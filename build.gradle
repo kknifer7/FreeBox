@@ -89,7 +89,7 @@ jlink {
         mainClassName = application.mainClass
         applicationName = launcherName
         installerName = launcherName
-        installerType = 'deb'
+        installerType = 'msi'
         appVersion = project.version
         if (org.gradle.internal.os.OperatingSystem.current().windows) {
             installerOptions = ['--win-dir-chooser', '--win-menu', '--win-shortcut']

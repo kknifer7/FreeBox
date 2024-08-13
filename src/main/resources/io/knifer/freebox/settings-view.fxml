@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<BorderPane stylesheets="@css/settings-view.css" fx:id="root" maxHeight="-Infinity"  maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="250.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
+   <center>
+      <VBox>
+         <children>
+            <GridPane hgap="8" vgap="8">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="100" />
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="10" />
+               </columnConstraints>
+               <Label text="%source-link" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+               <TextField fx:id="sourceLinkTextField" alignment="TOP_LEFT" prefHeight="26.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+               <rowConstraints>
+                  <RowConstraints />
+               </rowConstraints>
+            </GridPane>
+            <GridPane hgap="8" vgap="8">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="100" />
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="10" />
+               </columnConstraints>
+               <Label text="%rule" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                  <graphic>
+                     <FontIcon iconLiteral="fa-info-circle:12:blue" />
+                  </graphic>
+                  <tooltip>
+                     <Tooltip showDelay="200ms" text="%rule-tooltip" />
+                  </tooltip>
+               </Label>
+               <ChoiceBox fx:id="ruleChoiceBox" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                  <items>
+                     <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="MaoYingShi" />
+                     </FXCollections>
+                  </items>
+               </ChoiceBox>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
+            </GridPane>
+         </children>
+      </VBox>
+   </center>
+   <bottom>
+      <HBox alignment="CENTER" prefHeight="50.0" prefWidth="600.0" spacing="10.0" BorderPane.alignment="CENTER">
+         <children>
+            <Button mnemonicParsing="false" text="%save" onAction="#onSaveBtnClick">
+               <graphic>
+                  <FontIcon iconLiteral="fa-save" />
+               </graphic>
+            </Button>
+            <Button mnemonicParsing="false" text="%cancel" onAction="#onCancelBtnClick" />
+         </children>
+      </HBox>
+   </bottom>
+</BorderPane>

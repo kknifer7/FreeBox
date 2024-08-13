@@ -1,0 +1,103 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.javamodularity.moduleplugin' version '1.8.12'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'org.beryx.jlink' version '2.25.0'
+    id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.23'
+}
+
+group 'io.knifer'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainModule = 'io.knifer.freebox'
+    mainClass = 'io.knifer.freebox.FreeBoxApplication'
+}
+
+javafx {
+    version = '17.0.6'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+ext {
+    dv = [
+            controlsFX: '11.1.2',
+            ikonli: '12.3.1',
+            gson: '2.11.0',
+            guava: '33.2.1-jre',
+            lang3: '3.16.0',
+            javaWebSocket: '1.5.7',
+            slf4jSimple: '2.1.0-alpha1',
+            lombok: '1.18.34',
+            junit: '5.9.2'
+    ]
+}
+
+dependencies {
+    implementation "org.controlsfx:controlsfx:${dv.controlsFX}"
+    implementation "org.kordamp.ikonli:ikonli-javafx:${dv.ikonli}"
+    implementation "org.kordamp.ikonli:ikonli-fontawesome-pack:${dv.ikonli}"
+    implementation "com.google.code.gson:gson:${dv.gson}"
+    implementation "com.google.guava:guava:${dv.guava}"
+    implementation "org.apache.commons:commons-lang3:${dv.lang3}"
+    implementation "org.java-websocket:Java-WebSocket:${dv.javaWebSocket}"
+    implementation "org.slf4j:slf4j-simple:${dv.slf4jSimple}"
+
+    compileOnly "org.projectlombok:lombok:${dv.lombok}"
+    annotationProcessor "org.projectlombok:lombok:${dv.lombok}"
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${dv.junit}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${dv.junit}"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes = [
+                'Main-Class': application.mainClass,
+                'Premain-Class': 'io.knifer.freebox.FreeBoxAgent'
+        ]
+    }
+}
+
+gluonfx {
+    graalvmHome = 'E:\\StudyTools\\graalvm-ce-java17-22.3.2'
+}
+
+jlink {
+    imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = 'FreeBox'
+    }
+    jpackage {
+        mainClassName = application.mainClass
+        applicationName = launcherName
+        installerName = launcherName
+        installerType = 'deb'
+        appVersion = project.version
+        if (org.gradle.internal.os.OperatingSystem.current().windows) {
+            installerOptions = ['--win-dir-chooser', '--win-menu', '--win-shortcut']
+            imageOptions = ['--win-console']
+        }
+    }
+}
+
+jlinkZip {
+    group = 'distribution'
+}

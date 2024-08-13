@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<BorderPane fx:id="root" fx:controller="io.knifer.freebox.controller.HomeController" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
+    <fx:define>
+        <fx:include source="settings-view.fxml" fx:id="settingsView" />
+    </fx:define>
+
+    <bottom>
+        <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <items>
+              <Button onAction="#onSettingsBtnClick" focusTraversable="false" mnemonicParsing="false" prefWidth="30" prefHeight="30">
+                  <graphic>
+                    <FontIcon iconLiteral="fa-gears:16" />
+                  </graphic>
+              </Button>
+            </items>
+        </ToolBar>
+    </bottom>
+</BorderPane>

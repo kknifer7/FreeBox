@@ -1,64 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.collections.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 <?import org.kordamp.ikonli.javafx.*?>
+<?import io.knifer.freebox.component.converter.NetworkInterfaceAndIP2StringConverter?>
 
-<BorderPane stylesheets="@css/settings-view.css" fx:id="root" maxHeight="-Infinity"  maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="250.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
+<BorderPane fx:id="root" stylesheets="@css/view/settings-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
+   <fx:define>
+      <NetworkInterfaceAndIP2StringConverter fx:id="httpIpChoiceBoxConverter"/>
+   </fx:define>
    <center>
-      <VBox>
-         <children>
-            <GridPane hgap="8" vgap="8">
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="100" />
-                  <ColumnConstraints hgrow="ALWAYS" minWidth="10" />
-               </columnConstraints>
-               <Label text="%source-link" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-               <TextField fx:id="sourceLinkTextField" alignment="TOP_LEFT" prefHeight="26.0" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-               <rowConstraints>
-                  <RowConstraints />
-               </rowConstraints>
-            </GridPane>
-            <GridPane hgap="8" vgap="8">
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="100" />
-                  <ColumnConstraints hgrow="ALWAYS" minWidth="10" />
-               </columnConstraints>
-               <Label text="%rule" GridPane.columnIndex="0" GridPane.rowIndex="1">
-                  <graphic>
-                     <FontIcon iconLiteral="fa-info-circle:12:blue" />
-                  </graphic>
-                  <tooltip>
-                     <Tooltip showDelay="200ms" text="%rule-tooltip" />
-                  </tooltip>
-               </Label>
-               <ChoiceBox fx:id="ruleChoiceBox" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                  <items>
-                     <FXCollections fx:factory="observableArrayList">
-                        <String fx:value="MaoYingShi" />
-                     </FXCollections>
-                  </items>
-               </ChoiceBox>
-               <rowConstraints>
-                  <RowConstraints />
-                  <RowConstraints />
-               </rowConstraints>
-            </GridPane>
-         </children>
-      </VBox>
+      <TabPane BorderPane.alignment="CENTER">
+         <tabs>
+            <Tab closable="false" text="%settings.network-and-service">
+                <graphic>
+                    <FontIcon iconLiteral="fa-wifi:12:#4169E1" />
+                </graphic>
+               <content>
+                  <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+                     <children>
+                        <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+                           <top>
+                              <HBox alignment="CENTER" spacing="5" BorderPane.alignment="CENTER">
+                                 <BorderPane.margin>
+                                    <Insets bottom="15.0" top="15.0" />
+                                 </BorderPane.margin>
+                                 <children>
+                                    <Label text="%settings.http">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Label>
+                                    <Label>
+                                       <graphic>
+                                          <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
+                                       </graphic>
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                       <tooltip>
+                                          <Tooltip showDelay="200ms" showDuration="1m" text="%settings.http.tooltip">
+                                             <font>
+                                                <Font size="14" />
+                                             </font>
+                                          </Tooltip>
+                                       </tooltip>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                           </top>
+                           <center>
+                              <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+                                 <children>
+                                    <HBox alignment="CENTER">
+                                       <children>
+                                          <ChoiceBox fx:id="httpIpChoiceBox" HBox.hgrow="ALWAYS" converter="$httpIpChoiceBoxConverter"/>
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </VBox>
+                           </center></BorderPane>
+                        <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                     </children>
+                     <padding>
+                        <Insets left="20.0" right="20.0" />
+                     </padding>
+                  </HBox>
+               </content>
+            </Tab>
+         </tabs>
+      </TabPane>
    </center>
    <bottom>
-      <HBox alignment="CENTER" prefHeight="50.0" prefWidth="600.0" spacing="10.0" BorderPane.alignment="CENTER">
-         <children>
-            <Button mnemonicParsing="false" text="%save" onAction="#onSaveBtnClick">
-               <graphic>
-                  <FontIcon iconLiteral="fa-save" />
-               </graphic>
-            </Button>
-            <Button mnemonicParsing="false" text="%cancel" onAction="#onCancelBtnClick" />
-         </children>
-      </HBox>
+      <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <buttons>
+          <Button mnemonicParsing="false" onAction="#onSaveBtnAction" text="%settings.save">
+             <graphic>
+                <FontIcon iconLiteral="fa-check:16:green" />
+             </graphic>
+          </Button>
+            <Button mnemonicParsing="false" onAction="#onCancelBtnAction" text="%settings.cancel" />
+        </buttons>
+         <BorderPane.margin>
+            <Insets left="20.0" right="20.0" />
+         </BorderPane.margin>
+      </ButtonBar>
    </bottom>
 </BorderPane>

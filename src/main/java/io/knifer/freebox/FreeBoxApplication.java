@@ -1,9 +1,10 @@
 package io.knifer.freebox;
 
 import com.sun.net.httpserver.HttpServer;
-import io.knifer.freebox.helper.ConfigHelper;
-import io.knifer.freebox.http.FreeBoxHttpHandler;
-import io.knifer.freebox.websocket.FreeBoxWebSocketServer;
+import io.knifer.freebox.context.Context;
+import io.knifer.freebox.exception.GlobalExceptionHandler;
+import io.knifer.freebox.net.http.FreeBoxHttpHandler;
+import io.knifer.freebox.net.websocket.FreeBoxWebSocketServer;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -51,7 +52,9 @@ public class FreeBoxApplication extends Application {
         stage.setTitle("FreeBox");
         stage.setScene(scene);
         stage.show();
-        ConfigHelper.refresh();
+
+        // 初始化上下文
+        Context.INSTANCE.init(this);
     }
 
     @Override
@@ -78,6 +81,7 @@ public class FreeBoxApplication extends Application {
     }
 
     public static void main(String[] args) {
+        Thread.setDefaultUncaughtExceptionHandler(new GlobalExceptionHandler());
         wsThread.start();
         new Thread(() -> {
             httpServer.start();

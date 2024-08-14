@@ -1,4 +1,4 @@
-package io.knifer.freebox.http;
+package io.knifer.freebox.net.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;

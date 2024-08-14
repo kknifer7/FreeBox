@@ -1,4 +1,4 @@
-package io.knifer.freebox.websocket;
+package io.knifer.freebox.net.websocket;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;

@@ -1,13 +1,16 @@
 package io.knifer.freebox.helper;
 
+import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.model.domain.Config;
 import io.knifer.freebox.util.GsonUtil;
+import javafx.application.Platform;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 设置
@@ -19,13 +22,22 @@ public class ConfigHelper {
 
     private static final Path CONFIG_PATH = Path.of("config", "config.json");
 
-    private static Config config = loadConfig();
+    private static Config config = loadConfigFromLocalPath();
 
-    public void refresh() {
-        config = loadConfig();
+    private static final AtomicBoolean updateFlag = new AtomicBoolean(false);
+
+    private static final Runnable SAVE_CONFIG_RUNNABLE = () -> {
+        if (updateFlag.getAndSet(false)) {
+            saveConfigOnDisk();
+        }
+        ToastHelper.showSuccess(I18nKeys.SETTINGS_SAVED);
+    };
+
+    public void loadConfig() {
+        config = loadConfigFromLocalPath();
     }
 
-    private Config loadConfig() {
+    private Config loadConfigFromLocalPath() {
         Config config;
         String configJson;
 
@@ -41,7 +53,7 @@ public class ConfigHelper {
             try {
                 config = new Config();
                 config.setUuid(UUID.randomUUID().toString());
-                config.setSourceLink("https://ghproxy.net/https://raw.githubusercontent.com/Greatwallcorner/CatVodSpider/master/json/config.json");
+                // TODO 新建Config
                 Files.createDirectories(CONFIG_PATH.getParent());
                 Files.writeString(CONFIG_PATH, GsonUtil.toJson(config));
 
@@ -52,17 +64,15 @@ public class ConfigHelper {
         }
     }
 
-    public String getSourceLink() {
-        return config.getSourceLink();
+    public void markUpdating() {
+        updateFlag.set(true);
     }
 
-    public void updateSourceLink(String sourceLink) {
-        config.setSourceLink(sourceLink);
-        saveConfig();
-        refresh();
+    public void saveConfig() {
+        Platform.runLater(SAVE_CONFIG_RUNNABLE);
     }
 
-    private void saveConfig() {
+    private void saveConfigOnDisk() {
         try {
             Files.writeString(CONFIG_PATH, GsonUtil.toJson(config));
         } catch (IOException e) {

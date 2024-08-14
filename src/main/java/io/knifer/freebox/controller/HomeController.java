@@ -6,22 +6,13 @@ import io.knifer.freebox.helper.I18nHelper;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.Duration;
-import org.controlsfx.control.Notifications;
-import org.kordamp.ikonli.fontawesome.FontAwesome;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 
 public class HomeController {
-
-    @FXML
-    private BorderPane root;
 
     @FXML
     private void onSettingsBtnClick() throws IOException {

@@ -2,21 +2,17 @@ package io.knifer.freebox.controller;
 
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.ConfigHelper;
-import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.util.NetworkUtil;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
-import org.controlsfx.control.Notifications;
-import org.kordamp.ikonli.fontawesome.FontAwesome;
-import org.kordamp.ikonli.javafx.FontIcon;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.NetworkInterface;
+import java.util.Collection;
 
 /**
  * 设置
@@ -27,44 +23,38 @@ public class SettingsController {
 
     @FXML
     private BorderPane root;
-
     @FXML
-    private TextField sourceLinkTextField;
-
-    @FXML
-    private ChoiceBox<String> ruleChoiceBox;
+    private ChoiceBox<Pair<NetworkInterface, String>> httpIpChoiceBox;
 
     @FXML
     private void initialize() {
-        sourceLinkTextField.setText(ConfigHelper.getSourceLink());
-        ruleChoiceBox.getSelectionModel().selectFirst();
+        ConfigHelper.loadConfig();
+        fillHttpIpChoiceBox();
     }
 
-    @FXML
-    private void onSaveBtnClick() {
-        String sourceLink = sourceLinkTextField.getText();
+    private void fillHttpIpChoiceBox() {
+        Collection<Pair<NetworkInterface, String>> networkInterfaceAndIps =
+                NetworkUtil.getAvailableNetworkInterfaceAndIPv4();
+        ObservableList<Pair<NetworkInterface, String>> items;
 
-        try {
-            new URL(sourceLink).toURI();
-        } catch (MalformedURLException | URISyntaxException e) {
-            Notifications.create()
-                    .position(Pos.TOP_CENTER)
-                    .text(I18nHelper.get(I18nKeys.SOURCE_LINK_ILLEGAL))
-                    .showError();
+        if (networkInterfaceAndIps.isEmpty()) {
+            ToastHelper.showError(I18nKeys.SETTINGS_FORM_HINT_NO_AVAILABLE_IP);
 
             return;
         }
-        ConfigHelper.updateSourceLink(sourceLink);
-        WindowHelper.close(root);
-        Notifications.create()
-                .position(Pos.TOP_CENTER)
-                .text(I18nHelper.get(I18nKeys.SETTINGS_SAVED))
-                .graphic(FontIcon.of(FontAwesome.CHECK_CIRCLE, 32, Color.GREEN))
-                .show();
+        items = httpIpChoiceBox.getItems();
+        items.addAll(networkInterfaceAndIps);
+        httpIpChoiceBox.setValue(items.get(0));
     }
 
     @FXML
-    private void onCancelBtnClick() {
+    private void onSaveBtnAction() {
+        WindowHelper.close(root);
+        ConfigHelper.saveConfig();
+    }
+
+    @FXML
+    private void onCancelBtnAction() {
         WindowHelper.close(root);
     }
 }

@@ -1,6 +1,7 @@
 package io.knifer.freebox.util;
 
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -22,5 +23,20 @@ public class ValidationUtil {
         }
 
         return true;
+    }
+
+    public boolean isPort(String cs) {
+        int port;
+
+        if (!StringUtils.isNumeric(cs) || cs.length() > 5) {
+            return false;
+        }
+        port = Integer.parseInt(cs);
+
+        return isPort(port);
+    }
+
+    public boolean isPort(Integer num) {
+        return num < 65536 && num > 0;
     }
 }

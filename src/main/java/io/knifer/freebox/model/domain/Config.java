@@ -1,10 +1,6 @@
 package io.knifer.freebox.model.domain;
 
-import io.knifer.freebox.constant.BaseValues;
-import io.knifer.freebox.util.NetworkUtil;
 import lombok.Data;
-
-import java.util.UUID;
 
 /**
  * 本地设置
@@ -30,11 +26,6 @@ public class Config {
     private Integer wsPort;
 
     /**
-     * 服务网卡
-     */
-    private String networkInterface;
-
-    /**
      * 服务IPv4地址
      */
     private String serviceIPv4;
@@ -48,16 +39,4 @@ public class Config {
      * 自动启动WebSocket服务
      */
     private Boolean autoStartWs;
-
-    public static Config createDefault() {
-        // TODO 创建默认配置
-        Config config = new Config();
-
-        config.setUuid(UUID.randomUUID().toString());
-        config.setHttpPort(BaseValues.DEFAULT_HTTP_PORT);
-        config.setWsPort(BaseValues.DEFAULT_WS_PORT);
-        NetworkUtil.getAvailableNetworkInterfaceAndIPv4();
-
-        return config;
-    }
 }

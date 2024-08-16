@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
@@ -90,7 +91,7 @@ public class NetworkUtil {
         }
     }
 
-    public static String formatMacAddress(byte[] address) {
+    public String formatMacAddress(byte[] address) {
         StringJoiner joiner = new StringJoiner(":");
 
         for (byte b : address) {
@@ -98,5 +99,19 @@ public class NetworkUtil {
         }
 
         return joiner.toString().toUpperCase();
+    }
+
+    public boolean isPortUsing(int port) {
+        boolean flag = false;
+        InetAddress address = null;
+
+        try {
+            address = InetAddress.getByName("127.0.0.1");
+        } catch (UnknownHostException ignored) {}
+        try (Socket ignored1 = new Socket(address, port)){
+            flag = true;
+        } catch (IOException ignored) {}
+
+        return flag;
     }
 }

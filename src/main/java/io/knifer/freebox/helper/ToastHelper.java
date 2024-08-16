@@ -25,19 +25,27 @@ import org.kordamp.ikonli.javafx.FontIcon;
 @UtilityClass
 public class ToastHelper {
 
-    public void showSuccess(String i18nKey) {
+    public void showSuccessI18n(String i18nKey) {
+        showSuccess(I18nHelper.get(i18nKey));
+    }
+
+    public void showSuccess(String successMessage) {
         Notifications.create()
                 .position(Pos.TOP_CENTER)
-                .text(I18nHelper.get(i18nKey))
+                .text(successMessage)
                 .graphic(FontIcon.of(FontAwesome.CHECK_CIRCLE, 32, Color.GREEN))
                 .hideAfter(Duration.seconds(2))
                 .show();
     }
 
-    public void showError(String i18nKey) {
+    public void showErrorI18n(String i18nKey) {
+        showError(I18nHelper.get(i18nKey));
+    }
+
+    public void showError(String errorMessage) {
         Notifications.create()
                 .position(Pos.TOP_CENTER)
-                .text(I18nHelper.get(i18nKey))
+                .text(errorMessage)
                 .graphic(FontIcon.of(FontAwesome.EXCLAMATION_TRIANGLE, 32, Color.ORANGERED))
                 .hideAfter(Duration.seconds(2))
                 .show();

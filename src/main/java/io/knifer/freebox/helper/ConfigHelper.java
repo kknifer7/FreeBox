@@ -2,7 +2,6 @@ package io.knifer.freebox.helper;
 
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.domain.Config;
-import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.SaveConfigService;
 import io.knifer.freebox.util.GsonUtil;
 import lombok.experimental.UtilityClass;
@@ -26,10 +25,6 @@ public class ConfigHelper {
     private static Config config;
 
     private static final AtomicBoolean updateFlag = new AtomicBoolean(false);
-
-    static {
-        new LoadConfigService().start();
-    }
 
     public void setServiceIPv4(String serviceIPv4) {
         assertIfConfigLoaded();

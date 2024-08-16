@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import io.knifer.freebox.component.converter.NetworkInterfaceAndIP2StringConverter?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
@@ -20,44 +20,63 @@
                <content>
                   <StackPane prefHeight="400.0" prefWidth="600.0">
                      <ProgressIndicator fx:id="loadingProgressIndicator" />
-                     <HBox visible="false" fx:id="networkAndServiceHBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+                     <HBox fx:id="networkAndServiceHBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" visible="false">
                         <children>
                            <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
                               <top>
-                                 <HBox alignment="CENTER" spacing="5" BorderPane.alignment="CENTER">
+                                 <VBox BorderPane.alignment="CENTER">
                                     <BorderPane.margin>
                                        <Insets bottom="15.0" top="15.0" />
                                     </BorderPane.margin>
                                     <children>
-                                       <Label text="%settings.http">
-                                          <font>
-                                             <Font size="20.0" />
-                                          </font>
-                                       </Label>
-                                       <Label>
-                                          <graphic>
-                                             <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
-                                          </graphic>
-                                          <font>
-                                             <Font size="20.0" />
-                                          </font>
-                                          <tooltip>
-                                             <Tooltip showDelay="200ms" showDuration="1m" text="%settings.http.tooltip">
+                                       <HBox alignment="CENTER" spacing="5">
+                                          <children>
+                                             <Label text="%settings.http">
                                                 <font>
-                                                   <Font size="14" />
+                                                   <Font size="20.0" />
                                                 </font>
-                                             </Tooltip>
-                                          </tooltip>
-                                       </Label>
+                                             </Label>
+                                             <Label>
+                                                <graphic>
+                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
+                                                </graphic>
+                                                <font>
+                                                   <Font size="20.0" />
+                                                </font>
+                                                <tooltip>
+                                                   <Tooltip showDelay="200ms" showDuration="1m" text="%settings.http.tooltip">
+                                                      <font>
+                                                         <Font size="14" />
+                                                      </font>
+                                                   </Tooltip>
+                                                </tooltip>
+                                             </Label>
+                                          </children>
+                                       </HBox>
+                                       <HBox alignment="CENTER" prefHeight="30.0" prefWidth="200.0">
+                                          <children>
+                                             <Label fx:id="httpServiceStatusLabel">
+                                                <font>
+                                                   <Font size="18" />
+                                                </font>
+                                                <graphic>
+                                                   <FontIcon fx:id="httpServiceStatusFontIcon" iconLiteral="fa-circle" />
+                                                </graphic>
+                                             </Label>
+                                          </children>
+                                          <VBox.margin>
+                                             <Insets right="10.0" top="10.0" />
+                                          </VBox.margin>
+                                       </HBox>
                                     </children>
-                                 </HBox>
+                                 </VBox>
                               </top>
                               <center>
                                  <VBox prefHeight="200.0" prefWidth="100.0" spacing="20.0" BorderPane.alignment="CENTER">
                                     <children>
                                        <HBox alignment="CENTER">
                                           <children>
-                                             <ChoiceBox fx:id="httpIpChoiceBox" onAction="#onHttpIpChoiceBoxAction" HBox.hgrow="ALWAYS" converter="$httpIpChoiceBoxConverter" />
+                                             <ChoiceBox fx:id="httpIpChoiceBox" onAction="#onHttpIpChoiceBoxAction" prefWidth="250.0" HBox.hgrow="ALWAYS" converter="$httpIpChoiceBoxConverter" />
                                           </children>
                                        </HBox>
                                        <HBox alignment="CENTER" spacing="10.0">
@@ -68,7 +87,18 @@
                                        </HBox>
                                     </children>
                                  </VBox>
-                              </center></BorderPane>
+                              </center>
+                              <bottom>
+                                 <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0" BorderPane.alignment="CENTER">
+                                    <children>
+                                       <Button fx:id="httpServiceStartBtn" mnemonicParsing="false" onAction="#onHttpServiceStartBtnAction" text="%settings.service-start" />
+                                       <Button fx:id="httpServiceStopBtn" mnemonicParsing="false" onAction="#onHttpServiceStopBtnAction" text="%settings.service-stop" />
+                                    </children>
+                                    <BorderPane.margin>
+                                       <Insets bottom="90.0" />
+                                    </BorderPane.margin>
+                                 </HBox>
+                              </bottom></BorderPane>
                            <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
                         </children>
                         <padding>

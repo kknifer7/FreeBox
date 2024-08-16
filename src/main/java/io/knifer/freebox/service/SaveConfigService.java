@@ -32,7 +32,7 @@ public class SaveConfigService extends Service<Void> {
             @Override
             protected Void call() {
                 saveConfigOnDisk();
-                Platform.runLater(() -> ToastHelper.showSuccess(I18nKeys.SETTINGS_SAVED));
+                Platform.runLater(() -> ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_SAVED));
 
                 return null;
             }

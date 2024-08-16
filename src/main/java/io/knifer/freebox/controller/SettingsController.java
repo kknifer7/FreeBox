@@ -2,22 +2,24 @@ package io.knifer.freebox.controller;
 
 import io.knifer.freebox.component.validator.PortValidator;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.helper.ConfigHelper;
-import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.helper.ValidationHelper;
-import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.context.Context;
+import io.knifer.freebox.helper.*;
+import io.knifer.freebox.net.http.FreeBoxHttpServer;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
+import io.knifer.freebox.util.NetworkUtil;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.validation.ValidationSupport;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.NetworkInterface;
 import java.util.Collection;
@@ -44,16 +46,22 @@ public class SettingsController {
     private TextField httpPortTextField;
     @FXML
     private CheckBox httpAutoStartCheckBox;
+    @FXML
+    private Label httpServiceStatusLabel;
+    @FXML
+    private FontIcon httpServiceStatusFontIcon;
+    @FXML
+    private Button httpServiceStartBtn;
+    @FXML
+    public Button httpServiceStopBtn;
 
     private final LoadConfigService loadConfigService = new LoadConfigService();
     private final ValidationSupport validationSupport = new ValidationSupport();
 
+    private final FreeBoxHttpServer httpServer = Context.INSTANCE.getHttpServer();
+
     @FXML
     private void initialize() {
-        startInitService();
-    }
-
-    private void startInitService() {
         LoadNetworkInterfaceDataService loadNetworkInterfaceService = new LoadNetworkInterfaceDataService();
 
         loadConfigService.setOnSucceeded(evt -> loadNetworkInterfaceService.restart());
@@ -83,7 +91,7 @@ public class SettingsController {
         String configIP;
 
         if (networkInterfaceAndIps.isEmpty()) {
-            ToastHelper.showError(I18nKeys.SETTINGS_FORM_HINT_NO_AVAILABLE_IP);
+            ToastHelper.showErrorI18n(I18nKeys.SETTINGS_FORM_HINT_NO_AVAILABLE_IP);
 
             return;
         }
@@ -117,8 +125,32 @@ public class SettingsController {
     private void setupComponent() {
         validationSupport.registerValidator(httpPortTextField, PortValidator.getInstance());
         httpPortTextField.textProperty().addListener((ob, oldVal, newVal) -> onHttpPortTextFieldChange());
+
+        if (httpServer.isRunning()) {
+            httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
+            httpServiceStatusFontIcon.setIconColor(Color.GREEN);
+            httpServiceStartBtn.setDisable(true);
+            disableHttpServiceForm();
+        } else {
+            httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
+            httpServiceStatusFontIcon.setIconColor(Color.GRAY);
+            httpServiceStopBtn.setDisable(true);
+        }
     }
 
+    private void disableHttpServiceForm() {
+        httpIpChoiceBox.setDisable(true);
+        httpAutoStartCheckBox.setDisable(true);
+        httpPortTextField.setDisable(true);
+    }
+
+    private void enableHttpServiceForm() {
+        httpIpChoiceBox.setDisable(false);
+        httpAutoStartCheckBox.setDisable(false);
+        httpPortTextField.setDisable(false);
+    }
+
+    @FXML
     private void onHttpPortTextFieldChange() {
         // 延迟执行，等待Validator验证结束
         Platform.runLater(() -> {
@@ -176,5 +208,45 @@ public class SettingsController {
         }
         ConfigHelper.setAutoStartHttp(autoStartHttp);
         ConfigHelper.markToUpdate();
+    }
+
+    @FXML
+    public void onHttpServiceStartBtnAction() {
+        Integer httpPort = ConfigHelper.getHttpPort();
+
+        disableHttpServiceBtn();
+        if (NetworkUtil.isPortUsing(httpPort)) {
+            ToastHelper.showError(String.format(
+                    I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
+                    httpPort
+            ));
+            httpServiceStartBtn.setDisable(false);
+
+            return;
+        }
+        ConfigHelper.checkAndSave();
+        httpServer.start(ConfigHelper.getServiceIPv4(), httpPort);
+        httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
+        httpServiceStatusFontIcon.setIconColor(Color.GREEN);
+        httpServiceStopBtn.setDisable(false);
+        disableHttpServiceForm();
+        ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_HTTP_SERVICE_UP);
+    }
+
+    @FXML
+    public void onHttpServiceStopBtnAction() {
+        disableHttpServiceBtn();
+        httpServer.stop(() -> {
+            httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
+            httpServiceStatusFontIcon.setIconColor(Color.GRAY);
+            httpServiceStartBtn.setDisable(false);
+            enableHttpServiceForm();
+            ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_HTTP_SERVICE_DOWN);
+        });
+    }
+
+    private void disableHttpServiceBtn() {
+        httpServiceStartBtn.setDisable(true);
+        httpServiceStopBtn.setDisable(true);
     }
 }

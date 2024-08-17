@@ -13,6 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
 
+    private static final GlobalExceptionHandler INSTANCE = new GlobalExceptionHandler();
+
+    public static GlobalExceptionHandler getInstance() {
+        return INSTANCE;
+    }
+
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         if (Context.INSTANCE.isInitialized()) {

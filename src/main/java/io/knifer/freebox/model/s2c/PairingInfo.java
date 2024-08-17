@@ -1,9 +1,10 @@
-package io.knifer.freebox.model.common;
+package io.knifer.freebox.model.s2c;
 
 import lombok.Data;
 
 /**
  * 配对信息
+ * 由HTTP服务端返回
  *
  * @author Knifer
  */

@@ -5,6 +5,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.13'
     id 'org.beryx.jlink' version '2.25.0'
     id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.23'
+    id 'org.gradlex.extra-java-module-info' version '1.8'
 }
 
 group 'io.knifer'
@@ -40,6 +41,7 @@ ext {
             lang3: '3.16.0',
             javaWebSocket: '1.5.7',
             slf4jSimple: '2.1.0-alpha1',
+            blockingMap: '0.91',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]
@@ -54,12 +56,21 @@ dependencies {
     implementation "org.apache.commons:commons-lang3:${dv.lang3}"
     implementation "org.java-websocket:Java-WebSocket:${dv.javaWebSocket}"
     implementation "org.slf4j:slf4j-simple:${dv.slf4jSimple}"
+    implementation "com.github.sarveswaran-m:util.concurrent.blockingMap:${dv.blockingMap}"
 
     compileOnly "org.projectlombok:lombok:${dv.lombok}"
     annotationProcessor "org.projectlombok:lombok:${dv.lombok}"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${dv.junit}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${dv.junit}"
+}
+
+extraJavaModuleInfo {
+    // 为非模块化项目添加自动模块
+    automaticModule('com.github.sarveswaran-m:util.concurrent.blockingMap', 'blockingMap4j')
+    // 解决google guava相关的编译错误
+    automaticModule('com.google.guava:listenablefuture', 'listenablefutureAvoidConflict')
+    automaticModule('com.google.code.findbugs:jsr305', 'jsr305')
 }
 
 test {
@@ -69,8 +80,7 @@ test {
 jar {
     manifest {
         attributes = [
-                'Main-Class': application.mainClass,
-                'Premain-Class': 'io.knifer.freebox.FreeBoxAgent'
+                'Main-Class': application.mainClass
         ]
     }
 }

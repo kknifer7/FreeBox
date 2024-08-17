@@ -12,6 +12,7 @@ module io.knifer.freebox {
     requires com.google.common;
     requires org.apache.commons.lang3;
     requires org.java_websocket;
+    requires blockingMap4j;
 
     requires static lombok;
 
@@ -23,4 +24,6 @@ module io.knifer.freebox {
     opens io.knifer.freebox.controller to javafx.fxml;
     opens io.knifer.freebox.model.domain to com.google.gson;
     opens io.knifer.freebox.model.common to com.google.gson;
+    opens io.knifer.freebox.model.c2s to com.google.gson;
+    opens io.knifer.freebox.model.s2c to com.google.gson;
 }

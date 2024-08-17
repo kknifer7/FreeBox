@@ -1,5 +1,7 @@
-package io.knifer.freebox.net.websocket;
+package io.knifer.freebox.net.websocket.server;
 
+import io.knifer.freebox.net.websocket.core.ClientManager;
+import io.knifer.freebox.net.websocket.core.KebSocketMessageDispatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.java_websocket.WebSocket;
@@ -10,21 +12,25 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
 /**
- * WebSocket服务
+ * KebSocket服务
+ * 基于WebSocket封装
  *
  * @author Knifer
  */
 @Slf4j
-public class FreeBoxWebSocketServer extends WebSocketServer {
+public class KebSocketServer extends WebSocketServer {
 
-	public FreeBoxWebSocketServer(InetSocketAddress address) {
+	private final ClientManager clientManager = new ClientManager();
+
+	private final KebSocketMessageDispatcher messageDispatcher = new KebSocketMessageDispatcher(clientManager);
+
+	public KebSocketServer(InetSocketAddress address) {
 		super(address);
 	}
 
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake) {
 		log.info("new connection to {}: {}", conn.getRemoteSocketAddress(), handshake.getResourceDescriptor());
-		conn.send("Welcome to the server!"); //This method sends a message to the new client
 	}
 
 	@Override
@@ -33,16 +39,19 @@ public class FreeBoxWebSocketServer extends WebSocketServer {
 				"closed {} with exit code {}, additional info: {}",
 				conn.getRemoteSocketAddress(), code, StringUtils.isBlank(reason) ? "-" : reason
 		);
+		clientManager.unregister(conn);
 	}
 
 	@Override
 	public void onMessage(WebSocket conn, String message) {
-		System.out.println("received message from "	+ conn.getRemoteSocketAddress() + ": " + message);
+		log.info("received message from "	+ conn.getRemoteSocketAddress() + ": " + message);
+		messageDispatcher.dispatch(message, conn);
 	}
 
 	@Override
 	public void onMessage(WebSocket conn, ByteBuffer message) {
-		System.out.println("received ByteBuffer from "	+ conn.getRemoteSocketAddress());
+		log.info("received ByteBuffer from "	+ conn.getRemoteSocketAddress());
+		conn.close();
 	}
 
 	@Override

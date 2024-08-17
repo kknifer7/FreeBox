@@ -1,6 +1,7 @@
 package io.knifer.freebox.util;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -20,6 +21,14 @@ public class GsonUtil {
 
     public <T> T fromJson(String objectStr, Class<T> clazz){
         return gson.fromJson(objectStr, clazz);
+    }
+
+    public <T> T fromJson(JsonElement jsonElement, Class<T> clazz) {
+        return gson.fromJson(jsonElement, clazz);
+    }
+
+    public <T> T fromJson(String objectStr, TypeToken<T> typeToken) {
+        return gson.fromJson(objectStr, typeToken);
     }
 
     public JsonElement toJsonTree(Object object) {

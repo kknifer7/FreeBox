@@ -1,6 +1,6 @@
 package io.knifer.freebox.service;
 
-import io.knifer.freebox.net.websocket.FreeBoxWebSocketServer;
+import io.knifer.freebox.net.websocket.server.KebSocketServer;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ShutdownWebSocketServerService extends Service<Void> {
 
-    private final FreeBoxWebSocketServer server;
+    private final KebSocketServer server;
 
     @Override
     protected Task<Void> createTask() {

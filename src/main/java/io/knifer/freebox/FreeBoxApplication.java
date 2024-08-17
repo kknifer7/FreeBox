@@ -3,8 +3,6 @@ package io.knifer.freebox;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
-import io.knifer.freebox.net.http.FreeBoxHttpServerHolder;
-import io.knifer.freebox.net.websocket.FreeBoxWebSocketServerHolder;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -32,8 +30,6 @@ public class FreeBoxApplication extends Application {
         // 初始化上下文
         Context.INSTANCE.init(
                 this,
-                new FreeBoxHttpServerHolder(),
-                new FreeBoxWebSocketServerHolder(),
                 () -> Context.INSTANCE.postEvent(AppEvents.APP_INITIALIZED)
         );
     }
@@ -44,7 +40,7 @@ public class FreeBoxApplication extends Application {
     }
 
     public static void main(String[] args) {
-        Thread.setDefaultUncaughtExceptionHandler(new GlobalExceptionHandler());
+        Thread.setDefaultUncaughtExceptionHandler(GlobalExceptionHandler.getInstance());
         launch();
     }
 }

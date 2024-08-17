@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
  * @author Knifer
  */
 @UtilityClass
-public class ResultCodes {
+public class MessageCodes {
 
-    public static final Integer SUCCESS = 0;
+    public static final int REGISTER = 100;
 }

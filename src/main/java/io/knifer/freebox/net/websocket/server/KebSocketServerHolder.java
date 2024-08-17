@@ -1,4 +1,4 @@
-package io.knifer.freebox.net.websocket;
+package io.knifer.freebox.net.websocket.server;
 
 import io.knifer.freebox.service.ShutdownWebSocketServerService;
 import javafx.concurrent.Service;
@@ -10,12 +10,12 @@ import java.net.InetSocketAddress;
  *
  * @author Knifer
  */
-public class FreeBoxWebSocketServerHolder {
+public class KebSocketServerHolder {
 
-    private volatile FreeBoxWebSocketServer server;
+    private volatile KebSocketServer server;
 
     public synchronized void start(String hostname, int port) {
-        server = new FreeBoxWebSocketServer(new InetSocketAddress(hostname, port));
+        server = new KebSocketServer(new InetSocketAddress(hostname, port));
         server.start();
     }
 

@@ -4,8 +4,8 @@ import io.knifer.freebox.component.validator.PortValidator;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.*;
-import io.knifer.freebox.net.http.FreeBoxHttpServerHolder;
-import io.knifer.freebox.net.websocket.FreeBoxWebSocketServerHolder;
+import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
+import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
@@ -82,7 +82,7 @@ public class SettingsController {
     private final ValidationSupport validationSupport = new ValidationSupport();
 
     private final FreeBoxHttpServerHolder httpServer = Context.INSTANCE.getHttpServer();
-    private final FreeBoxWebSocketServerHolder wsServer = Context.INSTANCE.getWsServer();
+    private final KebSocketServerHolder wsServer = Context.INSTANCE.getWsServer();
 
     @FXML
     private void initialize() {

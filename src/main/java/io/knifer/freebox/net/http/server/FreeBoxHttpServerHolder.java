@@ -1,7 +1,8 @@
-package io.knifer.freebox.net.http;
+package io.knifer.freebox.net.http.server;
 
 import com.sun.net.httpserver.HttpServer;
 import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.net.http.handler.FreeBoxHttpHandler;
 import io.knifer.freebox.service.ShutdownHttpServerService;
 import javafx.concurrent.Service;
 

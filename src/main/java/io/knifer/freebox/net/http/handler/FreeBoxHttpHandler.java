@@ -1,9 +1,9 @@
-package io.knifer.freebox.net.http;
+package io.knifer.freebox.net.http.handler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import io.knifer.freebox.helper.ConfigHelper;
-import io.knifer.freebox.model.common.PairingInfo;
+import io.knifer.freebox.model.s2c.PairingInfo;
 import io.knifer.freebox.util.GsonUtil;
 
 import java.io.IOException;

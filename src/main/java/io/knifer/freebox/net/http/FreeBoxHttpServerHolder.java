@@ -13,7 +13,7 @@ import java.net.InetSocketAddress;
  *
  * @author Knifer
  */
-public class FreeBoxHttpServer {
+public class FreeBoxHttpServerHolder {
 
     private volatile HttpServer server;
 

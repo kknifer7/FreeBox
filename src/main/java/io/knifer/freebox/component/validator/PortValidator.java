@@ -27,7 +27,7 @@ public class PortValidator implements Validator<String> {
         if (ValidationUtil.isPort(s)) {
             return new ValidationResult();
         } else {
-            errorMsg = I18nHelper.get(I18nKeys.SETTINGS_HTTP_INVALID_PORT_MESSAGE);
+            errorMsg = I18nHelper.get(I18nKeys.SETTINGS_INVALID_PORT_MESSAGE);
 
             return ValidationResult.fromError(control, errorMsg);
         }

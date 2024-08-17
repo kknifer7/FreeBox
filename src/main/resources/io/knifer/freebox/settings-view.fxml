@@ -4,11 +4,11 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import javafx.scene.text.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 <BorderPane fx:id="root" stylesheets="@css/view/settings-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
    <fx:define>
-      <NetworkInterfaceAndIP2StringConverter fx:id="httpIpChoiceBoxConverter" />
+      <NetworkInterfaceAndIP2StringConverter fx:id="ipChoiceBoxConverter"/>
    </fx:define>
    <center>
       <TabPane BorderPane.alignment="CENTER">
@@ -20,7 +20,7 @@
                <content>
                   <StackPane prefHeight="400.0" prefWidth="600.0">
                      <ProgressIndicator fx:id="loadingProgressIndicator" />
-                     <HBox fx:id="networkAndServiceHBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" visible="false">
+                     <HBox fx:id="networkAndServiceHBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
                         <children>
                            <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
                               <top>
@@ -38,7 +38,7 @@
                                              </Label>
                                              <Label>
                                                 <graphic>
-                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
+                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF"/>
                                                 </graphic>
                                                 <font>
                                                    <Font size="20.0" />
@@ -72,17 +72,17 @@
                                  </VBox>
                               </top>
                               <center>
-                                 <VBox prefHeight="200.0" prefWidth="100.0" spacing="20.0" BorderPane.alignment="CENTER">
+                                 <VBox alignment="CENTER" spacing="20.0" BorderPane.alignment="CENTER">
                                     <children>
                                        <HBox alignment="CENTER">
                                           <children>
-                                             <ChoiceBox fx:id="httpIpChoiceBox" onAction="#onHttpIpChoiceBoxAction" prefWidth="250.0" HBox.hgrow="ALWAYS" converter="$httpIpChoiceBoxConverter" />
+                                             <ChoiceBox fx:id="httpIpChoiceBox" onAction="#onIpChoiceBoxAction" prefWidth="250.0" HBox.hgrow="ALWAYS" converter="$ipChoiceBoxConverter" />
                                           </children>
                                        </HBox>
                                        <HBox alignment="CENTER" spacing="10.0">
                                           <children>
-                                             <TextField fx:id="httpPortTextField" alignment="center" promptText="%settings.http.hint-port" />
-                                             <CheckBox fx:id="httpAutoStartCheckBox" mnemonicParsing="false" onAction="#onHttpAutoStartCheckBoxAction" text="%settings.http.auto-start" />
+                                             <TextField fx:id="httpPortTextField" alignment="center" promptText="%settings.hint-port" />
+                                             <CheckBox fx:id="httpAutoStartCheckBox" mnemonicParsing="false" onAction="#onHttpAutoStartCheckBoxAction" text="%settings.auto-start" />
                                           </children>
                                        </HBox>
                                     </children>
@@ -99,7 +99,80 @@
                                     </BorderPane.margin>
                                  </HBox>
                               </bottom></BorderPane>
-                           <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                           <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
+                              <center>
+                                 <VBox alignment="CENTER" spacing="20.0" BorderPane.alignment="CENTER">
+                                    <children>
+                                       <HBox alignment="CENTER">
+                                          <children>
+                                             <ChoiceBox fx:id="wsIpChoiceBox" onAction="#onIpChoiceBoxAction" prefWidth="250.0" converter="$ipChoiceBoxConverter" />
+                                          </children>
+                                       </HBox>
+                                       <HBox alignment="CENTER" spacing="10.0">
+                                          <children>
+                                             <TextField fx:id="wsPortTextField"  alignment="center" promptText="%settings.hint-port" />
+                                             <CheckBox fx:id="wsAutoStartCheckBox" onAction="#onWsAutoStartCheckBoxAction" mnemonicParsing="false" text="%settings.auto-start" />
+                                          </children>
+                                       </HBox>
+                                    </children></VBox>
+                              </center>
+                              <top>
+                                 <VBox alignment="CENTER" BorderPane.alignment="CENTER">
+                                    <children>
+                                       <HBox alignment="CENTER" spacing="5.0">
+                                          <children>
+                                             <Label text="%settings.ws">
+                                                <font>
+                                                   <Font size="20.0" />
+                                                </font></Label>
+                                             <Label>
+                                                <font>
+                                                   <Font size="20.0" />
+                                                </font>
+                                                <graphic>
+                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF"/>
+                                                </graphic>
+                                                <tooltip>
+                                                   <Tooltip showDelay="200ms" showDuration="1m" text="%settings.ws.tooltip">
+                                                      <font>
+                                                         <Font size="14" />
+                                                      </font>
+                                                   </Tooltip>
+                                                </tooltip>
+                                             </Label>
+                                          </children>
+                                       </HBox>
+                                       <HBox alignment="CENTER" prefHeight="30.0" prefWidth="200.0">
+                                          <children>
+                                             <Label fx:id="wsServiceStatusLabel">
+                                                <font>
+                                                   <Font size="18" />
+                                                </font>
+                                                <graphic>
+                                                   <FontIcon fx:id="wsServiceStatusFontIcon" iconLiteral="fa-circle" />
+                                                </graphic>
+                                             </Label>
+                                          </children>
+                                          <VBox.margin>
+                                             <Insets right="10.0" top="10.0" />
+                                          </VBox.margin></HBox>
+                                    </children>
+                                    <BorderPane.margin>
+                                       <Insets bottom="15.0" top="15.0" />
+                                    </BorderPane.margin>
+                                 </VBox>
+                              </top>
+                              <bottom>
+                                 <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0" BorderPane.alignment="CENTER">
+                                    <BorderPane.margin>
+                                       <Insets bottom="90.0" />
+                                    </BorderPane.margin>
+                                    <children>
+                                       <Button fx:id="wsServiceStartBtn" onAction="#onWsServiceStartBtnAction" mnemonicParsing="false" text="%settings.service-start" />
+                                       <Button fx:id="wsServiceStopBtn" onAction="#onWsServiceStopBtnAction" mnemonicParsing="false" text="%settings.service-stop" />
+                                    </children>
+                                 </HBox>
+                              </bottom></BorderPane>
                         </children>
                         <padding>
                            <Insets left="20.0" right="20.0" />

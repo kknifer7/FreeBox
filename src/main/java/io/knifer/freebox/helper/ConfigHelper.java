@@ -48,15 +48,37 @@ public class ConfigHelper {
         return config.getHttpPort();
     }
 
+    public void setAutoStartHttp(Boolean autoStartHttp) {
+        assertIfConfigLoaded();
+        config.setAutoStartHttp(autoStartHttp);
+    }
+
     public Boolean getAutoStartHttp() {
         assertIfConfigLoaded();
 
         return config.getAutoStartHttp();
     }
 
-    public void setAutoStartHttp(Boolean autoStartHttp) {
+    public void setAutoStartWs(Boolean autoStartWs) {
         assertIfConfigLoaded();
-        config.setAutoStartHttp(autoStartHttp);
+        config.setAutoStartWs(autoStartWs);
+    }
+
+    public Boolean getAutoStartWs() {
+        assertIfConfigLoaded();
+
+        return config.getAutoStartWs();
+    }
+
+    public void setWsPort(Integer wsPort) {
+        assertIfConfigLoaded();
+        config.setWsPort(wsPort);
+    }
+
+    public Integer getWsPort() {
+        assertIfConfigLoaded();
+
+        return config.getWsPort();
     }
 
     private void assertIfConfigLoaded() {

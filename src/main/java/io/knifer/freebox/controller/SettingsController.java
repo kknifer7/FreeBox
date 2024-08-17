@@ -4,12 +4,18 @@ import io.knifer.freebox.component.validator.PortValidator;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.*;
-import io.knifer.freebox.net.http.FreeBoxHttpServer;
+import io.knifer.freebox.net.http.FreeBoxHttpServerHolder;
+import io.knifer.freebox.net.websocket.FreeBoxWebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import io.knifer.freebox.util.NetworkUtil;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -54,11 +60,29 @@ public class SettingsController {
     private Button httpServiceStartBtn;
     @FXML
     public Button httpServiceStopBtn;
+    @FXML
+    private ChoiceBox<Pair<NetworkInterface, String>> wsIpChoiceBox;
+    @FXML
+    public Label wsServiceStatusLabel;
+    @FXML
+    public FontIcon wsServiceStatusFontIcon;
+    @FXML
+    private Button wsServiceStartBtn;
+    @FXML
+    public Button wsServiceStopBtn;
+    @FXML
+    private TextField wsPortTextField;
+    @FXML
+    private CheckBox wsAutoStartCheckBox;
+
+    private final ObjectProperty<Pair<NetworkInterface, String>> ipValueProp = new SimpleObjectProperty<>();
+    private final BooleanProperty ipChoiceBoxDisableProp = new SimpleBooleanProperty();
 
     private final LoadConfigService loadConfigService = new LoadConfigService();
     private final ValidationSupport validationSupport = new ValidationSupport();
 
-    private final FreeBoxHttpServer httpServer = Context.INSTANCE.getHttpServer();
+    private final FreeBoxHttpServerHolder httpServer = Context.INSTANCE.getHttpServer();
+    private final FreeBoxWebSocketServerHolder wsServer = Context.INSTANCE.getWsServer();
 
     @FXML
     private void initialize() {
@@ -80,11 +104,11 @@ public class SettingsController {
     private void putDataInForm(
             Collection<Pair<NetworkInterface, String>> networkInterfaceAndIps
     ) {
-        putDataInHttpIpChoiceBox(networkInterfaceAndIps);
+        putDataInIpChoiceBox(networkInterfaceAndIps);
         putDataInOtherComponent();
     }
 
-    private void putDataInHttpIpChoiceBox(
+    private void putDataInIpChoiceBox(
             Collection<Pair<NetworkInterface, String>> networkInterfaceAndIps
     ) {
         ObservableList<Pair<NetworkInterface, String>> items;
@@ -96,20 +120,25 @@ public class SettingsController {
             return;
         }
         items = httpIpChoiceBox.getItems();
+        wsIpChoiceBox.setItems(items);
         items.clear();
         items.addAll(networkInterfaceAndIps);
         configIP = ConfigHelper.getServiceIPv4();
         if (StringUtils.isBlank(configIP)) {
             // 如果没有找到 网卡-IP 配置，填充可用列表中的第一个
-            httpIpChoiceBox.setValue(items.get(0));
+            ipValueProp.setValue(items.get(0));
         } else {
             // 如果配置了 网卡-IP，尝试填充
             for (Pair<NetworkInterface, String> item : items) {
                 if (Objects.equals(item.getRight(), configIP)) {
-                    httpIpChoiceBox.setValue(item);
-                    break;
+                    ipValueProp.setValue(item);
+
+                    return;
                 }
             }
+            // 网络环境发生了改变，自动填充第一个配置，并标记配置更新
+            ipValueProp.setValue(items.get(0));
+            ConfigHelper.markToUpdate();
         }
     }
 
@@ -119,13 +148,28 @@ public class SettingsController {
         if (configPort != null) {
             httpPortTextField.setText(configPort.toString());
         }
+        configPort = ConfigHelper.getWsPort();
+        if (configPort != null) {
+            wsPortTextField.setText(configPort.toString());
+        }
         httpAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartHttp()));
+        wsAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartWs()));
     }
 
     private void setupComponent() {
+        // 注册表单验证器
         validationSupport.registerValidator(httpPortTextField, PortValidator.getInstance());
-        httpPortTextField.textProperty().addListener((ob, oldVal, newVal) -> onHttpPortTextFieldChange());
+        validationSupport.registerValidator(wsPortTextField, PortValidator.getInstance());
 
+        // 表单数据监听与绑定
+        httpPortTextField.textProperty().addListener((ob, oldVal, newVal) -> onHttpPortTextFieldChange());
+        wsPortTextField.textProperty().addListener((ob, oldVal, newVal) -> onWsPortTextFieldChange());
+        httpIpChoiceBox.valueProperty().bindBidirectional(ipValueProp);
+        wsIpChoiceBox.valueProperty().bindBidirectional(ipValueProp);
+        httpIpChoiceBox.disableProperty().bind(ipChoiceBoxDisableProp);
+        wsIpChoiceBox.disableProperty().bind(ipChoiceBoxDisableProp);
+
+        // 服务状态显示
         if (httpServer.isRunning()) {
             httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
             httpServiceStatusFontIcon.setIconColor(Color.GREEN);
@@ -136,21 +180,46 @@ public class SettingsController {
             httpServiceStatusFontIcon.setIconColor(Color.GRAY);
             httpServiceStopBtn.setDisable(true);
         }
+        if (wsServer.isRunning()) {
+            wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
+            wsServiceStatusFontIcon.setIconColor(Color.GREEN);
+            wsServiceStartBtn.setDisable(true);
+            disableWsServiceForm();
+        } else {
+            wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
+            wsServiceStatusFontIcon.setIconColor(Color.GRAY);
+            wsServiceStopBtn.setDisable(true);
+        }
     }
 
     private void disableHttpServiceForm() {
-        httpIpChoiceBox.setDisable(true);
+        ipChoiceBoxDisableProp.set(true);
         httpAutoStartCheckBox.setDisable(true);
         httpPortTextField.setDisable(true);
     }
 
     private void enableHttpServiceForm() {
-        httpIpChoiceBox.setDisable(false);
+        if (!wsServer.isRunning()) {
+            ipChoiceBoxDisableProp.set(false);
+        }
         httpAutoStartCheckBox.setDisable(false);
         httpPortTextField.setDisable(false);
     }
 
-    @FXML
+    private void disableWsServiceForm() {
+        ipChoiceBoxDisableProp.set(true);
+        wsAutoStartCheckBox.setDisable(true);
+        wsPortTextField.setDisable(true);
+    }
+
+    private void enableWsServiceForm() {
+        if (!httpServer.isRunning()) {
+            ipChoiceBoxDisableProp.set(false);
+        }
+        wsAutoStartCheckBox.setDisable(false);
+        wsPortTextField.setDisable(false);
+    }
+
     private void onHttpPortTextFieldChange() {
         // 延迟执行，等待Validator验证结束
         Platform.runLater(() -> {
@@ -184,8 +253,11 @@ public class SettingsController {
     }
 
     @FXML
-    private void onHttpIpChoiceBoxAction() {
-        Pair<NetworkInterface, String> value = httpIpChoiceBox.getValue();
+    @SuppressWarnings("unchecked")
+    private void onIpChoiceBoxAction(ActionEvent event) {
+        ChoiceBox<Pair<NetworkInterface, String>> ipChoiceBox =
+                (ChoiceBox<Pair<NetworkInterface, String>>) event.getTarget();
+        Pair<NetworkInterface, String> value = ipChoiceBox.getValue();
         String newIP;
 
         if (value == null) {
@@ -248,5 +320,72 @@ public class SettingsController {
     private void disableHttpServiceBtn() {
         httpServiceStartBtn.setDisable(true);
         httpServiceStopBtn.setDisable(true);
+    }
+
+    @FXML
+    private void onWsAutoStartCheckBoxAction() {
+        boolean autoStartWs = wsAutoStartCheckBox.isSelected();
+
+        if (Objects.equals(ConfigHelper.getAutoStartWs(), autoStartWs)) {
+            return;
+        }
+        ConfigHelper.setAutoStartWs(autoStartWs);
+        ConfigHelper.markToUpdate();
+    }
+
+    private void onWsPortTextFieldChange() {
+        Platform.runLater(() -> {
+            int newPort;
+
+            if (!ValidationHelper.validate(validationSupport, wsPortTextField)) {
+                return;
+            }
+            newPort = Integer.parseInt(wsPortTextField.getText());
+            if (Objects.equals(ConfigHelper.getWsPort(), newPort)) {
+                return;
+            }
+            ConfigHelper.setWsPort(newPort);
+            ConfigHelper.markToUpdate();
+        });
+    }
+
+    @FXML
+    private void onWsServiceStartBtnAction() {
+        Integer wsPort = ConfigHelper.getWsPort();
+
+        disableWsServiceBtn();
+        if (NetworkUtil.isPortUsing(wsPort)) {
+            ToastHelper.showError(String.format(
+                    I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
+                    wsPort
+            ));
+            wsServiceStartBtn.setDisable(false);
+
+            return;
+        }
+        ConfigHelper.checkAndSave();
+        wsServer.start(ConfigHelper.getServiceIPv4(), wsPort);
+        wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
+        wsServiceStatusFontIcon.setIconColor(Color.GREEN);
+        wsServiceStopBtn.setDisable(false);
+        disableWsServiceForm();
+        ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_WS_SERVICE_UP);
+    }
+
+    @FXML
+    private void onWsServiceStopBtnAction() {
+        disableWsServiceBtn();
+        wsServer.stop(() -> {
+            wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
+            wsServiceStatusFontIcon.setIconColor(Color.GRAY);
+            wsServiceStartBtn.setDisable(false);
+            enableWsServiceForm();
+            ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_WS_SERVICE_DOWN);
+        });
+    }
+
+    private void disableWsServiceBtn() {
+        wsServiceStartBtn.setDisable(true);
+        wsServiceStopBtn.setDisable(true);
     }
 }

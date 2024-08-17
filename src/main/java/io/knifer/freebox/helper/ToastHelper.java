@@ -51,6 +51,19 @@ public class ToastHelper {
                 .show();
     }
 
+    public void showInfoI18n(String i18nKey) {
+        showInfo(I18nHelper.get(i18nKey));
+    }
+
+    public void showInfo(String infoMessage) {
+        Notifications.create()
+                .position(Pos.TOP_CENTER)
+                .text(infoMessage)
+                .graphic(FontIcon.of(FontAwesome.INFO_CIRCLE, 32, Color.DODGERBLUE))
+                .hideAfter(Duration.seconds(2))
+                .show();
+    }
+
     public void showException(Throwable e) {
         ExceptionDialog dialog = new ExceptionDialog(e);
 

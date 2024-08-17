@@ -2,6 +2,7 @@ package io.knifer.freebox.net.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.model.common.PairingInfo;
 import io.knifer.freebox.util.GsonUtil;
 
@@ -22,7 +23,7 @@ public class FreeBoxHttpHandler implements HttpHandler {
         if (canHandle(exchange)) {
             out = exchange.getResponseBody();
             respData = GsonUtil.toJson(
-                    PairingInfo.from("192.168.0.13", 9898)
+                    PairingInfo.from(ConfigHelper.getServiceIPv4(), ConfigHelper.getWsPort())
             ).getBytes();
             exchange.sendResponseHeaders(200, respData.length);
             out.write(respData);

@@ -20,7 +20,7 @@
                <content>
                   <StackPane prefHeight="400.0" prefWidth="600.0">
                      <ProgressIndicator fx:id="loadingProgressIndicator" />
-                     <HBox fx:id="networkAndServiceHBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+                     <HBox fx:id="networkAndServiceHBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" visible="false">
                         <children>
                            <BorderPane prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS">
                               <top>

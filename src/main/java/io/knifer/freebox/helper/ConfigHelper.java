@@ -22,11 +22,11 @@ public class ConfigHelper {
 
     private static final Path CONFIG_PATH = Path.of("config", "config.json");
 
-    private static Config config;
+    private volatile static Config config;
 
     private static final AtomicBoolean updateFlag = new AtomicBoolean(false);
 
-    public void setServiceIPv4(String serviceIPv4) {
+    public synchronized void setServiceIPv4(String serviceIPv4) {
         assertIfConfigLoaded();
         config.setServiceIPv4(serviceIPv4);
     }
@@ -37,7 +37,7 @@ public class ConfigHelper {
         return config.getServiceIPv4();
     }
 
-    public void setHttpPort(Integer httpPort) {
+    public synchronized void setHttpPort(Integer httpPort) {
         assertIfConfigLoaded();
         config.setHttpPort(httpPort);
     }
@@ -48,7 +48,7 @@ public class ConfigHelper {
         return config.getHttpPort();
     }
 
-    public void setAutoStartHttp(Boolean autoStartHttp) {
+    public synchronized void setAutoStartHttp(Boolean autoStartHttp) {
         assertIfConfigLoaded();
         config.setAutoStartHttp(autoStartHttp);
     }
@@ -59,7 +59,7 @@ public class ConfigHelper {
         return config.getAutoStartHttp();
     }
 
-    public void setAutoStartWs(Boolean autoStartWs) {
+    public synchronized void setAutoStartWs(Boolean autoStartWs) {
         assertIfConfigLoaded();
         config.setAutoStartWs(autoStartWs);
     }
@@ -70,7 +70,7 @@ public class ConfigHelper {
         return config.getAutoStartWs();
     }
 
-    public void setWsPort(Integer wsPort) {
+    public synchronized void setWsPort(Integer wsPort) {
         assertIfConfigLoaded();
         config.setWsPort(wsPort);
     }
@@ -145,7 +145,7 @@ public class ConfigHelper {
     /**
      * 立即保存配置
      */
-    public void saveAnyWay() {
+    public synchronized void saveAnyWay() {
         updateFlag.set(false);
         new SaveConfigService(config).start();
     }

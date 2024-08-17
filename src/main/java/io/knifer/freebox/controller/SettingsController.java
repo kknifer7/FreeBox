@@ -6,9 +6,9 @@ import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.net.http.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.FreeBoxWebSocketServerHolder;
+import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
-import io.knifer.freebox.util.NetworkUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -171,23 +171,35 @@ public class SettingsController {
 
         // 服务状态显示
         if (httpServer.isRunning()) {
-            httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
-            httpServiceStatusFontIcon.setIconColor(Color.GREEN);
+            showServiceStatus(
+                    httpServiceStatusLabel,
+                    httpServiceStatusFontIcon,
+                    Color.GREEN
+            );
             httpServiceStartBtn.setDisable(true);
             disableHttpServiceForm();
         } else {
-            httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
-            httpServiceStatusFontIcon.setIconColor(Color.GRAY);
+            showServiceStatus(
+                    httpServiceStatusLabel,
+                    httpServiceStatusFontIcon,
+                    Color.GRAY
+            );
             httpServiceStopBtn.setDisable(true);
         }
         if (wsServer.isRunning()) {
-            wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
-            wsServiceStatusFontIcon.setIconColor(Color.GREEN);
+            showServiceStatus(
+                    wsServiceStatusLabel,
+                    wsServiceStatusFontIcon,
+                    Color.GREEN
+            );
             wsServiceStartBtn.setDisable(true);
             disableWsServiceForm();
         } else {
-            wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
-            wsServiceStatusFontIcon.setIconColor(Color.GRAY);
+            showServiceStatus(
+                    wsServiceStatusLabel,
+                    wsServiceStatusFontIcon,
+                    Color.GRAY
+            );
             wsServiceStopBtn.setDisable(true);
         }
     }
@@ -285,32 +297,53 @@ public class SettingsController {
     @FXML
     public void onHttpServiceStartBtnAction() {
         Integer httpPort = ConfigHelper.getHttpPort();
+        String ip = ConfigHelper.getServiceIPv4();
+        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(ip, httpPort);
 
         disableHttpServiceBtn();
-        if (NetworkUtil.isPortUsing(httpPort)) {
-            ToastHelper.showError(String.format(
-                    I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
-                    httpPort
-            ));
-            httpServiceStartBtn.setDisable(false);
-
-            return;
-        }
-        ConfigHelper.checkAndSave();
-        httpServer.start(ConfigHelper.getServiceIPv4(), httpPort);
-        httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
-        httpServiceStatusFontIcon.setIconColor(Color.GREEN);
-        httpServiceStopBtn.setDisable(false);
         disableHttpServiceForm();
-        ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_HTTP_SERVICE_UP);
+        showServiceStatus(
+                httpServiceStatusLabel,
+                httpServiceStatusFontIcon,
+                Color.ORANGE
+        );
+        checkPortUsingService.setOnSucceeded(evt -> {
+            if (checkPortUsingService.getValue()) {
+                ToastHelper.showError(String.format(
+                        I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
+                        httpPort
+                ));
+                showServiceStatus(
+                        httpServiceStatusLabel,
+                        httpServiceStatusFontIcon,
+                        Color.GRAY
+                );
+                httpServiceStartBtn.setDisable(false);
+                enableHttpServiceForm();
+            } else {
+                ConfigHelper.checkAndSave();
+                httpServer.start(ip, httpPort);
+                showServiceStatus(
+                        httpServiceStatusLabel,
+                        httpServiceStatusFontIcon,
+                        Color.GREEN
+                );
+                httpServiceStopBtn.setDisable(false);
+                ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_HTTP_SERVICE_UP);
+            }
+        });
+        checkPortUsingService.start();
     }
 
     @FXML
     public void onHttpServiceStopBtnAction() {
         disableHttpServiceBtn();
         httpServer.stop(() -> {
-            httpServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
-            httpServiceStatusFontIcon.setIconColor(Color.GRAY);
+            showServiceStatus(
+                    httpServiceStatusLabel,
+                    httpServiceStatusFontIcon,
+                    Color.GRAY
+            );
             httpServiceStartBtn.setDisable(false);
             enableHttpServiceForm();
             ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_HTTP_SERVICE_DOWN);
@@ -352,32 +385,68 @@ public class SettingsController {
     @FXML
     private void onWsServiceStartBtnAction() {
         Integer wsPort = ConfigHelper.getWsPort();
+        String ip = ConfigHelper.getServiceIPv4();
+        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(ip, wsPort);
 
         disableWsServiceBtn();
-        if (NetworkUtil.isPortUsing(wsPort)) {
-            ToastHelper.showError(String.format(
-                    I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
-                    wsPort
-            ));
-            wsServiceStartBtn.setDisable(false);
-
-            return;
-        }
-        ConfigHelper.checkAndSave();
-        wsServer.start(ConfigHelper.getServiceIPv4(), wsPort);
-        wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
-        wsServiceStatusFontIcon.setIconColor(Color.GREEN);
-        wsServiceStopBtn.setDisable(false);
         disableWsServiceForm();
-        ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_WS_SERVICE_UP);
+        showServiceStatus(
+                wsServiceStatusLabel,
+                wsServiceStatusFontIcon,
+                Color.ORANGE
+        );
+        checkPortUsingService.setOnSucceeded(evt -> {
+            if (checkPortUsingService.getValue()) {
+                ToastHelper.showError(String.format(
+                        I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
+                        wsPort
+                ));
+                showServiceStatus(
+                        wsServiceStatusLabel,
+                        wsServiceStatusFontIcon,
+                        Color.GRAY
+                );
+                wsServiceStartBtn.setDisable(false);
+                enableWsServiceForm();
+            } else {
+                ConfigHelper.checkAndSave();
+                wsServer.start(ip, wsPort);
+                showServiceStatus(
+                        wsServiceStatusLabel,
+                        wsServiceStatusFontIcon,
+                        Color.GREEN
+                );
+                wsServiceStopBtn.setDisable(false);
+                ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_WS_SERVICE_UP);
+            }
+        });
+        checkPortUsingService.start();
+    }
+
+    private void showServiceStatus(
+            Label label,
+            FontIcon icon,
+            Color color
+    ) {
+        if (color == Color.GREEN) {
+            label.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP));
+        } else if (color == Color.ORANGE) {
+            label.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_STARTING));
+        } else if (color == Color.GRAY) {
+            label.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
+        }
+        icon.setIconColor(color);
     }
 
     @FXML
     private void onWsServiceStopBtnAction() {
         disableWsServiceBtn();
         wsServer.stop(() -> {
-            wsServiceStatusLabel.setText(I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN));
-            wsServiceStatusFontIcon.setIconColor(Color.GRAY);
+            showServiceStatus(
+                    wsServiceStatusLabel,
+                    wsServiceStatusFontIcon,
+                    Color.GRAY
+            );
             wsServiceStartBtn.setDisable(false);
             enableWsServiceForm();
             ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_WS_SERVICE_DOWN);

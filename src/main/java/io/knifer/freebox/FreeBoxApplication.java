@@ -1,5 +1,6 @@
 package io.knifer.freebox;
 
+import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.net.http.FreeBoxHttpServerHolder;
@@ -29,7 +30,12 @@ public class FreeBoxApplication extends Application {
         stage.show();
 
         // 初始化上下文
-        Context.INSTANCE.init(this, new FreeBoxHttpServerHolder(), new FreeBoxWebSocketServerHolder());
+        Context.INSTANCE.init(
+                this,
+                new FreeBoxHttpServerHolder(),
+                new FreeBoxWebSocketServerHolder(),
+                () -> Context.INSTANCE.postEvent(AppEvents.APP_INITIALIZED)
+        );
     }
 
     @Override

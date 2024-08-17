@@ -101,12 +101,12 @@ public class NetworkUtil {
         return joiner.toString().toUpperCase();
     }
 
-    public boolean isPortUsing(int port) {
+    public boolean isPortUsing(String hostname, int port) {
         boolean flag = false;
         InetAddress address = null;
 
         try {
-            address = InetAddress.getByName("127.0.0.1");
+            address = InetAddress.getByName(hostname);
         } catch (UnknownHostException ignored) {}
         try (Socket ignored1 = new Socket(address, port)){
             flag = true;

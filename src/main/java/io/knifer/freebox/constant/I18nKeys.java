@@ -18,6 +18,7 @@ public class I18nKeys {
     public static final String SETTINGS_INVALID_PORT_MESSAGE = "settings.invalid-port-message";
     public static final String SETTINGS_SERVICE_UP = "settings.service-up";
     public static final String SETTINGS_SERVICE_DOWN = "settings.service-down";
+    public static final String SETTINGS_SERVICE_STARTING = "settings.service-starting";
     public static final String SETTINGS_PORT_IN_USE = "settings.port-in-use";
     public static final String SETTINGS_HTTP_SERVICE_UP = "settings.http.service-up";
     public static final String SETTINGS_HTTP_SERVICE_DOWN = "settings.http.service-down";

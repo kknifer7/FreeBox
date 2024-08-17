@@ -18,6 +18,7 @@ module io.knifer.freebox {
     exports io.knifer.freebox;
     exports io.knifer.freebox.controller;
     exports io.knifer.freebox.component.converter;
+    exports io.knifer.freebox.component.event;
     opens io.knifer.freebox to javafx.fxml;
     opens io.knifer.freebox.controller to javafx.fxml;
     opens io.knifer.freebox.model.domain to com.google.gson;

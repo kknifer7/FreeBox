@@ -1,5 +1,6 @@
 package io.knifer.freebox.constant;
 
+import io.knifer.freebox.model.domain.ClientInfo;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -15,4 +16,8 @@ public class AppEvents {
     public interface Event {}
 
     public static final class AppInitializedEvent implements Event {}
+
+    public record ClientRegisteredEvent(ClientInfo clientInfo) implements Event {}
+
+    public record ClientUnregisteredEvent(ClientInfo clientInfo) implements Event {}
 }

@@ -1,6 +1,7 @@
 package io.knifer.freebox;
 
 import io.knifer.freebox.constant.AppEvents;
+import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import javafx.application.Application;
@@ -25,6 +26,7 @@ public class FreeBoxApplication extends Application {
 
         stage.setTitle("FreeBox");
         stage.setScene(scene);
+        stage.getIcons().add(BaseResources.LOGO);
         stage.show();
 
         // 初始化上下文

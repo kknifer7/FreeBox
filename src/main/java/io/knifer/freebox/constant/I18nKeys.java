@@ -12,6 +12,9 @@ public class I18nKeys {
 
     public static final String INIT_IP_CHANGED_MESSAGE = "init.ip-changed-message";
 
+    public static final String MESSAGE_CLIENT_REGISTERED = "message.client-registered";
+    public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";
+
     public static final String SETTINGS = "settings";
     public static final String SETTINGS_SAVED = "settings.saved";
     public static final String SETTINGS_FORM_HINT_NO_AVAILABLE_IP = "settings.no-available-ip";

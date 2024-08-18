@@ -1,5 +1,6 @@
 package io.knifer.freebox.helper;
 
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -29,6 +30,12 @@ public class ToastHelper {
         showSuccess(I18nHelper.get(i18nKey));
     }
 
+    public void showSuccessI18n(String i18nKey, Object... formatArgs) {
+        showSuccess(String.format(
+                I18nHelper.get(i18nKey), formatArgs
+        ));
+    }
+
     public void showSuccess(String successMessage) {
         Notifications.create()
                 .position(Pos.TOP_CENTER)
@@ -53,6 +60,12 @@ public class ToastHelper {
 
     public void showInfoI18n(String i18nKey) {
         showInfo(I18nHelper.get(i18nKey));
+    }
+
+    public void showInfoI18n(String i18nKey, Object... formatArgs) {
+        showInfo(String.format(
+                I18nHelper.get(i18nKey), formatArgs
+        ));
     }
 
     public void showInfo(String infoMessage) {
@@ -97,7 +110,7 @@ public class ToastHelper {
         reportBtn = new Button(I18nHelper.get(I18nKeys.ERROR_REPORT));
         reportBtn.setGraphic(FontIcon.of(FontAwesome.GITHUB, 16));
         reportBtn.setOnAction(event ->
-                HostServiceHelper.showDocument("https://github.com/kknifer7/FreeBox/issues/new")
+                HostServiceHelper.showDocument(BaseValues.REPOSITORY_NEW_ISSUE_URL)
         );
         buttons.add(reportBtn);
     }

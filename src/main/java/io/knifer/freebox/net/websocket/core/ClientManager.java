@@ -4,6 +4,7 @@ import io.knifer.freebox.model.domain.ClientInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,8 +24,12 @@ public class ClientManager {
         log.info("register client: {}", clientInfo);
     }
 
-    public void unregister(WebSocket connection) {
-        clients.remove(connection.getRemoteSocketAddress().getHostName());
+    public ClientInfo unregister(WebSocket connection) {
+        if (connection.isOpen()) {
+            connection.close();
+        }
+
+        return clients.remove(connection.getRemoteSocketAddress().getHostName());
     }
 
     public Optional<ClientInfo> getClientInfo(WebSocket connection) {
@@ -33,5 +38,9 @@ public class ClientManager {
 
     public boolean isRegistered(WebSocket connection) {
         return clients.containsKey(connection.getRemoteSocketAddress().getHostName());
+    }
+
+    public Collection<ClientInfo> getClients() {
+        return clients.values();
     }
 }

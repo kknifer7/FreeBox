@@ -1,7 +1,13 @@
 package io.knifer.freebox.net.websocket.server;
 
+import io.knifer.freebox.constant.AppEvents;
+import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.context.Context;
+import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketMessageDispatcher;
+import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.java_websocket.WebSocket;
@@ -28,6 +34,10 @@ public class KebSocketServer extends WebSocketServer {
 		super(address);
 	}
 
+	public ClientManager getClientManager() {
+		return clientManager;
+	}
+
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake) {
 		log.info("new connection to {}: {}", conn.getRemoteSocketAddress(), handshake.getResourceDescriptor());
@@ -35,11 +45,19 @@ public class KebSocketServer extends WebSocketServer {
 
 	@Override
 	public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+		ClientInfo clientInfo = clientManager.unregister(conn);
+
 		log.info(
 				"closed {} with exit code {}, additional info: {}",
 				conn.getRemoteSocketAddress(), code, StringUtils.isBlank(reason) ? "-" : reason
 		);
-		clientManager.unregister(conn);
+		if (clientInfo == null) {
+			return;
+		}
+		Platform.runLater(() -> {
+			Context.INSTANCE.postEvent(new AppEvents.ClientUnregisteredEvent(clientInfo));
+			ToastHelper.showInfoI18n(I18nKeys.MESSAGE_CLIENT_UNREGISTERED, conn.getRemoteSocketAddress().getHostName());
+		});
 	}
 
 	@Override

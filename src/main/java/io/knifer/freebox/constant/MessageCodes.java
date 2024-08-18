@@ -11,4 +11,8 @@ import lombok.experimental.UtilityClass;
 public class MessageCodes {
 
     public static final int REGISTER = 100;
+
+    public static final int GET_SITES = 201;
+
+    public static final int GET_SITES_RESULT = 202;
 }

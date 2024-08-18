@@ -20,10 +20,12 @@ module io.knifer.freebox {
     exports io.knifer.freebox.controller;
     exports io.knifer.freebox.component.converter;
     exports io.knifer.freebox.component.event;
+    exports io.knifer.freebox.model.domain;
     opens io.knifer.freebox to javafx.fxml;
     opens io.knifer.freebox.controller to javafx.fxml;
     opens io.knifer.freebox.model.domain to com.google.gson;
     opens io.knifer.freebox.model.common to com.google.gson;
     opens io.knifer.freebox.model.c2s to com.google.gson;
     opens io.knifer.freebox.model.s2c to com.google.gson;
+    exports io.knifer.freebox.component.factory;
 }

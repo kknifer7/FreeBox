@@ -1,17 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 <?import org.kordamp.ikonli.javafx.*?>
+<?import io.knifer.freebox.component.factory.ClientInfoListCellFactory?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.HomeController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/home-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.HomeController">
+    <fx:define>
+        <ClientInfoListCellFactory fx:id="clientInfoListCellFactory"/>
+    </fx:define>
+
    <center>
-      <ProgressIndicator fx:id="initProgressIndicator" BorderPane.alignment="CENTER" />
+      <StackPane BorderPane.alignment="CENTER">
+         <children>
+            <BorderPane fx:id="root" disable="true" prefHeight="200.0" prefWidth="200.0">
+                <padding>
+                    <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+                </padding>
+               <left>
+                  <VBox alignment="CENTER" spacing="15.0" BorderPane.alignment="CENTER">
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <children>
+                        <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@/image/welcome.png" />
+                           </image></ImageView>
+                        <Label text="%home.welcome">
+                           <font>
+                              <Font size="20.0" />
+                           </font></Label>
+                         <Label text="%home.description" textFill="gray" wrapText="true">
+                             <font>
+                                 <Font size="15.0" />
+                             </font>
+                         </Label>
+                         <Label text="%home.version-info" textFill="blue" />
+                        <Hyperlink onAction="#onFreeBoxRepositoryHyperLinkClick" text="%home.repository" />
+                        <Hyperlink onAction="#onTvBoxKRepositoryHyperLinkClick" text="%home.tv-box-k-repository" />
+                     </children>
+                  </VBox>
+               </left>
+               <center>
+                  <VBox alignment="CENTER" BorderPane.alignment="CENTER">
+                     <children>
+                        <ListView fx:id="clientListView" prefHeight="200.0" prefWidth="200.0" cellFactory="$clientInfoListCellFactory" />
+                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                           <children>
+                              <Label>
+                                  <graphic>
+                                      <FontIcon iconLiteral="fa-question-circle:20:#1E90FF"/>
+                                  </graphic>
+                                  <tooltip>
+                                      <Tooltip showDelay="200ms" showDuration="1m" text="%home.client-list-help">
+                                          <font>
+                                              <Font size="14" />
+                                          </font>
+                                      </Tooltip>
+                                  </tooltip>
+                              </Label>
+                              <Button mnemonicParsing="false" text="%home.client-list-choose">
+                                  <graphic>
+                                      <FontIcon iconLiteral="fa-arrow-right:16:green" />
+                                  </graphic>
+                              </Button>
+                              <Button mnemonicParsing="false" onAction="#onExitBtnClick" text="%home.exit">
+                                  <graphic>
+                                      <FontIcon iconLiteral="fa-power-off:16:red" />
+                                  </graphic>
+                              </Button>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </center>
+            </BorderPane>
+            <ProgressIndicator fx:id="initProgressIndicator" />
+         </children>
+      </StackPane>
    </center>
     <bottom>
         <ToolBar prefHeight="40.0" prefWidth="200.0">
             <items>
-                <Button disable="true" fx:id="settingsBtn" focusTraversable="false" mnemonicParsing="false" onAction="#onSettingsBtnClick" prefHeight="30" prefWidth="30">
+                <Button fx:id="settingsBtn" disable="true" focusTraversable="false" mnemonicParsing="false" onAction="#onSettingsBtnClick" prefHeight="30" prefWidth="30">
                     <graphic>
                         <FontIcon iconLiteral="fa-gears:16" />
                     </graphic>

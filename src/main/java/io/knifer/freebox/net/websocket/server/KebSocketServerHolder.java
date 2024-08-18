@@ -1,5 +1,6 @@
 package io.knifer.freebox.net.websocket.server;
 
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.ShutdownWebSocketServerService;
 import javafx.concurrent.Service;
 
@@ -43,5 +44,9 @@ public class KebSocketServerHolder {
 
     public boolean isRunning() {
         return server != null;
+    }
+
+    public ClientManager getClientManager() {
+        return server.getClientManager();
     }
 }

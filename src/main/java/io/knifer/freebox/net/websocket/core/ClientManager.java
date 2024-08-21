@@ -24,6 +24,10 @@ public class ClientManager {
         log.info("register client: {}", clientInfo);
     }
 
+    public ClientInfo unregister(ClientInfo clientInfo) {
+        return unregister(clientInfo.getConnection());
+    }
+
     public ClientInfo unregister(WebSocket connection) {
         if (connection.isOpen()) {
             connection.close();

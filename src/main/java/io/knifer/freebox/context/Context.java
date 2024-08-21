@@ -11,6 +11,7 @@ import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
 import javafx.application.Application;
 import javafx.concurrent.Service;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,6 +27,8 @@ public enum Context {
 
     private Application app;
 
+    private Stage primaryStage;
+
     private final ServiceManager serviceManager = new ServiceManager();
 
     private volatile boolean initFlag = false;
@@ -39,17 +42,26 @@ public enum Context {
     });
 
     public Application getApp() {
-        if (app == null) {
+        if (!initFlag) {
             throw new IllegalStateException("application has not started yet");
         }
 
         return app;
     }
 
-    public void init(Application app, Runnable callback) {
+    public Stage getPrimaryStage() {
+        if (!initFlag) {
+            throw new IllegalStateException("application has not started yet");
+        }
+
+        return primaryStage;
+    }
+
+    public void init(Application app, Stage primaryStage, Runnable callback) {
         Service<Void> loadConfigService = new LoadConfigService();
 
         this.app = app;
+        this.primaryStage = primaryStage;
         loadConfigService.setOnSucceeded(evt -> {
             serviceManager.init(callback);
             log.info("application initialized");

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
+<?import io.knifer.freebox.component.factory.ClientInfoListCellFactory?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <?import org.kordamp.ikonli.javafx.*?>
-<?import io.knifer.freebox.component.factory.ClientInfoListCellFactory?>
-
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/home-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.HomeController">
     <fx:define>
-        <ClientInfoListCellFactory fx:id="clientInfoListCellFactory"/>
+        <ClientInfoListCellFactory fx:id="clientInfoListCellFactory" />
     </fx:define>
 
    <center>
@@ -22,9 +22,6 @@
                 </padding>
                <left>
                   <VBox alignment="CENTER" spacing="15.0" BorderPane.alignment="CENTER">
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
                      <children>
                         <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -48,12 +45,28 @@
                <center>
                   <VBox alignment="CENTER" BorderPane.alignment="CENTER">
                      <children>
-                        <ListView fx:id="clientListView" prefHeight="200.0" prefWidth="200.0" cellFactory="$clientInfoListCellFactory" />
+                        <VBox alignment="TOP_CENTER">
+                           <children>
+                              <TextFlow lineSpacing="5.0" textAlignment="CENTER">
+                                 <children>
+                                    <Text fx:id="settingsInfoText" fill="gray" strokeType="OUTSIDE" strokeWidth="0.0">
+                                       <font>
+                                          <Font size="16.0" />
+                                       </font>
+                                    </Text>
+                                 </children>
+                              </TextFlow>
+                           </children>
+                           <VBox.margin>
+                              <Insets bottom="40.0" />
+                           </VBox.margin>
+                        </VBox>
+                        <ListView cellFactory="$clientInfoListCellFactory" fx:id="clientListView" prefHeight="200.0" prefWidth="200.0" />
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                            <children>
                               <Label>
                                   <graphic>
-                                      <FontIcon iconLiteral="fa-question-circle:20:#1E90FF"/>
+                                      <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
                                   </graphic>
                                   <tooltip>
                                       <Tooltip showDelay="200ms" showDuration="1m" text="%home.client-list-help">
@@ -63,11 +76,16 @@
                                       </Tooltip>
                                   </tooltip>
                               </Label>
-                              <Button mnemonicParsing="false" text="%home.client-list-choose">
+                              <Button mnemonicParsing="false" onAction="#onClientListChooseBtnAction" text="%home.client-list-choose">
                                   <graphic>
                                       <FontIcon iconLiteral="fa-arrow-right:16:green" />
                                   </graphic>
                               </Button>
+                               <Button mnemonicParsing="false" onAction="#onClientListCloseBtnAction" text="%home.client-list-close">
+                                   <graphic>
+                                       <FontIcon iconLiteral="fa-times:16:red" />
+                                   </graphic>
+                               </Button>
                               <Button mnemonicParsing="false" onAction="#onExitBtnClick" text="%home.exit">
                                   <graphic>
                                       <FontIcon iconLiteral="fa-power-off:16:red" />

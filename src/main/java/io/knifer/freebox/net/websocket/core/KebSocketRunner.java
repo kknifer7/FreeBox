@@ -1,5 +1,6 @@
 package io.knifer.freebox.net.websocket.core;
 
+import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.model.common.Message;
 import io.knifer.freebox.util.GsonUtil;
 import lombok.AllArgsConstructor;
@@ -25,7 +26,7 @@ public class KebSocketRunner {
         send(connection, Message.oneWay(code, data, topicId));
     }
 
-    public <T, R> Future<R> sendTopic(WebSocket connection, Integer code, T data, Class<R> resultData) {
+    public <T, R> Future<R> sendTopic(WebSocket connection, Integer code, T data, TypeToken<R> resultData) {
         Message<T> topic = Message.topic(code, data);
 
         send(connection, topic);
@@ -33,7 +34,7 @@ public class KebSocketRunner {
         return topicKeeper.getTopic(topic.getTopicId(), resultData);
     }
 
-    public <T, R> Future<R> sendTopic(WebSocket connection, Integer code, T data, String topicId, Class<R> resultData) {
+    public <T, R> Future<R> sendTopic(WebSocket connection, Integer code, T data, String topicId, TypeToken<R> resultData) {
         Message<T> topic = Message.topic(code, data, topicId);
 
         send(connection, topic);

@@ -10,9 +10,28 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MessageCodes {
 
+    /**
+     * 注册
+     */
     public static final int REGISTER = 100;
 
-    public static final int GET_SITES = 201;
+    /**
+     * 获取源列表
+     */
+    public static final int GET_SOURCE_BEAN_LIST = 201;
 
-    public static final int GET_SITES_RESULT = 202;
+    /**
+     * 获取源列表结果
+     */
+    public static final int GET_SOURCE_BEAN_LIST_RESULT = 202;
+
+    /**
+     * 获取首页信息
+     */
+    public static final int GET_HOME_CONTENT = 203;
+
+    /**
+     * 获取首页信息结果
+     */
+    public static final int GET_HOME_CONTENT_RESULT = 204;
 }

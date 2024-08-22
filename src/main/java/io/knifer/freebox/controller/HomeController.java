@@ -21,6 +21,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 public class HomeController {
@@ -50,6 +51,7 @@ public class HomeController {
             MultipleSelectionModel<ClientInfo> model = clientListView.getSelectionModel();
             ClientInfo clientInfo = evt.clientInfo();
 
+            clientItems.remove(clientInfo);
             clientItems.add(clientInfo);
             if (model.getSelectedItem() == null) {
                 model.select(clientInfo);
@@ -67,7 +69,7 @@ public class HomeController {
 
     @FXML
     private void onSettingsBtnClick() {
-        Stage stage = FXMLUtil.load(Views.SETTINGS);
+        Stage stage = FXMLUtil.load(Views.SETTINGS).getLeft();
 
         stage.initStyle(StageStyle.UTILITY);
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -124,7 +126,7 @@ public class HomeController {
     }
 
     @FXML
-    private void onClientListChooseBtnAction(ActionEvent event) {
+    private void onClientListChooseBtnAction() {
         ClientInfo clientInfo = clientListView.getSelectionModel().getSelectedItem();
 
         if (clientInfo == null || !clientInfo.getConnection().isOpen()) {
@@ -132,13 +134,13 @@ public class HomeController {
         }
         log.info("open client [{}]", clientInfo.getConnection().getRemoteSocketAddress().getHostString());
         openClient(clientInfo);
-        WindowHelper.close(event);
     }
 
     private void openClient(ClientInfo clientInfo) {
-        Stage stage = FXMLUtil.load(Views.TV);
+        Pair<Stage, TVController> stageAndController = FXMLUtil.load(Views.TV);
 
-        stage.show();
+        stageAndController.getRight().setData(clientInfo);
+        stageAndController.getLeft().show();
     }
 
     @FXML

@@ -1,6 +1,7 @@
 package io.knifer.freebox.net.websocket.handler.impl;
 
 import io.knifer.freebox.constant.MessageCodes;
+import io.knifer.freebox.model.common.Message;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.exception.ForbiddenException;
 import io.knifer.freebox.net.websocket.handler.KebSocketMessageHandler;
@@ -15,17 +16,22 @@ import org.java_websocket.WebSocket;
  */
 @Slf4j
 @AllArgsConstructor
-public class ValidationHandler implements KebSocketMessageHandler {
+public class ValidationHandler implements KebSocketMessageHandler<Void> {
 
     private final ClientManager clientManager;
 
     @Override
-    public boolean support(Integer code) {
-        return MessageCodes.REGISTER != code;
+    public boolean support(Message<?> message) {
+        return MessageCodes.REGISTER != message.getCode();
     }
 
     @Override
-    public void handle(String messageData, WebSocket connection) {
+    public Message<Void> resolve(String messageString) {
+        return null;
+    }
+
+    @Override
+    public void handle(Message<Void> message, WebSocket connection) {
         if (!clientManager.isRegistered(connection)) {
             log.warn("ip [{}] not registered", connection.getRemoteSocketAddress().getAddress().getHostAddress());
 

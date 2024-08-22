@@ -1,5 +1,6 @@
 package io.knifer.freebox.net.websocket.handler;
 
+import io.knifer.freebox.model.common.Message;
 import org.java_websocket.WebSocket;
 
 /**
@@ -7,20 +8,27 @@ import org.java_websocket.WebSocket;
  *
  * @author Knifer
  */
-public interface KebSocketMessageHandler {
+public interface KebSocketMessageHandler<T> {
 
     /**
-     * 是否支持指定的消息码
+     * 是否支持指定的消息
      * @see io.knifer.freebox.constant.MessageCodes
-     * @param code 消息码
+     * @param message 消息
      * @return bool
      */
-    boolean support(Integer code);
+    boolean support(Message<?> message);
+
+    /**
+     * 解析Message对象
+     * @param messageString 消息字符串
+     * @return Message对象
+     */
+    Message<T> resolve(String messageString);
 
     /**
      * 处理消息
-     * @param messageData 消息数据
+     * @param message 消息
      * @param connection 客户端连接对象
      */
-    void handle(String messageData, WebSocket connection);
+    void handle(Message<T> message, WebSocket connection);
 }

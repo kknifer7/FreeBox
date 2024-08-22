@@ -7,7 +7,9 @@ import io.knifer.freebox.model.common.Message;
 import io.knifer.freebox.net.websocket.exception.ForbiddenException;
 import io.knifer.freebox.net.websocket.handler.KebSocketMessageHandler;
 import io.knifer.freebox.net.websocket.handler.impl.ClientRegisterHandler;
+import io.knifer.freebox.net.websocket.handler.impl.CommonTopicHandler;
 import io.knifer.freebox.net.websocket.handler.impl.ValidationHandler;
+import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.GsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
@@ -22,28 +24,30 @@ import java.util.List;
 @Slf4j
 public class KebSocketMessageDispatcher {
 
-    private final List<KebSocketMessageHandler> handlers;
+    private final List<KebSocketMessageHandler<?>> handlers;
 
     public KebSocketMessageDispatcher(ClientManager clientManager) {
         handlers = ImmutableList.of(
                 new ValidationHandler(clientManager),
-                new ClientRegisterHandler(clientManager)
+                new ClientRegisterHandler(clientManager),
+                new CommonTopicHandler(KebSocketTopicKeeper.getInstance())
         );
     }
 
     public void dispatch(String message, WebSocket connection) {
-        Message<String> apiResult;
+        Message<Object> msgUnResolved;
+        Message<?> msg;
         Integer code;
 
         try {
-            apiResult = GsonUtil.fromJson(message, new TypeToken<>(){});
+            msgUnResolved = GsonUtil.fromJson(message, new TypeToken<>(){});
         } catch (JsonSyntaxException e) {
             connection.close();
             log.warn("ip [{}] send wrong message, closed", connection.getRemoteSocketAddress().getHostName());
 
             return;
         }
-        code = apiResult.getCode();
+        code = msgUnResolved.getCode();
         if (code == null) {
             connection.close();
             log.warn("ip [{}] send wrong message, closed", connection.getRemoteSocketAddress().getHostName());
@@ -51,9 +55,10 @@ public class KebSocketMessageDispatcher {
             return;
         }
         try {
-            for (KebSocketMessageHandler handler : handlers) {
-                if (handler.support(code)) {
-                    handler.handle(apiResult.getData(), connection);
+            for (KebSocketMessageHandler<?> handler : handlers) {
+                if (handler.support(msgUnResolved)) {
+                    msg = handler.resolve(message);
+                    handler.handle(CastUtil.cast(msg), connection);
                 }
             }
         } catch (ForbiddenException e) {

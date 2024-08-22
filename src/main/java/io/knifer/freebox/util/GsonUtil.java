@@ -31,6 +31,10 @@ public class GsonUtil {
         return gson.fromJson(objectStr, typeToken);
     }
 
+    public <T> T fromJson(JsonElement jsonElement, TypeToken<T> typeToken) {
+        return gson.fromJson(jsonElement, typeToken);
+    }
+
     public JsonElement toJsonTree(Object object) {
         return gson.toJsonTree(object);
     }

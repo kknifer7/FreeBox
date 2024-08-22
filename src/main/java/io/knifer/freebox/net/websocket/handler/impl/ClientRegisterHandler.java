@@ -1,11 +1,13 @@
 package io.knifer.freebox.net.websocket.handler.impl;
 
+import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.c2s.RegisterInfo;
+import io.knifer.freebox.model.common.Message;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.exception.ForbiddenException;
@@ -21,18 +23,23 @@ import org.java_websocket.WebSocket;
  * @author Knifer
  */
 @AllArgsConstructor
-public class ClientRegisterHandler implements KebSocketMessageHandler {
+public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterInfo> {
 
     private final ClientManager clientManager;
 
     @Override
-    public boolean support(Integer code) {
-        return MessageCodes.REGISTER == code;
+    public boolean support(Message<?> message) {
+        return MessageCodes.REGISTER == message.getCode();
     }
 
     @Override
-    public void handle(String messageData, WebSocket connection) {
-        RegisterInfo registerInfo = GsonUtil.fromJson(messageData, RegisterInfo.class);
+    public Message<RegisterInfo> resolve(String messageString) {
+        return GsonUtil.fromJson(messageString, new TypeToken<>(){});
+    }
+
+    @Override
+    public void handle(Message<RegisterInfo> registerInfoMsg, WebSocket connection) {
+        RegisterInfo registerInfo = registerInfoMsg.getData();
         ClientInfo clientInfo;
 
         if (registerInfo == null) {

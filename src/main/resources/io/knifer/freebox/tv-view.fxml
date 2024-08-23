@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.controlsfx.control.*?>
 
 <BorderPane fx:id="root" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/tv-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.TVController">
    <left>
@@ -22,4 +23,15 @@
             </StackPane>
          </center></BorderPane>
    </left>
+   <center>
+      <BorderPane BorderPane.alignment="CENTER">
+         <center>
+            <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <children>
+                  <GridView fx:id="videosGridView" horizontalCellSpacing="50" verticalCellSpacing="75" />
+               </children>
+            </StackPane>
+         </center>
+      </BorderPane>
+   </center>
 </BorderPane>

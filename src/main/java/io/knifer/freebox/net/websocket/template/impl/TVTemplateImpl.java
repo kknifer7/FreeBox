@@ -3,8 +3,10 @@ package io.knifer.freebox.net.websocket.template.impl;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.model.common.AbsSortXml;
+import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
+import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.template.TVTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
@@ -48,6 +50,19 @@ public class TVTemplateImpl implements TVTemplate {
                         MessageCodes.GET_HOME_CONTENT,
                         sourceBean,
                         new TypeToken<AbsSortXml>(){}
+                ),
+                msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
+    @Override
+    public void getCategoryContent(ClientInfo clientInfo, GetCategoryContentDTO dto, Consumer<AbsXml> callback) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.GET_CATEGORY_CONTENT,
+                        dto,
+                        new TypeToken<AbsXml>(){}
                 ),
                 msg -> callback.accept(CastUtil.cast(msg))
         );

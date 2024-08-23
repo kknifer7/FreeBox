@@ -9,6 +9,7 @@ import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
+import io.knifer.freebox.util.AsyncUtil;
 import javafx.application.Application;
 import javafx.concurrent.Service;
 import javafx.stage.Stage;
@@ -88,6 +89,7 @@ public enum Context {
 
     public void destroy() {
         serviceManager.destroy();
+        AsyncUtil.destroy();
     }
 
     public void postEvent(Object object) {

@@ -1,1 +1,12 @@
 @import "../common.css";
+
+.movie-remark-label {
+    -fx-background-color: #32CD32;
+    -fx-text-fill: white;
+    -fx-label-padding: 1px;
+}
+
+.movie-info-overlay {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}

@@ -42,6 +42,8 @@ ext {
             javaWebSocket: '1.5.7',
             slf4jSimple: '2.1.0-alpha1',
             blockingMap: '0.91',
+            vlcjJavaFX: '1.2.0',
+            vlcj: '4.8.3',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]
@@ -57,6 +59,8 @@ dependencies {
     implementation "org.java-websocket:Java-WebSocket:${dv.javaWebSocket}"
     implementation "org.slf4j:slf4j-simple:${dv.slf4jSimple}"
     implementation "com.github.sarveswaran-m:util.concurrent.blockingMap:${dv.blockingMap}"
+    implementation "uk.co.caprica:vlcj:${dv.vlcj}"
+    implementation "uk.co.caprica:vlcj-javafx:${dv.vlcjJavaFX}"
 
     compileOnly "org.projectlombok:lombok:${dv.lombok}"
     annotationProcessor "org.projectlombok:lombok:${dv.lombok}"

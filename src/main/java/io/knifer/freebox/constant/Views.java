@@ -15,4 +15,6 @@ public class Views {
     public static final String SETTINGS = "settings-view.fxml";
 
     public static final String TV = "tv-view.fxml";
+
+    public static final String VIDEO = "video-view.fxml";
 }

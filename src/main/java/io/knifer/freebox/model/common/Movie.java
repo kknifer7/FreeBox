@@ -36,14 +36,17 @@ public class Movie implements Serializable {
         public String sourceKey;
         public String tag;
 
+        @Data
         public static class UrlBean implements Serializable {
             public List<UrlInfo> infoList;
 
+            @Data
             public static class UrlInfo implements Serializable {
                 public String flag;
                 public String urls;
                 public List<InfoBean> beanList;
 
+                @Data
                 public static class InfoBean implements Serializable {
                     public String name;
                     public String url;

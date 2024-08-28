@@ -1,19 +1,26 @@
 package io.knifer.freebox.controller;
 
+import io.knifer.freebox.component.container.VLCPlayer;
 import io.knifer.freebox.component.converter.SourceBean2StringConverter;
 import io.knifer.freebox.component.factory.ClassListCellFactory;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
+import io.knifer.freebox.constant.Views;
+import io.knifer.freebox.context.Context;
+import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.MovieSort;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
+import io.knifer.freebox.model.s2c.GetDetailContentDTO;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.template.TVTemplate;
 import io.knifer.freebox.net.websocket.template.impl.TVTemplateImpl;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
+import io.knifer.freebox.util.FXMLUtil;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -22,7 +29,10 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.GridView;
 
 import java.util.List;
@@ -60,13 +70,58 @@ public class TVController extends BaseController {
     private void initialize() {
         template = new TVTemplateImpl(new KebSocketRunner(KebSocketTopicKeeper.getInstance()));
         Platform.runLater(() -> {
-            root.getScene().getWindow().setOnCloseRequest(evt -> destroy());
+           WindowHelper.getStage(root).setOnCloseRequest(evt -> {
+               Stage homeStage;
+
+               destroy();
+               Context.INSTANCE.popAndShowLastStage();
+           });
 
             // TODO converter写入FXML里
             sourceBeanComboBox.setConverter(new SourceBean2StringConverter());
             classesListView.setCellFactory(new ClassListCellFactory());
             videosGridView.setCellFactory(new VideoGridCellFactory());
 
+            videosGridView.setOnMouseClicked(evt -> {
+                Movie.Video video;
+
+                if (evt.getTarget() instanceof VideoGridCellFactory.VideoGridCell cell) {
+                    if (evt.getClickCount() > 1) {
+                        video = cell.getItem();
+                        template.getDetailContent(
+                                getClientInfo(),
+                                GetDetailContentDTO.of(getCurrentSourceBean().getKey(), video.getId()),
+                                detailContent -> {
+                                    Pair<Stage, VideoController> stageAndController;
+                                    Stage tvStage;
+                                    Stage videoStage;
+
+                                    if (
+                                            detailContent.getMovie()
+                                                    .getVideoList()
+                                                    .stream()
+                                                    .noneMatch(v -> StringUtils.isNotBlank(v.getId()))
+                                    ) {
+                                        // 有的源接口会在影视列表数据中插入广告，因此需要通过影视ID来过滤掉无效的影视
+                                        // 多次点击这样的无效影视会导致客户端断开链接，这是TVBox-K的问题，待解决
+                                        return;
+                                    }
+                                    stageAndController = FXMLUtil.load(Views.VIDEO);
+                                    tvStage = WindowHelper.getStage(root);
+                                    videoStage = stageAndController.getLeft();
+                                    videoStage.setTitle(video.getName());
+                                    stageAndController.getRight().setData(VideoDetailsBO.of(
+                                            detailContent,
+                                            new VLCPlayer((BorderPane) videoStage.getScene().getRoot())
+                                    ));
+                                    Context.INSTANCE.pushStage(tvStage);
+                                    tvStage.hide();
+                                    videoStage.show();
+                                }
+                        );
+                    }
+                }
+            });
             template.getSourceBeanList(getClientInfo(), this::initSourceBeanData);
         });
     }

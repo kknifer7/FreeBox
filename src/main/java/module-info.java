@@ -10,9 +10,13 @@ module io.knifer.freebox {
     requires org.kordamp.ikonli.fontawesome;
     requires com.google.gson;
     requires com.google.common;
+    requires jsr305;
     requires org.apache.commons.lang3;
     requires org.java_websocket;
     requires blockingMap4j;
+    requires uk.co.caprica.vlcj;
+    requires uk.co.caprica.vlcj.javafx;
+    requires uk.co.caprica.vlcj.natives;
 
     requires static lombok;
 

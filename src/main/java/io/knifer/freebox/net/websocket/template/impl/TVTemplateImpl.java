@@ -7,6 +7,7 @@ import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
+import io.knifer.freebox.model.s2c.GetDetailContentDTO;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.template.TVTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
@@ -61,6 +62,19 @@ public class TVTemplateImpl implements TVTemplate {
                 runner.sendTopic(
                         clientInfo.getConnection(),
                         MessageCodes.GET_CATEGORY_CONTENT,
+                        dto,
+                        new TypeToken<AbsXml>(){}
+                ),
+                msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
+    @Override
+    public void getDetailContent(ClientInfo clientInfo, GetDetailContentDTO dto, Consumer<AbsXml> callback) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.GET_DETAIL_CONTENT,
                         dto,
                         new TypeToken<AbsXml>(){}
                 ),

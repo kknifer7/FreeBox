@@ -11,9 +11,13 @@ import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.util.AsyncUtil;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+import java.util.Stack;
 
 /**
  * 全局上下文
@@ -41,6 +45,8 @@ public enum Context {
         }
         ToastHelper.showException(exception);
     });
+
+    private final Stack<Stage> stageStack = new Stack<>();
 
     public Application getApp() {
         if (!initFlag) {
@@ -90,6 +96,9 @@ public enum Context {
     public void destroy() {
         serviceManager.destroy();
         AsyncUtil.destroy();
+        Context.INSTANCE.getPrimaryStage().close();
+        Platform.exit();
+        System.exit(0);
     }
 
     public void postEvent(Object object) {
@@ -102,5 +111,29 @@ public enum Context {
 
     public <T extends AppEvents.Event> void registerEventListener(Class<T> eventClazz, EventListener<T> listener) {
         eventBus.register(listener);
+    }
+
+    public void pushStage(Stage stage) {
+        if (stageStack.contains(stage)) {
+            return;
+        }
+        stageStack.push(stage);
+    }
+
+    public void popAndShowLastStage() {
+        Stage stage = popStage();
+
+        if (stage != null) {
+            stage.show();
+        }
+    }
+
+    @Nullable
+    public Stage popStage() {
+        if (stageStack.isEmpty()) {
+            return null;
+        }
+
+        return stageStack.pop();
     }
 }

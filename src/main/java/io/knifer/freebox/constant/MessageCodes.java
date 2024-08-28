@@ -38,4 +38,12 @@ public class MessageCodes {
      * 获取指定分类信息结果
      */
     public static final int GET_CATEGORY_CONTENT_RESULT = 206;
+    /**
+     * 获取影视详情信息
+     */
+    public static final int GET_DETAIL_CONTENT = 207;
+    /**
+     * 获取影视详情信息结果
+     */
+    public static final int GET_DETAIL_CONTENT_RESULT = 208;
 }

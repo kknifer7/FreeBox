@@ -5,6 +5,7 @@ import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
+import io.knifer.freebox.model.s2c.GetDetailContentDTO;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -38,4 +39,12 @@ public interface TVTemplate {
      * @param callback 回调
      */
     void getCategoryContent(ClientInfo clientInfo, GetCategoryContentDTO dto, Consumer<AbsXml> callback);
+
+    /**
+     * 获取影视详情内容
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     * @param callback 回调
+     */
+    void getDetailContent(ClientInfo clientInfo, GetDetailContentDTO dto, Consumer<AbsXml> callback);
 }

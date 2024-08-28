@@ -23,10 +23,26 @@ public class WindowHelper {
     }
 
     public void close(Node node) {
-        ((Stage) node.getScene().getWindow()).close();
+        getStage(node).close();
+    }
+
+    public void hide(Event event) {
+        if (event.getTarget() instanceof Node n) {
+            hide(n);
+        } else if (event.getSource() instanceof Node n) {
+            hide(n);
+        }
+    }
+
+    public void hide(Node node) {
+        getStage(node).hide();
     }
 
     public <T> T getUserData(Node node) {
-        return CastUtil.cast(node.getScene().getWindow().getUserData());
+        return CastUtil.cast(getStage(node).getUserData());
+    }
+
+    public Stage getStage(Node node) {
+        return CastUtil.cast(node.getScene().getWindow());
     }
 }

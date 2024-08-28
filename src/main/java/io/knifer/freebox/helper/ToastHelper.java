@@ -9,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.DialogPane;
 import javafx.scene.paint.Color;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,8 @@ import org.controlsfx.control.Notifications;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.util.Optional;
 
 /**
  * 提示
@@ -37,12 +40,13 @@ public class ToastHelper {
     }
 
     public void showSuccess(String successMessage) {
-        Notifications.create()
-                .position(Pos.TOP_CENTER)
-                .text(successMessage)
-                .graphic(FontIcon.of(FontAwesome.CHECK_CIRCLE, 32, Color.GREEN))
-                .hideAfter(Duration.seconds(2))
-                .show();
+        createNotification()
+                .ifPresent(n -> n.position(Pos.TOP_CENTER)
+                        .text(successMessage)
+                        .graphic(FontIcon.of(FontAwesome.CHECK_CIRCLE, 32, Color.GREEN))
+                        .hideAfter(Duration.seconds(2))
+                        .show()
+                );
     }
 
     public void showErrorI18n(String i18nKey) {
@@ -50,12 +54,13 @@ public class ToastHelper {
     }
 
     public void showError(String errorMessage) {
-        Notifications.create()
-                .position(Pos.TOP_CENTER)
-                .text(errorMessage)
-                .graphic(FontIcon.of(FontAwesome.EXCLAMATION_TRIANGLE, 32, Color.ORANGERED))
-                .hideAfter(Duration.seconds(2))
-                .show();
+        createNotification()
+                .ifPresent(n -> n.position(Pos.TOP_CENTER)
+                        .text(errorMessage)
+                        .graphic(FontIcon.of(FontAwesome.EXCLAMATION_TRIANGLE, 32, Color.ORANGERED))
+                        .hideAfter(Duration.seconds(2))
+                        .show()
+                );
     }
 
     public void showInfoI18n(String i18nKey) {
@@ -69,12 +74,17 @@ public class ToastHelper {
     }
 
     public void showInfo(String infoMessage) {
-        Notifications.create()
-                .position(Pos.TOP_CENTER)
-                .text(infoMessage)
-                .graphic(FontIcon.of(FontAwesome.INFO_CIRCLE, 32, Color.DODGERBLUE))
-                .hideAfter(Duration.seconds(2))
-                .show();
+        createNotification()
+                .ifPresent(n -> n.position(Pos.TOP_CENTER)
+                        .text(infoMessage)
+                        .graphic(FontIcon.of(FontAwesome.INFO_CIRCLE, 32, Color.DODGERBLUE))
+                        .hideAfter(Duration.seconds(2))
+                        .show()
+                );
+    }
+
+    private Optional<Notifications> createNotification() {
+        return Window.getWindows().isEmpty() ? Optional.empty() : Optional.of(Notifications.create());
     }
 
     public void showException(Throwable e) {

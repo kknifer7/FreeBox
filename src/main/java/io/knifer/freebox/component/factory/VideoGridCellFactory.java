@@ -30,70 +30,77 @@ import java.util.List;
 @Slf4j
 public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, GridCell<Movie.Video>> {
 
-    private final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
+    private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
             .maximumSize(150)
             .build();
 
+    private final static double CELL_WIDTH = 150;
+
+    private final static double CELL_HEIGHT = 200;
+
     @Override
     public GridCell<Movie.Video> call(GridView<Movie.Video> view) {
-        return new GridCell<>() {
-            @Override
-            protected void updateItem(Movie.Video item, boolean empty) {
-                String itemId;
-                StackPane container;
-                List<Node> containerChildren;
-                Label movieNoteLabel;
-                InfoOverlay movieInfoOverlay;
-                Image moviePicImage;
-                ImageView moviePicImageView;
-                String note;
-                String picUrl;
+        return new VideoGridCell();
+    }
 
-                super.updateItem(item, empty);
-                if (item == null || empty) {
-                    setText(null);
-                    setGraphic(null);
+    public static class VideoGridCell extends GridCell<Movie.Video> {
+        @Override
+        protected void updateItem(Movie.Video item, boolean empty) {
+            String itemId;
+            StackPane container;
+            List<Node> containerChildren;
+            InfoOverlay movieInfoOverlay;
+            Label movieNoteLabel;
+            Image moviePicImage;
+            ImageView moviePicImageView;
+            String note;
+            String picUrl;
 
-                    return;
-                }
-                itemId = item.getId();
-                moviePicImage = PICTURE_CACHE.getIfPresent(itemId);
-                if (moviePicImage == null) {
-                    moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER);
-                    picUrl = item.getPic();
-                    if (ValidationUtil.isURL(picUrl)) {
-                        AsyncUtil.execute(
-                                () -> new Image(picUrl),
-                                image -> {
-                                    if (!image.isError()) {
-                                        Platform.runLater(() -> {
-                                            PICTURE_CACHE.put(itemId, image);
-                                            updateItem(item, false);
-                                        });
-                                    }
-                                }
-                        );
-                    }
-                } else {
-                    moviePicImageView = new ImageView(moviePicImage);
-                }
-                moviePicImageView.setFitWidth(150);
-                moviePicImageView.setFitHeight(200);
-                movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
-                movieInfoOverlay.getStyleClass().add("movie-info-overlay");
-                container = new StackPane();
-                containerChildren = container.getChildren();
-                containerChildren.add(movieInfoOverlay);
-                note = item.getNote();
-                if (StringUtils.isNotBlank(note)) {
-                    movieNoteLabel = new Label(note);
-                    containerChildren.add(movieNoteLabel);
-                    movieNoteLabel.getStyleClass().add("movie-remark-label");
-                    container.setAlignment(Pos.TOP_RIGHT);
-                }
-                setGraphic(container);
+            super.updateItem(item, empty);
+            if (item == null || empty) {
+                setText(null);
+                setGraphic(null);
+
+                return;
             }
-        };
+            container = new StackPane();
+            container.setAlignment(Pos.TOP_RIGHT);
+            containerChildren = container.getChildren();
+            itemId = item.getId();
+            moviePicImage = PICTURE_CACHE.getIfPresent(itemId);
+            if (moviePicImage == null) {
+                moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER);
+                picUrl = item.getPic();
+                if (ValidationUtil.isURL(picUrl)) {
+                    AsyncUtil.execute(
+                            () -> new Image(picUrl),
+                            image -> {
+                                if (!image.isError()) {
+                                    Platform.runLater(() -> {
+                                        PICTURE_CACHE.put(itemId, image);
+                                        updateItem(item, false);
+                                    });
+                                }
+                            }
+                    );
+                }
+            } else {
+                moviePicImageView = new ImageView(moviePicImage);
+            }
+            moviePicImageView.setFitWidth(CELL_WIDTH);
+            moviePicImageView.setFitHeight(CELL_HEIGHT);
+            movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
+            movieInfoOverlay.getStyleClass().add("movie-info-overlay");
+            note = item.getNote();
+            containerChildren.add(movieInfoOverlay);
+            if (StringUtils.isNotBlank(note)) {
+                movieNoteLabel = new Label(note);
+                movieNoteLabel.getStyleClass().add("movie-remark-label");
+                containerChildren.add(movieNoteLabel);
+            }
+            setId(item.getId());
+            setGraphic(container);
+        }
     }
 
     public void destroy() {

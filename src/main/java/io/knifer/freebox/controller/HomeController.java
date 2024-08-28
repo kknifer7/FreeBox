@@ -138,9 +138,13 @@ public class HomeController {
 
     private void openClient(ClientInfo clientInfo) {
         Pair<Stage, TVController> stageAndController = FXMLUtil.load(Views.TV);
+        Stage homeStage = WindowHelper.getStage(root);
+        Stage tvStage = stageAndController.getLeft();
 
         stageAndController.getRight().setData(clientInfo);
-        stageAndController.getLeft().show();
+        Context.INSTANCE.pushStage(homeStage);
+        homeStage.hide();
+        tvStage.show();
     }
 
     @FXML

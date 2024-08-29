@@ -1,6 +1,6 @@
 package io.knifer.freebox.controller;
 
-import io.knifer.freebox.component.container.VLCPlayer;
+import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.VideoDetailsBO;

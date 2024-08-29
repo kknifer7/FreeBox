@@ -1,6 +1,6 @@
 package io.knifer.freebox.model.bo;
 
-import io.knifer.freebox.component.container.VLCPlayer;
+import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.model.common.AbsXml;
 import lombok.Data;
 

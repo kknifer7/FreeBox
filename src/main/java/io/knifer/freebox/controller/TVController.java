@@ -1,6 +1,6 @@
 package io.knifer.freebox.controller;
 
-import io.knifer.freebox.component.container.VLCPlayer;
+import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.component.converter.SourceBean2StringConverter;
 import io.knifer.freebox.component.factory.ClassListCellFactory;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
@@ -71,8 +71,6 @@ public class TVController extends BaseController {
         template = new TVTemplateImpl(new KebSocketRunner(KebSocketTopicKeeper.getInstance()));
         Platform.runLater(() -> {
            WindowHelper.getStage(root).setOnCloseRequest(evt -> {
-               Stage homeStage;
-
                destroy();
                Context.INSTANCE.popAndShowLastStage();
            });

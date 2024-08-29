@@ -1,21 +1,20 @@
-package io.knifer.freebox.component.container;
+package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.helper.WindowHelper;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -33,9 +32,12 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 import javax.swing.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * VLC播放器自定义组件
+ * PS：我知道代码很乱，但是因为我没指望谁有xin'si
  *
  * @author Knifer
  */
@@ -48,12 +50,20 @@ public class VLCPlayer {
     private final Label pauseLabel;
     private final Slider volumeSlider;
     private final Label volumeLabel;
+    private final ProgressBar videoProgressBar;
+    private final Label videoProgressLabel;
+    private final Label videoProgressSplitLabel;
+    private final Label videoProgressLengthLabel;
     private final Label fullScreenLabel;
+    private final Label fillWindowLabel;
     private final FontIcon pauseIcon = FontIcon.of(FontAwesome.PAUSE, 32, Color.WHITE);
     private final FontIcon playIcon = FontIcon.of(FontAwesome.PLAY, 32, Color.WHITE);
     private final FontIcon volumeUpIcon = FontIcon.of(FontAwesome.VOLUME_UP, 32, Color.WHITE);
     private final FontIcon volumeOffIcon = FontIcon.of(FontAwesome.VOLUME_OFF, 32, Color.WHITE);
     private final FontIcon fullScreenIcon = FontIcon.of(FontAwesome.ARROWS_ALT, 32, Color.WHITE);
+    private final FontIcon fillWindowIcon = FontIcon.of(FontAwesome.WINDOW_MAXIMIZE, 32, Color.WHITE);
+    private final AtomicLong videoLength = new AtomicLong(-1);
+    private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
 
     public VLCPlayer(BorderPane parent) {
         StackPane pane = new StackPane();
@@ -65,6 +75,7 @@ public class VLCPlayer {
         AnchorPane controlInnerAnchorPane;
         PopOver volumePopOver;
         Timer volumePopOverHideTimer;
+        HBox progressLabelHBox;
         HBox leftToolBarHbox;
         HBox rightToolBarHbox;
 
@@ -83,7 +94,6 @@ public class VLCPlayer {
 
             @Override
             public void onAfterExitFullScreen() {
-                videoImageView.setPreserveRatio(true);
                 /*parent.getTop().setVisible(true);
                 parent.getLeft().setVisible(true);
                 parent.getRight().setVisible(true);
@@ -93,15 +103,29 @@ public class VLCPlayer {
         mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
             @Override
             public void playing(MediaPlayer mediaPlayer) {
+                long length = mediaPlayer.status().length();
+
+                Platform.runLater(() -> {
+                    videoLength.set(length);
+                    videoProgressLengthLabel.setText(formatProgressText(length));
+                });
             }
 
             @Override
             public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
+                if (videoLength.get() > 0) {
+                    Platform.runLater(() -> {
+                        if (!isVideoProgressBarUsing.get()) {
+                            videoProgressLabel.setText(formatProgressText(newTime));
+                            videoProgressBar.setProgress(newTime / (double) videoLength.get());
+                        }
+                    });
+                }
             }
 
             @Override
             public void error(MediaPlayer mediaPlayer) {
-                log.info("error");
+                log.error("VLCPlayer error");
             }
         });
         videoImageView = new ImageView();
@@ -147,20 +171,86 @@ public class VLCPlayer {
                 volumePopOver.show(volumeLabel);
             }
         });
+        videoProgressBar = new ProgressBar(0);
+        videoProgressLabel = new Label("00:00:00");
+        videoProgressLabel.getStyleClass().add("vlc-player-progress-label");
+        videoProgressBar.setOnMousePressed(evt -> {
+            double newProgress;
+
+            if (!mediaPlayer.status().isPlayable() || !mediaPlayer.status().isSeekable()) {
+                return;
+            }
+            isVideoProgressBarUsing.set(true);
+            newProgress = evt.getX() / videoProgressBar.getWidth();
+            videoProgressBar.setProgress(newProgress);
+            if (newProgress > 0) {
+                videoProgressLabel.setText(formatProgressText((long) (videoLength.get() * newProgress)));
+            }
+        });
+        videoProgressBar.setOnMouseDragged(evt -> {
+            double newX;
+            double width;
+            double newProgress;
+
+            if (!mediaPlayer.status().isPlayable() || !mediaPlayer.status().isSeekable()) {
+                return;
+            }
+            newX = evt.getX();
+            width = videoProgressBar.getWidth();
+            newProgress = newX / width;
+            if (newProgress > 0) {
+                if (newProgress > 1) {
+                    videoProgressLabel.setText(formatProgressText(videoLength.get()));
+                    videoProgressBar.setProgress(1);
+                } else {
+                    videoProgressLabel.setText(formatProgressText((long) (videoLength.get() * newProgress)));
+                    videoProgressBar.setProgress(newProgress);
+                }
+            } else {
+                videoProgressLabel.setText("00:00:00");
+                videoProgressBar.setProgress(0);
+            }
+        });
+        videoProgressBar.setOnMouseReleased(evt -> {
+            if (!mediaPlayer.status().isPlayable() || !mediaPlayer.status().isSeekable()) {
+                return;
+            }
+            mediaPlayer.controls().setPosition(((float) videoProgressBar.getProgress()));
+            isVideoProgressBarUsing.set(false);
+        });
+        videoProgressSplitLabel = new Label("/");
+        videoProgressSplitLabel.getStyleClass().add("vlc-player-progress-label");
+        videoProgressLengthLabel = new Label("-:-:-");
+        videoProgressLengthLabel.getStyleClass().add("vlc-player-progress-label");
+        progressLabelHBox = new HBox(videoProgressLabel, videoProgressSplitLabel, videoProgressLengthLabel);
+        progressLabelHBox.setSpacing(5);
+        progressLabelHBox.setAlignment(Pos.CENTER);
         fullScreenLabel = new Label();
         fullScreenLabel.getStyleClass().add("vlc-player-control-label");
         fullScreenLabel.setGraphic(fullScreenIcon);
         fullScreenLabel.setOnMouseClicked(evt -> mediaPlayer.fullScreen().toggle());
-        leftToolBarHbox = new HBox(pauseLabel, volumeLabel);
+        fillWindowLabel = new Label();
+        fillWindowLabel.getStyleClass().add("vlc-player-control-label");
+        fillWindowLabel.setGraphic(fillWindowIcon);
+        fillWindowLabel.setOnMouseClicked(evt -> videoImageView.setPreserveRatio(!videoImageView.isPreserveRatio()));
+        leftToolBarHbox = new HBox(pauseLabel, volumeLabel, progressLabelHBox);
         leftToolBarHbox.setSpacing(20);
         leftToolBarHbox.setAlignment(Pos.CENTER);
-        rightToolBarHbox = new HBox(fullScreenLabel);
+        rightToolBarHbox = new HBox(fillWindowLabel, fullScreenLabel);
         rightToolBarHbox.setSpacing(20);
-        controlInnerAnchorPane = new AnchorPane(leftToolBarHbox, rightToolBarHbox);
+        controlInnerAnchorPane = new AnchorPane(leftToolBarHbox, videoProgressBar, rightToolBarHbox);
         controlInnerAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
         controlInnerAnchorPane.setOnMouseClicked(Event::consume);
         AnchorPane.setLeftAnchor(leftToolBarHbox, 10.0);
+        AnchorPane.setTopAnchor(leftToolBarHbox, 10.0);
+        AnchorPane.setBottomAnchor(leftToolBarHbox, 10.0);
+        AnchorPane.setLeftAnchor(videoProgressBar, 360.0);
+        AnchorPane.setRightAnchor(videoProgressBar, 160.0);
+        AnchorPane.setTopAnchor(videoProgressBar, 10.0);
+        AnchorPane.setBottomAnchor(videoProgressBar, 10.0);
         AnchorPane.setRightAnchor(rightToolBarHbox, 10.0);
+        AnchorPane.setTopAnchor(rightToolBarHbox, 10.0);
+        AnchorPane.setBottomAnchor(rightToolBarHbox, 10.0);
         controlPane = new StackPane(controlInnerAnchorPane);
         controlPane.setAlignment(Pos.BOTTOM_CENTER);
         paneChildren = pane.getChildren();
@@ -189,6 +279,7 @@ public class VLCPlayer {
                     }
                 }
                 case F -> mediaPlayer.fullScreen().toggle();
+                case Z -> videoImageView.setPreserveRatio(!videoImageView.isPreserveRatio());
             }
         });
         parent.requestFocus();
@@ -207,6 +298,19 @@ public class VLCPlayer {
     public void changePlayStatus() {
         mediaPlayer.controls().pause();
         pauseLabel.setGraphic(pauseLabel.getGraphic() == pauseIcon ? playIcon : pauseIcon);
+    }
+
+    private String formatProgressText(long totalMilliseconds) {
+        // 将毫秒转换为秒
+        long totalSeconds = totalMilliseconds / 1000;
+
+        // 计算小时、分钟和秒
+        int hours = (int) (totalSeconds / 3600);
+        int minutes = (int) ((totalSeconds % 3600) / 60);
+        int seconds = (int) (totalSeconds % 60);
+
+        // 格式化字符串
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
     public void destroy() {

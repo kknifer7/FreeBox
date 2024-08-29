@@ -1,18 +1,1 @@
 @import "base/color.css";
-
-.vlc-player-anchor-pane {
-    -fx-pref-height: 46px;
-    -fx-min-height: 46px;
-    -fx-max-height: 46px;
-    -fx-background-color: rgba(0,0,0,0.5);
-}
-
-.vlc-player-control-label {
-    -fx-pref-width: 40px;
-    -fx-pref-height: 40px;
-    -fx-alignment: center;
-}
-
-.vlc-player-volume-pop-over {
-    -fx-padding: 10px;
-}

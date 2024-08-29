@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * VLC播放器自定义组件
- * PS：我知道代码很乱，但是因为我没指望谁有xin'si
+ * PS：我知道这里的代码很乱，没有注释，因为我没指望谁有心思动这个类。如果你有什么想法，直接告诉我。
  *
  * @author Knifer
  */

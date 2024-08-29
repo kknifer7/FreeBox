@@ -1,6 +1,7 @@
 package io.knifer.freebox.util;
 
 import io.knifer.freebox.FreeBoxApplication;
+import io.knifer.freebox.constant.BaseResources;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -32,6 +33,7 @@ public class FXMLUtil {
             throw new RuntimeException(e);
         }
         stage = new Stage();
+        stage.getIcons().add(BaseResources.LOGO);
         stage.setScene(scene);
 
         return Pair.of(stage, loader.getController());
@@ -49,6 +51,7 @@ public class FXMLUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        stage.getIcons().add(BaseResources.LOGO);
         stage.setScene(scene);
     }
 }

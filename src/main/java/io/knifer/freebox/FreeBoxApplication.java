@@ -1,7 +1,6 @@
 package io.knifer.freebox;
 
 import io.knifer.freebox.constant.AppEvents;
-import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
@@ -20,7 +19,6 @@ public class FreeBoxApplication extends Application {
         FXMLUtil.load(Views.HOME, stage);
 
         stage.setTitle("FreeBox");
-        stage.getIcons().add(BaseResources.LOGO);
         stage.show();
 
         // 初始化上下文

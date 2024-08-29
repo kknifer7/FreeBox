@@ -6,6 +6,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.model.common.Message;
 import io.knifer.freebox.util.GsonUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.thavam.util.concurrent.blockingMap.BlockingHashMap;
 import org.thavam.util.concurrent.blockingMap.BlockingMap;
 
@@ -17,6 +18,7 @@ import java.util.concurrent.*;
  *
  * @author Knifer
  */
+@Slf4j
 public class KebSocketTopicKeeper {
 
     private final BlockingMap<String, Message<JsonElement>> DATA_MAP = new BlockingHashMap<>();
@@ -65,7 +67,7 @@ public class KebSocketTopicKeeper {
     }
 
     public void destroy() {
-        // TODO 销毁时要调用
+        log.info("destroy KebSocketTopicKeeper......");
         DATA_MAP.clear();
         EXECUTOR.shutdown();
     }

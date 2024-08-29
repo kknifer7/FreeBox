@@ -7,6 +7,7 @@ import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.net.ServiceManager;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.core.ClientManager;
+import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.util.AsyncUtil;
@@ -97,6 +98,7 @@ public enum Context {
         serviceManager.destroy();
         AsyncUtil.destroy();
         Context.INSTANCE.getPrimaryStage().close();
+        KebSocketTopicKeeper.getInstance().destroy();
         Platform.exit();
         System.exit(0);
     }

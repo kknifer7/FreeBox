@@ -1,5 +1,7 @@
 package io.knifer.freebox.component.node;
 
+import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -7,9 +9,7 @@ import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -50,6 +50,13 @@ public class VLCPlayer {
     private final Label pauseLabel;
     private final Slider volumeSlider;
     private final Label volumeLabel;
+    private final ToggleGroup rateSettingToggleGroup;
+    private final RadioButton rate0_5SettingRadioButton;
+    private final RadioButton rate1SettingRadioButton;
+    private final RadioButton rate1_25SettingRadioButton;
+    private final RadioButton rate1_5SettingRadioButton;
+    private final RadioButton rate2SettingRadioButton;
+    private final Label settingsLabel;
     private final ProgressBar videoProgressBar;
     private final Label videoProgressLabel;
     private final Label videoProgressSplitLabel;
@@ -62,6 +69,7 @@ public class VLCPlayer {
     private final FontIcon volumeOffIcon = FontIcon.of(FontAwesome.VOLUME_OFF, 32, Color.WHITE);
     private final FontIcon fullScreenIcon = FontIcon.of(FontAwesome.ARROWS_ALT, 32, Color.WHITE);
     private final FontIcon fillWindowIcon = FontIcon.of(FontAwesome.WINDOW_MAXIMIZE, 32, Color.WHITE);
+    private final FontIcon settingsIcon = FontIcon.of(FontAwesome.SLIDERS, 32, Color.WHITE);
     private final AtomicLong videoLength = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
 
@@ -75,6 +83,11 @@ public class VLCPlayer {
         AnchorPane controlInnerAnchorPane;
         PopOver volumePopOver;
         Timer volumePopOverHideTimer;
+        Label rateSettingTitleLabel;
+        HBox rateSettingRadioButtonHBox;
+        HBox rateSettingHBox;
+        PopOver settingsPopOver;
+        Timer settingsPopOverHideTimer;
         HBox progressLabelHBox;
         HBox leftToolBarHbox;
         HBox rightToolBarHbox;
@@ -86,18 +99,25 @@ public class VLCPlayer {
             @Override
             public void onBeforeEnterFullScreen() {
                 videoImageView.setPreserveRatio(false);
-                /*parent.getTop().setVisible(false);
-                parent.getLeft().setVisible(false);
-                parent.getRight().setVisible(false);
-                parent.getBottom().setVisible(false);*/
+                setBorderPaneChildrenVisible(false);
             }
 
             @Override
             public void onAfterExitFullScreen() {
-                /*parent.getTop().setVisible(true);
-                parent.getLeft().setVisible(true);
-                parent.getRight().setVisible(true);
-                parent.getBottom().setVisible(true);*/
+                setBorderPaneChildrenVisible(true);
+            }
+
+            private void setBorderPaneChildrenVisible(boolean visible) {
+                setVisibleIfNotNull(parent.getTop(), visible);
+                setVisibleIfNotNull(parent.getBottom(), visible);
+                setVisibleIfNotNull(parent.getLeft(), visible);
+                setVisibleIfNotNull(parent.getRight(), visible);
+            }
+
+            private void setVisibleIfNotNull(Node node, boolean visible) {
+                if (node != null) {
+                    node.setVisible(visible);
+                }
             }
         });
         mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
@@ -133,10 +153,12 @@ public class VLCPlayer {
         videoImageView.fitWidthProperty().bind(pane.widthProperty());
         videoImageView.fitHeightProperty().bind(pane.heightProperty());
         mediaPlayer.videoSurface().set(new ImageViewVideoSurface(videoImageView));
+        // 暂停设置
         pauseLabel = new Label();
         pauseLabel.setGraphic(pauseIcon);
         pauseLabel.getStyleClass().add("vlc-player-control-label");
         pauseLabel.setOnMouseClicked(evt -> changePlayStatus());
+        // 音量设置
         volumeLabel = new Label();
         volumeLabel.setGraphic(volumeUpIcon);
         volumeLabel.getStyleClass().add("vlc-player-control-label");
@@ -148,7 +170,7 @@ public class VLCPlayer {
         volumeSlider.setOrientation(Orientation.VERTICAL);
         volumePopOver = new PopOver(volumeSlider);
         volumePopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
-        volumePopOver.getStyleClass().add("vlc-player-volume-pop-over");
+        volumePopOver.getStyleClass().add("vlc-player-pop-over");
         volumePopOver.setDetachable(false);
         volumePopOverHideTimer = new Timer(1000, evt -> volumePopOver.hide());
         volumePopOver.addEventFilter(MouseEvent.ANY, evt -> {
@@ -171,6 +193,64 @@ public class VLCPlayer {
                 volumePopOver.show(volumeLabel);
             }
         });
+        settingsLabel = new Label();
+        settingsLabel.getStyleClass().add("vlc-player-control-label");
+        settingsLabel.setGraphic(settingsIcon);
+        // 倍速设置
+        rateSettingTitleLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_RATE));
+        rateSettingToggleGroup = new ToggleGroup();
+        rate0_5SettingRadioButton = new RadioButton("0.5");
+        rate0_5SettingRadioButton.setUserData(0.5f);
+        rate0_5SettingRadioButton.setToggleGroup(rateSettingToggleGroup);
+        rate1SettingRadioButton = new RadioButton("1.0");
+        rate1SettingRadioButton.setUserData(1.0f);
+        rate1SettingRadioButton.setToggleGroup(rateSettingToggleGroup);
+        rate1_25SettingRadioButton = new RadioButton("1.25");
+        rate1_25SettingRadioButton.setUserData(1.25f);
+        rate1_25SettingRadioButton.setToggleGroup(rateSettingToggleGroup);
+        rate1_5SettingRadioButton = new RadioButton("1.5");
+        rate1_5SettingRadioButton.setUserData(1.5f);
+        rate1_5SettingRadioButton.setToggleGroup(rateSettingToggleGroup);
+        rate2SettingRadioButton = new RadioButton("2.0");
+        rate2SettingRadioButton.setUserData(2.0f);
+        rate2SettingRadioButton.setToggleGroup(rateSettingToggleGroup);
+        // 默认选择1倍速
+        rateSettingToggleGroup.selectToggle(rate1SettingRadioButton);
+        rateSettingToggleGroup.selectedToggleProperty().addListener(((observable, oldValue, newValue) -> {
+            mediaPlayer.controls().setRate((float) newValue.getUserData());
+        }));
+        rateSettingRadioButtonHBox = new HBox(
+                rate0_5SettingRadioButton,
+                rate1SettingRadioButton,
+                rate1_25SettingRadioButton,
+                rate1_5SettingRadioButton,
+                rate2SettingRadioButton
+        );
+        rateSettingHBox = new HBox(rateSettingTitleLabel, rateSettingRadioButtonHBox);
+        rateSettingHBox.setSpacing(10);
+        rateSettingHBox.setAlignment(Pos.CENTER);
+        rateSettingRadioButtonHBox.setAlignment(Pos.CENTER);
+        rateSettingRadioButtonHBox.setSpacing(5);
+        settingsPopOver = new PopOver();
+        settingsPopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
+        settingsPopOver.getStyleClass().add("vlc-player-pop-over");
+        settingsPopOver.setDetachable(false);
+        settingsPopOver.setContentNode(rateSettingHBox);
+        settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());
+        settingsPopOver.addEventFilter(MouseEvent.ANY, evt -> {
+            if (evt.getEventType() == MouseEvent.MOUSE_EXITED) {
+                settingsPopOverHideTimer.stop();
+            } else {
+                settingsPopOverHideTimer.restart();
+            }
+        });
+        settingsLabel.setOnMouseEntered(evt -> {
+            settingsPopOverHideTimer.restart();
+            if (!settingsPopOver.isShowing()) {
+                settingsPopOver.show(settingsLabel);
+            }
+        });
+        // 进度条组件
         videoProgressBar = new ProgressBar(0);
         videoProgressLabel = new Label("00:00:00");
         videoProgressLabel.getStyleClass().add("vlc-player-progress-label");
@@ -225,6 +305,7 @@ public class VLCPlayer {
         progressLabelHBox = new HBox(videoProgressLabel, videoProgressSplitLabel, videoProgressLengthLabel);
         progressLabelHBox.setSpacing(5);
         progressLabelHBox.setAlignment(Pos.CENTER);
+        // 铺满、全屏组件
         fullScreenLabel = new Label();
         fullScreenLabel.getStyleClass().add("vlc-player-control-label");
         fullScreenLabel.setGraphic(fullScreenIcon);
@@ -233,7 +314,7 @@ public class VLCPlayer {
         fillWindowLabel.getStyleClass().add("vlc-player-control-label");
         fillWindowLabel.setGraphic(fillWindowIcon);
         fillWindowLabel.setOnMouseClicked(evt -> videoImageView.setPreserveRatio(!videoImageView.isPreserveRatio()));
-        leftToolBarHbox = new HBox(pauseLabel, volumeLabel, progressLabelHBox);
+        leftToolBarHbox = new HBox(pauseLabel, volumeLabel, settingsLabel, progressLabelHBox);
         leftToolBarHbox.setSpacing(20);
         leftToolBarHbox.setAlignment(Pos.CENTER);
         rightToolBarHbox = new HBox(fillWindowLabel, fullScreenLabel);
@@ -244,8 +325,8 @@ public class VLCPlayer {
         AnchorPane.setLeftAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setTopAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(leftToolBarHbox, 10.0);
-        AnchorPane.setLeftAnchor(videoProgressBar, 360.0);
-        AnchorPane.setRightAnchor(videoProgressBar, 160.0);
+        AnchorPane.setLeftAnchor(videoProgressBar, 420.0);
+        AnchorPane.setRightAnchor(videoProgressBar, 140.0);
         AnchorPane.setTopAnchor(videoProgressBar, 10.0);
         AnchorPane.setBottomAnchor(videoProgressBar, 10.0);
         AnchorPane.setRightAnchor(rightToolBarHbox, 10.0);
@@ -256,6 +337,7 @@ public class VLCPlayer {
         paneChildren = pane.getChildren();
         paneChildren.add(videoImageView);
         paneChildren.add(controlPane);
+        pane.setStyle("-fx-background-color: black;");
         pane.prefWidthProperty().bind(parentWidthProp);
         pane.prefHeightProperty().bind(parentHeightProp);
         pane.minWidthProperty().bind(parentWidthProp);

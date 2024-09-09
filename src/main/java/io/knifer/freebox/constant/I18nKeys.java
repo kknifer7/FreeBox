@@ -30,6 +30,8 @@ public class I18nKeys {
     public static final String SETTINGS_WS_SERVICE_UP = "settings.ws.service-up";
     public static final String SETTINGS_WS_SERVICE_DOWN = "settings.ws.service-down";
 
+    public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
+
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";
     public static final String ERROR_CONFIRM = "error.confirm";

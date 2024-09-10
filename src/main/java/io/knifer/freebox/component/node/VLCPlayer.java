@@ -4,7 +4,9 @@ import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -47,6 +49,7 @@ public class VLCPlayer {
 
     private final EmbeddedMediaPlayer mediaPlayer;
     private final ImageView videoImageView;
+    private final ProgressIndicator loadingProgressIndicator;
     private final Label pauseLabel;
     private final Slider volumeSlider;
     private final Label volumeLabel;
@@ -72,6 +75,7 @@ public class VLCPlayer {
     private final FontIcon settingsIcon = FontIcon.of(FontAwesome.SLIDERS, 32, Color.WHITE);
     private final AtomicLong videoLength = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
+    private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
 
     public VLCPlayer(BorderPane parent) {
         StackPane pane = new StackPane();
@@ -79,7 +83,6 @@ public class VLCPlayer {
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
         Stage stage = WindowHelper.getStage(parent);
         List<Node> paneChildren;
-        StackPane controlPane;
         AnchorPane controlInnerAnchorPane;
         PopOver volumePopOver;
         Timer volumePopOverHideTimer;
@@ -91,6 +94,7 @@ public class VLCPlayer {
         HBox progressLabelHBox;
         HBox leftToolBarHbox;
         HBox rightToolBarHbox;
+        StackPane controlPane;
 
         stage.setFullScreenExitHint(StringUtils.EMPTY);
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
@@ -98,7 +102,6 @@ public class VLCPlayer {
         mediaPlayer.fullScreen().strategy(new JavaFXFullScreenStrategy(stage){
             @Override
             public void onBeforeEnterFullScreen() {
-                videoImageView.setPreserveRatio(false);
                 setBorderPaneChildrenVisible(false);
             }
 
@@ -122,7 +125,39 @@ public class VLCPlayer {
         });
         mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
             @Override
+            public void mediaPlayerReady(MediaPlayer mediaPlayer) {
+                setLoading(false);
+            }
+
+            @Override
+            public void buffering(MediaPlayer mediaPlayer, float newCache) {
+                if (isLoading() && newCache >= 1) {
+                    setLoading(false);
+                }
+            }
+
+            @Override
+            public void paused(MediaPlayer mediaPlayer) {
+                Platform.runLater(() -> {
+                    if (isLoading()) {
+                        setLoading(false);
+                    }
+                    pauseLabel.setGraphic(playIcon);
+                });
+            }
+
+            @Override
             public void playing(MediaPlayer mediaPlayer) {
+                Platform.runLater(() -> {
+                    if (isLoading()) {
+                        setLoading(false);
+                    }
+                    pauseLabel.setGraphic(pauseIcon);
+                });
+            }
+
+            @Override
+            public void lengthChanged(MediaPlayer mediaPlayer, long newLength) {
                 long length = mediaPlayer.status().length();
 
                 Platform.runLater(() -> {
@@ -153,6 +188,8 @@ public class VLCPlayer {
         videoImageView.fitWidthProperty().bind(pane.widthProperty());
         videoImageView.fitHeightProperty().bind(pane.heightProperty());
         mediaPlayer.videoSurface().set(new ImageViewVideoSurface(videoImageView));
+        loadingProgressIndicator = new ProgressIndicator();
+        loadingProgressIndicator.visibleProperty().bind(isLoading);
         // 暂停设置
         pauseLabel = new Label();
         pauseLabel.setGraphic(pauseIcon);
@@ -295,9 +332,11 @@ public class VLCPlayer {
             if (!mediaPlayer.status().isPlayable() || !mediaPlayer.status().isSeekable()) {
                 return;
             }
+            setLoading(true);
             mediaPlayer.controls().setPosition(((float) videoProgressBar.getProgress()));
             isVideoProgressBarUsing.set(false);
         });
+        videoProgressBar.disableProperty().bind(isLoading);
         videoProgressSplitLabel = new Label("/");
         videoProgressSplitLabel.getStyleClass().add("vlc-player-progress-label");
         videoProgressLengthLabel = new Label("-:-:-");
@@ -337,6 +376,7 @@ public class VLCPlayer {
         paneChildren = pane.getChildren();
         paneChildren.add(videoImageView);
         paneChildren.add(controlPane);
+        paneChildren.add(loadingProgressIndicator);
         pane.setStyle("-fx-background-color: black;");
         pane.prefWidthProperty().bind(parentWidthProp);
         pane.prefHeightProperty().bind(parentHeightProp);
@@ -366,20 +406,29 @@ public class VLCPlayer {
         });
         parent.requestFocus();
         parent.setCenter(pane);
+
+        setLoading(true);
+    }
+
+    private void setLoading(boolean loading) {
+        isLoading.set(loading);
     }
 
     public void play(String url) {
-        long length;
-
         mediaPlayer.media().play(url);
-        length = mediaPlayer.status().length();
-        log.info("video length: {}", length);
         mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
     }
 
     public void changePlayStatus() {
+        if (!mediaPlayer.status().canPause()) {
+            return;
+        }
+        setLoading(true);
         mediaPlayer.controls().pause();
-        pauseLabel.setGraphic(pauseLabel.getGraphic() == pauseIcon ? playIcon : pauseIcon);
+    }
+
+    private boolean isLoading() {
+        return isLoading.get();
     }
 
     private String formatProgressText(long totalMilliseconds) {

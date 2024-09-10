@@ -3,6 +3,7 @@ package io.knifer.freebox.component.factory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.knifer.freebox.constant.BaseResources;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.ValidationUtil;
@@ -67,25 +68,29 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             container.setAlignment(Pos.TOP_RIGHT);
             containerChildren = container.getChildren();
             itemId = item.getId();
-            moviePicImage = PICTURE_CACHE.getIfPresent(itemId);
-            if (moviePicImage == null) {
-                moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER);
-                picUrl = item.getPic();
-                if (ValidationUtil.isURL(picUrl)) {
-                    AsyncUtil.execute(
-                            () -> new Image(picUrl),
-                            image -> {
-                                if (!image.isError()) {
-                                    Platform.runLater(() -> {
-                                        PICTURE_CACHE.put(itemId, image);
-                                        updateItem(item, false);
-                                    });
-                                }
-                            }
-                    );
-                }
+            if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
+                moviePicImageView = new ImageView(BaseResources.LOAD_MORE_IMG);
             } else {
-                moviePicImageView = new ImageView(moviePicImage);
+                moviePicImage = PICTURE_CACHE.getIfPresent(itemId);
+                if (moviePicImage == null) {
+                    moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    picUrl = item.getPic();
+                    if (ValidationUtil.isURL(picUrl)) {
+                        AsyncUtil.execute(
+                                () -> new Image(picUrl),
+                                image -> {
+                                    if (!image.isError()) {
+                                        Platform.runLater(() -> {
+                                            PICTURE_CACHE.put(itemId, image);
+                                            updateItem(item, false);
+                                        });
+                                    }
+                                }
+                        );
+                    }
+                } else {
+                    moviePicImageView = new ImageView(moviePicImage);
+                }
             }
             moviePicImageView.setFitWidth(CELL_WIDTH);
             moviePicImageView.setFitHeight(CELL_HEIGHT);

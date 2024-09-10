@@ -1,5 +1,6 @@
 package io.knifer.freebox.net.websocket.template.impl;
 
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.model.common.AbsSortXml;
@@ -8,8 +9,9 @@ import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
 import io.knifer.freebox.model.s2c.GetDetailContentDTO;
+import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
-import io.knifer.freebox.net.websocket.template.TVTemplate;
+import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.util.CastUtil;
 import lombok.AllArgsConstructor;
@@ -26,7 +28,7 @@ import java.util.function.Consumer;
  */
 @Slf4j
 @AllArgsConstructor
-public class TVTemplateImpl implements TVTemplate {
+public class KebSocketTemplateImpl implements KebSocketTemplate {
 
     private final KebSocketRunner runner;
 
@@ -77,6 +79,19 @@ public class TVTemplateImpl implements TVTemplate {
                         MessageCodes.GET_DETAIL_CONTENT,
                         dto,
                         new TypeToken<AbsXml>(){}
+                ),
+                msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
+    @Override
+    public void getPlayerContent(ClientInfo clientInfo, GetPlayerContentDTO dto, Consumer<JsonObject> callback) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.GET_PLAYER_CONTENT,
+                        dto,
+                        new TypeToken<JsonObject>(){}
                 ),
                 msg -> callback.accept(CastUtil.cast(msg))
         );

@@ -33,7 +33,7 @@ public class FXMLUtil {
             throw new RuntimeException(e);
         }
         stage = new Stage();
-        stage.getIcons().add(BaseResources.LOGO);
+        stage.getIcons().add(BaseResources.LOGO_IMG);
         stage.setScene(scene);
 
         return Pair.of(stage, loader.getController());
@@ -51,7 +51,7 @@ public class FXMLUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        stage.getIcons().add(BaseResources.LOGO);
+        stage.getIcons().add(BaseResources.LOGO_IMG);
         stage.setScene(scene);
     }
 }

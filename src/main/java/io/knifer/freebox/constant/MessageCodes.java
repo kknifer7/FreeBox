@@ -46,4 +46,12 @@ public class MessageCodes {
      * 获取影视详情信息结果
      */
     public static final int GET_DETAIL_CONTENT_RESULT = 208;
+    /**
+     * 获取播放信息
+     */
+    public static final int GET_PLAYER_CONTENT = 209;
+    /**
+     * 获取播放信息结果
+     */
+    public static final int GET_PLAYER_CONTENT_RESULT = 210;
 }

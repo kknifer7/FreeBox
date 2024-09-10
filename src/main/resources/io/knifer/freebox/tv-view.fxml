@@ -13,12 +13,12 @@
          <center>
             <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                <children>
-                  <ProgressIndicator />
                   <VBox prefHeight="200.0" prefWidth="100.0">
                      <children>
                         <ListView fx:id="classesListView" focusTraversable="false" onMouseClicked="#onClassesListViewClick" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
+                  <ProgressIndicator fx:id="sortsLoadingProgressIndicator" />
                </children>
             </StackPane>
          </center></BorderPane>
@@ -28,7 +28,8 @@
          <center>
             <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                <children>
-                  <GridView fx:id="videosGridView" horizontalCellSpacing="50" verticalCellSpacing="75" />
+                  <GridView fx:id="videosGridView" horizontalCellSpacing="50" onMouseClicked="#onVideosGridViewMouseClicked" verticalCellSpacing="75" />
+                  <ProgressIndicator fx:id="movieLoadingProgressIndicator" visible="false" />
                </children>
             </StackPane>
          </center>

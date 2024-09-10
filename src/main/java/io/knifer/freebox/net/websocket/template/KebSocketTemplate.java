@@ -1,11 +1,13 @@
 package io.knifer.freebox.net.websocket.template;
 
+import com.google.gson.JsonObject;
 import io.knifer.freebox.model.common.AbsSortXml;
 import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
 import io.knifer.freebox.model.s2c.GetDetailContentDTO;
+import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -15,7 +17,7 @@ import java.util.function.Consumer;
  *
  * @author Knifer
  */
-public interface TVTemplate {
+public interface KebSocketTemplate {
 
     /**
      * 获取源列表
@@ -47,4 +49,12 @@ public interface TVTemplate {
      * @param callback 回调
      */
     void getDetailContent(ClientInfo clientInfo, GetDetailContentDTO dto, Consumer<AbsXml> callback);
+
+    /**
+     * 获取播放信息
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     * @param callback 回调
+     */
+    void getPlayerContent(ClientInfo clientInfo, GetPlayerContentDTO dto, Consumer<JsonObject> callback);
 }

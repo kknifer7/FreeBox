@@ -14,6 +14,8 @@ public class I18nKeys {
 
     public static final String HOME_SETTINGS_INFO = "home.settings-info";
 
+    public static final String TV_LOAD_MORE = "tv.load-more";
+
     public static final String MESSAGE_CLIENT_REGISTERED = "message.client-registered";
     public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";
 
@@ -30,6 +32,7 @@ public class I18nKeys {
     public static final String SETTINGS_WS_SERVICE_UP = "settings.ws.service-up";
     public static final String SETTINGS_WS_SERVICE_DOWN = "settings.ws.service-down";
 
+    public static final String VIDEO_ERROR_NO_DATA = "video.error.no-data";
     public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
 
     public static final String ERROR = "error";

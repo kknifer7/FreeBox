@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
 <HBox fx:id="root" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/video-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.VideoController">
    <children>
-      <VBox spacing="15.0" styleClass="video-details" BorderPane.alignment="TOP_LEFT" HBox.hgrow="ALWAYS">
+      <VBox spacing="15.0" BorderPane.alignment="TOP_LEFT" HBox.hgrow="ALWAYS">
          <children>
             <HBox alignment="TOP_CENTER" spacing="10.0" HBox.hgrow="ALWAYS">
                <children>
@@ -14,12 +15,18 @@
                      <font>
                         <Font size="20.0" />
                      </font>
+                     <padding>
+                        <Insets top="10.0" />
+                     </padding>
                   </Label>
                </children>
             </HBox>
             <SplitPane fx:id="videoDetailSplitPane" dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0">
                <items>
-                  <TextFlow fx:id="movieDetailsTextFlow" lineSpacing="5.0" styleClass="video-details-prop" />
+                  <TextFlow fx:id="movieDetailsTextFlow" lineSpacing="5.0" styleClass="video-details-prop">
+                     <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </padding></TextFlow>
                   <TabPane fx:id="resourceTabPane" tabClosingPolicy="UNAVAILABLE" />
                </items>
             </SplitPane>

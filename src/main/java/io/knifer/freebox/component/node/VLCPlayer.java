@@ -36,6 +36,7 @@ import uk.co.caprica.vlcj.javafx.fullscreen.JavaFXFullScreenStrategy;
 import uk.co.caprica.vlcj.javafx.videosurface.ImageViewVideoSurface;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.base.State;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 import javax.swing.*;
@@ -470,6 +471,13 @@ public class VLCPlayer {
 
         // 格式化字符串
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+    public void stop() {
+        setLoading(false);
+        if (mediaPlayer.status().state() != State.STOPPED) {
+            mediaPlayer.controls().stop();
+        }
     }
 
     public void destroy() {

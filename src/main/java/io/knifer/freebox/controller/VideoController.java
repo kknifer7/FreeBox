@@ -181,6 +181,7 @@ public class VideoController extends BaseController {
     }
 
     private void playVideo(Movie.Video video, String flag, String videoUrl) {
+        player.stop();
         template.getPlayerContent(
                 clientInfo,
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, videoUrl),

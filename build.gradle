@@ -70,7 +70,8 @@ dependencies {
 }
 
 extraJavaModuleInfo {
-    // 为非模块化项目添加自动模块
+    /* 为非模块化项目添加自动模块 */
+    // blockingMap
     automaticModule('com.github.sarveswaran-m:util.concurrent.blockingMap', 'blockingMap4j')
     // 解决google guava相关的编译错误
     automaticModule('com.google.guava:listenablefuture', 'listenablefutureAvoidConflict')

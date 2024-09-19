@@ -35,6 +35,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -123,10 +124,12 @@ public class TVController extends BaseController {
      * @param video 影片视频对象
      */
     private void openVideo(Movie.Video video) {
+        SourceBean sourceBean = getCurrentSourceBean();
+
         movieLoadingProperty.set(true);
         template.getDetailContent(
                 clientInfo,
-                GetDetailContentDTO.of(getCurrentSourceBean().getKey(), video.getId()),
+                GetDetailContentDTO.of(sourceBean.getKey(), video.getId()),
                 detailContent -> {
                     Pair<Stage, VideoController> stageAndController;
                     Stage tvStage;
@@ -138,7 +141,8 @@ public class TVController extends BaseController {
                     videoStage.setTitle(video.getName());
                     stageAndController.getRight().setData(VideoDetailsBO.of(
                             detailContent,
-                            new VLCPlayer((BorderPane) videoStage.getScene().getRoot()),
+                            sourceBean,
+                            new VLCPlayer((HBox) videoStage.getScene().getRoot()),
                             template,
                             clientInfo
                     ));

@@ -4,9 +4,13 @@ import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import javafx.application.Platform;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -16,7 +20,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -66,6 +72,7 @@ public class VLCPlayer {
     private final Label videoProgressLengthLabel;
     private final Label fullScreenLabel;
     private final Label fillWindowLabel;
+    private final StackPane playerPane;
     private final FontIcon pauseIcon = FontIcon.of(FontAwesome.PAUSE, 32, Color.WHITE);
     private final FontIcon playIcon = FontIcon.of(FontAwesome.PLAY, 32, Color.WHITE);
     private final FontIcon volumeUpIcon = FontIcon.of(FontAwesome.VOLUME_UP, 32, Color.WHITE);
@@ -77,9 +84,10 @@ public class VLCPlayer {
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
 
-    public VLCPlayer(BorderPane parent) {
-        StackPane pane = new StackPane();
+    public VLCPlayer(HBox parent) {
+        ObservableList<Node> parentChildren = parent.getChildren();
         ReadOnlyDoubleProperty parentWidthProp = parent.widthProperty();
+        DoubleBinding paneWidthProp = parentWidthProp.multiply(0.8);
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
         Stage stage = WindowHelper.getStage(parent);
         List<Node> paneChildren;
@@ -96,31 +104,33 @@ public class VLCPlayer {
         HBox rightToolBarHbox;
         StackPane controlPane;
 
+        playerPane = new StackPane();
         stage.setFullScreenExitHint(StringUtils.EMPTY);
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         mediaPlayer = new MediaPlayerFactory().mediaPlayers().newEmbeddedMediaPlayer();
         mediaPlayer.fullScreen().strategy(new JavaFXFullScreenStrategy(stage){
             @Override
             public void onBeforeEnterFullScreen() {
+                // 隐藏除播放器外的所有控件
                 setBorderPaneChildrenVisible(false);
+                // 绑定播放器宽度与父窗口宽度一致
+                bindPlayerPaneWidth(parentWidthProp);
             }
 
             @Override
             public void onAfterExitFullScreen() {
+                // 显示所有控件
                 setBorderPaneChildrenVisible(true);
+                // 绑定非全屏下的播放器宽度
+                bindPlayerPaneWidth(paneWidthProp);
             }
 
             private void setBorderPaneChildrenVisible(boolean visible) {
-                setVisibleIfNotNull(parent.getTop(), visible);
-                setVisibleIfNotNull(parent.getBottom(), visible);
-                setVisibleIfNotNull(parent.getLeft(), visible);
-                setVisibleIfNotNull(parent.getRight(), visible);
-            }
-
-            private void setVisibleIfNotNull(Node node, boolean visible) {
-                if (node != null) {
-                    node.setVisible(visible);
-                }
+                parentChildren.forEach(p -> {
+                    if (p != playerPane) {
+                        p.setVisible(visible);
+                    }
+                });
             }
         });
         mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
@@ -185,8 +195,8 @@ public class VLCPlayer {
         });
         videoImageView = new ImageView();
         videoImageView.setPreserveRatio(true);
-        videoImageView.fitWidthProperty().bind(pane.widthProperty());
-        videoImageView.fitHeightProperty().bind(pane.heightProperty());
+        videoImageView.fitWidthProperty().bind(playerPane.widthProperty());
+        videoImageView.fitHeightProperty().bind(playerPane.heightProperty());
         mediaPlayer.videoSurface().set(new ImageViewVideoSurface(videoImageView));
         loadingProgressIndicator = new ProgressIndicator();
         loadingProgressIndicator.visibleProperty().bind(isLoading);
@@ -253,9 +263,9 @@ public class VLCPlayer {
         rate2SettingRadioButton.setToggleGroup(rateSettingToggleGroup);
         // 默认选择1倍速
         rateSettingToggleGroup.selectToggle(rate1SettingRadioButton);
-        rateSettingToggleGroup.selectedToggleProperty().addListener(((observable, oldValue, newValue) -> {
-            mediaPlayer.controls().setRate((float) newValue.getUserData());
-        }));
+        rateSettingToggleGroup.selectedToggleProperty().addListener(((observable, oldValue, newValue) ->
+            mediaPlayer.controls().setRate((float) newValue.getUserData())
+        ));
         rateSettingRadioButtonHBox = new HBox(
                 rate0_5SettingRadioButton,
                 rate1SettingRadioButton,
@@ -373,18 +383,16 @@ public class VLCPlayer {
         AnchorPane.setBottomAnchor(rightToolBarHbox, 10.0);
         controlPane = new StackPane(controlInnerAnchorPane);
         controlPane.setAlignment(Pos.BOTTOM_CENTER);
-        paneChildren = pane.getChildren();
+        paneChildren = playerPane.getChildren();
         paneChildren.add(videoImageView);
         paneChildren.add(controlPane);
         paneChildren.add(loadingProgressIndicator);
-        pane.setStyle("-fx-background-color: black;");
-        pane.prefWidthProperty().bind(parentWidthProp);
-        pane.prefHeightProperty().bind(parentHeightProp);
-        pane.minWidthProperty().bind(parentWidthProp);
-        pane.minHeightProperty().bind(parentHeightProp);
-        pane.maxWidthProperty().bind(parentWidthProp);
-        pane.maxHeightProperty().bind(parentHeightProp);
-        pane.setOnMouseClicked(evt -> {
+        playerPane.setStyle("-fx-background-color: black;");
+        bindPlayerPaneWidth(paneWidthProp);
+        playerPane.prefHeightProperty().bind(parentHeightProp);
+        playerPane.minHeightProperty().bind(parentHeightProp);
+        playerPane.maxHeightProperty().bind(parentHeightProp);
+        playerPane.setOnMouseClicked(evt -> {
             if (evt.getClickCount() == 1) {
                 changePlayStatus();
             } else {
@@ -404,8 +412,8 @@ public class VLCPlayer {
                 case Z -> videoImageView.setPreserveRatio(!videoImageView.isPreserveRatio());
             }
         });
+        parentChildren.add(0, playerPane);
         parent.requestFocus();
-        parent.setCenter(pane);
 
         setLoading(true);
     }
@@ -414,7 +422,27 @@ public class VLCPlayer {
         isLoading.set(loading);
     }
 
+    private void bindPlayerPaneWidth(DoubleExpression widthProp) {
+        DoubleProperty prefWidthProperty = playerPane.prefWidthProperty();
+        DoubleProperty maxWidthProperty = playerPane.maxWidthProperty();
+        DoubleProperty minWidthProperty = playerPane.minWidthProperty();
+
+        if (prefWidthProperty.isBound()) {
+            prefWidthProperty.unbind();
+        }
+        prefWidthProperty.bind(widthProp);
+        if (maxWidthProperty.isBound()) {
+            maxWidthProperty.unbind();
+        }
+        maxWidthProperty.bind(widthProp);
+        if (minWidthProperty.isBound()) {
+            minWidthProperty.unbind();
+        }
+        minWidthProperty.bind(widthProp);
+    }
+
     public void play(String url) {
+        setLoading(true);
         mediaPlayer.media().play(url);
         mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
     }

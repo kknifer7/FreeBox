@@ -20,3 +20,20 @@
 .vlc-player-pop-over {
     -fx-padding: 10px;
 }
+
+.video-details {
+    -fx-padding: 10px;
+}
+
+.video-details-prop {
+    -fx-font-size: 16px;
+}
+
+.video-details-prop-name {
+    -fx-fill: #4169E1;
+}
+
+.video-details-ep-btn-selected {
+    -fx-background-color: #007BFF;
+    -fx-text-fill: white;
+}

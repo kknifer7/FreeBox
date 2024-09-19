@@ -1,7 +1,7 @@
 @import "../common.css";
 
 .movie-remark-label {
-    -fx-background-color: #32CD32;
+    -fx-background-color: #4AAF5A;
     -fx-text-fill: white;
     -fx-label-padding: 1px;
 }

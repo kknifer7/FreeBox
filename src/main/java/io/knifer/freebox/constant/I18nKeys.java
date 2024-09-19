@@ -16,6 +16,15 @@ public class I18nKeys {
 
     public static final String TV_LOAD_MORE = "tv.load-more";
 
+    public static final String VIDEO_MOVIE_DETAILS_SOURCE = "video.movie-details.source";
+    public static final String VIDEO_MOVIE_DETAILS_YEAR = "video.movie-details.year";
+    public static final String VIDEO_MOVIE_DETAILS_AREA = "video.movie-details.area";
+    public static final String VIDEO_MOVIE_DETAILS_TYPE = "video.movie-details.type";
+    public static final String VIDEO_MOVIE_DETAILS_DIRECTORS = "video.movie-details.directors";
+    public static final String VIDEO_MOVIE_DETAILS_ACTORS = "video.movie-details.actors";
+    public static final String VIDEO_MOVIE_DETAILS_LINK = "video.movie-details.link";
+    public static final String VIDEO_MOVIE_DETAILS_INTRO = "video.movie-details.intro";
+
     public static final String MESSAGE_CLIENT_REGISTERED = "message.client-registered";
     public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";
 
@@ -33,6 +42,7 @@ public class I18nKeys {
     public static final String SETTINGS_WS_SERVICE_DOWN = "settings.ws.service-down";
 
     public static final String VIDEO_ERROR_NO_DATA = "video.error.no-data";
+    public static final String VIDEO_ERROR_NO_RESOURCE = "video.error.no-resource";
     public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
 
     public static final String ERROR = "error";

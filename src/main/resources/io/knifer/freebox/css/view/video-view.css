@@ -1,5 +1,14 @@
 @import "../common.css";
 
+.vlc-player {
+    -fx-background-color: black;
+}
+
+.vlc-player-title {
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+}
+
 .vlc-player-anchor-pane {
     -fx-pref-height: 46px;
     -fx-min-height: 46px;

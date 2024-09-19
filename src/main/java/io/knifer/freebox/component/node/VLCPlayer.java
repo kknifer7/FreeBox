@@ -14,7 +14,9 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
@@ -54,6 +56,10 @@ import java.util.concurrent.atomic.AtomicLong;
 @Getter
 public class VLCPlayer {
 
+    private final Stage stage;
+    private final Scene scene;
+    private final AnchorPane controlPane;
+    private final Timer controlPaneHideTimer;
     private final EmbeddedMediaPlayer mediaPlayer;
     private final ImageView videoImageView;
     private final ProgressIndicator loadingProgressIndicator;
@@ -73,6 +79,7 @@ public class VLCPlayer {
     private final Label videoProgressLengthLabel;
     private final Label fullScreenLabel;
     private final Label fillWindowLabel;
+    private final Label videoTitleLabel;
     private final StackPane playerPane;
     private final FontIcon pauseIcon = FontIcon.of(FontAwesome.PAUSE, 32, Color.WHITE);
     private final FontIcon playIcon = FontIcon.of(FontAwesome.PLAY, 32, Color.WHITE);
@@ -90,9 +97,7 @@ public class VLCPlayer {
         ReadOnlyDoubleProperty parentWidthProp = parent.widthProperty();
         DoubleBinding paneWidthProp = parentWidthProp.multiply(0.8);
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
-        Stage stage = WindowHelper.getStage(parent);
         List<Node> paneChildren;
-        AnchorPane controlInnerAnchorPane;
         PopOver volumePopOver;
         Timer volumePopOverHideTimer;
         Label rateSettingTitleLabel;
@@ -103,8 +108,11 @@ public class VLCPlayer {
         HBox progressLabelHBox;
         HBox leftToolBarHbox;
         HBox rightToolBarHbox;
-        StackPane controlPane;
+        AnchorPane controlBottomAnchorPane;
+        AnchorPane controlTopAnchorPane;
 
+        stage = WindowHelper.getStage(parent);
+        scene = stage.getScene();
         playerPane = new StackPane();
         stage.setFullScreenExitHint(StringUtils.EMPTY);
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
@@ -113,20 +121,21 @@ public class VLCPlayer {
             @Override
             public void onBeforeEnterFullScreen() {
                 // 隐藏除播放器外的所有控件
-                setBorderPaneChildrenVisible(false);
+                setOtherNodesVisible(false);
                 // 绑定播放器宽度与父窗口宽度一致
                 bindPlayerPaneWidth(parentWidthProp);
+                parent.requestFocus();
             }
 
             @Override
             public void onAfterExitFullScreen() {
                 // 显示所有控件
-                setBorderPaneChildrenVisible(true);
+                setOtherNodesVisible(true);
                 // 绑定非全屏下的播放器宽度
                 bindPlayerPaneWidth(paneWidthProp);
             }
 
-            private void setBorderPaneChildrenVisible(boolean visible) {
+            private void setOtherNodesVisible(boolean visible) {
                 parentChildren.forEach(p -> {
                     if (p != playerPane) {
                         p.setVisible(visible);
@@ -369,9 +378,9 @@ public class VLCPlayer {
         leftToolBarHbox.setAlignment(Pos.CENTER);
         rightToolBarHbox = new HBox(fillWindowLabel, fullScreenLabel);
         rightToolBarHbox.setSpacing(20);
-        controlInnerAnchorPane = new AnchorPane(leftToolBarHbox, videoProgressBar, rightToolBarHbox);
-        controlInnerAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
-        controlInnerAnchorPane.setOnMouseClicked(Event::consume);
+        controlBottomAnchorPane = new AnchorPane(leftToolBarHbox, videoProgressBar, rightToolBarHbox);
+        controlBottomAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
+        controlBottomAnchorPane.setOnMouseClicked(Event::consume);
         AnchorPane.setLeftAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setTopAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(leftToolBarHbox, 10.0);
@@ -382,13 +391,29 @@ public class VLCPlayer {
         AnchorPane.setRightAnchor(rightToolBarHbox, 10.0);
         AnchorPane.setTopAnchor(rightToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(rightToolBarHbox, 10.0);
-        controlPane = new StackPane(controlInnerAnchorPane);
-        controlPane.setAlignment(Pos.BOTTOM_CENTER);
+        // 顶端标题
+        videoTitleLabel = new Label();
+        videoTitleLabel.getStyleClass().add("vlc-player-title");
+        controlTopAnchorPane = new AnchorPane(videoTitleLabel);
+        controlTopAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
+        controlTopAnchorPane.setOnMouseClicked(Event::consume);
+        AnchorPane.setLeftAnchor(videoTitleLabel, 10.0);
+        AnchorPane.setRightAnchor(videoTitleLabel, 10.0);
+        AnchorPane.setTopAnchor(videoTitleLabel, 10.0);
+        AnchorPane.setBottomAnchor(videoTitleLabel, 10.0);
+        // 摆放布局组件
+        controlPane = new AnchorPane(controlBottomAnchorPane, controlTopAnchorPane);
+        AnchorPane.setLeftAnchor(controlBottomAnchorPane, 0.0);
+        AnchorPane.setRightAnchor(controlBottomAnchorPane, 0.0);
+        AnchorPane.setBottomAnchor(controlBottomAnchorPane, 0.0);
+        AnchorPane.setLeftAnchor(controlTopAnchorPane, 0.0);
+        AnchorPane.setRightAnchor(controlTopAnchorPane, 0.0);
+        AnchorPane.setTopAnchor(controlTopAnchorPane, 0.0);
         paneChildren = playerPane.getChildren();
         paneChildren.add(videoImageView);
         paneChildren.add(controlPane);
         paneChildren.add(loadingProgressIndicator);
-        playerPane.setStyle("-fx-background-color: black;");
+        playerPane.getStyleClass().add("vlc-player");
         bindPlayerPaneWidth(paneWidthProp);
         playerPane.prefHeightProperty().bind(parentHeightProp);
         playerPane.minHeightProperty().bind(parentHeightProp);
@@ -401,6 +426,7 @@ public class VLCPlayer {
                 mediaPlayer.fullScreen().toggle();
             }
         });
+        // 键盘快捷键事件绑定
         parent.addEventFilter(KeyEvent.KEY_PRESSED, evt -> {
             switch (evt.getCode()) {
                 case SPACE -> changePlayStatus();
@@ -413,10 +439,30 @@ public class VLCPlayer {
                 case Z -> videoImageView.setPreserveRatio(!videoImageView.isPreserveRatio());
             }
         });
+        // 鼠标移动事件处理
+        controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
+        parent.addEventFilter(MouseEvent.MOUSE_MOVED, evt -> setControlsVisible(true));
         parentChildren.add(0, playerPane);
         parent.requestFocus();
-
         setLoading(true);
+    }
+
+    private void setControlsVisible(boolean flag) {
+        Cursor cursor = scene.getCursor();
+
+        if (controlPane.isVisible() != flag) {
+            controlPane.setVisible(flag);
+        }
+        if (flag) {
+            controlPaneHideTimer.restart();
+            if (cursor == Cursor.NONE) {
+                scene.setCursor(Cursor.DEFAULT);
+            }
+        } else {
+            if (cursor != Cursor.NONE) {
+                scene.setCursor(Cursor.NONE);
+            }
+        }
     }
 
     private void setLoading(boolean loading) {
@@ -442,8 +488,9 @@ public class VLCPlayer {
         minWidthProperty.bind(widthProp);
     }
 
-    public void play(String url) {
+    public void play(String url, String videoTitle) {
         setLoading(true);
+        videoTitleLabel.setText(videoTitle);
         mediaPlayer.media().play(url);
         mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
     }

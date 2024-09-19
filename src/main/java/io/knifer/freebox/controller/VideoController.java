@@ -123,7 +123,7 @@ public class VideoController extends BaseController {
                     }
                     selectedEpBtn = btn;
                     selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
-                    playVideo(video, urlFlag, bean.getUrl());
+                    playVideo(video, bean, urlFlag);
                 });
             });
             tab.setContent(scrollPane);
@@ -170,7 +170,7 @@ public class VideoController extends BaseController {
         Movie.Video.UrlBean.UrlInfo urlInfo = video.getUrlBean().getInfoList().get(0);
 
         // 播放第一个视频
-        playVideo(video, urlInfo.getFlag(), urlInfo.getBeanList().get(0).getUrl());
+        playVideo(video, urlInfo.getBeanList().get(0), urlInfo.getFlag());
         // 设置第一个tab内的第一个按钮为选中状态
         selectedEpBtn = (
                 (Button) ((FlowPane) ((ScrollPane) resourceTabPane.getTabs().get(0).getContent()).getContent())
@@ -180,11 +180,11 @@ public class VideoController extends BaseController {
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
     }
 
-    private void playVideo(Movie.Video video, String flag, String videoUrl) {
+    private void playVideo(Movie.Video video, Movie.Video.UrlBean.UrlInfo.InfoBean videoInfo, String flag) {
         player.stop();
         template.getPlayerContent(
                 clientInfo,
-                GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, videoUrl),
+                GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, videoInfo.getUrl()),
                 playerContentJson -> {
                     JsonElement nameValuePairs = playerContentJson.get("nameValuePairs");
                     JsonElement playUrl = nameValuePairs.getAsJsonObject().get("url");
@@ -193,7 +193,10 @@ public class VideoController extends BaseController {
                         ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                         return;
                     }
-                    player.play(playUrl.getAsString());
+                    player.play(
+                            playUrl.getAsString(),
+                            "《" + video.getName() + "》" + flag + " - " + videoInfo.getName()
+                    );
                 }
         );
     }

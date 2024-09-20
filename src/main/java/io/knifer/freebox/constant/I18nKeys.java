@@ -14,6 +14,7 @@ public class I18nKeys {
 
     public static final String HOME_SETTINGS_INFO = "home.settings-info";
 
+    public static final String TV_HOME = "tv.home";
     public static final String TV_LOAD_MORE = "tv.load-more";
 
     public static final String VIDEO_MOVIE_DETAILS_SOURCE = "video.movie-details.source";

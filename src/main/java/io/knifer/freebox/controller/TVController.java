@@ -23,6 +23,7 @@ import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
+import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -70,6 +71,9 @@ public class TVController extends BaseController {
     private KebSocketTemplate template;
     private ClientInfo clientInfo;
     private Movie.Video fetchMoreItem;
+
+    private final String HOME_SORT_DATA_ID = "ztx*1RcW6%Ep";
+
     private final Map<String, MutablePair<Movie, List<Movie.Video>>> MOVIE_CACHE = new HashMap<>();
 
     @FXML
@@ -98,6 +102,7 @@ public class TVController extends BaseController {
             videosGridView.disableProperty().bind(movieLoadingProperty);
             classesListView.disableProperty().bind(sortsLoadingProperty);
             classesListView.disableProperty().bind(movieLoadingProperty);
+            sourceBeanComboBox.disableProperty().bind(sortsLoadingProperty);
             template.getSourceBeanList(clientInfo, this::initSourceBeanData);
         });
     }
@@ -231,11 +236,22 @@ public class TVController extends BaseController {
         MOVIE_CACHE.clear();
         videosGridView.getItems().clear();
         template.getHomeContent(clientInfo, getCurrentSourceBean(), homeContent -> {
+            Movie movie = homeContent.getList();
+            List<Movie.Video> list;
             MovieSort classes = homeContent.getClasses();
             List<MovieSort.SortData> sortList = classes.getSortList();
 
+            if (movie != null && CollectionUtil.isNotEmpty(list = movie.getVideoList())) {
+                // 该源带有首页推荐影片，新增一个首页推荐类别，并且将影片数据缓存起来
+                items.add(new MovieSort.SortData(HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)));
+                MOVIE_CACHE.put(HOME_SORT_DATA_ID, MutablePair.of(movie, list));
+            }
             items.addAll(sortList);
             sortsLoadingProperty.set(false);
+            if (!items.isEmpty()) {
+                classesListView.getSelectionModel().selectFirst();
+                loadMovieBySortData(items.get(0));
+            }
         });
     }
 
@@ -246,45 +262,54 @@ public class TVController extends BaseController {
     @FXML
     private void onClassesListViewClick(MouseEvent mouseEvent) {
         MovieSort.SortData sortData;
-        ObservableList<Movie.Video> items;
-        MutablePair<Movie, List<Movie.Video>> movieAndVideosCached;
 
         if (mouseEvent.getTarget() instanceof ListCell<?> listCell) {
             sortData = CastUtil.cast(listCell.getItem());
             if (sortData == null) {
                 return;
             }
-            movieLoadingProperty.set(true);
-            items = videosGridView.getItems();
-            if (!items.isEmpty()) {
-                /*
-                 * 列表中原本有影片数据，在清空的同时，也要清空异步任务队列
-                 * 防止列表中旧有影片封面的异步加载任务占用异步线程
-                 */
-                items.clear();
-                AsyncUtil.cancelAllTask();
-            }
-            movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
-            if (movieAndVideosCached == null) {
-                // 拉取影片数据
-                template.getCategoryContent(
-                        clientInfo,
-                        GetCategoryContentDTO.of(getCurrentSourceBean(), sortData, 1),
-                        categoryContent -> {
-                            Movie movie = categoryContent.getMovie();
-                            MutablePair<Movie, List<Movie.Video>> movieAndVideos =
-                                    MutablePair.of(movie, movie.getVideoList());
+            loadMovieBySortData(sortData);
+        }
+    }
 
-                            putVideosInView(movieAndVideos);
-                            MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
-                            movieLoadingProperty.set(false);
-                        }
-                );
-            } else {
-                // 使用缓存中的影片数据
-                putVideosInView(movieAndVideosCached);
-                movieLoadingProperty.set(false);
-            }
+    /**
+     * 根据分类加载影片
+     * @param sortData 分类数据
+     */
+    private void loadMovieBySortData(MovieSort.SortData sortData) {
+        ObservableList<Movie.Video> items;
+        MutablePair<Movie, List<Movie.Video>> movieAndVideosCached;
+
+        movieLoadingProperty.set(true);
+        items = videosGridView.getItems();
+        if (!items.isEmpty()) {
+            /*
+             * 列表中原本有影片数据，在清空的同时，也要清空异步任务队列
+             * 防止列表中旧有影片封面的异步加载任务占用异步线程
+             */
+            items.clear();
+            AsyncUtil.cancelAllTask();
+        }
+        movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
+        if (movieAndVideosCached == null) {
+            // 拉取影片数据
+            template.getCategoryContent(
+                    clientInfo,
+                    GetCategoryContentDTO.of(getCurrentSourceBean(), sortData, 1),
+                    categoryContent -> {
+                        Movie movie = categoryContent.getMovie();
+                        MutablePair<Movie, List<Movie.Video>> movieAndVideos =
+                                MutablePair.of(movie, movie.getVideoList());
+
+                        putVideosInView(movieAndVideos);
+                        MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
+                        movieLoadingProperty.set(false);
+                    }
+            );
+        } else {
+            // 使用缓存中的影片数据
+            putVideosInView(movieAndVideosCached);
+            movieLoadingProperty.set(false);
         }
     }
 

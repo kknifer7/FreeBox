@@ -8,7 +8,7 @@
    <left>
       <BorderPane BorderPane.alignment="CENTER">
          <top>
-            <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" BorderPane.alignment="CENTER" />
+            <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" prefWidth="200.0" BorderPane.alignment="CENTER" />
          </top>
          <center>
             <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">

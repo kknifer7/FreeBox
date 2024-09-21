@@ -27,6 +27,7 @@ import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -55,6 +56,9 @@ public class VideoController extends BaseController {
     private ClientInfo clientInfo;
 
     private Button selectedEpBtn = null;
+    private Movie.Video playingVideo;
+    private Movie.Video.UrlBean.UrlInfo playingUrlInfo;
+    private Movie.Video.UrlBean.UrlInfo.InfoBean playingInfoBean;
 
     @FXML
     private void initialize() {
@@ -70,6 +74,43 @@ public class VideoController extends BaseController {
                 ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                 return;
             }
+            // 绑定播放下一集事件
+            player.setOnStepForward(() -> {
+                Iterator<Movie.Video.UrlBean.UrlInfo.InfoBean> beanIter;
+                Movie.Video.UrlBean.UrlInfo.InfoBean bean;
+                ObservableList<Node> epBtnList;
+                Iterator<Node> epBtnIter;
+                Button epBtn;
+
+                if (playingVideo == null) {
+                    return;
+                }
+                beanIter = playingUrlInfo.getBeanList().iterator();
+                while (beanIter.hasNext()) {
+                    bean = beanIter.next();
+                    if (bean.getUrl().equals(playingInfoBean.getUrl())) {
+                        if (beanIter.hasNext()) {
+                            // 准备播放下一集，先更新“被选中的当前集按钮”样式
+                            epBtnList = ((FlowPane) (
+                                    (ScrollPane) resourceTabPane.getSelectionModel().getSelectedItem().getContent()
+                            ).getContent()).getChildren();
+                            epBtnIter = epBtnList.iterator();
+                            while (epBtnIter.hasNext()) {
+                                epBtn = (Button) epBtnIter.next();
+                                if (epBtn == selectedEpBtn) {
+                                    updateSelectedEpBtn(((Button) epBtnIter.next()));
+                                    break;
+                                }
+                            }
+                            // 播放下一集，同时
+                            playVideo(playingVideo, playingUrlInfo, beanIter.next());
+                        } else {
+                            ToastHelper.showInfoI18n(I18nKeys.VIDEO_INFO_NO_MORE_EP);
+                        }
+                        break;
+                    }
+                }
+            });
             WindowHelper.getStage(root).setOnCloseRequest(evt -> close());
             videoDetailSplitPane.minHeightProperty().bind(root.heightProperty());
             putMovieDataInView();
@@ -118,17 +159,22 @@ public class VideoController extends BaseController {
 
                 children.add(btn);
                 btn.setOnAction(evt -> {
-                    if (selectedEpBtn != null) {
-                        selectedEpBtn.getStyleClass().remove("video-details-ep-btn-selected");
-                    }
-                    selectedEpBtn = btn;
-                    selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
-                    playVideo(video, bean, urlFlag);
+                    // 选集按钮被点击，更新样式，并播放对应选集集视频
+                    updateSelectedEpBtn(btn);
+                    playVideo(video, urlInfo, bean);
                 });
             });
             tab.setContent(scrollPane);
             resourceTabPane.getTabs().add(tab);
         });
+    }
+
+    private void updateSelectedEpBtn(Button newSelectedEpBtn) {
+        if (selectedEpBtn != null) {
+            selectedEpBtn.getStyleClass().remove("video-details-ep-btn-selected");
+        }
+        selectedEpBtn = newSelectedEpBtn;
+        selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
     }
 
     private void addMovieDetailsIfExists(
@@ -169,8 +215,6 @@ public class VideoController extends BaseController {
         Movie.Video video = videoDetail.getVideoList().get(0);
         Movie.Video.UrlBean.UrlInfo urlInfo = video.getUrlBean().getInfoList().get(0);
 
-        // 播放第一个视频
-        playVideo(video, urlInfo.getBeanList().get(0), urlInfo.getFlag());
         // 设置第一个tab内的第一个按钮为选中状态
         selectedEpBtn = (
                 (Button) ((FlowPane) ((ScrollPane) resourceTabPane.getTabs().get(0).getContent()).getContent())
@@ -178,13 +222,21 @@ public class VideoController extends BaseController {
                         .get(0)
         );
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
+        // 播放第一个视频
+        playVideo(video, urlInfo, urlInfo.getBeanList().get(0));
     }
 
-    private void playVideo(Movie.Video video, Movie.Video.UrlBean.UrlInfo.InfoBean videoInfo, String flag) {
+    private void playVideo(
+            Movie.Video video,
+            Movie.Video.UrlBean.UrlInfo urlInfo,
+            Movie.Video.UrlBean.UrlInfo.InfoBean urlInfoBean
+    ) {
+        String flag = urlInfo.getFlag();
+
         player.stop();
         template.getPlayerContent(
                 clientInfo,
-                GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, videoInfo.getUrl()),
+                GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
                 playerContentJson -> {
                     JsonElement nameValuePairs = playerContentJson.get("nameValuePairs");
                     JsonElement playUrl = nameValuePairs.getAsJsonObject().get("url");
@@ -195,8 +247,11 @@ public class VideoController extends BaseController {
                     }
                     player.play(
                             playUrl.getAsString(),
-                            "《" + video.getName() + "》" + flag + " - " + videoInfo.getName()
+                            "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName()
                     );
+                    playingVideo = video;
+                    playingUrlInfo = urlInfo;
+                    playingInfoBean = urlInfoBean;
                 }
         );
     }

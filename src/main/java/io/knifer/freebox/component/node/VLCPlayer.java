@@ -12,6 +12,7 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -25,12 +26,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
+import org.controlsfx.control.ToggleSwitch;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
@@ -64,6 +67,7 @@ public class VLCPlayer {
     private final ImageView videoImageView;
     private final ProgressIndicator loadingProgressIndicator;
     private final Label pauseLabel;
+    private final Label stepForwardLabel;
     private final Slider volumeSlider;
     private final Label volumeLabel;
     private final ToggleGroup rateSettingToggleGroup;
@@ -72,25 +76,27 @@ public class VLCPlayer {
     private final RadioButton rate1_25SettingRadioButton;
     private final RadioButton rate1_5SettingRadioButton;
     private final RadioButton rate2SettingRadioButton;
+    private final ToggleSwitch fillWindowToggleSwitch;
     private final Label settingsLabel;
     private final ProgressBar videoProgressBar;
     private final Label videoProgressLabel;
     private final Label videoProgressSplitLabel;
     private final Label videoProgressLengthLabel;
     private final Label fullScreenLabel;
-    private final Label fillWindowLabel;
     private final Label videoTitleLabel;
     private final StackPane playerPane;
     private final FontIcon pauseIcon = FontIcon.of(FontAwesome.PAUSE, 32, Color.WHITE);
     private final FontIcon playIcon = FontIcon.of(FontAwesome.PLAY, 32, Color.WHITE);
+    private final FontIcon stepForwardIcon = FontIcon.of(FontAwesome.STEP_FORWARD, 32, Color.WHITE);
     private final FontIcon volumeUpIcon = FontIcon.of(FontAwesome.VOLUME_UP, 32, Color.WHITE);
     private final FontIcon volumeOffIcon = FontIcon.of(FontAwesome.VOLUME_OFF, 32, Color.WHITE);
     private final FontIcon fullScreenIcon = FontIcon.of(FontAwesome.ARROWS_ALT, 32, Color.WHITE);
-    private final FontIcon fillWindowIcon = FontIcon.of(FontAwesome.WINDOW_MAXIMIZE, 32, Color.WHITE);
     private final FontIcon settingsIcon = FontIcon.of(FontAwesome.SLIDERS, 32, Color.WHITE);
     private final AtomicLong videoLength = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
+
+    private Runnable stepForwardRunnable;
 
     public VLCPlayer(HBox parent) {
         ObservableList<Node> parentChildren = parent.getChildren();
@@ -103,6 +109,7 @@ public class VLCPlayer {
         Label rateSettingTitleLabel;
         HBox rateSettingRadioButtonHBox;
         HBox rateSettingHBox;
+        VBox settingsPopOverInnerVBox;
         PopOver settingsPopOver;
         Timer settingsPopOverHideTimer;
         HBox progressLabelHBox;
@@ -199,6 +206,11 @@ public class VLCPlayer {
             }
 
             @Override
+            public void finished(MediaPlayer mediaPlayer) {
+                stepForwardRunnable.run();
+            }
+
+            @Override
             public void error(MediaPlayer mediaPlayer) {
                 log.error("VLCPlayer error");
             }
@@ -215,6 +227,12 @@ public class VLCPlayer {
         pauseLabel.setGraphic(pauseIcon);
         pauseLabel.getStyleClass().add("vlc-player-control-label");
         pauseLabel.setOnMouseClicked(evt -> changePlayStatus());
+        // 下一集
+        stepForwardRunnable = () -> {};
+        stepForwardLabel = new Label();
+        stepForwardLabel.setGraphic(stepForwardIcon);
+        stepForwardLabel.getStyleClass().add("vlc-player-control-label");
+        stepForwardLabel.setOnMouseClicked(evt -> stepForwardRunnable.run());
         // 音量设置
         volumeLabel = new Label();
         volumeLabel.setGraphic(volumeUpIcon);
@@ -255,6 +273,7 @@ public class VLCPlayer {
         settingsLabel.setGraphic(settingsIcon);
         // 倍速设置
         rateSettingTitleLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_RATE));
+        HBox.setMargin(rateSettingTitleLabel, new Insets(0, 10, 0, 0));
         rateSettingToggleGroup = new ToggleGroup();
         rate0_5SettingRadioButton = new RadioButton("0.5");
         rate0_5SettingRadioButton.setUserData(0.5f);
@@ -288,11 +307,16 @@ public class VLCPlayer {
         rateSettingHBox.setAlignment(Pos.CENTER);
         rateSettingRadioButtonHBox.setAlignment(Pos.CENTER);
         rateSettingRadioButtonHBox.setSpacing(5);
+        // 铺满设置按钮
+        fillWindowToggleSwitch = new ToggleSwitch(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_FILL_WINDOW));
+        videoImageView.preserveRatioProperty().bind(fillWindowToggleSwitch.selectedProperty().not());
         settingsPopOver = new PopOver();
         settingsPopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
         settingsPopOver.getStyleClass().add("vlc-player-pop-over");
         settingsPopOver.setDetachable(false);
-        settingsPopOver.setContentNode(rateSettingHBox);
+        settingsPopOverInnerVBox = new VBox(fillWindowToggleSwitch, rateSettingHBox);
+        settingsPopOverInnerVBox.setSpacing(10.0);
+        settingsPopOver.setContentNode(settingsPopOverInnerVBox);
         settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());
         settingsPopOver.addEventFilter(MouseEvent.ANY, evt -> {
             if (evt.getEventType() == MouseEvent.MOUSE_EXITED) {
@@ -369,14 +393,10 @@ public class VLCPlayer {
         fullScreenLabel.getStyleClass().add("vlc-player-control-label");
         fullScreenLabel.setGraphic(fullScreenIcon);
         fullScreenLabel.setOnMouseClicked(evt -> mediaPlayer.fullScreen().toggle());
-        fillWindowLabel = new Label();
-        fillWindowLabel.getStyleClass().add("vlc-player-control-label");
-        fillWindowLabel.setGraphic(fillWindowIcon);
-        fillWindowLabel.setOnMouseClicked(evt -> videoImageView.setPreserveRatio(!videoImageView.isPreserveRatio()));
-        leftToolBarHbox = new HBox(pauseLabel, volumeLabel, settingsLabel, progressLabelHBox);
+        leftToolBarHbox = new HBox(pauseLabel, stepForwardLabel, volumeLabel, settingsLabel, progressLabelHBox);
         leftToolBarHbox.setSpacing(20);
         leftToolBarHbox.setAlignment(Pos.CENTER);
-        rightToolBarHbox = new HBox(fillWindowLabel, fullScreenLabel);
+        rightToolBarHbox = new HBox(fullScreenLabel);
         rightToolBarHbox.setSpacing(20);
         controlBottomAnchorPane = new AnchorPane(leftToolBarHbox, videoProgressBar, rightToolBarHbox);
         controlBottomAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
@@ -384,8 +404,8 @@ public class VLCPlayer {
         AnchorPane.setLeftAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setTopAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(leftToolBarHbox, 10.0);
-        AnchorPane.setLeftAnchor(videoProgressBar, 420.0);
-        AnchorPane.setRightAnchor(videoProgressBar, 140.0);
+        AnchorPane.setLeftAnchor(videoProgressBar, 490.0);
+        AnchorPane.setRightAnchor(videoProgressBar, 70.0);
         AnchorPane.setTopAnchor(videoProgressBar, 10.0);
         AnchorPane.setBottomAnchor(videoProgressBar, 10.0);
         AnchorPane.setRightAnchor(rightToolBarHbox, 10.0);
@@ -436,7 +456,7 @@ public class VLCPlayer {
                     }
                 }
                 case F -> mediaPlayer.fullScreen().toggle();
-                case Z -> videoImageView.setPreserveRatio(!videoImageView.isPreserveRatio());
+                case Z -> fillWindowToggleSwitch.setSelected(!fillWindowToggleSwitch.isSelected());
             }
         });
         // 鼠标移动事件处理
@@ -521,10 +541,17 @@ public class VLCPlayer {
     }
 
     public void stop() {
+        State playerState;
+
         setLoading(false);
-        if (mediaPlayer.status().state() != State.STOPPED) {
+        playerState = mediaPlayer.status().state();
+        if (playerState != State.STOPPED && playerState != State.ENDED) {
             mediaPlayer.controls().stop();
         }
+    }
+
+    public void setOnStepForward(Runnable runnable) {
+        this.stepForwardRunnable = runnable;
     }
 
     public void destroy() {

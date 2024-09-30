@@ -54,4 +54,12 @@ public class MessageCodes {
      * 获取播放信息结果
      */
     public static final int GET_PLAYER_CONTENT_RESULT = 210;
+    /**
+     * 获取观看历史
+     */
+    public static final int GET_PLAY_HISTORY = 211;
+    /**
+     * 获取观看历史结果
+     */
+    public static final int GET_PLAY_HISTORY_RESULT = 212;
 }

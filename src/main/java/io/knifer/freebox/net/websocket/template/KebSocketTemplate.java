@@ -4,9 +4,11 @@ import com.google.gson.JsonObject;
 import io.knifer.freebox.model.common.AbsSortXml;
 import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
 import io.knifer.freebox.model.s2c.GetDetailContentDTO;
+import io.knifer.freebox.model.s2c.GetPlayHistoryDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 
 import java.util.List;
@@ -57,4 +59,12 @@ public interface KebSocketTemplate {
      * @param callback 回调
      */
     void getPlayerContent(ClientInfo clientInfo, GetPlayerContentDTO dto, Consumer<JsonObject> callback);
+
+    /**
+     * 获取历史记录
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     * @param callback 回调
+     */
+    void getPlayHistory(ClientInfo clientInfo, GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback);
 }

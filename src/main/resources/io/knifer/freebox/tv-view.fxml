@@ -8,7 +8,12 @@
    <left>
       <BorderPane BorderPane.alignment="CENTER">
          <top>
-            <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" prefWidth="200.0" BorderPane.alignment="CENTER" />
+            <HBox BorderPane.alignment="CENTER">
+               <children>
+                  <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" prefWidth="150.0" />
+                  <Button fx:id="historyButton" mnemonicParsing="false" onAction="#onHistoryBtnAction" text="%tv.history" />
+               </children>
+            </HBox>
          </top>
          <center>
             <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">

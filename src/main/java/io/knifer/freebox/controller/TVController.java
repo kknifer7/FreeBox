@@ -3,12 +3,14 @@ package io.knifer.freebox.controller;
 import io.knifer.freebox.component.converter.SourceBean2StringConverter;
 import io.knifer.freebox.component.factory.ClassListCellFactory;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
+import io.knifer.freebox.component.node.MovieHistoryPopOver;
 import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.common.Movie;
@@ -17,6 +19,7 @@ import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
 import io.knifer.freebox.model.s2c.GetDetailContentDTO;
+import io.knifer.freebox.model.s2c.GetPlayHistoryDTO;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
@@ -30,10 +33,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -65,6 +65,10 @@ public class TVController extends BaseController {
     private ProgressIndicator sortsLoadingProgressIndicator;
     @FXML
     private ProgressIndicator movieLoadingProgressIndicator;
+    @FXML
+    private Button historyButton;
+
+    private final MovieHistoryPopOver movieHistoryPopOver = new MovieHistoryPopOver();
 
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
@@ -97,6 +101,7 @@ public class TVController extends BaseController {
             classesListView.setCellFactory(new ClassListCellFactory());
             videosGridView.setCellFactory(new VideoGridCellFactory());
 
+            historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty());
             sortsLoadingProgressIndicator.visibleProperty().bind(sortsLoadingProperty);
             movieLoadingProgressIndicator.visibleProperty().bind(movieLoadingProperty);
             videosGridView.disableProperty().bind(movieLoadingProperty);
@@ -236,11 +241,20 @@ public class TVController extends BaseController {
         MOVIE_CACHE.clear();
         videosGridView.getItems().clear();
         template.getHomeContent(clientInfo, getCurrentSourceBean(), homeContent -> {
-            Movie movie = homeContent.getList();
+            Movie movie;
             List<Movie.Video> list;
-            MovieSort classes = homeContent.getClasses();
-            List<MovieSort.SortData> sortList = classes.getSortList();
+            MovieSort classes;
+            List<MovieSort.SortData> sortList;
 
+            if (homeContent == null) {
+                ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SOURCE_FAILED);
+                sortsLoadingProperty.set(false);
+
+                return;
+            }
+            movie = homeContent.getList();
+            classes = homeContent.getClasses();
+            sortList = classes.getSortList();
             if (movie != null && CollectionUtil.isNotEmpty(list = movie.getVideoList())) {
                 // 该源带有首页推荐影片，新增一个首页推荐类别，并且将影片数据缓存起来
                 items.add(new MovieSort.SortData(HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)));
@@ -347,7 +361,7 @@ public class TVController extends BaseController {
     /**
      * 销毁方法
      */
-    public void destroy() {
+    private void destroy() {
         log.info(
                 "[{}]'s tv controller destroy",
                 clientInfo.getConnection().getRemoteSocketAddress().getHostName()
@@ -360,5 +374,15 @@ public class TVController extends BaseController {
 
     private ClientInfo getClientInfo() {
         return getData();
+    }
+
+    @FXML
+    private void onHistoryBtnAction() {
+        template.getPlayHistory(clientInfo, GetPlayHistoryDTO.of(100), playHistory -> {
+            if (CollectionUtil.isNotEmpty(playHistory)) {
+                movieHistoryPopOver.setVodInfoList(playHistory);
+            }
+            movieHistoryPopOver.show(historyButton);
+        });
     }
 }

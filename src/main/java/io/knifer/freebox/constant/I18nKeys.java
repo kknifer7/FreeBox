@@ -16,6 +16,8 @@ public class I18nKeys {
 
     public static final String TV_HOME = "tv.home";
     public static final String TV_LOAD_MORE = "tv.load-more";
+    public static final String TV_HISTORY = "tv.history";
+    public static final String TV_ERROR_LOAD_SOURCE_FAILED = "tv.error.load-source-failed";
 
     public static final String VIDEO_MOVIE_DETAILS_SOURCE = "video.movie-details.source";
     public static final String VIDEO_MOVIE_DETAILS_YEAR = "video.movie-details.year";

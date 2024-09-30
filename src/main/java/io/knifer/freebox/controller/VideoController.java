@@ -231,6 +231,7 @@ public class VideoController extends BaseController {
             Movie.Video.UrlBean.UrlInfo urlInfo,
             Movie.Video.UrlBean.UrlInfo.InfoBean urlInfoBean
     ) {
+        // TODO 播放时要使用VodInfo对象
         String flag = urlInfo.getFlag();
 
         player.stop();

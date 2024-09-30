@@ -41,7 +41,8 @@ public class VideoDetailsBO {
     private ClientInfo clientInfo;
 
     public static VideoDetailsBO of(
-            AbsXml videoDetail, SourceBean source,
+            AbsXml videoDetail,
+            SourceBean source,
             VLCPlayer player,
             KebSocketTemplate template,
             ClientInfo clientInfo

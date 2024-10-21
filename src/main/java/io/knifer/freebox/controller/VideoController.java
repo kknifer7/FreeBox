@@ -8,11 +8,13 @@ import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
+import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.util.CollectionUtil;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -25,8 +27,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,6 +54,7 @@ public class VideoController extends BaseController {
     private TabPane resourceTabPane;
 
     private Movie videoDetail;
+    private VideoPlayInfoBO playInfo;
     private SourceBean source;
     private VLCPlayer player;
     private KebSocketTemplate template;
@@ -66,6 +71,7 @@ public class VideoController extends BaseController {
             VideoDetailsBO bo = getData();
 
             videoDetail = bo.getVideoDetail().getMovie();
+            playInfo = bo.getPlayInfo();
             source = bo.getSource();
             player = bo.getPlayer();
             template = bo.getTemplate();
@@ -102,7 +108,7 @@ public class VideoController extends BaseController {
                                     break;
                                 }
                             }
-                            // 播放下一集，同时
+                            // 播放下一集，同时更新播放信息
                             playVideo(playingVideo, playingUrlInfo, beanIter.next());
                         } else {
                             ToastHelper.showInfoI18n(I18nKeys.VIDEO_INFO_NO_MORE_EP);
@@ -114,7 +120,7 @@ public class VideoController extends BaseController {
             WindowHelper.getStage(root).setOnCloseRequest(evt -> close());
             videoDetailSplitPane.minHeightProperty().bind(root.heightProperty());
             putMovieDataInView();
-            playFirstVideo();
+            startPlayVideo();
         });
     }
 
@@ -123,6 +129,7 @@ public class VideoController extends BaseController {
         ObservableList<Node> detailsPropList = movieDetailsTextFlow.getChildren();
         int year = video.getYear();
         List<Movie.Video.UrlBean.UrlInfo> urlInfoList = video.getUrlBean().getInfoList();
+        boolean hasPlayInfo = playInfo != null;
 
         // 影片信息
         movieTitleLabel.setText(video.getName());
@@ -143,6 +150,7 @@ public class VideoController extends BaseController {
         }
         urlInfoList.forEach(urlInfo -> {
             String urlFlag = urlInfo.getFlag();
+            List<Movie.Video.UrlBean.UrlInfo.InfoBean> beanList = urlInfo.getBeanList();
             Tab tab = new Tab(urlFlag);
             FlowPane flowPane = new FlowPane();
             ObservableList<Node> children = flowPane.getChildren();
@@ -154,7 +162,10 @@ public class VideoController extends BaseController {
             flowPane.setVgap(10);
             flowPane.setAlignment(Pos.TOP_CENTER);
             flowPane.setPadding(new Insets(10, 0, 60, 0));
-            urlInfo.getBeanList().forEach(bean -> {
+            if (hasPlayInfo && urlFlag.equals(playInfo.getPlayFlag()) && playInfo.isReverseSort()) {
+                Collections.reverse(beanList);
+            }
+            beanList.forEach(bean -> {
                 Button btn = new Button(bean.getName());
 
                 children.add(btn);
@@ -211,19 +222,49 @@ public class VideoController extends BaseController {
         );
     }
 
-    private void playFirstVideo() {
+    private void startPlayVideo() {
         Movie.Video video = videoDetail.getVideoList().get(0);
-        Movie.Video.UrlBean.UrlInfo urlInfo = video.getUrlBean().getInfoList().get(0);
+        Movie.Video.UrlBean.UrlInfo urlInfo;
+        List<Movie.Video.UrlBean.UrlInfo.InfoBean> beanList;
+        Movie.Video.UrlBean.UrlInfo.InfoBean infoBean;
+        String playFlag;
+        int playIndex;
+        Tab tab;
 
-        // 设置第一个tab内的第一个按钮为选中状态
-        selectedEpBtn = (
-                (Button) ((FlowPane) ((ScrollPane) resourceTabPane.getTabs().get(0).getContent()).getContent())
-                        .getChildren()
-                        .get(0)
-        );
+        if (playInfo == null) {
+            // 没有附带播放信息，直接播放第一个视频
+            urlInfo = video.getUrlBean().getInfoList().get(0);
+            infoBean = urlInfo.getBeanList().get(0);
+            // 设置第一个tab内的第一个按钮为选中状态
+            selectedEpBtn = (
+                    (Button) ((FlowPane) ((ScrollPane) resourceTabPane.getTabs().get(0).getContent()).getContent())
+                            .getChildren()
+                            .get(0)
+            );
+        } else {
+            playFlag = playInfo.getPlayFlag();
+            urlInfo = ObjectUtils.defaultIfNull(CollectionUtil.findFirst(
+                    video.getUrlBean().getInfoList(), info -> playFlag.equals(info.getFlag())
+            ), video.getUrlBean().getInfoList().get(0));
+            playIndex = playInfo.getPlayIndex();
+            beanList = urlInfo.getBeanList();
+            if (playIndex < 0 || beanList.size() - 1 < playIndex) {
+                playIndex = 0;
+            }
+            infoBean = beanList.get(playIndex);
+            // 设置指定选集按钮为选中状态
+            tab = CollectionUtil.findFirst(resourceTabPane.getTabs(), t -> t.getText().equals(playFlag));
+            // tab不太可能为null，忽略它为null的情况
+            if (tab != null) {
+                selectedEpBtn = (
+                        (Button) ((FlowPane) ((ScrollPane) tab.getContent()).getContent())
+                                .getChildren()
+                                .get(playIndex)
+                );
+            }
+        }
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
-        // 播放第一个视频
-        playVideo(video, urlInfo, urlInfo.getBeanList().get(0));
+        playVideo(video, urlInfo, infoBean);
     }
 
     private void playVideo(
@@ -231,7 +272,6 @@ public class VideoController extends BaseController {
             Movie.Video.UrlBean.UrlInfo urlInfo,
             Movie.Video.UrlBean.UrlInfo.InfoBean urlInfoBean
     ) {
-        // TODO 播放时要使用VodInfo对象
         String flag = urlInfo.getFlag();
 
         player.stop();

@@ -4,7 +4,11 @@ import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.model.common.VodInfo;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.PopOver;
@@ -19,7 +23,7 @@ import java.util.List;
 public class MovieHistoryPopOver extends PopOver {
 
     private final GridView<VodInfo> vodInfoGridView;
-    private final BorderPane root;
+    private final BooleanProperty loadingProperty = new SimpleBooleanProperty(false);
 
     public MovieHistoryPopOver() {
         // TODO 调整布局、开发功能逻辑
@@ -30,8 +34,10 @@ public class MovieHistoryPopOver extends PopOver {
         vodInfoGridView.setCellFactory(new VodInfoGridCellFactory());
         vodInfoGridView.setHorizontalCellSpacing(50);
         vodInfoGridView.setVerticalCellSpacing(75);
-        root = new BorderPane();
-        root.setPrefSize(500, 400);
+        vodInfoGridView.disableProperty().bind(loadingProperty);
+        closeButtonEnabledProperty().bind(loadingProperty.not());
+        BorderPane root = new BorderPane();
+        root.setPrefSize(570, 400);
         root.setCenter(vodInfoGridView);
         setContentNode(root);
     }
@@ -43,5 +49,13 @@ public class MovieHistoryPopOver extends PopOver {
             items.clear();
         }
         items.addAll(vodInfoList);
+    }
+
+    public void setOnVodInfoGridViewClicked(EventHandler<? super MouseEvent> eventHandler) {
+        vodInfoGridView.setOnMouseClicked(eventHandler);
+    }
+
+    public BooleanProperty loadingPropertyProperty() {
+        return loadingProperty;
     }
 }

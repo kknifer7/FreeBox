@@ -3,6 +3,7 @@ package io.knifer.freebox.controller;
 import io.knifer.freebox.component.converter.SourceBean2StringConverter;
 import io.knifer.freebox.component.factory.ClassListCellFactory;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
+import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.component.node.MovieHistoryPopOver;
 import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.constant.BaseValues;
@@ -13,9 +14,11 @@ import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
+import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.MovieSort;
 import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
 import io.knifer.freebox.model.s2c.GetDetailContentDTO;
@@ -32,6 +35,7 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.event.EventTarget;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
@@ -43,6 +47,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.GridView;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -101,13 +106,17 @@ public class TVController extends BaseController {
             classesListView.setCellFactory(new ClassListCellFactory());
             videosGridView.setCellFactory(new VideoGridCellFactory());
 
-            historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty());
+            historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty().or(movieLoadingProperty));
+            movieHistoryPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
             sortsLoadingProgressIndicator.visibleProperty().bind(sortsLoadingProperty);
             movieLoadingProgressIndicator.visibleProperty().bind(movieLoadingProperty);
             videosGridView.disableProperty().bind(movieLoadingProperty);
             classesListView.disableProperty().bind(sortsLoadingProperty);
             classesListView.disableProperty().bind(movieLoadingProperty);
             sourceBeanComboBox.disableProperty().bind(sortsLoadingProperty);
+
+            movieHistoryPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
+
             template.getSourceBeanList(clientInfo, this::initSourceBeanData);
         });
     }
@@ -118,39 +127,81 @@ public class TVController extends BaseController {
      */
     @FXML
     private void onVideosGridViewMouseClicked(MouseEvent evt) {
-        if (evt.getTarget() instanceof VideoGridCellFactory.VideoGridCell cell) {
-            Movie.Video video = cell.getItem();
+        EventTarget target = evt.getTarget();
+        Movie.Video video;
+        VodInfo vod;
+        String videoId;
 
-            if (video.getId().equals(BaseValues.LOAD_MORE_ITEM_ID)) {
+        if (target instanceof VideoGridCellFactory.VideoGridCell cell) {
+            // TV界面影片
+            video = cell.getItem();
+            videoId = video.getId();
+            if (videoId.equals(BaseValues.LOAD_MORE_ITEM_ID)) {
                 loadMoreMovie(cell);
             } else if (evt.getClickCount() > 1) {
-                openVideo(video);
+                openVideo(videoId, video.getName());
             }
+        } else if (target instanceof VodInfoGridCellFactory.VodInfoGridCell cell && evt.getClickCount() > 1) {
+            // 播放历史界面影片
+            vod = cell.getItem();
+            openVideo(vod.getId(), vod.getName(), VideoPlayInfoBO.of(vod));
         }
     }
 
     /**
      * 打开影片
-     * @param video 影片视频对象
+     * @param videoId 影片ID
+     * @param videoName 影片名称
      */
-    private void openVideo(Movie.Video video) {
-        SourceBean sourceBean = getCurrentSourceBean();
+    private void openVideo(String videoId, String videoName) {
+        openVideo(videoId, videoName, null);
+    }
 
+
+    /**
+     * 打开影片
+     * @param videoId 影片ID
+     * @param videoName 影片名称
+     * @param playInfo 播放信息
+     */
+    private void openVideo(String videoId, String videoName, @Nullable VideoPlayInfoBO playInfo) {
+        boolean noPlayInfo = playInfo == null;
+        String sourceKey;
+        SourceBean sourceBean;
+
+        if (noPlayInfo) {
+            sourceBean = getCurrentSourceBean();
+        } else {
+            sourceKey = playInfo.getSourceKey();
+            sourceBean = CollectionUtil.findFirst(sourceBeanComboBox.getItems(), s -> s.getKey().equals(sourceKey));
+            if (sourceBean == null) {
+                ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_MOVIE_DETAIL_FAILED);
+
+                return;
+            }
+        }
         movieLoadingProperty.set(true);
         template.getDetailContent(
                 clientInfo,
-                GetDetailContentDTO.of(sourceBean.getKey(), video.getId()),
+                GetDetailContentDTO.of(sourceBean.getKey(), videoId),
                 detailContent -> {
                     Pair<Stage, VideoController> stageAndController;
                     Stage tvStage;
                     Stage videoStage;
 
+                    if (detailContent == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_MOVIE_DETAIL_FAILED);
+                        movieLoadingProperty.set(false);
+
+                        return;
+                    }
                     stageAndController = FXMLUtil.load(Views.VIDEO);
                     tvStage = WindowHelper.getStage(root);
                     videoStage = stageAndController.getLeft();
-                    videoStage.setTitle(video.getName());
+                    videoStage.setTitle(videoName);
                     stageAndController.getRight().setData(VideoDetailsBO.of(
                             detailContent,
+                            playInfo,
                             sourceBean,
                             new VLCPlayer((HBox) videoStage.getScene().getRoot()),
                             template,

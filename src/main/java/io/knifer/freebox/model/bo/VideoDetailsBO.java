@@ -21,6 +21,11 @@ public class VideoDetailsBO {
     private AbsXml videoDetail;
 
     /**
+     * 影片播放信息
+     */
+    private VideoPlayInfoBO playInfo;
+
+    /**
      * 播放源
      */
     private SourceBean source;
@@ -42,6 +47,7 @@ public class VideoDetailsBO {
 
     public static VideoDetailsBO of(
             AbsXml videoDetail,
+            VideoPlayInfoBO playInfo,
             SourceBean source,
             VLCPlayer player,
             KebSocketTemplate template,
@@ -50,6 +56,7 @@ public class VideoDetailsBO {
         VideoDetailsBO result = new VideoDetailsBO();
 
         result.setVideoDetail(videoDetail);
+        result.setPlayInfo(playInfo);
         result.setSource(source);
         result.setPlayer(player);
         result.setTemplate(template);

@@ -15,14 +15,12 @@ import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
-import io.knifer.freebox.model.common.Movie;
-import io.knifer.freebox.model.common.MovieSort;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.model.common.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
 import io.knifer.freebox.model.s2c.GetDetailContentDTO;
 import io.knifer.freebox.model.s2c.GetPlayHistoryDTO;
+import io.knifer.freebox.model.s2c.SavePlayHistoryDTO;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
@@ -149,6 +147,55 @@ public class TVController extends BaseController {
     }
 
     /**
+     * 加载更多影片
+     * @param loadMoreCell 视图中的“加载更多”项
+     */
+    private void loadMoreMovie(VideoGridCellFactory.VideoGridCell loadMoreCell) {
+        MovieSort.SortData sortData;
+        MutablePair<Movie, List<Movie.Video>> movieAndVideoCached;
+        Movie movieCached;
+
+        loadMoreCell.setDisable(true);
+        sortData = classesListView.getSelectionModel().getSelectedItem();
+        if (sortData == null) {
+            loadMoreCell.setDisable(false);
+            return;
+        }
+        movieAndVideoCached = MOVIE_CACHE.get(sortData.getId());
+        if (movieAndVideoCached == null) {
+            loadMoreCell.setDisable(false);
+            return;
+        }
+        movieCached = movieAndVideoCached.getLeft();
+        template.getCategoryContent(
+                clientInfo,
+                GetCategoryContentDTO.of(getCurrentSourceBean(), sortData, movieCached.getPage() + 1),
+                categoryContent -> {
+                    Movie movie = categoryContent.getMovie();
+                    ObservableList<Movie.Video> items = videosGridView.getItems();
+                    List<Movie.Video> videos = movie.getVideoList();
+                    int loadMoreItemIdx;
+
+                    if (videos.isEmpty()) {
+                        return;
+                    }
+                    loadMoreItemIdx = items.size() - 1;
+                    items.addAll(videos);
+                    if (movie.getPage() >= movie.getPagecount() || items.size() >= movie.getRecordcount()) {
+                        // 没有更多的项了，移除“获取更多”项
+                        items.remove(loadMoreItemIdx);
+                    } else {
+                        // 将“获取更多”项移动到最后
+                        Collections.swap(items, loadMoreItemIdx, items.size() - 1);
+                    }
+                    movieAndVideoCached.setLeft(movie);
+                    movieAndVideoCached.setRight(new ArrayList<>(items));
+                    loadMoreCell.setDisable(false);
+                }
+        );
+    }
+
+    /**
      * 打开影片
      * @param videoId 影片ID
      * @param videoName 影片名称
@@ -205,7 +252,8 @@ public class TVController extends BaseController {
                             sourceBean,
                             new VLCPlayer((HBox) videoStage.getScene().getRoot()),
                             template,
-                            clientInfo
+                            clientInfo,
+                            newPlayInfo -> savePlayHistory(detailContent, newPlayInfo)
                     ));
                     Context.INSTANCE.pushStage(tvStage);
                     movieLoadingProperty.set(false);
@@ -216,52 +264,21 @@ public class TVController extends BaseController {
     }
 
     /**
-     * 加载更多影片
-     * @param loadMoreCell 视图中的“加载更多”项
+     * 保存播放历史
+     * @param detailContent 影片详情
+     * @param playInfo 播放信息
      */
-    private void loadMoreMovie(VideoGridCellFactory.VideoGridCell loadMoreCell) {
-        MovieSort.SortData sortData;
-        MutablePair<Movie, List<Movie.Video>> movieAndVideoCached;
-        Movie movieCached;
+    private void savePlayHistory(AbsXml detailContent, VideoPlayInfoBO playInfo) {
+        VodInfo vodInfo = new VodInfo();
+        Movie.Video video = detailContent.getMovie().getVideoList().get(0);
 
-        loadMoreCell.setDisable(true);
-        sortData = classesListView.getSelectionModel().getSelectedItem();
-        if (sortData == null) {
-            loadMoreCell.setDisable(false);
-            return;
-        }
-        movieAndVideoCached = MOVIE_CACHE.get(sortData.getId());
-        if (movieAndVideoCached == null) {
-            loadMoreCell.setDisable(false);
-            return;
-        }
-        movieCached = movieAndVideoCached.getLeft();
-        template.getCategoryContent(
-                clientInfo,
-                GetCategoryContentDTO.of(getCurrentSourceBean(), sortData, movieCached.getPage() + 1),
-                categoryContent -> {
-                    Movie movie = categoryContent.getMovie();
-                    ObservableList<Movie.Video> items = videosGridView.getItems();
-                    List<Movie.Video> videos = movie.getVideoList();
-                    int loadMoreItemIdx;
-
-                    if (videos.isEmpty()) {
-                        return;
-                    }
-                    loadMoreItemIdx = items.size() - 1;
-                    items.addAll(videos);
-                    if (movie.getPage() >= movie.getPagecount() || items.size() >= movie.getRecordcount()) {
-                        // 没有更多的项了，移除“获取更多”项
-                        items.remove(loadMoreItemIdx);
-                    } else {
-                        // 将“获取更多”项移动到最后
-                        Collections.swap(items, loadMoreItemIdx, items.size() - 1);
-                    }
-                    movieAndVideoCached.setLeft(movie);
-                    movieAndVideoCached.setRight(new ArrayList<>(items));
-                    loadMoreCell.setDisable(false);
-                }
-        );
+        vodInfo.setVideo(video);
+        vodInfo.setPlayFlag(playInfo.getPlayFlag());
+        vodInfo.setPlayIndex(playInfo.getPlayIndex());
+        vodInfo.setProgress(playInfo.getProgress());
+        vodInfo.setReverseSort(playInfo.isReverseSort());
+        vodInfo.setPlayNote(playInfo.getPlayNote());
+        template.savePlayHistory(clientInfo, SavePlayHistoryDTO.of(vodInfo));
     }
 
     /**

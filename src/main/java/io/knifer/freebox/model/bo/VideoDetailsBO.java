@@ -7,6 +7,8 @@ import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import lombok.Data;
 
+import java.util.function.Consumer;
+
 /**
  * 影片详情界面携带数据
  *
@@ -45,13 +47,19 @@ public class VideoDetailsBO {
      */
     private ClientInfo clientInfo;
 
+    /**
+     * 界面关闭时回调
+     */
+    private Consumer<VideoPlayInfoBO> onClose;
+
     public static VideoDetailsBO of(
             AbsXml videoDetail,
             VideoPlayInfoBO playInfo,
             SourceBean source,
             VLCPlayer player,
             KebSocketTemplate template,
-            ClientInfo clientInfo
+            ClientInfo clientInfo,
+            Consumer<VideoPlayInfoBO> onClose
     ) {
         VideoDetailsBO result = new VideoDetailsBO();
 
@@ -61,6 +69,7 @@ public class VideoDetailsBO {
         result.setPlayer(player);
         result.setTemplate(template);
         result.setClientInfo(clientInfo);
+        result.setOnClose(onClose);
 
         return result;
     }

@@ -36,6 +36,11 @@ public class VideoPlayInfoBO {
      */
     private Long progress;
 
+    /**
+     * 播放集数名称（仅在保存历史记录时需要）
+     */
+    private String playNote;
+
     public static VideoPlayInfoBO of(VodInfo vodInfo) {
         VideoPlayInfoBO result = new VideoPlayInfoBO();
 

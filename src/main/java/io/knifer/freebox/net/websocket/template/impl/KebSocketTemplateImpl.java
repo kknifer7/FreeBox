@@ -8,10 +8,7 @@ import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.model.domain.ClientInfo;
-import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
-import io.knifer.freebox.model.s2c.GetDetailContentDTO;
-import io.knifer.freebox.model.s2c.GetPlayHistoryDTO;
-import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
+import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
@@ -109,6 +106,15 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
                         new TypeToken<List<VodInfo>>(){}
                 ),
                 msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
+    @Override
+    public void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto) {
+        runner.send(
+                clientInfo.getConnection(),
+                MessageCodes.SAVE_PLAY_HISTORY,
+                dto
         );
     }
 

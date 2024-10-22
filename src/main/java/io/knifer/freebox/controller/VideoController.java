@@ -38,6 +38,7 @@ import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * 影视详情控制器
@@ -64,6 +65,7 @@ public class VideoController extends BaseController {
     private VLCPlayer player;
     private KebSocketTemplate template;
     private ClientInfo clientInfo;
+    private Consumer<VideoPlayInfoBO> onClose;
 
     private Button selectedEpBtn = null;
     private Movie.Video playingVideo;
@@ -81,6 +83,7 @@ public class VideoController extends BaseController {
             player = bo.getPlayer();
             template = bo.getTemplate();
             clientInfo = bo.getClientInfo();
+            onClose = bo.getOnClose();
             if (videoDetail == null || videoDetail.getVideoList().isEmpty()) {
                 ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                 return;
@@ -335,6 +338,24 @@ public class VideoController extends BaseController {
     }
 
     private void close() {
+        if (playInfo == null) {
+            playInfo = new VideoPlayInfoBO();
+        }
+        playInfo.setPlayFlag(resourceTabPane.getSelectionModel().getSelectedItem().getText());
+        playInfo.setPlayIndex(
+                ((FlowPane) (
+                        (ScrollPane) resourceTabPane.getSelectionModel()
+                                .getSelectedItem()
+                                .getContent()
+                ).getContent())
+                        .getChildren()
+                        .indexOf(selectedEpBtn)
+        );
+        playInfo.setProgress(player.getCurrentProgress());
+        playInfo.setPlayNote(selectedEpBtn.getText());
+        // TODO 倒序功能要做出来
+        playInfo.setReverseSort(false);
+        onClose.accept(playInfo);
         player.destroy();
         Context.INSTANCE.popAndShowLastStage();
     }

@@ -574,6 +574,18 @@ public class VLCPlayer {
         this.stepForwardRunnable = runnable;
     }
 
+    public long getCurrentProgress() {
+        long length = videoLength.get();
+        float position;
+
+        if (length < 1) {
+            return 0;
+        }
+        position = mediaPlayer.status().position();
+
+        return position == 0 ? 0 : ((long) (position * length));
+    }
+
     public void destroy() {
         mediaPlayer.release();
     }

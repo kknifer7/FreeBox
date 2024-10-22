@@ -6,10 +6,7 @@ import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.model.domain.ClientInfo;
-import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
-import io.knifer.freebox.model.s2c.GetDetailContentDTO;
-import io.knifer.freebox.model.s2c.GetPlayHistoryDTO;
-import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
+import io.knifer.freebox.model.s2c.*;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -67,4 +64,11 @@ public interface KebSocketTemplate {
      * @param callback 回调
      */
     void getPlayHistory(ClientInfo clientInfo, GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback);
+
+    /**
+     * 保存历史记录
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     */
+    void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto);
 }

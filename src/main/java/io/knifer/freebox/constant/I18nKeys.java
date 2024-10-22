@@ -47,6 +47,7 @@ public class I18nKeys {
 
     public static final String VIDEO_ERROR_NO_DATA = "video.error.no-data";
     public static final String VIDEO_ERROR_NO_RESOURCE = "video.error.no-resource";
+    public static final String VIDEO_ERROR_SOURCE_NOT_SUPPORTED = "video.error.source-not-supported";
     public static final String VIDEO_INFO_NO_MORE_EP = "video.info.no-more-ep";
     public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
     public static final String VIDEO_SETTINGS_FILL_WINDOW = "video.settings.fill-window";

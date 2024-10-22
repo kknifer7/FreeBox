@@ -526,9 +526,13 @@ public class VLCPlayer {
         if (progress != null) {
             initProgress.set(Math.max(progress, -1));
         }
-        videoTitleLabel.setText(videoTitle);
+        setVideoTitle(videoTitle);
         mediaPlayer.media().play(url);
         mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
+    }
+
+    public void setVideoTitle(String videoTitle) {
+        videoTitleLabel.setText(videoTitle);
     }
 
     public void changePlayStatus() {

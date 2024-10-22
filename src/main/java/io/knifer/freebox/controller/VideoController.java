@@ -1,9 +1,12 @@
 package io.knifer.freebox.controller;
 
+import com.google.common.base.Charsets;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.helper.HostServiceHelper;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
@@ -31,6 +34,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
+import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -290,18 +294,39 @@ public class VideoController extends BaseController {
                 clientInfo,
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
                 playerContentJson -> {
-                    JsonElement nameValuePairs = playerContentJson.get("nameValuePairs");
-                    JsonElement playUrl = nameValuePairs.getAsJsonObject().get("url");
+                    JsonElement propsElm = playerContentJson.get("nameValuePairs");
+                    JsonObject propsObj;
+                    JsonElement playUrlElm;
+                    String playUrl;
+                    int parse;
+                    int jx;
+                    String videoTitle;
 
-                    if (playUrl == null) {
+                    if (propsElm == null) {
                         ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                         return;
                     }
-                    player.play(
-                            playUrl.getAsString(),
-                            "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName(),
-                            progress
-                    );
+                    propsObj = propsElm.getAsJsonObject();
+                    playUrlElm = propsObj.get("url");
+                    if (playUrlElm == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                        return;
+                    }
+                    playUrl = URLDecoder.decode(playUrlElm.getAsString(), Charsets.UTF_8);
+                    parse = propsObj.get("parse").getAsInt();
+                    jx = propsObj.get("jx").getAsInt();
+                    videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
+                    if (parse == 0) {
+                        player.play(playUrl, videoTitle, progress);
+                    } else {
+                        if (jx != 0) {
+                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SOURCE_NOT_SUPPORTED);
+                            return;
+                        }
+                        videoTitle += " （此为解析源，请在弹出的浏览器程序中观看）";
+                        player.setVideoTitle(videoTitle);
+                        HostServiceHelper.showDocument(playUrl);
+                    }
                     playingVideo = video;
                     playingUrlInfo = urlInfo;
                     playingInfoBean = urlInfoBean;

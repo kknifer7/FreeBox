@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -109,9 +110,9 @@ public class VideoController extends BaseController {
                                 }
                             }
                             // 播放下一集，同时更新播放信息
-                            playVideo(playingVideo, playingUrlInfo, beanIter.next());
+                            playVideo(playingVideo, playingUrlInfo, beanIter.next(), null);
                         } else {
-                            ToastHelper.showInfoI18n(I18nKeys.VIDEO_INFO_NO_MORE_EP);
+                            Platform.runLater(() -> ToastHelper.showInfoI18n(I18nKeys.VIDEO_INFO_NO_MORE_EP));
                         }
                         break;
                     }
@@ -172,7 +173,7 @@ public class VideoController extends BaseController {
                 btn.setOnAction(evt -> {
                     // 选集按钮被点击，更新样式，并播放对应选集集视频
                     updateSelectedEpBtn(btn);
-                    playVideo(video, urlInfo, bean);
+                    playVideo(video, urlInfo, bean, null);
                 });
             });
             tab.setContent(scrollPane);
@@ -230,6 +231,7 @@ public class VideoController extends BaseController {
         String playFlag;
         int playIndex;
         Tab tab;
+        Long progress = null;
 
         if (playInfo == null) {
             // 没有附带播放信息，直接播放第一个视频
@@ -262,15 +264,24 @@ public class VideoController extends BaseController {
                                 .get(playIndex)
                 );
             }
+            progress = playInfo.getProgress();
         }
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
-        playVideo(video, urlInfo, infoBean);
+        playVideo(video, urlInfo, infoBean, progress);
     }
 
+    /**
+     * 播放视频
+     * @param video 影视信息
+     * @param urlInfo 播放源信息
+     * @param urlInfoBean 播放集数
+     * @param progress 播放进度（为空则从0播放）
+     */
     private void playVideo(
             Movie.Video video,
             Movie.Video.UrlBean.UrlInfo urlInfo,
-            Movie.Video.UrlBean.UrlInfo.InfoBean urlInfoBean
+            Movie.Video.UrlBean.UrlInfo.InfoBean urlInfoBean,
+            @Nullable Long progress
     ) {
         String flag = urlInfo.getFlag();
 
@@ -288,7 +299,8 @@ public class VideoController extends BaseController {
                     }
                     player.play(
                             playUrl.getAsString(),
-                            "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName()
+                            "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName(),
+                            progress
                     );
                     playingVideo = video;
                     playingUrlInfo = urlInfo;

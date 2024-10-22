@@ -26,7 +26,6 @@ public class MovieHistoryPopOver extends PopOver {
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(false);
 
     public MovieHistoryPopOver() {
-        // TODO 调整布局、开发功能逻辑
         super();
         setOnShowing(evt -> setDetached(true));
         setTitle(I18nHelper.get(I18nKeys.TV_HISTORY));

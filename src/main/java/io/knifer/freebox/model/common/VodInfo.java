@@ -46,6 +46,14 @@ public class VodInfo implements Serializable {
     public String playerCfg = "";
     public boolean reverseSort = false;
 
+    /*
+     * ↓ by knifer
+     * */
+    /**
+     * 播放进度
+     */
+    private Long progress;
+
     public void setVideo(Movie.Video video) {
         sourceKey = video.sourceKey;
         last = video.last;

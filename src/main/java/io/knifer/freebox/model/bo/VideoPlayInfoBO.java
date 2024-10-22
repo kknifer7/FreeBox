@@ -31,6 +31,11 @@ public class VideoPlayInfoBO {
      */
     private boolean reverseSort;
 
+    /**
+     * 播放进度
+     */
+    private Long progress;
+
     public static VideoPlayInfoBO of(VodInfo vodInfo) {
         VideoPlayInfoBO result = new VideoPlayInfoBO();
 
@@ -38,6 +43,7 @@ public class VideoPlayInfoBO {
         result.setPlayFlag(vodInfo.getPlayFlag());
         result.setPlayIndex(vodInfo.getPlayIndex());
         result.setReverseSort(vodInfo.isReverseSort());
+        result.setProgress(vodInfo.getProgress());
 
         return result;
     }

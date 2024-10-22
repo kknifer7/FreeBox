@@ -44,6 +44,7 @@ import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.base.State;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -93,6 +94,7 @@ public class VLCPlayer {
     private final FontIcon fullScreenIcon = FontIcon.of(FontAwesome.ARROWS_ALT, 32, Color.WHITE);
     private final FontIcon settingsIcon = FontIcon.of(FontAwesome.SLIDERS, 32, Color.WHITE);
     private final AtomicLong videoLength = new AtomicLong(-1);
+    private final AtomicLong initProgress = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
 
@@ -158,8 +160,8 @@ public class VLCPlayer {
 
             @Override
             public void buffering(MediaPlayer mediaPlayer, float newCache) {
-                if (isLoading() && newCache >= 1) {
-                    setLoading(false);
+                if (!isLoading()) {
+                    setLoading(true);
                 }
             }
 
@@ -187,6 +189,14 @@ public class VLCPlayer {
             public void lengthChanged(MediaPlayer mediaPlayer, long newLength) {
                 long length = mediaPlayer.status().length();
 
+                initProgress.getAndUpdate(val -> {
+                    if (val == -1) {
+                        return -1;
+                    }
+                    Platform.runLater(() -> mediaPlayer.controls().setPosition((float) (val / (double) length)));
+
+                    return -1;
+                });
                 Platform.runLater(() -> {
                     videoLength.set(length);
                     videoProgressLengthLabel.setText(formatProgressText(length));
@@ -200,6 +210,9 @@ public class VLCPlayer {
                         if (!isVideoProgressBarUsing.get()) {
                             videoProgressLabel.setText(formatProgressText(newTime));
                             videoProgressBar.setProgress(newTime / (double) videoLength.get());
+                        }
+                        if (isLoading()) {
+                            setLoading(false);
                         }
                     });
                 }
@@ -508,8 +521,11 @@ public class VLCPlayer {
         minWidthProperty.bind(widthProp);
     }
 
-    public void play(String url, String videoTitle) {
+    public void play(String url, String videoTitle, @Nullable Long progress) {
         setLoading(true);
+        if (progress != null) {
+            initProgress.set(Math.max(progress, -1));
+        }
         videoTitleLabel.setText(videoTitle);
         mediaPlayer.media().play(url);
         mediaPlayer.audio().setVolume((int) volumeSlider.getValue());

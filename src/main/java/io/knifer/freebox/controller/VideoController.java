@@ -19,6 +19,7 @@ import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.util.CollectionUtil;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -30,7 +31,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -89,47 +89,52 @@ public class VideoController extends BaseController {
                 return;
             }
             // 绑定播放下一集事件
-            player.setOnStepForward(() -> {
-                Iterator<Movie.Video.UrlBean.UrlInfo.InfoBean> beanIter;
-                Movie.Video.UrlBean.UrlInfo.InfoBean bean;
-                ObservableList<Node> epBtnList;
-                Iterator<Node> epBtnIter;
-                Button epBtn;
-
-                if (playingVideo == null) {
-                    return;
-                }
-                beanIter = playingUrlInfo.getBeanList().iterator();
-                while (beanIter.hasNext()) {
-                    bean = beanIter.next();
-                    if (bean.getUrl().equals(playingInfoBean.getUrl())) {
-                        if (beanIter.hasNext()) {
-                            // 准备播放下一集，先更新“被选中的当前集按钮”样式
-                            epBtnList = ((FlowPane) (
-                                    (ScrollPane) resourceTabPane.getSelectionModel().getSelectedItem().getContent()
-                            ).getContent()).getChildren();
-                            epBtnIter = epBtnList.iterator();
-                            while (epBtnIter.hasNext()) {
-                                epBtn = (Button) epBtnIter.next();
-                                if (epBtn == selectedEpBtn) {
-                                    updateSelectedEpBtn(((Button) epBtnIter.next()));
-                                    break;
-                                }
-                            }
-                            // 播放下一集，同时更新播放信息
-                            playVideo(playingVideo, playingUrlInfo, beanIter.next(), null);
-                        } else {
-                            Platform.runLater(() -> ToastHelper.showInfoI18n(I18nKeys.VIDEO_INFO_NO_MORE_EP));
-                        }
-                        break;
-                    }
-                }
-            });
+            player.setOnStepForward(this::onPlayerStepForward);
             WindowHelper.getStage(root).setOnCloseRequest(evt -> close());
             videoDetailSplitPane.minHeightProperty().bind(root.heightProperty());
             putMovieDataInView();
             startPlayVideo();
         });
+    }
+
+    /**
+     * 播放下一集
+     */
+    private void onPlayerStepForward() {
+        Iterator<Movie.Video.UrlBean.UrlInfo.InfoBean> beanIter;
+        Movie.Video.UrlBean.UrlInfo.InfoBean bean;
+        ObservableList<Node> epBtnList;
+        Iterator<Node> epBtnIter;
+        Button epBtn;
+
+        if (playingVideo == null) {
+            return;
+        }
+        beanIter = playingUrlInfo.getBeanList().iterator();
+        while (beanIter.hasNext()) {
+            bean = beanIter.next();
+            if (bean.getUrl().equals(playingInfoBean.getUrl())) {
+                if (beanIter.hasNext()) {
+                    // 准备播放下一集，先更新“被选中的当前集按钮”样式
+                    epBtnList = ((FlowPane) (
+                            (ScrollPane) resourceTabPane.getSelectionModel().getSelectedItem().getContent()
+                    ).getContent()).getChildren();
+                    epBtnIter = epBtnList.iterator();
+                    while (epBtnIter.hasNext()) {
+                        epBtn = (Button) epBtnIter.next();
+                        if (epBtn == selectedEpBtn) {
+                            updateSelectedEpBtn(((Button) epBtnIter.next()));
+                            break;
+                        }
+                    }
+                    // 播放下一集，同时更新播放信息
+                    playVideo(playingVideo, playingUrlInfo, beanIter.next(), null);
+                } else {
+                    Platform.runLater(() -> ToastHelper.showInfoI18n(I18nKeys.VIDEO_INFO_NO_MORE_EP));
+                }
+                break;
+            }
+        }
     }
 
     private void putMovieDataInView() {
@@ -138,6 +143,8 @@ public class VideoController extends BaseController {
         int year = video.getYear();
         List<Movie.Video.UrlBean.UrlInfo> urlInfoList = video.getUrlBean().getInfoList();
         boolean hasPlayInfo = playInfo != null;
+        String playFlag;
+        List<Tab> tabs;
 
         // 影片信息
         movieTitleLabel.setText(video.getName());
@@ -156,6 +163,8 @@ public class VideoController extends BaseController {
             ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_RESOURCE);
             return;
         }
+        tabs = resourceTabPane.getTabs();
+        playFlag = hasPlayInfo ? playInfo.getPlayFlag() : StringUtils.EMPTY;
         urlInfoList.forEach(urlInfo -> {
             String urlFlag = urlInfo.getFlag();
             List<Movie.Video.UrlBean.UrlInfo.InfoBean> beanList = urlInfo.getBeanList();
@@ -163,6 +172,7 @@ public class VideoController extends BaseController {
             FlowPane flowPane = new FlowPane();
             ObservableList<Node> children = flowPane.getChildren();
             ScrollPane scrollPane = new ScrollPane(flowPane);
+            CheckMenuItem reverseMenuItem;
 
             scrollPane.setFitToWidth(true);
             scrollPane.setFitToHeight(true);
@@ -184,7 +194,22 @@ public class VideoController extends BaseController {
                 });
             });
             tab.setContent(scrollPane);
-            resourceTabPane.getTabs().add(tab);
+            // 给选集标签页绑定右键菜单
+            reverseMenuItem = new CheckMenuItem(I18nHelper.get(I18nKeys.VIDEO_REVERSE));
+            reverseMenuItem.setOnAction(evt -> {
+                /* 倒序操作 */
+                // 数据列表倒叙
+                Collections.reverse(beanList);
+                // 按钮列表倒序
+                FXCollections.reverse(children);
+            });
+            tab.setContextMenu(new ContextMenu(reverseMenuItem));
+            if (hasPlayInfo && playFlag.equals(urlFlag)) {
+                // 存在历史记录，且历史记录的选集标签页与当前播放的选集标签页相同，因此要赋予当前选集标签页历史记录中的相关属性
+                reverseMenuItem.setSelected(playInfo.isReverseSort());
+            }
+            // 添加标签页
+            tabs.add(tab);
         });
     }
 
@@ -237,7 +262,7 @@ public class VideoController extends BaseController {
         Movie.Video.UrlBean.UrlInfo.InfoBean infoBean;
         String playFlag;
         int playIndex;
-        Tab tab;
+        int finalPlayIndex;
         Long progress = null;
 
         if (playInfo == null) {
@@ -252,25 +277,25 @@ public class VideoController extends BaseController {
             );
         } else {
             playFlag = playInfo.getPlayFlag();
-            urlInfo = ObjectUtils.defaultIfNull(CollectionUtil.findFirst(
+            urlInfo = CollectionUtil.findFirst(
                     video.getUrlBean().getInfoList(), info -> playFlag.equals(info.getFlag())
-            ), video.getUrlBean().getInfoList().get(0));
+            ).orElseGet(() -> video.getUrlBean().getInfoList().get(0));
             playIndex = playInfo.getPlayIndex();
             beanList = urlInfo.getBeanList();
             if (playIndex < 0 || beanList.size() - 1 < playIndex) {
                 playIndex = 0;
             }
             infoBean = beanList.get(playIndex);
+            finalPlayIndex = playIndex;
             // 设置指定选集按钮为选中状态
-            tab = CollectionUtil.findFirst(resourceTabPane.getTabs(), t -> t.getText().equals(playFlag));
-            // tab不太可能为null，忽略它为null的情况
-            if (tab != null) {
-                selectedEpBtn = (
-                        (Button) ((FlowPane) ((ScrollPane) tab.getContent()).getContent())
-                                .getChildren()
-                                .get(playIndex)
-                );
-            }
+            CollectionUtil.findFirst(resourceTabPane.getTabs(), t -> t.getText().equals(playFlag))
+                    .ifPresent(tab -> {
+                        selectedEpBtn = (
+                                (Button) ((FlowPane) ((ScrollPane) tab.getContent()).getContent())
+                                        .getChildren()
+                                        .get(finalPlayIndex)
+                        );
+                    });
             progress = playInfo.getProgress();
         }
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
@@ -338,23 +363,22 @@ public class VideoController extends BaseController {
     }
 
     private void close() {
+        String playFlag = playingUrlInfo.getFlag();
+
         if (playInfo == null) {
             playInfo = new VideoPlayInfoBO();
         }
-        playInfo.setPlayFlag(resourceTabPane.getSelectionModel().getSelectedItem().getText());
-        playInfo.setPlayIndex(
-                ((FlowPane) (
-                        (ScrollPane) resourceTabPane.getSelectionModel()
-                                .getSelectedItem()
-                                .getContent()
-                ).getContent())
-                        .getChildren()
-                        .indexOf(selectedEpBtn)
-        );
+        playInfo.setPlayFlag(playFlag);
+        playInfo.setPlayIndex(playingUrlInfo.getBeanList().indexOf(playingInfoBean));
         playInfo.setProgress(player.getCurrentProgress());
         playInfo.setPlayNote(selectedEpBtn.getText());
-        // TODO 倒序功能要做出来
-        playInfo.setReverseSort(false);
+        CollectionUtil.findFirst(resourceTabPane.getTabs(), tab -> tab.getText().equals(playFlag))
+                        .ifPresent(tab -> {
+                            ObservableList<MenuItem> menus = tab.getContextMenu().getItems();
+                            CheckMenuItem reverseMenuItem = (CheckMenuItem) menus.get(0);
+
+                            playInfo.setReverseSort(reverseMenuItem.isSelected());
+                        });
         onClose.accept(playInfo);
         player.destroy();
         Context.INSTANCE.popAndShowLastStage();

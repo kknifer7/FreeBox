@@ -28,6 +28,7 @@ public class I18nKeys {
     public static final String VIDEO_MOVIE_DETAILS_ACTORS = "video.movie-details.actors";
     public static final String VIDEO_MOVIE_DETAILS_LINK = "video.movie-details.link";
     public static final String VIDEO_MOVIE_DETAILS_INTRO = "video.movie-details.intro";
+    public static final String VIDEO_REVERSE = "video.reverse";
 
     public static final String MESSAGE_CLIENT_REGISTERED = "message.client-registered";
     public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";

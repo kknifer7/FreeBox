@@ -2,9 +2,9 @@ package io.knifer.freebox.util;
 
 import lombok.experimental.UtilityClass;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -23,23 +23,22 @@ public class CollectionUtil {
         return !isEmpty(collection);
     }
 
-    @Nullable
-    public <T> T findFirst(Collection<T> collection, Predicate<T> predicate) {
+    public <T> Optional<T> findFirst(Collection<T> collection, Predicate<T> predicate) {
         Iterator<T> iterator;
         T t;
 
         if (isEmpty(collection)) {
-            return null;
+            return Optional.empty();
         }
         iterator = collection.iterator();
         while (iterator.hasNext()) {
             t = iterator.next();
 
             if (predicate.test(t)) {
-                return t;
+                return Optional.of(t);
             }
         }
 
-        return null;
+        return Optional.empty();
     }
 }

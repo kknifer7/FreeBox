@@ -220,7 +220,8 @@ public class TVController extends BaseController {
             sourceBean = getCurrentSourceBean();
         } else {
             sourceKey = playInfo.getSourceKey();
-            sourceBean = CollectionUtil.findFirst(sourceBeanComboBox.getItems(), s -> s.getKey().equals(sourceKey));
+            sourceBean = CollectionUtil.findFirst(sourceBeanComboBox.getItems(), s -> s.getKey().equals(sourceKey))
+                    .orElse(null);
             if (sourceBean == null) {
                 ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_MOVIE_DETAIL_FAILED);
 

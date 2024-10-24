@@ -10,6 +10,8 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.handler.MovieSuggestionHandler;
+import io.knifer.freebox.handler.impl.SoupianMovieSuggestionHandler;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
@@ -44,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.GridView;
+import org.controlsfx.control.textfield.TextFields;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -70,6 +73,10 @@ public class TVController extends BaseController {
     private ProgressIndicator movieLoadingProgressIndicator;
     @FXML
     private Button historyButton;
+    @FXML
+    private Button searchButton;
+    @FXML
+    private TextField searchTextField;
 
     private final MovieHistoryPopOver movieHistoryPopOver = new MovieHistoryPopOver();
 
@@ -78,6 +85,8 @@ public class TVController extends BaseController {
     private KebSocketTemplate template;
     private ClientInfo clientInfo;
     private Movie.Video fetchMoreItem;
+
+    private final MovieSuggestionHandler movieSuggestionHandler = new SoupianMovieSuggestionHandler();
 
     private final String HOME_SORT_DATA_ID = "ztx*1RcW6%Ep";
 
@@ -112,7 +121,9 @@ public class TVController extends BaseController {
             classesListView.disableProperty().bind(sortsLoadingProperty);
             classesListView.disableProperty().bind(movieLoadingProperty);
             sourceBeanComboBox.disableProperty().bind(sortsLoadingProperty);
+            searchButton.disableProperty().bind(movieLoadingProperty);
 
+            TextFields.bindAutoCompletion(searchTextField, movieSuggestionHandler::handle);
             movieHistoryPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
 
             template.getSourceBeanList(clientInfo, this::initSourceBeanData);
@@ -453,5 +464,10 @@ public class TVController extends BaseController {
             }
             movieHistoryPopOver.show(historyButton);
         });
+    }
+
+    @FXML
+    private void onSearchBtnAction() {
+        log.info("search");
     }
 }

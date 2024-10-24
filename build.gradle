@@ -71,6 +71,11 @@ dependencies {
 
 extraJavaModuleInfo {
     /* 为非模块化项目添加自动模块 */
+    // javafx controlsFX
+    module('org.openjfx:javafx-base', 'javafx.base') {
+        patchRealModule()
+        exportAllPackages()
+    }
     // blockingMap
     automaticModule('com.github.sarveswaran-m:util.concurrent.blockingMap', 'blockingMap4j')
     // 解决google guava相关的编译错误

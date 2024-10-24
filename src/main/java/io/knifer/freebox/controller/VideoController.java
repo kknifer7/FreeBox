@@ -324,7 +324,7 @@ public class VideoController extends BaseController {
                 playerContentJson -> {
                     JsonElement propsElm = playerContentJson.get("nameValuePairs");
                     JsonObject propsObj;
-                    JsonElement playUrlElm;
+                    JsonElement elm;
                     String playUrl;
                     int parse;
                     int jx;
@@ -335,14 +335,16 @@ public class VideoController extends BaseController {
                         return;
                     }
                     propsObj = propsElm.getAsJsonObject();
-                    playUrlElm = propsObj.get("url");
-                    if (playUrlElm == null) {
+                    elm = propsObj.get("url");
+                    if (elm == null) {
                         ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                         return;
                     }
-                    playUrl = URLDecoder.decode(playUrlElm.getAsString(), Charsets.UTF_8);
-                    parse = propsObj.get("parse").getAsInt();
-                    jx = propsObj.get("jx").getAsInt();
+                    playUrl = URLDecoder.decode(elm.getAsString(), Charsets.UTF_8);
+                    elm = propsObj.get("parse");
+                    parse = elm == null ? 0 : elm.getAsInt();
+                    elm = propsObj.get("jx");
+                    jx = elm == null ? 0 : elm.getAsInt();
                     videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
                     if (parse == 0) {
                         player.play(playUrl, videoTitle, progress);

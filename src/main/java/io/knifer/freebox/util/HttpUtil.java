@@ -1,9 +1,7 @@
 package io.knifer.freebox.util;
 
-import com.google.common.base.Strings;
+import io.knifer.freebox.exception.FBException;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.Notifications;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,14 +23,35 @@ public class HttpUtil {
     public String get(String url) {
         try {
             return client.send(
-                    HttpRequest.newBuilder().GET().uri(URI.create(url)).build(),
+                    HttpRequest.newBuilder()
+                            .GET()
+                            .uri(URI.create(url))
+                            .build(),
                     HttpResponse.BodyHandlers.ofString()
             ).body();
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-            Notifications.create().text(e.getMessage()).showError();
+            throw new FBException("Error while sending request to " + url, e);
+        } catch (InterruptedException e) {
+            return null;
+        }
+    }
 
-            return StringUtils.EMPTY;
+    public String get(String url, String... headers) {
+        try {
+            return client.send(
+                    HttpRequest.newBuilder()
+                            .GET()
+                            .uri(URI.create(url))
+                            .headers(headers)
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString()
+            ).body();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new FBException("Error while sending request to " + url, e);
+        } catch (InterruptedException ignored) {
+            return null;
         }
     }
 }

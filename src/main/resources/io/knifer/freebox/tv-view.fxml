@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.controlsfx.control.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 
 <BorderPane fx:id="root" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/tv-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.TVController">
    <left>
@@ -16,27 +18,53 @@
             </HBox>
          </top>
          <center>
-            <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-               <children>
-                  <VBox prefHeight="200.0" prefWidth="100.0">
+            <BorderPane BorderPane.alignment="CENTER">
+               <center>
+                  <StackPane prefHeight="150.0" prefWidth="200.0">
                      <children>
-                        <ListView fx:id="classesListView" focusTraversable="false" onMouseClicked="#onClassesListViewClick" VBox.vgrow="ALWAYS" />
+                        <VBox prefHeight="200.0" prefWidth="100.0">
+                           <children>
+                              <ListView fx:id="classesListView" focusTraversable="false" onMouseClicked="#onClassesListViewClick" VBox.vgrow="ALWAYS" />
+                           </children>
+                        </VBox>
+                        <ProgressIndicator fx:id="sortsLoadingProgressIndicator" />
                      </children>
-                  </VBox>
-                  <ProgressIndicator fx:id="sortsLoadingProgressIndicator" />
-               </children>
-            </StackPane>
+                  </StackPane>
+               </center>
+            </BorderPane>
          </center></BorderPane>
    </left>
    <center>
       <BorderPane BorderPane.alignment="CENTER">
          <center>
-            <StackPane prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-               <children>
-                  <GridView fx:id="videosGridView" horizontalCellSpacing="50" onMouseClicked="#onVideosGridViewMouseClicked" verticalCellSpacing="75" />
-                  <ProgressIndicator fx:id="movieLoadingProgressIndicator" visible="false" />
-               </children>
-            </StackPane>
+            <BorderPane BorderPane.alignment="CENTER">
+               <center>
+                  <StackPane prefHeight="150.0" prefWidth="200.0">
+                     <children>
+                        <GridView fx:id="videosGridView" horizontalCellSpacing="47" onMouseClicked="#onVideosGridViewMouseClicked" verticalCellSpacing="75" />
+                        <ProgressIndicator fx:id="movieLoadingProgressIndicator" visible="false" />
+                     </children>
+                  </StackPane>
+               </center>
+               <top>
+                  <HBox BorderPane.alignment="CENTER">
+                     <children>
+                        <TextField fx:id="searchTextField" focusTraversable="false" promptText="%tv.search.prompt" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="searchButton" focusTraversable="false" mnemonicParsing="false" onAction="#onSearchBtnAction" text="%tv.search">
+                           <graphic>
+                              <FontIcon iconLiteral="fa-search:16" />
+                           </graphic>
+                        </Button>
+                     </children>
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <BorderPane.margin>
+                        <Insets left="150.0" right="150.0" />
+                     </BorderPane.margin>
+                  </HBox>
+               </top>
+            </BorderPane>
          </center>
       </BorderPane>
    </center>

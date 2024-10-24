@@ -45,6 +45,10 @@ public class AsyncUtil {
         });
     }
 
+    public void execute(Runnable runnable) {
+        EXECUTOR.execute(runnable);
+    }
+
     public void cancelAllTask() {
         EXECUTOR.getQueue().clear();
     }

@@ -322,7 +322,7 @@ public class VideoController extends BaseController {
                 clientInfo,
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
                 playerContentJson -> {
-                    JsonElement propsElm = playerContentJson.get("nameValuePairs");
+                    JsonElement propsElm;
                     JsonObject propsObj;
                     JsonElement elm;
                     String playUrl;
@@ -330,6 +330,11 @@ public class VideoController extends BaseController {
                     int jx;
                     String videoTitle;
 
+                    if (playerContentJson == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                        return;
+                    }
+                    propsElm = playerContentJson.get("nameValuePairs");
                     if (propsElm == null) {
                         ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                         return;
@@ -365,8 +370,19 @@ public class VideoController extends BaseController {
     }
 
     private void close() {
-        String playFlag = playingUrlInfo.getFlag();
+        updatePlayInfo();
+        onClose.accept(playInfo);
+        player.destroy();
+        Context.INSTANCE.popAndShowLastStage();
+    }
 
+    private void updatePlayInfo() {
+        String playFlag;
+
+        if (playingVideo == null || playingUrlInfo == null || playingInfoBean == null) {
+            return;
+        }
+        playFlag = playingUrlInfo.getFlag();
         if (playInfo == null) {
             playInfo = new VideoPlayInfoBO();
         }
@@ -375,14 +391,12 @@ public class VideoController extends BaseController {
         playInfo.setProgress(player.getCurrentProgress());
         playInfo.setPlayNote(selectedEpBtn.getText());
         CollectionUtil.findFirst(resourceTabPane.getTabs(), tab -> tab.getText().equals(playFlag))
-                        .ifPresent(tab -> {
-                            ObservableList<MenuItem> menus = tab.getContextMenu().getItems();
-                            CheckMenuItem reverseMenuItem = (CheckMenuItem) menus.get(0);
+                .ifPresent(tab -> {
+                    ObservableList<MenuItem> menus = tab.getContextMenu().getItems();
+                    CheckMenuItem reverseMenuItem = (CheckMenuItem) menus.get(0);
 
-                            playInfo.setReverseSort(reverseMenuItem.isSelected());
-                        });
+                    playInfo.setReverseSort(reverseMenuItem.isSelected());
+                });
         onClose.accept(playInfo);
-        player.destroy();
-        Context.INSTANCE.popAndShowLastStage();
     }
 }

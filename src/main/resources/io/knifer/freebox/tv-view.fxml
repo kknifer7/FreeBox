@@ -49,7 +49,7 @@
                <top>
                   <HBox BorderPane.alignment="CENTER">
                      <children>
-                        <TextField fx:id="searchTextField" focusTraversable="false" promptText="%tv.search.prompt" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="searchTextField" focusTraversable="false" promptText="%tv.search.prompt" HBox.hgrow="ALWAYS" onKeyPressed="#onSearchTextFieldKeyPressed" />
                         <Button fx:id="searchButton" focusTraversable="false" mnemonicParsing="false" onAction="#onSearchBtnAction" text="%tv.search">
                            <graphic>
                               <FontIcon iconLiteral="fa-search:16" />

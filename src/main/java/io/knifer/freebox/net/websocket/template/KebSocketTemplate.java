@@ -66,6 +66,14 @@ public interface KebSocketTemplate {
     void getPlayHistory(ClientInfo clientInfo, GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback);
 
     /**
+     * 影视搜索
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     * @param callback 回调
+     */
+    void getSearchContent(ClientInfo clientInfo, GetSearchContentDTO dto, Consumer<AbsXml> callback);
+
+    /**
      * 保存历史记录
      * @param clientInfo 客户端信息
      * @param dto 参数

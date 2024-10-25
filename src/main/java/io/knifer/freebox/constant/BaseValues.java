@@ -24,9 +24,11 @@ public class BaseValues {
     /**
      * KebSocket通信超时时间
      */
-    public static final Long KEB_SOCKET_REQUEST_TIMEOUT = 12L;
+    public static final Long KEB_SOCKET_REQUEST_TIMEOUT = 15L;
     /**
      * “获取更多”项ID
      */
     public static final String LOAD_MORE_ITEM_ID = "load-more";
+    public static final String USER_AGENT =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
 }

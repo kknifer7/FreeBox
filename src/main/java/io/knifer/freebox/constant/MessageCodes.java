@@ -63,7 +63,15 @@ public class MessageCodes {
      */
     public static final int GET_PLAY_HISTORY_RESULT = 212;
     /**
+     * 影视搜素
+     */
+    public static final int GET_SEARCH_CONTENT = 213;
+    /**
+     * 影视搜索结果
+     */
+    public static final int GET_SEARCH_CONTENT_RESULT = 214;
+    /**
      * 保存观看历史
      */
-    public static final int SAVE_PLAY_HISTORY = 213;
+    public static final int SAVE_PLAY_HISTORY = 215;
 }

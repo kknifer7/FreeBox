@@ -110,6 +110,21 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
     }
 
     @Override
+    public void getSearchContent(
+            ClientInfo clientInfo, GetSearchContentDTO dto, Consumer<AbsXml> callback
+    ) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.GET_SEARCH_CONTENT,
+                        dto,
+                        new TypeToken<AbsXml>(){}
+                ),
+                msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
+    @Override
     public void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto) {
         runner.send(
                 clientInfo.getConnection(),

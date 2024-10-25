@@ -10,6 +10,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
 import io.knifer.freebox.handler.impl.SoupianMovieSuggestionHandler;
 import io.knifer.freebox.helper.I18nHelper;
@@ -27,6 +28,7 @@ import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
+import io.knifer.freebox.service.MovieSearchService;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
@@ -35,14 +37,18 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
 import javafx.event.EventTarget;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.GridView;
@@ -78,6 +84,8 @@ public class TVController extends BaseController {
     @FXML
     private TextField searchTextField;
 
+    private MovieSearchService movieSearchService;
+
     private final MovieHistoryPopOver movieHistoryPopOver = new MovieHistoryPopOver();
 
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
@@ -106,6 +114,24 @@ public class TVController extends BaseController {
             stage.setOnCloseRequest(evt -> {
                destroy();
                Context.INSTANCE.popAndShowLastStage();
+            });
+            movieSearchService = new MovieSearchService(clientInfo, template, keywordAndSearchContent -> {
+                String keyword = keywordAndSearchContent.getLeft();
+                AbsXml searchContent;
+
+                if (
+                        movieSearchService.getState() != Service.State.SUCCEEDED ||
+                        !keyword.equals(movieSearchService.getKeyword())
+                ) {
+                    // 任务已取消
+
+                    return;
+                }
+                searchContent = keywordAndSearchContent.getRight();
+                putVideosInView(
+                        MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
+                        false
+                );
             });
 
             // TODO converter写入FXML里
@@ -148,12 +174,12 @@ public class TVController extends BaseController {
             if (videoId.equals(BaseValues.LOAD_MORE_ITEM_ID)) {
                 loadMoreMovie(cell);
             } else if (evt.getClickCount() > 1) {
-                openVideo(videoId, video.getName());
+                openVideo(video.getSourceKey(), videoId, video.getName());
             }
         } else if (target instanceof VodInfoGridCellFactory.VodInfoGridCell cell && evt.getClickCount() > 1) {
             // 播放历史界面影片
             vod = cell.getItem();
-            openVideo(vod.getId(), vod.getName(), VideoPlayInfoBO.of(vod));
+            openVideo(vod.getSourceKey(), vod.getId(), vod.getName(), VideoPlayInfoBO.of(vod));
         }
     }
 
@@ -180,7 +206,7 @@ public class TVController extends BaseController {
         movieCached = movieAndVideoCached.getLeft();
         template.getCategoryContent(
                 clientInfo,
-                GetCategoryContentDTO.of(getCurrentSourceBean(), sortData, movieCached.getPage() + 1),
+                GetCategoryContentDTO.of(getSourceBean(), sortData, movieCached.getPage() + 1),
                 categoryContent -> {
                     Movie movie = categoryContent.getMovie();
                     ObservableList<Movie.Video> items = videosGridView.getItems();
@@ -208,29 +234,29 @@ public class TVController extends BaseController {
 
     /**
      * 打开影片
+     * @param sourceKey 源ID
      * @param videoId 影片ID
      * @param videoName 影片名称
      */
-    private void openVideo(String videoId, String videoName) {
-        openVideo(videoId, videoName, null);
+    private void openVideo(String sourceKey, String videoId, String videoName) {
+        openVideo(sourceKey, videoId, videoName, null);
     }
 
 
     /**
      * 打开影片
+     * @param sourceKey 源ID
      * @param videoId 影片ID
      * @param videoName 影片名称
      * @param playInfo 播放信息
      */
-    private void openVideo(String videoId, String videoName, @Nullable VideoPlayInfoBO playInfo) {
+    private void openVideo(String sourceKey, String videoId, String videoName, @Nullable VideoPlayInfoBO playInfo) {
         boolean noPlayInfo = playInfo == null;
-        String sourceKey;
         SourceBean sourceBean;
 
         if (noPlayInfo) {
-            sourceBean = getCurrentSourceBean();
+            sourceBean = getSourceBean(sourceKey);
         } else {
-            sourceKey = playInfo.getSourceKey();
             sourceBean = CollectionUtil.findFirst(sourceBeanComboBox.getItems(), s -> s.getKey().equals(sourceKey))
                     .orElse(null);
             if (sourceBean == null) {
@@ -265,7 +291,11 @@ public class TVController extends BaseController {
                             new VLCPlayer((HBox) videoStage.getScene().getRoot()),
                             template,
                             clientInfo,
-                            newPlayInfo -> savePlayHistory(detailContent, newPlayInfo)
+                            newPlayInfo -> {
+                                if (newPlayInfo != null) {
+                                    savePlayHistory(detailContent, newPlayInfo);
+                                }
+                            }
                     ));
                     Context.INSTANCE.pushStage(tvStage);
                     movieLoadingProperty.set(false);
@@ -317,10 +347,9 @@ public class TVController extends BaseController {
         ObservableList<MovieSort.SortData> items = classesListView.getItems();
 
         sortsLoadingProperty.set(true);
-        items.clear();
-        MOVIE_CACHE.clear();
+        clearMovieData();
         videosGridView.getItems().clear();
-        template.getHomeContent(clientInfo, getCurrentSourceBean(), homeContent -> {
+        template.getHomeContent(clientInfo, getSourceBean(), homeContent -> {
             Movie movie;
             List<Movie.Video> list;
             MovieSort classes;
@@ -374,6 +403,7 @@ public class TVController extends BaseController {
         ObservableList<Movie.Video> items;
         MutablePair<Movie, List<Movie.Video>> movieAndVideosCached;
 
+        resetMovieSearchService();
         movieLoadingProperty.set(true);
         items = videosGridView.getItems();
         if (!items.isEmpty()) {
@@ -389,29 +419,37 @@ public class TVController extends BaseController {
             // 拉取影片数据
             template.getCategoryContent(
                     clientInfo,
-                    GetCategoryContentDTO.of(getCurrentSourceBean(), sortData, 1),
+                    GetCategoryContentDTO.of(getSourceBean(), sortData, 1),
                     categoryContent -> {
                         Movie movie = categoryContent.getMovie();
                         MutablePair<Movie, List<Movie.Video>> movieAndVideos =
                                 MutablePair.of(movie, movie.getVideoList());
 
-                        putVideosInView(movieAndVideos);
+                        putVideosInView(movieAndVideos, true);
                         MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
                         movieLoadingProperty.set(false);
                     }
             );
         } else {
             // 使用缓存中的影片数据
-            putVideosInView(movieAndVideosCached);
+            putVideosInView(movieAndVideosCached, true);
             movieLoadingProperty.set(false);
         }
+    }
+
+    private void resetMovieSearchService() {
+        movieSearchService.cancel();
+        movieSearchService.reset();
     }
 
     /**
      * 将影片数据放入视图中
      * @param movieAndVideos 影片数据
      */
-    private void putVideosInView(MutablePair<Movie, List<Movie.Video>> movieAndVideos) {
+    private void putVideosInView(
+            MutablePair<Movie, List<Movie.Video>> movieAndVideos,
+            boolean showLoadMoreItem
+    ) {
         ObservableList<Movie.Video> items = videosGridView.getItems();
         Movie movie = movieAndVideos.getLeft();
         List<Movie.Video> videos = movieAndVideos.getRight();
@@ -420,7 +458,7 @@ public class TVController extends BaseController {
             return;
         }
         items.addAll(videos);
-        if (
+        if (    showLoadMoreItem &&
                 !items.get(items.size() - 1).equals(fetchMoreItem) &&
                 movie.getPagecount() > movie.getPage() &&
                 movie.getRecordcount() > items.size()
@@ -434,8 +472,19 @@ public class TVController extends BaseController {
      * 获取当前选中的源对象
      * @return 源对象
      */
-    private SourceBean getCurrentSourceBean() {
+    private SourceBean getSourceBean() {
         return sourceBeanComboBox.getSelectionModel().getSelectedItem();
+    }
+
+    /**
+     * 根据源标识获取源对象
+     * @param sourceKey 源ID
+     * @return 源对象
+     */
+    private SourceBean getSourceBean(String sourceKey) {
+        return CollectionUtil.findFirst(
+                sourceBeanComboBox.getItems(), sourceBean -> sourceBean.getKey().equals(sourceKey)
+        ).orElseThrow(() -> new FBException("No source bean found for key: " + sourceKey));
     }
 
     /**
@@ -446,10 +495,17 @@ public class TVController extends BaseController {
                 "[{}]'s tv controller destroy",
                 clientInfo.getConnection().getRemoteSocketAddress().getHostName()
         );
+        clearMovieData();
         if (videosGridView.getCellFactory() instanceof VideoGridCellFactory factory) {
             factory.destroy();
         }
+    }
+
+    private void clearMovieData() {
+        videosGridView.getItems().clear();
         MOVIE_CACHE.clear();
+        resetMovieSearchService();
+        AsyncUtil.cancelAllTask();
     }
 
     private ClientInfo getClientInfo() {
@@ -468,6 +524,33 @@ public class TVController extends BaseController {
 
     @FXML
     private void onSearchBtnAction() {
-        log.info("search");
+        String searchKeyword = searchTextField.getText();
+        Iterator<String> sourceBeanKeyIterator;
+
+        if (StringUtils.isBlank(searchKeyword)) {
+            return;
+        }
+        clearMovieData();
+        sourceBeanKeyIterator = sourceBeanComboBox.getItems()
+                .stream()
+                .filter(SourceBean::isSearchable)
+                .map(SourceBean::getKey)
+                .iterator();
+        if (!sourceBeanKeyIterator.hasNext()) {
+            return;
+        }
+        resetMovieSearchService();
+        movieSearchService.setKeyword(searchKeyword);
+        movieSearchService.setSourceKeyIterator(sourceBeanKeyIterator);
+        // TODO 超时频繁弹异常框需要解决
+        movieSearchService.start();
+    }
+
+    @FXML
+    private void onSearchTextFieldKeyPressed(KeyEvent evt) {
+        if (evt.getCode() != KeyCode.ENTER) {
+            return;
+        }
+        onSearchBtnAction();
     }
 }

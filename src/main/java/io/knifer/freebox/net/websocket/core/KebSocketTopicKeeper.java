@@ -53,16 +53,25 @@ public class KebSocketTopicKeeper {
 
     public <T> Future<T> getTopic(String topicId, TypeToken<T> typeToken) {
         return CompletableFuture.supplyAsync(() -> {
-            Message<JsonElement> message = null;
+            Message<JsonElement> message;
+            JsonElement jsonData;
 
             try {
                 message = DATA_MAP.take(topicId, BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
-            } catch (InterruptedException ignored) {}
-            if (message == null) {
-                return null;
+                if (message == null) {
+                    return null;
+                }
+                jsonData = message.getData();
+                if (jsonData == null) {
+                    return null;
+                }
+
+                return GsonUtil.fromJson(jsonData, typeToken);
+            } catch (Exception e) {
+                log.error("getTopic error", e);
             }
 
-            return GsonUtil.fromJson(message.getData(), typeToken);
+            return null;
         }, EXECUTOR);
     }
 

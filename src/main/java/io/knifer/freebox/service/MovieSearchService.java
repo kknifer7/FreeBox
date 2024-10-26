@@ -52,6 +52,11 @@ public class MovieSearchService extends Service<Void> {
      */
     private final Consumer<Pair<String, AbsXml>> callback;
 
+    /**
+     * 结束回调
+     */
+    private final Runnable endCallback;
+
     @Override
     protected Task<Void> createTask() {
         return new Task<>() {
@@ -65,7 +70,13 @@ public class MovieSearchService extends Service<Void> {
             private void search(String keyword) {
                 String sourceKey;
 
-                if (!sourceKeyIterator.hasNext() || isCancelled()) {
+                if (isCancelled()) {
+
+                    return;
+                }
+                if (!sourceKeyIterator.hasNext()) {
+                    endCallback.run();
+
                     return;
                 }
                 sourceKey = sourceKeyIterator.next();
@@ -77,6 +88,7 @@ public class MovieSearchService extends Service<Void> {
 
                             if (isCancelled()) {
                                 // 这里的检测取消是无效的，并没有进行取消操作，同时经测试，取消Service或者Task也无法成功终止任务，待优化
+
                                 return;
                             }
                             if (searchContent == null) {

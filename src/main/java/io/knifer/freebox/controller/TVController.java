@@ -83,6 +83,8 @@ public class TVController extends BaseController {
     private Button searchButton;
     @FXML
     private TextField searchTextField;
+    @FXML
+    private ProgressIndicator searchLoadingProgressIndicator;
 
     private MovieSearchService movieSearchService;
 
@@ -90,6 +92,7 @@ public class TVController extends BaseController {
 
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty searchLoadingProperty = new SimpleBooleanProperty(false);
     private KebSocketTemplate template;
     private ClientInfo clientInfo;
     private Movie.Video fetchMoreItem;
@@ -132,7 +135,7 @@ public class TVController extends BaseController {
                         MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
                         false
                 );
-            });
+            }, () -> searchLoadingProperty.set(false));
 
             // TODO converter写入FXML里
             sourceBeanComboBox.setConverter(new SourceBean2StringConverter());
@@ -148,6 +151,7 @@ public class TVController extends BaseController {
             classesListView.disableProperty().bind(movieLoadingProperty);
             sourceBeanComboBox.disableProperty().bind(sortsLoadingProperty);
             searchButton.disableProperty().bind(movieLoadingProperty);
+            searchLoadingProgressIndicator.visibleProperty().bind(searchLoadingProperty);
 
             TextFields.bindAutoCompletion(searchTextField, movieSuggestionHandler::handle);
             movieHistoryPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
@@ -440,6 +444,7 @@ public class TVController extends BaseController {
     private void resetMovieSearchService() {
         movieSearchService.cancel();
         movieSearchService.reset();
+        searchLoadingProperty.set(false);
     }
 
     /**
@@ -540,9 +545,9 @@ public class TVController extends BaseController {
             return;
         }
         resetMovieSearchService();
+        searchLoadingProperty.set(true);
         movieSearchService.setKeyword(searchKeyword);
         movieSearchService.setSourceKeyIterator(sourceBeanKeyIterator);
-        // TODO 超时频繁弹异常框需要解决
         movieSearchService.start();
     }
 

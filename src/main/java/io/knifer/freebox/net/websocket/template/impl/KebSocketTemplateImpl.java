@@ -13,11 +13,13 @@ import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.util.CastUtil;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
@@ -26,10 +28,13 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class KebSocketTemplateImpl implements KebSocketTemplate {
 
     private final KebSocketRunner runner;
+
+    private final Set<Class<? extends Throwable>> ignoringToastThrowableClassesInMovieSearching =
+            Set.of(TimeoutException.class);
 
     @Override
     public void getSourceBeanList(ClientInfo clientInfo, Consumer<List<SourceBean>> callback) {
@@ -120,7 +125,8 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
                         dto,
                         new TypeToken<AbsXml>(){}
                 ),
-                msg -> callback.accept(CastUtil.cast(msg))
+                msg -> callback.accept(CastUtil.cast(msg)),
+                ignoringToastThrowableClassesInMovieSearching
         );
     }
 
@@ -135,6 +141,15 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
 
     private <T> void execute(Future<T> future, Consumer<T> callback) {
         FutureWaitingService<T> service = new FutureWaitingService<>(future);
+
+        service.setOnSucceeded(event -> callback.accept(service.getValue()));
+        service.start();
+    }
+
+    private <T> void execute(
+            Future<T> future, Consumer<T> callback, Set<Class<? extends Throwable>> ignoringToastThrowableClasses
+    ) {
+        FutureWaitingService<T> service = new FutureWaitingService<>(future, ignoringToastThrowableClasses);
 
         service.setOnSucceeded(event -> callback.accept(service.getValue()));
         service.start();

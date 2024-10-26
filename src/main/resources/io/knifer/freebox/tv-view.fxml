@@ -49,12 +49,16 @@
                <top>
                   <HBox BorderPane.alignment="CENTER">
                      <children>
-                        <TextField fx:id="searchTextField" focusTraversable="false" promptText="%tv.search.prompt" HBox.hgrow="ALWAYS" onKeyPressed="#onSearchTextFieldKeyPressed" />
+                        <TextField fx:id="searchTextField" focusTraversable="false" onKeyPressed="#onSearchTextFieldKeyPressed" promptText="%tv.search.prompt" HBox.hgrow="ALWAYS" />
                         <Button fx:id="searchButton" focusTraversable="false" mnemonicParsing="false" onAction="#onSearchBtnAction" text="%tv.search">
                            <graphic>
                               <FontIcon iconLiteral="fa-search:16" />
                            </graphic>
                         </Button>
+                        <ProgressIndicator fx:id="searchLoadingProgressIndicator" prefHeight="20.0" prefWidth="20.0" visible="false">
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin></ProgressIndicator>
                      </children>
                      <opaqueInsets>
                         <Insets />

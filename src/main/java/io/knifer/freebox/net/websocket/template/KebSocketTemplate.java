@@ -79,4 +79,11 @@ public interface KebSocketTemplate {
      * @param dto 参数
      */
     void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto);
+
+    /**
+     * 删除历史记录
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     */
+    void deletePlayHistory(ClientInfo clientInfo, DeletePlayHistoryDTO dto, Runnable callback);
 }

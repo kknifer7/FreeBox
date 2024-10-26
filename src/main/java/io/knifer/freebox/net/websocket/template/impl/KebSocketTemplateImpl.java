@@ -139,6 +139,19 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
         );
     }
 
+    @Override
+    public void deletePlayHistory(ClientInfo clientInfo, DeletePlayHistoryDTO dto, Runnable callback) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.DELETE_PLAY_HISTORY,
+                        dto,
+                        new TypeToken<Void>(){}
+                ),
+                msg -> callback.run()
+        );
+    }
+
     private <T> void execute(Future<T> future, Consumer<T> callback) {
         FutureWaitingService<T> service = new FutureWaitingService<>(future);
 

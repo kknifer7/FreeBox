@@ -4,29 +4,36 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * 影片信息单元格工厂
  *
  * @author Knifer
  */
+@RequiredArgsConstructor
 public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridCell<VodInfo>> {
 
     private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
@@ -37,12 +44,18 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
 
     private final static double CELL_HEIGHT = 200;
 
+    private final Consumer<VodInfo> onItemDelete;
+
     @Override
     public GridCell<VodInfo> call(GridView<VodInfo> param) {
-        return new VodInfoGridCell();
+        return new VodInfoGridCell(onItemDelete);
     }
 
+    @RequiredArgsConstructor
     public static class VodInfoGridCell extends GridCell<VodInfo> {
+
+        private final Consumer<VodInfo> onItemDelete;
+
         @Override
         protected void updateItem(VodInfo item, boolean empty) {
             String itemId;
@@ -93,7 +106,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             moviePicImageView.setFitWidth(CELL_WIDTH);
             moviePicImageView.setFitHeight(CELL_HEIGHT);
             movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
-            movieInfoOverlay.getStyleClass().add("movie-info-overlay");
+            setupMovieInfoOverlay(movieInfoOverlay, item);
             note = item.getNote();
             containerChildren.add(movieInfoOverlay);
             if (StringUtils.isNotBlank(note)) {
@@ -103,6 +116,16 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             }
             setId(item.getId());
             setGraphic(container);
+        }
+
+        private void setupMovieInfoOverlay(InfoOverlay infoOverlay, VodInfo vodInfo) {
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem deleteMenuItem = new MenuItem(I18nHelper.get(I18nKeys.COMMON_DELETE));
+
+            deleteMenuItem.setOnAction(evt -> onItemDelete.accept(vodInfo));
+            contextMenu.getItems().add(deleteMenuItem);
+            infoOverlay.setContextMenu(contextMenu);
+            infoOverlay.getStyleClass().add("movie-info-overlay");
         }
     }
 }

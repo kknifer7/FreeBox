@@ -74,4 +74,12 @@ public class MessageCodes {
      * 保存观看历史
      */
     public static final int SAVE_PLAY_HISTORY = 215;
+    /**
+     * 删除观看历史
+     */
+    public static final int DELETE_PLAY_HISTORY = 217;
+    /**
+     * 删除观看历史结果
+     */
+    public static final int DELETE_PLAY_HISTORY_RESULT = 218;
 }

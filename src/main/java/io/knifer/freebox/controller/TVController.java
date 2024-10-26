@@ -20,10 +20,7 @@ import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.*;
 import io.knifer.freebox.model.domain.ClientInfo;
-import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
-import io.knifer.freebox.model.s2c.GetDetailContentDTO;
-import io.knifer.freebox.model.s2c.GetPlayHistoryDTO;
-import io.knifer.freebox.model.s2c.SavePlayHistoryDTO;
+import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
@@ -88,7 +85,7 @@ public class TVController extends BaseController {
 
     private MovieSearchService movieSearchService;
 
-    private final MovieHistoryPopOver movieHistoryPopOver = new MovieHistoryPopOver();
+    private MovieHistoryPopOver movieHistoryPopOver;
 
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
@@ -142,6 +139,15 @@ public class TVController extends BaseController {
             classesListView.setCellFactory(new ClassListCellFactory());
             videosGridView.setCellFactory(new VideoGridCellFactory());
 
+            // 创建历史记录弹出框
+            movieHistoryPopOver = new MovieHistoryPopOver(vodInfoDeleting -> {
+                movieHistoryPopOver.clearVodInfoList();
+                template.deletePlayHistory(
+                        clientInfo, DeletePlayHistoryDTO.of(vodInfoDeleting), this::reloadMovieHistoryPopOver
+                );
+                ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+            });
+            movieHistoryPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
             historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty().or(movieLoadingProperty));
             movieHistoryPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
             sortsLoadingProgressIndicator.visibleProperty().bind(sortsLoadingProperty);
@@ -154,9 +160,19 @@ public class TVController extends BaseController {
             searchLoadingProgressIndicator.visibleProperty().bind(searchLoadingProperty);
 
             TextFields.bindAutoCompletion(searchTextField, movieSuggestionHandler::handle);
-            movieHistoryPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
 
             template.getSourceBeanList(clientInfo, this::initSourceBeanData);
+        });
+    }
+
+    private void reloadMovieHistoryPopOver() {
+        if (!movieHistoryPopOver.isShowing()) {
+            return;
+        }
+        template.getPlayHistory(clientInfo, GetPlayHistoryDTO.of(100), playHistory -> {
+            if (CollectionUtil.isNotEmpty(playHistory)) {
+                movieHistoryPopOver.setVodInfoList(playHistory);
+            }
         });
     }
 

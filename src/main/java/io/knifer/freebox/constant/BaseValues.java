@@ -24,7 +24,7 @@ public class BaseValues {
     /**
      * KebSocket通信超时时间
      */
-    public static final Long KEB_SOCKET_REQUEST_TIMEOUT = 15L;
+    public static final Long KEB_SOCKET_REQUEST_TIMEOUT = 12L;
     /**
      * “获取更多”项ID
      */

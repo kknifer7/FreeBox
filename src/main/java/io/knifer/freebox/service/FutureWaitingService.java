@@ -1,6 +1,7 @@
 package io.knifer.freebox.service;
 
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.ToastHelper;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * websocket通信服务
@@ -47,16 +49,18 @@ public class FutureWaitingService<T> extends Service<T> {
             protected T call() {
                 try {
                     return future.get(BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
+                } catch (TimeoutException e) {
+                    Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.COMMON_MESSAGE_TIMOUT_FAILED));
                 } catch (Exception e) {
-                    // InterruptedException | ExecutionException | TimeoutException | JsonSyntaxException
+                    // InterruptedException | ExecutionException | JsonSyntaxException
                     if (ignoringToastThrowableClasses.contains(e.getClass())) {
                         log.warn("Ignored future waiting exception", e);
                     } else {
                         Platform.runLater(() -> ToastHelper.showException(e));
                     }
-
-                    return null;
                 }
+
+                return null;
             }
         };
     }

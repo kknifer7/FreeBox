@@ -14,6 +14,7 @@ import org.controlsfx.control.GridView;
 import org.controlsfx.control.PopOver;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * 影视历史记录弹出内容框
@@ -25,12 +26,12 @@ public class MovieHistoryPopOver extends PopOver {
     private final GridView<VodInfo> vodInfoGridView;
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(false);
 
-    public MovieHistoryPopOver() {
+    public MovieHistoryPopOver(Consumer<VodInfo> onItemDelete) {
         super();
         setOnShowing(evt -> setDetached(true));
         setTitle(I18nHelper.get(I18nKeys.TV_HISTORY));
         vodInfoGridView = new GridView<>();
-        vodInfoGridView.setCellFactory(new VodInfoGridCellFactory());
+        vodInfoGridView.setCellFactory(new VodInfoGridCellFactory(onItemDelete));
         vodInfoGridView.setHorizontalCellSpacing(50);
         vodInfoGridView.setVerticalCellSpacing(75);
         vodInfoGridView.disableProperty().bind(loadingProperty);
@@ -48,6 +49,10 @@ public class MovieHistoryPopOver extends PopOver {
             items.clear();
         }
         items.addAll(vodInfoList);
+    }
+
+    public void clearVodInfoList() {
+        vodInfoGridView.getItems().clear();
     }
 
     public void setOnVodInfoGridViewClicked(EventHandler<? super MouseEvent> eventHandler) {

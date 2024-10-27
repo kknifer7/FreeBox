@@ -1,5 +1,6 @@
 package io.knifer.freebox.component.node;
 
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.WindowHelper;
@@ -78,6 +79,7 @@ public class VLCPlayer {
     private final RadioButton rate1_5SettingRadioButton;
     private final RadioButton rate2SettingRadioButton;
     private final ToggleSwitch fillWindowToggleSwitch;
+    private final Button reloadButton;
     private final Label settingsLabel;
     private final ProgressBar videoProgressBar;
     private final Label videoProgressLabel;
@@ -92,13 +94,14 @@ public class VLCPlayer {
     private final FontIcon volumeUpIcon = FontIcon.of(FontAwesome.VOLUME_UP, 32, Color.WHITE);
     private final FontIcon volumeOffIcon = FontIcon.of(FontAwesome.VOLUME_OFF, 32, Color.WHITE);
     private final FontIcon fullScreenIcon = FontIcon.of(FontAwesome.ARROWS_ALT, 32, Color.WHITE);
+    private final FontIcon reloadIcon = FontIcon.of(FontAwesome.REFRESH, 16);
     private final FontIcon settingsIcon = FontIcon.of(FontAwesome.SLIDERS, 32, Color.WHITE);
     private final AtomicLong videoLength = new AtomicLong(-1);
     private final AtomicLong initProgress = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
 
-    private Runnable stepForwardRunnable;
+    private Runnable stepForwardRunnable = BaseValues.EMPTY_RUNNABLE;
 
     public VLCPlayer(HBox parent) {
         ObservableList<Node> parentChildren = parent.getChildren();
@@ -111,6 +114,8 @@ public class VLCPlayer {
         Label rateSettingTitleLabel;
         HBox rateSettingRadioButtonHBox;
         HBox rateSettingHBox;
+        Label reloadSettingTitleLabel;
+        HBox reloadSettingsHBox;
         VBox settingsPopOverInnerVBox;
         PopOver settingsPopOver;
         Timer settingsPopOverHideTimer;
@@ -241,7 +246,6 @@ public class VLCPlayer {
         pauseLabel.getStyleClass().add("vlc-player-control-label");
         pauseLabel.setOnMouseClicked(evt -> changePlayStatus());
         // 下一集
-        stepForwardRunnable = () -> {};
         stepForwardLabel = new Label();
         stepForwardLabel.setGraphic(stepForwardIcon);
         stepForwardLabel.getStyleClass().add("vlc-player-control-label");
@@ -322,12 +326,26 @@ public class VLCPlayer {
         rateSettingRadioButtonHBox.setSpacing(5);
         // 铺满设置按钮
         fillWindowToggleSwitch = new ToggleSwitch(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_FILL_WINDOW));
+        fillWindowToggleSwitch.setFocusTraversable(false);
         videoImageView.preserveRatioProperty().bind(fillWindowToggleSwitch.selectedProperty().not());
+        // 重新加载
+        reloadSettingTitleLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_RELOAD));
+        reloadButton = new Button();
+        reloadButton.setGraphic(reloadIcon);
+        reloadButton.setFocusTraversable(false);
+        reloadButton.setOnAction(evt -> {
+            mediaPlayer.controls().stop();
+            mediaPlayer.controls().play();
+        });
+        reloadSettingsHBox = new HBox(reloadSettingTitleLabel, reloadButton);
+        reloadSettingsHBox.setSpacing(15);
+        reloadSettingsHBox.setAlignment(Pos.CENTER_LEFT);
+        // 设置弹出框
         settingsPopOver = new PopOver();
         settingsPopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
         settingsPopOver.getStyleClass().add("vlc-player-pop-over");
         settingsPopOver.setDetachable(false);
-        settingsPopOverInnerVBox = new VBox(fillWindowToggleSwitch, rateSettingHBox);
+        settingsPopOverInnerVBox = new VBox(reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox);
         settingsPopOverInnerVBox.setSpacing(10.0);
         settingsPopOver.setContentNode(settingsPopOverInnerVBox);
         settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());

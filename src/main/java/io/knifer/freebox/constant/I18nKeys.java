@@ -55,6 +55,7 @@ public class I18nKeys {
     public static final String VIDEO_INFO_NO_MORE_EP = "video.info.no-more-ep";
     public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
     public static final String VIDEO_SETTINGS_FILL_WINDOW = "video.settings.fill-window";
+    public static final String VIDEO_SETTINGS_RELOAD = "video.settings.reload";
 
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";

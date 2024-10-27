@@ -205,6 +205,19 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
         );
     }
 
+    @Override
+    public void getMovieCollectedStatus(ClientInfo clientInfo, GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.GET_MOVIE_COLLECTED_STATUS,
+                        dto,
+                        new TypeToken<Boolean>(){}
+                ),
+                msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
     private <T> void execute(Future<T> future, Consumer<T> callback) {
         FutureWaitingService<T> service = new FutureWaitingService<>(future);
 

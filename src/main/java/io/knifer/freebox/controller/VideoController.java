@@ -14,11 +14,17 @@ import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.model.domain.ClientInfo;
+import io.knifer.freebox.model.s2c.DeleteMovieCollectionDTO;
+import io.knifer.freebox.model.s2c.GetMovieCollectedStatusDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
+import io.knifer.freebox.model.s2c.SaveMovieCollectionDTO;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.util.CollectionUtil;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -28,11 +34,15 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import javax.annotation.Nullable;
 import java.net.URLDecoder;
@@ -59,6 +69,11 @@ public class VideoController extends BaseController {
     private TextFlow movieDetailsTextFlow;
     @FXML
     private TabPane resourceTabPane;
+    @FXML
+    private Button collectBtn;
+
+    private final FontIcon COLLECT_FONT_ICON = FontIcon.of(FontAwesome.STAR_O, 16, Color.ORANGE);
+    private final FontIcon COLLECTED_FONT_ICON = FontIcon.of(FontAwesome.STAR, 16, Color.ORANGE);
 
     private Movie videoDetail;
     private VideoPlayInfoBO playInfo;
@@ -72,6 +87,7 @@ public class VideoController extends BaseController {
     private Movie.Video playingVideo;
     private Movie.Video.UrlBean.UrlInfo playingUrlInfo;
     private Movie.Video.UrlBean.UrlInfo.InfoBean playingInfoBean;
+    public final BooleanProperty operationLoading = new SimpleBooleanProperty(true);
 
     @FXML
     private void initialize() {
@@ -89,6 +105,13 @@ public class VideoController extends BaseController {
                 ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                 return;
             }
+            // 收藏按钮
+            collectBtn.disableProperty().bind(operationLoading);
+            template.getMovieCollectedStatus(
+                    clientInfo,
+                    GetMovieCollectedStatusDTO.of(source.getKey(), videoDetail.getVideoList().get(0).getId()),
+                    this::setCollectBtnByCollectedStatus
+            );
             // 绑定播放下一集事件
             player.setOnStepForward(this::onPlayerStepForward);
             WindowHelper.getStage(root).setOnCloseRequest(evt -> close());
@@ -404,5 +427,45 @@ public class VideoController extends BaseController {
                     playInfo.setReverseSort(reverseMenuItem.isSelected());
                 });
         onClose.accept(playInfo);
+    }
+
+    @FXML
+    private void onCollectBtnAction() {
+        VodInfo vodInfo;
+
+        operationLoading.set(true);
+        vodInfo = VodInfo.from(playingVideo);
+        if (collectBtn.getGraphic() == COLLECTED_FONT_ICON) {
+            template.deleteMovieCollection(
+                    clientInfo,
+                    DeleteMovieCollectionDTO.of(vodInfo),
+                    () -> {
+                        setCollectBtnByCollectedStatus(false);
+                        Platform.runLater(() -> ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS));
+                    }
+            );
+        } else {
+            template.saveMovieCollection(
+                    clientInfo,
+                    SaveMovieCollectionDTO.of(vodInfo),
+                    () -> {
+                        setCollectBtnByCollectedStatus(true);
+                        Platform.runLater(() -> ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS));
+                    }
+            );
+        }
+    }
+
+    private void setCollectBtnByCollectedStatus(@Nullable Boolean collectedStatus) {
+        Platform.runLater(() -> {
+            if (BooleanUtils.toBoolean(collectedStatus)) {
+                collectBtn.setGraphic(COLLECTED_FONT_ICON);
+                collectBtn.setText(I18nHelper.get(I18nKeys.VIDEO_UN_COLLECT));
+            } else {
+                collectBtn.setGraphic(COLLECT_FONT_ICON);
+                collectBtn.setText(I18nHelper.get(I18nKeys.VIDEO_COLLECT));
+            }
+            operationLoading.set(false);
+        });
     }
 }

@@ -113,4 +113,12 @@ public interface KebSocketTemplate {
      * @param callback 回调
      */
     void getMovieCollection(ClientInfo clientInfo, Consumer<List<VodCollect>> callback);
+
+    /**
+     * 获取影视收藏状态
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     * @param callback 回调
+     */
+    void getMovieCollectedStatus(ClientInfo clientInfo, GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback);
 }

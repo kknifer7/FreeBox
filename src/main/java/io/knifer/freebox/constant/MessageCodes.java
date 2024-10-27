@@ -114,4 +114,12 @@ public class MessageCodes {
      * 获取一个观看历史结果
      */
     public static final int GET_ONE_PLAY_HISTORY_RESULT = 226;
+    /**
+     * 获取影视是否收藏
+     */
+    public static final int GET_MOVIE_COLLECTED_STATUS = 227;
+    /**
+     * 获取影视是否收藏结果
+     */
+    public static final int GET_MOVIE_COLLECTED_STATUS_RESULT = 228;
 }

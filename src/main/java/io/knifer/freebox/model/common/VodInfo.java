@@ -110,6 +110,14 @@ public class VodInfo implements Serializable {
         return result;
     }
 
+    public static VodInfo from(Movie.Video video) {
+        VodInfo result = new VodInfo();
+
+        result.setVideo(video);
+
+        return result;
+    }
+
     public static class VodSeriesFlag implements Serializable {
 
         public String name;

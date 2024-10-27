@@ -21,7 +21,9 @@ import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 影片单元格工厂
@@ -34,6 +36,8 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
     private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
             .maximumSize(150)
             .build();
+
+    private static final Set<String> LOADED_PICTURES = new HashSet<>();
 
     private final static double CELL_WIDTH = 150;
 
@@ -75,7 +79,8 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 if (moviePicImage == null) {
                     moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER_IMG);
                     picUrl = item.getPic();
-                    if (ValidationUtil.isURL(picUrl)) {
+                    if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {
+                        LOADED_PICTURES.add(picUrl);
                         AsyncUtil.execute(
                                 () -> new Image(picUrl),
                                 image -> {

@@ -186,7 +186,7 @@ public class TVController extends BaseController {
             if (CollectionUtil.isNotEmpty(playHistory)) {
                 movieHistoryPopOver.setVodInfoList(playHistory);
             }
-            ToastHelper.showInfoI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+            ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
         });
     }
 
@@ -200,7 +200,7 @@ public class TVController extends BaseController {
                         movieCollection.stream().map(VodInfo::from).toList()
                 );
             }
-            ToastHelper.showInfoI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+            ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
         });
     }
 
@@ -535,7 +535,11 @@ public class TVController extends BaseController {
      * @param sourceKey 源ID
      * @return 源对象
      */
-    private SourceBean getSourceBean(String sourceKey) {
+    private SourceBean getSourceBean(@Nullable String sourceKey) {
+        if (sourceKey == null) {
+            return getSourceBean();
+        }
+
         return CollectionUtil.findFirst(
                 sourceBeanComboBox.getItems(), sourceBean -> sourceBean.getKey().equals(sourceKey)
         ).orElseThrow(() -> new FBException("No source bean found for key: " + sourceKey));

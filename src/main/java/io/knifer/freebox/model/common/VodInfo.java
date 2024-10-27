@@ -99,6 +99,17 @@ public class VodInfo implements Serializable {
         }
     }
 
+    public static VodInfo from(VodCollect vodCollect) {
+        VodInfo result = new VodInfo();
+
+        result.setId(vodCollect.getVodId());
+        result.setSourceKey(vodCollect.getSourceKey());
+        result.setName(vodCollect.getName());
+        result.setPic(vodCollect.getPic());
+
+        return result;
+    }
+
     public static class VodSeriesFlag implements Serializable {
 
         public String name;

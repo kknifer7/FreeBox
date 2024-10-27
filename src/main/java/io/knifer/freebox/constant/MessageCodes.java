@@ -82,4 +82,36 @@ public class MessageCodes {
      * 删除观看历史结果
      */
     public static final int DELETE_PLAY_HISTORY_RESULT = 218;
+    /**
+     * 获取收藏
+     */
+    public static final int GET_MOVIE_COLLECTION = 219;
+    /**
+     * 获取收藏结果
+     */
+    public static final int GET_MOVIE_COLLECTION_RESULT = 220;
+    /**
+     * 收藏影片
+     */
+    public static final int SAVE_MOVIE_COLLECTION = 221;
+    /**
+     * 收藏影片结果
+     */
+    public static final int SAVE_MOVIE_COLLECTION_RESULT = 222;
+    /**
+     * 取消收藏
+     */
+    public static final int DELETE_MOVIE_COLLECTION = 223;
+    /**
+     * 取消收藏结果
+     */
+    public static final int DELETE_MOVIE_COLLECTION_RESULT = 224;
+    /**
+     * 获取一个观看历史
+     */
+    public static final int GET_ONE_PLAY_HISTORY = 225;
+    /**
+     * 获取一个观看历史结果
+     */
+    public static final int GET_ONE_PLAY_HISTORY_RESULT = 226;
 }

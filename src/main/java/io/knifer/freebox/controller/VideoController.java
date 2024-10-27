@@ -31,6 +31,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -164,7 +165,9 @@ public class VideoController extends BaseController {
             return;
         }
         tabs = resourceTabPane.getTabs();
-        playFlag = hasPlayInfo ? playInfo.getPlayFlag() : StringUtils.EMPTY;
+        playFlag = hasPlayInfo ?
+                ObjectUtils.defaultIfNull(playInfo.getPlayFlag(), StringUtils.EMPTY) :
+                StringUtils.EMPTY;
         urlInfoList.forEach(urlInfo -> {
             String urlFlag = urlInfo.getFlag();
             List<Movie.Video.UrlBean.UrlInfo.InfoBean> beanList = urlInfo.getBeanList();
@@ -276,7 +279,7 @@ public class VideoController extends BaseController {
                             .get(0)
             );
         } else {
-            playFlag = playInfo.getPlayFlag();
+            playFlag = ObjectUtils.defaultIfNull(playInfo.getPlayFlag(), StringUtils.EMPTY);
             urlInfo = CollectionUtil.findFirst(
                     video.getUrlBean().getInfoList(), info -> playFlag.equals(info.getFlag())
             ).orElseGet(() -> video.getUrlBean().getInfoList().get(0));
@@ -289,13 +292,16 @@ public class VideoController extends BaseController {
             finalPlayIndex = playIndex;
             // 设置指定选集按钮为选中状态
             CollectionUtil.findFirst(resourceTabPane.getTabs(), t -> t.getText().equals(playFlag))
-                    .ifPresent(tab -> {
-                        selectedEpBtn = (
-                                (Button) ((FlowPane) ((ScrollPane) tab.getContent()).getContent())
-                                        .getChildren()
-                                        .get(finalPlayIndex)
-                        );
-                    });
+                    .ifPresentOrElse(tab -> selectedEpBtn = (
+                            (Button) ((FlowPane) ((ScrollPane) tab.getContent()).getContent())
+                                    .getChildren()
+                                    .get(finalPlayIndex)
+                    ), () -> selectedEpBtn = (
+                            (Button) ((FlowPane) ((ScrollPane) resourceTabPane.getTabs().get(0).getContent())
+                                    .getContent())
+                                    .getChildren()
+                                    .get(0)
+                    ));
             progress = playInfo.getProgress();
         }
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");

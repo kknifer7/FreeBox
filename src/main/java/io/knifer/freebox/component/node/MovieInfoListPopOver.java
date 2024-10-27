@@ -1,7 +1,6 @@
 package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
-import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.model.common.VodInfo;
 import javafx.beans.property.BooleanProperty;
@@ -17,19 +16,19 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * 影视历史记录弹出内容框
+ * 影视数据列表弹出框
  *
  * @author Knifer
  */
-public class MovieHistoryPopOver extends PopOver {
+public class MovieInfoListPopOver extends PopOver {
 
     private final GridView<VodInfo> vodInfoGridView;
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(false);
 
-    public MovieHistoryPopOver(Consumer<VodInfo> onItemDelete) {
+    public MovieInfoListPopOver(String titleI18n, Consumer<VodInfo> onItemDelete) {
         super();
         setOnShowing(evt -> setDetached(true));
-        setTitle(I18nHelper.get(I18nKeys.TV_HISTORY));
+        setTitle(I18nHelper.get(titleI18n));
         vodInfoGridView = new GridView<>();
         vodInfoGridView.setCellFactory(new VodInfoGridCellFactory(onItemDelete));
         vodInfoGridView.setHorizontalCellSpacing(50);

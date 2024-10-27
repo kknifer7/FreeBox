@@ -1,10 +1,7 @@
 package io.knifer.freebox.net.websocket.template;
 
 import com.google.gson.JsonObject;
-import io.knifer.freebox.model.common.AbsSortXml;
-import io.knifer.freebox.model.common.AbsXml;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.model.common.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
 
@@ -66,6 +63,13 @@ public interface KebSocketTemplate {
     void getPlayHistory(ClientInfo clientInfo, GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback);
 
     /**
+     * 获取一条历史记录
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     */
+    void getOnePlayHistory(ClientInfo clientInfo, GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback);
+
+    /**
      * 影视搜索
      * @param clientInfo 客户端信息
      * @param dto 参数
@@ -86,4 +90,27 @@ public interface KebSocketTemplate {
      * @param dto 参数
      */
     void deletePlayHistory(ClientInfo clientInfo, DeletePlayHistoryDTO dto, Runnable callback);
+
+    /**
+     * 收藏影片
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     * @param callback 回调
+     */
+    void saveMovieCollection(ClientInfo clientInfo, SaveMovieCollectionDTO dto, Runnable callback);
+
+    /**
+     * 取消收藏
+     * @param clientInfo 客户端信息
+     * @param dto 参数
+     * @param callback 回调
+     */
+    void deleteMovieCollection(ClientInfo clientInfo, DeleteMovieCollectionDTO dto, Runnable callback);
+
+    /**
+     * 获取收藏列表
+     * @param clientInfo 客户端信息
+     * @param callback 回调
+     */
+    void getMovieCollection(ClientInfo clientInfo, Consumer<List<VodCollect>> callback);
 }

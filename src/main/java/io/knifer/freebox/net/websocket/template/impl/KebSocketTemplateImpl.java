@@ -3,10 +3,7 @@ package io.knifer.freebox.net.websocket.template.impl;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
-import io.knifer.freebox.model.common.AbsSortXml;
-import io.knifer.freebox.model.common.AbsXml;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.model.common.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
@@ -115,6 +112,19 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
     }
 
     @Override
+    public void getOnePlayHistory(ClientInfo clientInfo, GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.GET_ONE_PLAY_HISTORY,
+                        dto,
+                        new TypeToken<VodInfo>(){}
+                ),
+                msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
+    @Override
     public void getSearchContent(
             ClientInfo clientInfo, GetSearchContentDTO dto, Consumer<AbsXml> callback
     ) {
@@ -149,6 +159,49 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
                         new TypeToken<Void>(){}
                 ),
                 msg -> callback.run()
+        );
+    }
+
+    @Override
+    public void saveMovieCollection(
+            ClientInfo clientInfo, SaveMovieCollectionDTO dto, Runnable callback
+    ) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.SAVE_MOVIE_COLLECTION,
+                        dto,
+                        new TypeToken<Void>(){}
+                ),
+                ignored -> callback.run()
+        );
+    }
+
+    @Override
+    public void deleteMovieCollection(
+            ClientInfo clientInfo, DeleteMovieCollectionDTO dto, Runnable callback
+    ) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.DELETE_MOVIE_COLLECTION,
+                        dto,
+                        new TypeToken<Void>(){}
+                ),
+                ignored -> callback.run()
+        );
+    }
+
+    @Override
+    public void getMovieCollection(ClientInfo clientInfo, Consumer<List<VodCollect>> callback) {
+        execute(
+                runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.GET_MOVIE_COLLECTION,
+                        null,
+                        new TypeToken<List<VodCollect>>(){}
+                ),
+                msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 

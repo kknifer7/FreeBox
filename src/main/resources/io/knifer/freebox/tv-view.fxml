@@ -13,7 +13,16 @@
             <HBox BorderPane.alignment="CENTER">
                <children>
                   <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" prefWidth="150.0" />
-                  <Button fx:id="historyButton" mnemonicParsing="false" onAction="#onHistoryBtnAction" text="%tv.history" />
+                  <Button fx:id="historyButton" focusTraversable="false" mnemonicParsing="false" onAction="#onHistoryBtnAction">
+                     <graphic>
+                        <FontIcon iconLiteral="fa-history:16" />
+                     </graphic>
+                  </Button>
+                  <Button fx:id="collectButton" focusTraversable="false" mnemonicParsing="false" onAction="#onCollectBtnAction">
+                     <graphic>
+                        <FontIcon iconLiteral="fa-star:16" />
+                     </graphic>
+                  </Button>
                </children>
             </HBox>
          </top>

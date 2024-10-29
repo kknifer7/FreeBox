@@ -87,6 +87,14 @@ test {
     useJUnitPlatform()
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+}
+
 jar {
     manifest {
         attributes = [
@@ -113,7 +121,7 @@ jlink {
         appVersion = project.version
         if (org.gradle.internal.os.OperatingSystem.current().windows) {
             installerOptions = ['--win-dir-chooser', '--win-menu', '--win-shortcut']
-            imageOptions = ['--win-console']
+//            imageOptions = ['--win-console']
         }
     }
 }

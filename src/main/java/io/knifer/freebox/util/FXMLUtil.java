@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.ResourceBundle;
  *
  * @author Knifer
  */
+@Slf4j
 @UtilityClass
 public class FXMLUtil {
 

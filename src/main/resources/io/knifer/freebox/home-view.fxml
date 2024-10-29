@@ -25,7 +25,7 @@
                      <children>
                         <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@/image/welcome.png" />
+                              <Image url="@image/welcome.png" />
                            </image></ImageView>
                         <Label text="%home.welcome">
                            <font>

@@ -21,6 +21,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
@@ -102,7 +103,7 @@ public class HomeController {
         }
         settingsInfoText.setText(String.format(
                 I18nHelper.get(I18nKeys.HOME_SETTINGS_INFO),
-                ConfigHelper.getServiceIPv4(),
+                ObjectUtils.defaultIfNull(ConfigHelper.getServiceIPv4(), "--"),
                 httpServiceRunningStatus,
                 httpPort,
                 wsServiceRunningStatus,

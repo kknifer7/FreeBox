@@ -3,6 +3,7 @@ package io.knifer.freebox.component.node;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
@@ -172,6 +173,7 @@ public class VLCPlayer {
 
             @Override
             public void paused(MediaPlayer mediaPlayer) {
+                SystemHelper.allowSleep();
                 Platform.runLater(() -> {
                     if (isLoading()) {
                         setLoading(false);
@@ -182,6 +184,7 @@ public class VLCPlayer {
 
             @Override
             public void playing(MediaPlayer mediaPlayer) {
+                SystemHelper.preventSleep();
                 Platform.runLater(() -> {
                     if (isLoading()) {
                         setLoading(false);
@@ -230,6 +233,7 @@ public class VLCPlayer {
 
             @Override
             public void error(MediaPlayer mediaPlayer) {
+                SystemHelper.allowSleep();
                 log.error("VLCPlayer error");
             }
         });
@@ -605,6 +609,9 @@ public class VLCPlayer {
     }
 
     public void destroy() {
+        if (mediaPlayer.status().isPlaying()) {
+            SystemHelper.allowSleep();
+        }
         mediaPlayer.release();
     }
 }

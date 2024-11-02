@@ -31,7 +31,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
@@ -59,13 +58,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Knifer
  */
 @Slf4j
-@Getter
 public class VLCPlayer {
 
     private final Stage stage;
     private final Scene scene;
     private final AnchorPane controlPane;
-    private final Timer controlPaneHideTimer;
+    private final Timer controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
     private final EmbeddedMediaPlayer mediaPlayer;
     private final ImageView videoImageView;
     private final ProgressIndicator loadingProgressIndicator;
@@ -92,7 +90,7 @@ public class VLCPlayer {
     private final FontIcon pauseIcon = FontIcon.of(FontAwesome.PAUSE, 32, Color.WHITE);
     private final FontIcon playIcon = FontIcon.of(FontAwesome.PLAY, 32, Color.WHITE);
     private final FontIcon stepForwardIcon = FontIcon.of(FontAwesome.STEP_FORWARD, 32, Color.WHITE);
-    private final FontIcon volumeUpIcon = FontIcon.of(FontAwesome.VOLUME_UP, 32, Color.WHITE);
+    private final FontIcon volumeOnIcon = FontIcon.of(FontAwesome.VOLUME_UP, 32, Color.WHITE);
     private final FontIcon volumeOffIcon = FontIcon.of(FontAwesome.VOLUME_OFF, 32, Color.WHITE);
     private final FontIcon fullScreenIcon = FontIcon.of(FontAwesome.ARROWS_ALT, 32, Color.WHITE);
     private final FontIcon reloadIcon = FontIcon.of(FontAwesome.REFRESH, 16);
@@ -198,10 +196,9 @@ public class VLCPlayer {
                 long length = mediaPlayer.status().length();
 
                 initProgress.getAndUpdate(val -> {
-                    if (val == -1) {
-                        return -1;
+                    if (val != -1) {
+                        Platform.runLater(() -> mediaPlayer.controls().setTime(val));
                     }
-                    Platform.runLater(() -> mediaPlayer.controls().setPosition((float) (val / (double) length)));
 
                     return -1;
                 });
@@ -256,10 +253,10 @@ public class VLCPlayer {
         stepForwardLabel.setOnMouseClicked(evt -> stepForwardRunnable.run());
         // 音量设置
         volumeLabel = new Label();
-        volumeLabel.setGraphic(volumeUpIcon);
+        volumeLabel.setGraphic(volumeOnIcon);
         volumeLabel.getStyleClass().add("vlc-player-control-label");
         volumeLabel.setOnMouseClicked(evt -> {
-            volumeLabel.setGraphic(mediaPlayer.audio().isMute() ? volumeUpIcon : volumeOffIcon);
+            volumeLabel.setGraphic(mediaPlayer.audio().isMute() ? volumeOnIcon : volumeOffIcon);
             mediaPlayer.audio().mute();
         });
         volumeSlider = new Slider(0, 100, 100);
@@ -280,7 +277,7 @@ public class VLCPlayer {
             mediaPlayer.audio().setVolume(newVal.intValue());
             if (mediaPlayer.audio().isMute()) {
                 mediaPlayer.audio().mute();
-                volumeLabel.setGraphic(volumeUpIcon);
+                volumeLabel.setGraphic(volumeOnIcon);
             }
         });
         volumeLabel.setOnMouseEntered(evt -> {
@@ -338,6 +335,7 @@ public class VLCPlayer {
         reloadButton.setGraphic(reloadIcon);
         reloadButton.setFocusTraversable(false);
         reloadButton.setOnAction(evt -> {
+            initProgress.set(getCurrentProgress());
             mediaPlayer.controls().stop();
             mediaPlayer.controls().play();
         });
@@ -377,6 +375,9 @@ public class VLCPlayer {
                 return;
             }
             isVideoProgressBarUsing.set(true);
+            // 让播放器的控制面板保持可见
+            setControlsAutoHide(false);
+            // 处理进度拖动相关逻辑
             newProgress = evt.getX() / videoProgressBar.getWidth();
             videoProgressBar.setProgress(newProgress);
             if (newProgress > 0) {
@@ -412,6 +413,9 @@ public class VLCPlayer {
                 return;
             }
             setLoading(true);
+            // 恢复播放器的控制面板自动隐藏逻辑
+            setControlsAutoHide(true);
+            // 处理进度拖动相关逻辑
             mediaPlayer.controls().setPosition(((float) videoProgressBar.getProgress()));
             isVideoProgressBarUsing.set(false);
         });
@@ -492,14 +496,50 @@ public class VLCPlayer {
                 }
                 case F -> mediaPlayer.fullScreen().toggle();
                 case Z -> fillWindowToggleSwitch.setSelected(!fillWindowToggleSwitch.isSelected());
+                case RIGHT -> movePosition(true);
+                case LEFT -> movePosition(false);
+                case UP -> moveVolume(true);
+                case DOWN -> moveVolume(false);
             }
         });
         // 鼠标移动事件处理
-        controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
         parent.addEventFilter(MouseEvent.MOUSE_MOVED, evt -> setControlsVisible(true));
         parentChildren.add(0, playerPane);
         parent.requestFocus();
         setLoading(true);
+    }
+
+    private void movePosition(boolean forward) {
+        long length = videoLength.get();
+        long oldTime;
+        long newTime;
+
+        if (!mediaPlayer.status().isPlayable() || length <= 0) {
+            return;
+        }
+        oldTime = mediaPlayer.status().time();
+        newTime = forward ? Math.min(oldTime + 5000, length) : Math.max(oldTime - 5000, 0);
+        mediaPlayer.controls().setTime(newTime);
+    }
+
+    private void moveVolume(boolean forward) {
+        double oldVolume = volumeSlider.getValue();
+        double newVolume = forward ? Math.min(oldVolume + 10, 100) : Math.max(oldVolume - 10, 0);
+
+        if (mediaPlayer.audio().isMute()) {
+            mediaPlayer.audio().mute();
+            volumeLabel.setGraphic(volumeOnIcon);
+        }
+        volumeSlider.setValue(newVolume);
+    }
+
+    private void setControlsAutoHide(boolean flag) {
+        if (flag) {
+            controlPaneHideTimer.restart();
+        } else {
+            setControlsVisible(true);
+            controlPaneHideTimer.stop();
+        }
     }
 
     private void setControlsVisible(boolean flag) {

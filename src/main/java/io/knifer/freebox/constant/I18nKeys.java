@@ -62,8 +62,10 @@ public class I18nKeys {
     public static final String ERROR_CONFIRM = "error.confirm";
     public static final String ERROR_REPORT = "error.report";
     public static final String ERROR_HEADER_TITLE = "error.header-title";
+    public static final String ERROR_MESSAGE_VLC_NOT_FOUND = "error.message.vlc-not-found";
 
     public static final String COMMON_DELETE = "common.delete";
+    public static final String COMMON_EXIT = "common.exit";
     public static final String COMMON_MESSAGE_SUCCESS = "common.message.success";
     public static final String COMMON_MESSAGE_TIMOUT_FAILED = "common.message.timeout-failed";
 }

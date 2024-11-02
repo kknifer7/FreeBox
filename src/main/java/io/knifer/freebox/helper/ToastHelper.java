@@ -1,13 +1,13 @@
 package io.knifer.freebox.helper;
 
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.constant.ButtonTypes;
 import io.knifer.freebox.constant.I18nKeys;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.DialogPane;
+import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -123,5 +123,14 @@ public class ToastHelper {
                 HostServiceHelper.showDocument(BaseValues.REPOSITORY_NEW_ISSUE_URL)
         );
         buttons.add(reportBtn);
+    }
+
+    public void showErrorAlert(String headerI18n, String contentI18n, EventHandler<DialogEvent> onCloseRequest) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, I18nHelper.get(contentI18n), ButtonTypes.EXIT);
+
+        alert.setTitle(I18nHelper.get(I18nKeys.ERROR));
+        alert.setHeaderText(I18nHelper.get(headerI18n));
+        alert.setOnCloseRequest(onCloseRequest);
+        alert.show();
     }
 }

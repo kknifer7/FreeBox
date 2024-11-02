@@ -3,6 +3,8 @@ package io.knifer.freebox.context;
 import com.google.common.eventbus.EventBus;
 import io.knifer.freebox.component.event.EventListener;
 import io.knifer.freebox.constant.AppEvents;
+import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.net.ServiceManager;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
@@ -70,6 +72,17 @@ public enum Context {
 
         this.app = app;
         this.primaryStage = primaryStage;
+        // 检测是否安装VLC Player
+        if (!new WindowsRegistryVLCPlayerCheckHandler().handle()) {
+            ToastHelper.showErrorAlert(
+                    I18nKeys.ERROR_HEADER_TITLE,
+                    I18nKeys.ERROR_MESSAGE_VLC_NOT_FOUND,
+                    ignored -> Platform.exit()
+            );
+
+            return;
+        }
+        // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
             serviceManager.init(callback);
             log.info("application initialized");
@@ -97,9 +110,10 @@ public enum Context {
     public void destroy() {
         serviceManager.destroy();
         AsyncUtil.destroy();
-        Context.INSTANCE.getPrimaryStage().close();
+        if (initFlag) {
+            Context.INSTANCE.getPrimaryStage().close();
+        }
         KebSocketTopicKeeper.getInstance().destroy();
-        Platform.exit();
         System.exit(0);
     }
 

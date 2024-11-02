@@ -17,6 +17,7 @@ module io.knifer.freebox {
     requires uk.co.caprica.vlcj;
     requires uk.co.caprica.vlcj.javafx;
     requires uk.co.caprica.vlcj.natives;
+    requires jregistry;
 
     requires static lombok;
 

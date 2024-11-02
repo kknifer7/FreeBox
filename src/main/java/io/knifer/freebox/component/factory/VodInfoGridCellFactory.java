@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * 影片信息单元格工厂
+ * 影片信息单元格工厂（历史记录、收藏夹）
  *
  * @author Knifer
  */

@@ -1,7 +1,5 @@
 package io.knifer.freebox.controller;
 
-import io.knifer.freebox.component.converter.SourceBean2StringConverter;
-import io.knifer.freebox.component.factory.ClassListCellFactory;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.component.node.MovieInfoListPopOver;
@@ -137,11 +135,6 @@ public class TVController extends BaseController {
                 );
             }, () -> searchLoadingProperty.set(false));
 
-            // TODO converter写入FXML里
-            sourceBeanComboBox.setConverter(new SourceBean2StringConverter());
-            classesListView.setCellFactory(new ClassListCellFactory());
-            videosGridView.setCellFactory(new VideoGridCellFactory());
-
             // 历史记录弹出框
             movieHistoryPopOver = new MovieInfoListPopOver(I18nKeys.TV_HISTORY, vodInfoDeleting -> {
                 movieHistoryPopOver.clearVodInfoList();
@@ -163,11 +156,10 @@ public class TVController extends BaseController {
             movieHistoryPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
             collectButton.disableProperty().bind(movieCollectionPopOver.showingProperty());
             movieCollectionPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
-            sortsLoadingProgressIndicator.visibleProperty().bind(sortsLoadingProperty);
+            sortsLoadingProgressIndicator.visibleProperty().bind(sortsLoadingProperty.or(movieLoadingProperty));
             movieLoadingProgressIndicator.visibleProperty().bind(movieLoadingProperty);
             videosGridView.disableProperty().bind(movieLoadingProperty);
-            classesListView.disableProperty().bind(sortsLoadingProperty);
-            classesListView.disableProperty().bind(movieLoadingProperty);
+            classesListView.disableProperty().bind(sortsLoadingProperty.or(movieLoadingProperty));
             sourceBeanComboBox.disableProperty().bind(sortsLoadingProperty);
             searchButton.disableProperty().bind(movieLoadingProperty);
             searchLoadingProgressIndicator.visibleProperty().bind(searchLoadingProperty);
@@ -382,6 +374,7 @@ public class TVController extends BaseController {
      */
     private void initSourceBeanData(List<SourceBean> sourceBeanList) {
         List<SourceBean> items = sourceBeanComboBox.getItems();
+        VideoGridCellFactory videoGridCellFactory;
 
         items.clear();
         if (sourceBeanList.isEmpty()) {
@@ -389,6 +382,8 @@ public class TVController extends BaseController {
             return;
         }
         items.addAll(sourceBeanList);
+        videoGridCellFactory = (VideoGridCellFactory) videosGridView.getCellFactory();
+        videoGridCellFactory.setSourceBeans(sourceBeanList);
         sourceBeanComboBox.getSelectionModel().selectFirst();
     }
 
@@ -408,6 +403,7 @@ public class TVController extends BaseController {
             MovieSort classes;
             List<MovieSort.SortData> sortList;
 
+            items.clear();
             if (homeContent == null) {
                 ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SOURCE_FAILED);
                 sortsLoadingProperty.set(false);
@@ -448,6 +444,12 @@ public class TVController extends BaseController {
         }
     }
 
+    private void setVideoGridShowSourceName(boolean flag) {
+        VideoGridCellFactory factory = (VideoGridCellFactory) videosGridView.getCellFactory();
+
+        factory.setShowSourceName(flag);
+    }
+
     /**
      * 根据分类加载影片
      * @param sortData 分类数据
@@ -467,6 +469,7 @@ public class TVController extends BaseController {
             items.clear();
             AsyncUtil.cancelAllTask();
         }
+        setVideoGridShowSourceName(false);
         movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
         if (movieAndVideosCached == null) {
             // 拉取影片数据
@@ -617,6 +620,7 @@ public class TVController extends BaseController {
             return;
         }
         clearMovieData();
+        setVideoGridShowSourceName(true);
         searchLoadingProperty.set(true);
         movieSearchService.setKeyword(searchKeyword);
         movieSearchService.setSourceKeyIterator(sourceBeanKeyIterator);

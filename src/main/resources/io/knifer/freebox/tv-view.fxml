@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
+<?import io.knifer.freebox.component.converter.SourceBean2StringConverter?>
+<?import io.knifer.freebox.component.factory.ClassListCellFactory?>
+<?import io.knifer.freebox.component.factory.VideoGridCellFactory?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import org.controlsfx.control.*?>
-<?import org.kordamp.ikonli.javafx.*?>
-
+<?import org.controlsfx.control.GridView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane fx:id="root" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/tv-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.TVController">
+   <fx:define>
+      <SourceBean2StringConverter fx:id="sourceBean2StringConverter" />
+      <ClassListCellFactory fx:id="classListCellFactory" />
+      <VideoGridCellFactory fx:id="videosGridCellFactory" />
+   </fx:define>
+
    <left>
       <BorderPane BorderPane.alignment="CENTER">
          <top>
             <HBox BorderPane.alignment="CENTER">
                <children>
-                  <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" prefWidth="150.0" />
+                  <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" converter="$sourceBean2StringConverter" prefWidth="150.0" />
                   <Button fx:id="historyButton" focusTraversable="false" mnemonicParsing="false" onAction="#onHistoryBtnAction">
                      <graphic>
                         <FontIcon iconLiteral="fa-history:16:#4169E1" />
@@ -33,7 +41,7 @@
                      <children>
                         <VBox prefHeight="200.0" prefWidth="100.0">
                            <children>
-                              <ListView fx:id="classesListView" focusTraversable="false" onMouseClicked="#onClassesListViewClick" VBox.vgrow="ALWAYS" />
+                              <ListView fx:id="classesListView" cellFactory="$classListCellFactory" focusTraversable="false" onMouseClicked="#onClassesListViewClick" VBox.vgrow="ALWAYS" />
                            </children>
                         </VBox>
                         <ProgressIndicator fx:id="sortsLoadingProgressIndicator" />
@@ -50,7 +58,7 @@
                <center>
                   <StackPane prefHeight="150.0" prefWidth="200.0">
                      <children>
-                        <GridView fx:id="videosGridView" horizontalCellSpacing="47" onMouseClicked="#onVideosGridViewMouseClicked" verticalCellSpacing="75" />
+                        <GridView fx:id="videosGridView" cellFactory="$videosGridCellFactory" horizontalCellSpacing="47" onMouseClicked="#onVideosGridViewMouseClicked" verticalCellSpacing="75" />
                         <ProgressIndicator fx:id="movieLoadingProgressIndicator" visible="false" />
                      </children>
                   </StackPane>

@@ -6,6 +6,12 @@
     -fx-label-padding: 1px;
 }
 
+.movie-source-label {
+    -fx-background-color: darkorange;
+    -fx-text-fill: white;
+    -fx-label-padding: 1px;
+}
+
 .movie-info-overlay {
     -fx-font-weight: bold;
     -fx-font-size: 14px;

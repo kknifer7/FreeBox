@@ -5,9 +5,12 @@ import com.google.common.cache.CacheBuilder;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.common.Movie;
+import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -15,15 +18,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 影片单元格工厂
@@ -32,6 +35,8 @@ import java.util.Set;
  */
 @Slf4j
 public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, GridCell<Movie.Video>> {
+
+    private static final Map<String, String> SOURCE_KEY_AND_NAME_MAP = new HashMap<>();
 
     private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
             .maximumSize(150)
@@ -43,12 +48,31 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
 
     private final static double CELL_HEIGHT = 200;
 
-    @Override
-    public GridCell<Movie.Video> call(GridView<Movie.Video> view) {
-        return new VideoGridCell();
+    private final BooleanProperty showSourceName = new SimpleBooleanProperty(false);
+
+    public void setSourceBeans(Collection<SourceBean> sourceBeans) {
+        SOURCE_KEY_AND_NAME_MAP.clear();
+        SOURCE_KEY_AND_NAME_MAP.putAll(
+                sourceBeans.stream().collect(Collectors.toUnmodifiableMap(
+                        SourceBean::getKey, SourceBean::getName
+                ))
+        );
     }
 
+    public void setShowSourceName(boolean flag) {
+        showSourceName.set(flag);
+    }
+
+    @Override
+    public GridCell<Movie.Video> call(GridView<Movie.Video> view) {
+        return new VideoGridCell(showSourceName);
+    }
+
+    @RequiredArgsConstructor
     public static class VideoGridCell extends GridCell<Movie.Video> {
+
+        private final BooleanProperty showSourceName;
+
         @Override
         protected void updateItem(Movie.Video item, boolean empty) {
             String itemId;
@@ -60,6 +84,9 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             ImageView moviePicImageView;
             String note;
             String picUrl;
+            String sourceName;
+            Label sourceNameLabel;
+            StackPane sourceNameContainer;
 
             super.updateItem(item, empty);
             if (item == null || empty) {
@@ -101,6 +128,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             moviePicImageView.setFitHeight(CELL_HEIGHT);
             movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
             movieInfoOverlay.getStyleClass().add("movie-info-overlay");
+            // 影片右上角备注
             note = item.getNote();
             containerChildren.add(movieInfoOverlay);
             if (StringUtils.isNotBlank(note)) {
@@ -108,6 +136,17 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 movieNoteLabel.getStyleClass().add("movie-remark-label");
                 containerChildren.add(movieNoteLabel);
             }
+            // 影片左上角源名称
+            sourceNameLabel = new Label();
+            sourceNameLabel.getStyleClass().add("movie-source-label");
+            sourceName = SOURCE_KEY_AND_NAME_MAP.get(item.getSourceKey());
+            if (StringUtils.isNotBlank(sourceName)) {
+                sourceNameLabel.setText(sourceName);
+            }
+            sourceNameContainer = new StackPane(sourceNameLabel);
+            sourceNameContainer.setAlignment(Pos.TOP_LEFT);
+            sourceNameContainer.visibleProperty().bind(showSourceName);
+            containerChildren.add(sourceNameContainer);
             setId(item.getId());
             setGraphic(container);
         }

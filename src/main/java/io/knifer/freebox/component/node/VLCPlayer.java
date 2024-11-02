@@ -14,6 +14,7 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
+import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -108,6 +109,7 @@ public class VLCPlayer {
         DoubleBinding paneWidthProp = parentWidthProp.multiply(0.8);
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
         List<Node> paneChildren;
+        VBox volumePopOverInnerVBox;
         PopOver volumePopOver;
         Timer volumePopOverHideTimer;
         Label rateSettingTitleLabel;
@@ -261,16 +263,32 @@ public class VLCPlayer {
         });
         volumeSlider = new Slider(0, 100, 100);
         volumeSlider.setOrientation(Orientation.VERTICAL);
-        volumePopOver = new PopOver(volumeSlider);
+        volumePopOverInnerVBox = new VBox(volumeSlider);
+        volumePopOverInnerVBox.setAlignment(Pos.CENTER);
+        volumePopOver = new PopOver(volumePopOverInnerVBox);
         volumePopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
         volumePopOver.getStyleClass().add("vlc-player-pop-over");
         volumePopOver.setDetachable(false);
         volumePopOverHideTimer = new Timer(1000, evt -> volumePopOver.hide());
-        volumePopOver.addEventFilter(MouseEvent.ANY, evt -> {
+        /*volumePopOver.addEventFilter(MouseEvent.ANY, evt -> {
             if (evt.getEventType() == MouseEvent.MOUSE_EXITED) {
                 volumePopOverHideTimer.stop();
             } else {
                 volumePopOverHideTimer.restart();
+            }
+        });*/
+        volumePopOverInnerVBox.addEventFilter(MouseEvent.ANY, evt -> {
+            EventType<? extends MouseEvent> eventType = evt.getEventType();
+
+            if (eventType == MouseEvent.MOUSE_ENTERED) {
+                setControlsAutoHide(false);
+                volumePopOverHideTimer.stop();
+                if (!volumePopOver.isShowing()) {
+                    volumePopOver.show(volumeLabel);
+                }
+            } else if (eventType == MouseEvent.MOUSE_EXITED) {
+                setControlsAutoHide(true);
+                volumePopOverHideTimer.start();
             }
         });
         volumeSlider.valueProperty().addListener((ob, oldVal, newVal) -> {
@@ -347,17 +365,24 @@ public class VLCPlayer {
         settingsPopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
         settingsPopOver.getStyleClass().add("vlc-player-pop-over");
         settingsPopOver.setDetachable(false);
+        settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());
         settingsPopOverInnerVBox = new VBox(reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox);
         settingsPopOverInnerVBox.setSpacing(10.0);
-        settingsPopOver.setContentNode(settingsPopOverInnerVBox);
-        settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());
-        settingsPopOver.addEventFilter(MouseEvent.ANY, evt -> {
-            if (evt.getEventType() == MouseEvent.MOUSE_EXITED) {
+        settingsPopOverInnerVBox.addEventFilter(MouseEvent.ANY, evt -> {
+            EventType<? extends MouseEvent> eventType = evt.getEventType();
+
+            if (eventType == MouseEvent.MOUSE_ENTERED) {
+                setControlsAutoHide(false);
                 settingsPopOverHideTimer.stop();
-            } else {
-                settingsPopOverHideTimer.restart();
+                if (!settingsPopOver.isShowing()) {
+                    settingsPopOver.show(settingsLabel);
+                }
+            } else if (eventType == MouseEvent.MOUSE_EXITED) {
+                setControlsAutoHide(true);
+                settingsPopOverHideTimer.start();
             }
         });
+        settingsPopOver.setContentNode(settingsPopOverInnerVBox);
         settingsLabel.setOnMouseEntered(evt -> {
             settingsPopOverHideTimer.restart();
             if (!settingsPopOver.isShowing()) {

@@ -384,6 +384,8 @@ public class TVController extends BaseController {
         items.addAll(sourceBeanList);
         videoGridCellFactory = (VideoGridCellFactory) videosGridView.getCellFactory();
         videoGridCellFactory.setSourceBeans(sourceBeanList);
+        movieHistoryPopOver.setSourceBeans(sourceBeanList);
+        movieCollectionPopOver.setSourceBeans(sourceBeanList);
         sourceBeanComboBox.getSelectionModel().selectFirst();
     }
 

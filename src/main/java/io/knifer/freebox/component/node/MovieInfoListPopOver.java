@@ -2,7 +2,9 @@ package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.util.CollectionUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
@@ -12,6 +14,7 @@ import javafx.scene.layout.BorderPane;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.PopOver;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -48,6 +51,13 @@ public class MovieInfoListPopOver extends PopOver {
             items.clear();
         }
         items.addAll(vodInfoList);
+    }
+
+    public void setSourceBeans(Collection<SourceBean> sourceBeans) {
+        if (CollectionUtil.isEmpty(sourceBeans)) {
+            return;
+        }
+        ((VodInfoGridCellFactory) vodInfoGridView.getCellFactory()).setSourceBeans(sourceBeans);
     }
 
     public void clearVodInfoList() {

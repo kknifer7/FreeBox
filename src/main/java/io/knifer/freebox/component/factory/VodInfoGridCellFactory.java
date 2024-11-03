@@ -6,6 +6,7 @@ import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.ValidationUtil;
@@ -25,10 +26,9 @@ import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * 影片信息单元格工厂（历史记录、收藏夹）
@@ -47,16 +47,27 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
 
     private final static double CELL_HEIGHT = 200;
 
+    private final Map<String, String> sourceKeyAndNameMap = new HashMap<>();
     private final Consumer<VodInfo> onItemDelete;
+
+    public void setSourceBeans(Collection<SourceBean> sourceBeans) {
+        sourceKeyAndNameMap.clear();
+        sourceKeyAndNameMap.putAll(
+                sourceBeans.stream().collect(Collectors.toUnmodifiableMap(
+                        SourceBean::getKey, SourceBean::getName
+                ))
+        );
+    }
 
     @Override
     public GridCell<VodInfo> call(GridView<VodInfo> param) {
-        return new VodInfoGridCell(onItemDelete);
+        return new VodInfoGridCell(sourceKeyAndNameMap, onItemDelete);
     }
 
     @RequiredArgsConstructor
     public static class VodInfoGridCell extends GridCell<VodInfo> {
 
+        private final Map<String, String> sourceKeyAndNameMap;
         private final Consumer<VodInfo> onItemDelete;
 
         @Override
@@ -70,6 +81,9 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             ImageView moviePicImageView;
             String note;
             String picUrl;
+            String sourceName;
+            Label sourceNameLabel;
+            StackPane sourceNameContainer;
 
             super.updateItem(item, empty);
             if (item == null || empty) {
@@ -111,13 +125,24 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             moviePicImageView.setFitHeight(CELL_HEIGHT);
             movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
             setupMovieInfoOverlay(movieInfoOverlay, item);
-            note = item.getNote();
             containerChildren.add(movieInfoOverlay);
+            // 影片右上角备注
+            note = item.getNote();
             if (StringUtils.isNotBlank(note)) {
                 movieNoteLabel = new Label(note);
                 movieNoteLabel.getStyleClass().add("movie-remark-label");
                 containerChildren.add(movieNoteLabel);
             }
+            // 影片左上角源名称
+            sourceNameLabel = new Label();
+            sourceNameLabel.getStyleClass().add("movie-source-label");
+            sourceName = sourceKeyAndNameMap.get(item.getSourceKey());
+            if (StringUtils.isNotBlank(sourceName)) {
+                sourceNameLabel.setText(sourceName);
+            }
+            sourceNameContainer = new StackPane(sourceNameLabel);
+            sourceNameContainer.setAlignment(Pos.TOP_LEFT);
+            containerChildren.add(sourceNameContainer);
             setId(item.getId());
             setGraphic(container);
         }

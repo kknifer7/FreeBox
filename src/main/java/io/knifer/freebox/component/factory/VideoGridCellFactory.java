@@ -7,6 +7,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.util.AsyncUtil;
+import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -51,6 +52,10 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
     private final BooleanProperty showSourceName = new SimpleBooleanProperty(false);
 
     public void setSourceBeans(Collection<SourceBean> sourceBeans) {
+        if (CollectionUtil.isEmpty(sourceBeans)) {
+
+            return;
+        }
         SOURCE_KEY_AND_NAME_MAP.clear();
         SOURCE_KEY_AND_NAME_MAP.putAll(
                 sourceBeans.stream().collect(Collectors.toUnmodifiableMap(

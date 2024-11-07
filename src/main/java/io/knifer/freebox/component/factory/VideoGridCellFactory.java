@@ -103,6 +103,18 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             container = new StackPane();
             container.setAlignment(Pos.TOP_RIGHT);
             containerChildren = container.getChildren();
+            // 影片左上角源名称
+            sourceNameLabel = new Label();
+            sourceNameLabel.getStyleClass().add("movie-source-label");
+            sourceName = SOURCE_KEY_AND_NAME_MAP.get(item.getSourceKey());
+            if (StringUtils.isNotBlank(sourceName)) {
+                sourceNameLabel.setText(sourceName);
+            }
+            sourceNameContainer = new StackPane(sourceNameLabel);
+            sourceNameContainer.setAlignment(Pos.TOP_LEFT);
+            sourceNameContainer.visibleProperty().bind(showSourceName);
+            containerChildren.add(sourceNameContainer);
+            // 图片
             itemId = item.getId();
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                 moviePicImageView = new ImageView(BaseResources.LOAD_MORE_IMG);
@@ -141,17 +153,6 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 movieNoteLabel.getStyleClass().add("movie-remark-label");
                 containerChildren.add(movieNoteLabel);
             }
-            // 影片左上角源名称
-            sourceNameLabel = new Label();
-            sourceNameLabel.getStyleClass().add("movie-source-label");
-            sourceName = SOURCE_KEY_AND_NAME_MAP.get(item.getSourceKey());
-            if (StringUtils.isNotBlank(sourceName)) {
-                sourceNameLabel.setText(sourceName);
-            }
-            sourceNameContainer = new StackPane(sourceNameLabel);
-            sourceNameContainer.setAlignment(Pos.TOP_LEFT);
-            sourceNameContainer.visibleProperty().bind(showSourceName);
-            containerChildren.add(sourceNameContainer);
             setId(item.getId());
             setGraphic(container);
         }

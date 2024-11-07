@@ -95,6 +95,17 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             container = new StackPane();
             container.setAlignment(Pos.TOP_RIGHT);
             containerChildren = container.getChildren();
+            // 影片左上角源名称
+            sourceNameLabel = new Label();
+            sourceNameLabel.getStyleClass().add("movie-source-label");
+            sourceName = sourceKeyAndNameMap.get(item.getSourceKey());
+            if (StringUtils.isNotBlank(sourceName)) {
+                sourceNameLabel.setText(sourceName);
+            }
+            sourceNameContainer = new StackPane(sourceNameLabel);
+            sourceNameContainer.setAlignment(Pos.TOP_LEFT);
+            containerChildren.add(sourceNameContainer);
+            // 图片
             itemId = item.getId();
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                 moviePicImageView = new ImageView(BaseResources.LOAD_MORE_IMG);
@@ -133,16 +144,6 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 movieNoteLabel.getStyleClass().add("movie-remark-label");
                 containerChildren.add(movieNoteLabel);
             }
-            // 影片左上角源名称
-            sourceNameLabel = new Label();
-            sourceNameLabel.getStyleClass().add("movie-source-label");
-            sourceName = sourceKeyAndNameMap.get(item.getSourceKey());
-            if (StringUtils.isNotBlank(sourceName)) {
-                sourceNameLabel.setText(sourceName);
-            }
-            sourceNameContainer = new StackPane(sourceNameLabel);
-            sourceNameContainer.setAlignment(Pos.TOP_LEFT);
-            containerChildren.add(sourceNameContainer);
             setId(item.getId());
             setGraphic(container);
         }

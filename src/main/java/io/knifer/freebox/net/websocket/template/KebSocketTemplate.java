@@ -82,7 +82,7 @@ public interface KebSocketTemplate {
      * @param clientInfo 客户端信息
      * @param dto 参数
      */
-    void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto);
+    <T extends RuntimeException> void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto, Consumer<T> onError);
 
     /**
      * 删除历史记录

@@ -365,7 +365,12 @@ public class TVController extends BaseController {
         vodInfo.setProgress(playInfo.getProgress());
         vodInfo.setReverseSort(playInfo.isReverseSort());
         vodInfo.setPlayNote(playInfo.getPlayNote());
-        template.savePlayHistory(clientInfo, SavePlayHistoryDTO.of(vodInfo));
+        template.savePlayHistory(
+                clientInfo, SavePlayHistoryDTO.of(vodInfo), exception -> {
+                    ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SAVE_HISTORY_FAILED);
+                    ToastHelper.showException(exception);
+                }
+        );
     }
 
     /**

@@ -141,12 +141,18 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
     }
 
     @Override
-    public void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto) {
-        runner.send(
-                clientInfo.getConnection(),
-                MessageCodes.SAVE_PLAY_HISTORY,
-                dto
-        );
+    public <T extends RuntimeException> void savePlayHistory(
+            ClientInfo clientInfo, SavePlayHistoryDTO dto, Consumer<T> onError
+    ) {
+        try {
+            runner.send(
+                    clientInfo.getConnection(),
+                    MessageCodes.SAVE_PLAY_HISTORY,
+                    dto
+            );
+        } catch (RuntimeException e) {
+            onError.accept(CastUtil.cast(e));
+        }
     }
 
     @Override

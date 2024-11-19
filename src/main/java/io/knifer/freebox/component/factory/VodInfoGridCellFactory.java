@@ -106,7 +106,6 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             }
             sourceNameContainer = new StackPane(sourceNameLabel);
             sourceNameContainer.setAlignment(Pos.TOP_LEFT);
-            sourceNameContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, evt -> Event.fireEvent(this, evt));
             // 图片
             itemId = item.getId();
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
@@ -138,6 +137,13 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             moviePicImageView.setFitHeight(CELL_HEIGHT);
             movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
             setupMovieInfoOverlay(movieInfoOverlay, item);
+            sourceNameContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, evt -> {
+                switch (evt.getButton()) {
+                    case PRIMARY -> Event.fireEvent(this, evt);
+                    case SECONDARY -> movieInfoOverlay.getContextMenu()
+                            .show(movieInfoOverlay, evt.getScreenX(), evt.getScreenY());
+                }
+            });
             containerChildren.add(movieInfoOverlay);
             containerChildren.add(sourceNameContainer);
             // 影片右上角备注

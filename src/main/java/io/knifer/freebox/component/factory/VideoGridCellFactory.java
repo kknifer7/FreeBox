@@ -18,6 +18,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
@@ -115,7 +116,11 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             sourceNameContainer = new StackPane(sourceNameLabel);
             sourceNameContainer.setAlignment(Pos.TOP_LEFT);
             sourceNameContainer.visibleProperty().bind(showSourceName);
-            sourceNameContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, evt -> Event.fireEvent(this, evt));
+            sourceNameContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, evt -> {
+                if (evt.getButton() == MouseButton.PRIMARY) {
+                    Event.fireEvent(this, evt);
+                }
+            });
             // 图片
             itemId = item.getId();
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {

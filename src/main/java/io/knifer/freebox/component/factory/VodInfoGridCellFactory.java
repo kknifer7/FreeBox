@@ -11,6 +11,7 @@ import io.knifer.freebox.model.common.VodInfo;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
+import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
@@ -18,6 +19,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
@@ -104,7 +106,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             }
             sourceNameContainer = new StackPane(sourceNameLabel);
             sourceNameContainer.setAlignment(Pos.TOP_LEFT);
-            containerChildren.add(sourceNameContainer);
+            sourceNameContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, evt -> Event.fireEvent(this, evt));
             // 图片
             itemId = item.getId();
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
@@ -137,6 +139,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
             setupMovieInfoOverlay(movieInfoOverlay, item);
             containerChildren.add(movieInfoOverlay);
+            containerChildren.add(sourceNameContainer);
             // 影片右上角备注
             note = item.getNote();
             if (StringUtils.isNotBlank(note)) {

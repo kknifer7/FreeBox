@@ -12,11 +12,13 @@ import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
@@ -113,7 +115,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             sourceNameContainer = new StackPane(sourceNameLabel);
             sourceNameContainer.setAlignment(Pos.TOP_LEFT);
             sourceNameContainer.visibleProperty().bind(showSourceName);
-            containerChildren.add(sourceNameContainer);
+            sourceNameContainer.addEventFilter(MouseEvent.MOUSE_CLICKED, evt -> Event.fireEvent(this, evt));
             // 图片
             itemId = item.getId();
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
@@ -148,6 +150,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             // 影片右上角备注
             note = item.getNote();
             containerChildren.add(movieInfoOverlay);
+            containerChildren.add(sourceNameContainer);
             if (StringUtils.isNotBlank(note)) {
                 movieNoteLabel = new Label(note);
                 movieNoteLabel.getStyleClass().add("movie-remark-label");

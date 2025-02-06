@@ -30,7 +30,6 @@ public class HttpUtil {
                     HttpResponse.BodyHandlers.ofString()
             ).body();
         } catch (IOException e) {
-            e.printStackTrace();
             throw new FBException("Error while sending request to " + url, e);
         } catch (InterruptedException e) {
             return null;
@@ -48,10 +47,26 @@ public class HttpUtil {
                     HttpResponse.BodyHandlers.ofString()
             ).body();
         } catch (IOException e) {
-            e.printStackTrace();
             throw new FBException("Error while sending request to " + url, e);
         } catch (InterruptedException ignored) {
             return null;
+        }
+    }
+
+    public String post(String url, String body) {
+        try {
+            return client.send(
+                    HttpRequest.newBuilder()
+                            .POST(HttpRequest.BodyPublishers.ofString(body))
+                            .uri(URI.create(url))
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString()
+            ).body();
+        } catch (IOException e) {
+            throw new FBException("Error while sending request to " + url, e);
+        } catch (InterruptedException e) {
+
+           return null;
         }
     }
 }

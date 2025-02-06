@@ -62,7 +62,7 @@ public class HomeController {
             MultipleSelectionModel<ClientInfo> model = clientListView.getSelectionModel();
 
             clientItems.remove(evt.clientInfo());
-            if (model.getSelectedItem() == null && clientItems.size() > 0) {
+            if (model.getSelectedItem() == null && !clientItems.isEmpty()) {
                 model.selectFirst();
             }
         });
@@ -143,9 +143,7 @@ public class HomeController {
         Stage tvStage = stageAndController.getLeft();
 
         stageAndController.getRight().setData(clientInfo);
-        Context.INSTANCE.pushStage(homeStage);
-        homeStage.hide();
-        tvStage.show();
+        WindowHelper.route(homeStage, tvStage);
     }
 
     @FXML
@@ -161,5 +159,23 @@ public class HomeController {
                 clientInfo.getConnection().getRemoteSocketAddress().getHostName()
         );
         clientListView.getItems().remove(clientInfo);
+    }
+
+    @FXML
+    private void onSourceAuditBtnAction() {
+        ClientInfo clientInfo = clientListView.getSelectionModel().getSelectedItem();
+        Pair<Stage, SourceAuditController> stageAndController;
+        Stage homeStage;
+        Stage sourceAuditStage;
+
+        if (clientInfo == null || !clientInfo.getConnection().isOpen()) {
+            return;
+        }
+        stageAndController = FXMLUtil.load(Views.SOURCE_AUDIT);
+        homeStage = WindowHelper.getStage(root);
+        sourceAuditStage = stageAndController.getLeft();
+        stageAndController.getRight().setData(clientInfo);
+        log.info("enter source audit for [{}]", clientInfo.getConnection().getRemoteSocketAddress().getHostName());
+        WindowHelper.route(homeStage, sourceAuditStage);
     }
 }

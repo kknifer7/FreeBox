@@ -1,5 +1,6 @@
 package io.knifer.freebox.helper;
 
+import io.knifer.freebox.context.Context;
 import io.knifer.freebox.util.CastUtil;
 import javafx.event.Event;
 import javafx.scene.Node;
@@ -44,5 +45,11 @@ public class WindowHelper {
 
     public Stage getStage(Node node) {
         return CastUtil.cast(node.getScene().getWindow());
+    }
+
+    public void route(Stage currentStage, Stage nextStage) {
+        Context.INSTANCE.pushStage(currentStage);
+        currentStage.hide();
+        nextStage.show();
     }
 }

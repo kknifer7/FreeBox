@@ -107,7 +107,6 @@ public class ServiceManager {
                         ));
                     } else {
                         wsServer.start(ip, wsPort);
-                        log.info("websocket service started");
                     }
                     callback.run();
                 });

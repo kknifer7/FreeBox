@@ -17,4 +17,6 @@ public class Views {
     public static final String TV = "tv-view.fxml";
 
     public static final String VIDEO = "video-view.fxml";
+
+    public static final String SOURCE_AUDIT = "source-audit-view.fxml";
 }

@@ -10,7 +10,6 @@ import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.util.CastUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -25,13 +24,22 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
-@RequiredArgsConstructor
 public class KebSocketTemplateImpl implements KebSocketTemplate {
+
+    private KebSocketTemplateImpl(KebSocketRunner runner) {
+        this.runner = runner;
+    }
 
     private final KebSocketRunner runner;
 
     private final Set<Class<? extends Throwable>> ignoringToastThrowableClassesInMovieSearching =
             Set.of(TimeoutException.class);
+
+    private static final KebSocketTemplateImpl INSTANCE = new KebSocketTemplateImpl(KebSocketRunner.getInstance());
+
+    public static KebSocketTemplate getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     public void getSourceBeanList(ClientInfo clientInfo, Consumer<List<SourceBean>> callback) {

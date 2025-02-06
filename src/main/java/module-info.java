@@ -22,6 +22,7 @@ module io.knifer.freebox {
     requires static lombok;
 
     exports io.knifer.freebox;
+    exports io.knifer.freebox.constant;
     exports io.knifer.freebox.controller;
     exports io.knifer.freebox.component.converter;
     exports io.knifer.freebox.component.event;

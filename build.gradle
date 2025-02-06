@@ -45,6 +45,7 @@ ext {
             vlcjJavaFX: '1.2.0',
             vlcj: '4.8.3',
             jregistry: '1.0.0',
+            monacoFX: '0.0.8',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]

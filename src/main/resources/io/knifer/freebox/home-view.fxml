@@ -81,6 +81,11 @@
                                       <FontIcon iconLiteral="fa-arrow-right:16:green" />
                                   </graphic>
                               </Button>
+                              <Button mnemonicParsing="false" onAction="#onSourceAuditBtnAction" text="%home.source-audit">
+                                  <graphic>
+                                      <FontIcon iconLiteral="fa-code:16:blue" />
+                                  </graphic>
+                              </Button>
                                <Button mnemonicParsing="false" onAction="#onClientListCloseBtnAction" text="%home.client-list-close">
                                    <graphic>
                                        <FontIcon iconLiteral="fa-times:16:red" />

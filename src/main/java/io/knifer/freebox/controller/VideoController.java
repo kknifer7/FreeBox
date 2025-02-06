@@ -374,7 +374,12 @@ public class VideoController extends BaseController {
                         ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                         return;
                     }
-                    playUrl = URLDecoder.decode(elm.getAsString(), Charsets.UTF_8);
+                    playUrl = elm.getAsString();
+                    if (StringUtils.isBlank(playUrl)) {
+                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                        return;
+                    }
+                    playUrl = URLDecoder.decode(playUrl, Charsets.UTF_8);
                     elm = propsObj.get("parse");
                     parse = elm == null ? 0 : elm.getAsInt();
                     elm = propsObj.get("jx");

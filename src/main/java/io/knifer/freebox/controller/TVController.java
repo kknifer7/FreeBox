@@ -19,8 +19,6 @@ import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
-import io.knifer.freebox.net.websocket.core.KebSocketRunner;
-import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
 import io.knifer.freebox.service.MovieSearchService;
@@ -103,7 +101,7 @@ public class TVController extends BaseController {
 
     @FXML
     private void initialize() {
-        template = new KebSocketTemplateImpl(new KebSocketRunner(KebSocketTopicKeeper.getInstance()));
+        template = KebSocketTemplateImpl.getInstance();
         fetchMoreItem = new Movie.Video();
         fetchMoreItem.setId(BaseValues.LOAD_MORE_ITEM_ID);
         fetchMoreItem.setName(I18nHelper.get(I18nKeys.TV_LOAD_MORE));
@@ -342,10 +340,8 @@ public class TVController extends BaseController {
                                 }
                             }
                     ));
-                    Context.INSTANCE.pushStage(tvStage);
                     movieLoadingProperty.set(false);
-                    tvStage.hide();
-                    videoStage.show();
+                    WindowHelper.route(tvStage, videoStage);
                 }
         );
     }

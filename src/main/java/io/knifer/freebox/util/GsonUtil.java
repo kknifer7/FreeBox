@@ -15,6 +15,8 @@ public class GsonUtil {
 
     private final static Gson gson = new GsonBuilder().create();
 
+    private final static Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
+
     public String toJson(Object object){
         return gson.toJson(object);
     }
@@ -37,6 +39,10 @@ public class GsonUtil {
 
     public JsonElement toJsonTree(Object object) {
         return gson.toJsonTree(object);
+    }
+
+    public String toPrettyJson(Object object){
+        return prettyGson.toJson(object);
     }
 
 }

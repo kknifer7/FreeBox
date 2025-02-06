@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import io.knifer.freebox.component.factory.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.controlsfx.control.CheckListView?>
+<?import org.controlsfx.control.MasterDetailPane?>
+<?import org.controlsfx.control.tableview2.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+<BorderPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SourceAuditController" stylesheets="@css/view/source-audit-view.css">
+    <fx:define>
+        <SourceAuditItemFirstTableColumnCellFactory fx:id="firstColumnCellFactory"/>
+        <SourceAuditItemStartAtTableColumnCellFactory fx:id="startAtColumnCellFactory"/>
+        <SourceAuditItemDoubleTableColumnCellFactory fx:id="doubleColumnCellFactory"/>
+        <SourceAuditItemStatusTableColumnCellFactory fx:id="statusColumnCellFactory"/>
+        <SourceAuditItemStringTableColumnCellFactory fx:id="stringColumnCellFactory"/>
+    </fx:define>
+   <left>
+      <VBox prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <CheckListView fx:id="sourceBeanCheckListView" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+            <HBox alignment="CENTER">
+               <children>
+                  <Button mnemonicParsing="false" onAction="#onSelectAllBtnAction" prefWidth="100.0" text="%source-audit.select-all" HBox.hgrow="ALWAYS" focusTraversable="false">
+                     <graphic>
+                        <FontIcon iconLiteral="fa-list:16" />
+                     </graphic>
+                  </Button>
+                  <Button fx:id="startAuditBtn" mnemonicParsing="false" onAction="#onStartAuditBtnAction" prefWidth="100.0" text="%source-audit.start-audit" HBox.hgrow="ALWAYS" focusTraversable="false">
+                     <graphic>
+                        <FontIcon iconLiteral="fa-play:16:green" />
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+      </VBox>
+   </left>
+   <center>
+      <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+        <tabs>
+          <Tab text="%source-audit.result-tab">
+              <content>
+                  <MasterDetailPane dividerPosition=".7">
+                      <masterNode>
+                          <VBox>
+                              <children>
+                                  <TableView2 fx:id="sourceAuditItemTableView">
+                                      <columns>
+                                          <TableColumn2 cellFactory="$firstColumnCellFactory" fx:id="sourceAuditItemNameTableColumn" text="%source-audit.audit-table-column.name" sortable="false">
+                                              <graphic>
+                                                  <FontIcon iconLiteral="fa-bookmark:16" />
+                                              </graphic>
+                                          </TableColumn2>
+                                          <TableColumn2 cellFactory="$startAtColumnCellFactory" fx:id="sourceAuditItemStartAtTableColumn" text="%source-audit.audit-table-column.start-at" sortable="false">
+                                              <graphic>
+                                                  <FontIcon iconLiteral="fa-calendar:16" />
+                                              </graphic>
+                                          </TableColumn2>
+                                          <TableColumn2 cellFactory="$doubleColumnCellFactory" fx:id="sourceAuditItemCostTableColumn" text="%source-audit.audit-table-column.cost" sortable="false">
+                                              <graphic>
+                                                  <FontIcon iconLiteral="fa-clock-o:16" />
+                                              </graphic>
+                                          </TableColumn2>
+                                          <TableColumn2 cellFactory="$statusColumnCellFactory" fx:id="sourceAuditItemStatusTableColumn" text="%source-audit.audit-table-column.status" sortable="false">
+                                              <graphic>
+                                                  <FontIcon iconLiteral="fa-laptop:16" />
+                                              </graphic>
+                                          </TableColumn2>
+                                          <TableColumn2 cellFactory="$stringColumnCellFactory" fx:id="sourceAuditItemResultInfoTableColumn" text="%source-audit.audit-table-column.result-info" sortable="false" prefWidth="100.0">
+                                              <graphic>
+                                                  <FontIcon iconLiteral="fa-info-circle:16" />
+                                              </graphic>
+                                          </TableColumn2>
+                                      </columns>
+                                  </TableView2>
+                                  <Button fx:id="singleSourceStartAuditBtn" mnemonicParsing="false" onAction="#onSingleSourceStartAuditBtnAction" text="%source-audit.start-single-audit" focusTraversable="false">
+                                      <VBox.margin>
+                                          <Insets left="5.0" top="5.0"/>
+                                      </VBox.margin>
+                                      <graphic>
+                                          <FontIcon iconLiteral="fa-bullseye:16:gray" />
+                                      </graphic>
+                                  </Button>
+                              </children>
+                          </VBox>
+                      </masterNode>
+                      <detailNode>
+                          <SplitPane dividerPositions=".5" orientation="VERTICAL">
+                              <items>
+                                  <TextArea fx:id="requestRawDataTextArea" editable="false" wrapText="true" />
+                                  <TextArea fx:id="responseRawDataTextArea" editable="false" wrapText="true" />
+                              </items>
+                          </SplitPane>
+                      </detailNode>
+                  </MasterDetailPane>
+              </content>
+          </Tab>
+          <Tab text="%source-audit.custom-audit-tab">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+   </center>
+</BorderPane>

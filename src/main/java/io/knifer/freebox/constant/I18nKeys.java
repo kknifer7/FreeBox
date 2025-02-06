@@ -69,4 +69,22 @@ public class I18nKeys {
     public static final String COMMON_EXIT = "common.exit";
     public static final String COMMON_MESSAGE_SUCCESS = "common.message.success";
     public static final String COMMON_MESSAGE_TIMOUT_FAILED = "common.message.timeout-failed";
+    public static final String COMMON_MESSAGE_COPY_SUCCEED = "common.message.copy-succeed";
+
+    public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
+    public static final String SOURCE_AUDIT_AUDIT_TABLE_ITEM_HOME = "source-audit.audit-table-item.home";
+    public static final String SOURCE_AUDIT_AUDIT_TABLE_ITEM_MOVIE_EXPLORE =
+            "source-audit.audit-table-item.movie-explore";
+    public static final String SOURCE_AUDIT_AUDIT_TABLE_ITEM_MOVIE_DETAIL =
+            "source-audit.audit-table-item.movie-detail";
+    public static final String SOURCE_AUDIT_AUDIT_TABLE_ITEM_MOVIE_PLAY = "source-audit.audit-table-item.movie-play";
+    public static final String SOURCE_AUDIT_AUDIT_TABLE_ITEM_MOVIE_SEARCH =
+            "source-audit.audit-table-item.movie-search";
+    public static final String SOURCE_AUDIT_AUDIT_STATUS_INITIALIZED =
+            "source-audit.audit-status.initialized";
+    public static final String SOURCE_AUDIT_AUDIT_STATUS_SKIPPED = "source-audit.audit-status.skipped";
+    public static final String SOURCE_AUDIT_AUDIT_STATUS_PROCESSING =
+            "source-audit.audit-status.processing";
+    public static final String SOURCE_AUDIT_AUDIT_STATUS_SUCCESS = "source-audit.audit-status.success";
+    public static final String SOURCE_AUDIT_AUDIT_STATUS_FAILED = "source-audit.audit-status.failed";
 }

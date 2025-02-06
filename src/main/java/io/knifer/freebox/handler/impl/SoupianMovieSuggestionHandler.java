@@ -20,10 +20,10 @@ import java.util.Collections;
  */
 public class SoupianMovieSuggestionHandler implements MovieSuggestionHandler {
 
-    private final String SEARCH_SUGGESTION_REQUEST_URL = "https://soupian.pro/prefix/search?wd=";
+    private final String SEARCH_SUGGESTION_REQUEST_URL = "https://soupian.plus/prefix/search?wd=";
     private final String[] SEARCH_SUGGESTION_REQUEST_HEADERS = {
             HttpHeaders.USER_AGENT, BaseValues.USER_AGENT,
-            HttpHeaders.REFERER, "https://soupian.pro/"
+            HttpHeaders.REFERER, "https://soupian.plus/"
     };
 
     @Override

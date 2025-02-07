@@ -50,7 +50,11 @@ public class FutureWaitingService<T> extends Service<T> {
                 try {
                     return future.get(BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
                 } catch (TimeoutException e) {
-                    Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.COMMON_MESSAGE_TIMOUT_FAILED));
+                    if (ignoringToastThrowableClasses.contains(e.getClass())) {
+                        log.warn("Ignored future waiting timeout exception", e);
+                    } else {
+                        Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.COMMON_MESSAGE_TIMOUT_FAILED));
+                    }
                 } catch (Exception e) {
                     // InterruptedException | ExecutionException | JsonSyntaxException
                     if (ignoringToastThrowableClasses.contains(e.getClass())) {

@@ -58,6 +58,11 @@ public class SourceAuditContext {
     private Runnable beforeAll;
 
     /**
+     * 最大重试次数
+     */
+    private int maxRetryCount;
+
+    /**
      * 首页信息
      */
     private AbsSortXml homeContent;
@@ -82,6 +87,7 @@ public class SourceAuditContext {
         context.setOnStatusUpdate(executionBo.getOnStatusUpdate());
         context.setOnFinish(executionBo.getOnFinish());
         context.setBeforeAll(executionBo.getBeforeAll());
+        context.setMaxRetryCount(executionBo.getMaxRetryCount());
 
         return context;
     }

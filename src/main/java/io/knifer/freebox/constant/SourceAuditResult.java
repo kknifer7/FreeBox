@@ -22,6 +22,7 @@ public enum SourceAuditResult {
     INVALID_VIDEO_URLS(Level.ERROR, "source-audit.audit-result.invalid-video-urls"),
     NO_VIDEO_URL(Level.ERROR, "source-audit.audit-result.no-url"),
     INVALID_VIDEO_URL(Level.ERROR, "source-audit.audit-result.invalid-video-url"),
+    UNSEARCHABLE(Level.INFO, "source-audit.audit-result.unsearchable")
     ;
 
     private final Level level;

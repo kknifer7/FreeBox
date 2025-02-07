@@ -54,6 +54,11 @@ public class SourceAuditExecutionBo {
      */
     private Runnable beforeAll;
 
+    /**
+     * 最大重试次数
+     */
+    private int maxRetryCount;
+
     public static SourceAuditExecutionBo of(
             ClientInfo clientInfo,
             SourceBean sourceBean,
@@ -61,7 +66,8 @@ public class SourceAuditExecutionBo {
             Consumer<Pair<SourceAuditType, String>> onResponse,
             Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate,
             Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish,
-            Runnable beforeAll
+            Runnable beforeAll,
+            int maxRetryCount
     ) {
         SourceAuditExecutionBo result = new SourceAuditExecutionBo();
 
@@ -72,6 +78,7 @@ public class SourceAuditExecutionBo {
         result.setOnStatusUpdate(onStatusUpdate);
         result.setOnFinish(onFinish);
         result.setBeforeAll(beforeAll);
+        result.setMaxRetryCount(maxRetryCount);
 
         return result;
     }

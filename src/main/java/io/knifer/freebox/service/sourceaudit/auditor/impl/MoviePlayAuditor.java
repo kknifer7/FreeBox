@@ -31,12 +31,6 @@ public class MoviePlayAuditor extends SourceAuditor {
     public void audit(SourceAuditContext context, boolean skip) {
         Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
-        GetPlayerContentDTO dto;
-        Consumer<Pair<SourceAuditType, String>> onRequest;
-        Consumer<Pair<SourceAuditType, String>> onResponse;
-        ClientInfo clientInfo;
-        Movie.Video video;
-        Movie.Video.UrlBean.UrlInfo urlInfo;
 
         if (skip) {
             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_PLAY, SourceAuditStatus.SKIPPED));
@@ -46,17 +40,25 @@ public class MoviePlayAuditor extends SourceAuditor {
             return;
         }
         onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_PLAY, SourceAuditStatus.PROCESSING));
-        clientInfo = context.getClientInfo();
-        video = context.getDetailContent().getMovie().getVideoList().get(0);
-        urlInfo = video.getUrlBean().getInfoList().get(0);
-        dto = GetPlayerContentDTO.of(
+        doAudit(context, 0);
+    }
+
+    private void doAudit(SourceAuditContext context, int retryCount) {
+        Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
+        Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
+        Consumer<Pair<SourceAuditType, String>> onRequest = context.getOnRequest();
+        Consumer<Pair<SourceAuditType, String>> onResponse = context.getOnResponse();
+        ClientInfo clientInfo = context.getClientInfo();
+        Movie.Video video = context.getDetailContent().getMovie().getVideoList().get(0);
+        Movie.Video.UrlBean.UrlInfo urlInfo = video.getUrlBean().getInfoList().get(0);
+        GetPlayerContentDTO dto = GetPlayerContentDTO.of(
                 video.getSourceKey(),
                 StringUtils.EMPTY,
                 urlInfo.getFlag(),
                 urlInfo.getBeanList().get(0).getUrl()
         );
-        onRequest = context.getOnRequest();
-        onResponse = context.getOnResponse();
+        int maxRetryCount = context.getMaxRetryCount();
+
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_PLAY, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getPlayerContent(
                 clientInfo,
@@ -67,17 +69,23 @@ public class MoviePlayAuditor extends SourceAuditor {
                     boolean needSkip;
 
                     if (playerContentJson == null) {
-                        onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_PLAY, SourceAuditStatus.FAILED));
-                        onFinish.accept(Pair.of(SourceAuditType.MOVIE_PLAY, List.of(SourceAuditResult.NO_DATA)));
-                        doNext(context, true);
+                        if (retryCount >= maxRetryCount) {
+                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_PLAY, SourceAuditStatus.FAILED));
+                            onFinish.accept(Pair.of(SourceAuditType.MOVIE_PLAY, List.of(SourceAuditResult.NO_DATA)));
+                            needSkip = true;
+                        } else {
+                            doAudit(context, retryCount + 1);
 
-                        return;
+                            return;
+                        }
                     } else {
-                        onResponse.accept(Pair.of(SourceAuditType.MOVIE_PLAY, GsonUtil.toPrettyJson(playerContentJson)));
+                        onResponse.accept(Pair.of(
+                                SourceAuditType.MOVIE_PLAY, GsonUtil.toPrettyJson(playerContentJson)
+                        ));
                         if (
                                 (propElm = playerContentJson.get("nameValuePairs")) == null ||
-                                !propElm.isJsonObject() ||
-                                (urlElem = propElm.getAsJsonObject().get("url")) == null
+                                        !propElm.isJsonObject() ||
+                                        (urlElem = propElm.getAsJsonObject().get("url")) == null
                         ) {
                             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_PLAY, SourceAuditStatus.FAILED));
                             onFinish.accept(Pair.of(

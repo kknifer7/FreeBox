@@ -4,6 +4,7 @@ import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.model.common.Movie;
+import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.s2c.GetSearchContentDTO;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
@@ -28,9 +29,7 @@ public class MovieSearchAuditor extends SourceAuditor {
     public void audit(SourceAuditContext context, boolean skip) {
         Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
-        GetSearchContentDTO dto;
-        Consumer<Pair<SourceAuditType, String>> onRequest;
-        Consumer<Pair<SourceAuditType, String>> onResponse;
+        SourceBean sourceBean = context.getSourceBean();
 
         if (skip) {
             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.SKIPPED));
@@ -39,10 +38,25 @@ public class MovieSearchAuditor extends SourceAuditor {
 
             return;
         }
+        if (!sourceBean.isSearchable()) {
+            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.SKIPPED));
+            onFinish.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, List.of(SourceAuditResult.UNSEARCHABLE)));
+            doNext(context, false);
+
+            return;
+        }
         onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.PROCESSING));
-        dto = GetSearchContentDTO.of(context.getSourceBean().getKey(), "战");
-        onRequest = context.getOnRequest();
-        onResponse = context.getOnResponse();
+        doAudit(context, 0);
+    }
+
+    private void doAudit(SourceAuditContext context, int retryCount) {
+        Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
+        Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
+        GetSearchContentDTO dto = GetSearchContentDTO.of(context.getSourceBean().getKey(), "战");
+        Consumer<Pair<SourceAuditType, String>> onRequest = context.getOnRequest();
+        Consumer<Pair<SourceAuditType, String>> onResponse = context.getOnResponse();
+        int maxRetryCount = context.getMaxRetryCount();
+
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getSearchContent(
                 context.getClientInfo(),
@@ -51,8 +65,14 @@ public class MovieSearchAuditor extends SourceAuditor {
                     Movie movieData;
 
                     if (content == null) {
-                        onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.FAILED));
-                        onFinish.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, List.of(SourceAuditResult.NO_DATA)));
+                        if (retryCount >= maxRetryCount) {
+                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.FAILED));
+                            onFinish.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, List.of(SourceAuditResult.NO_DATA)));
+                        } else {
+                            doAudit(context, retryCount + 1);
+
+                            return;
+                        }
                     } else {
                         onResponse.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, GsonUtil.toPrettyJson(content)));
                         movieData = content.getMovie();

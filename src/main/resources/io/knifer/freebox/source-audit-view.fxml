@@ -78,14 +78,18 @@
                                           </TableColumn2>
                                       </columns>
                                   </TableView2>
-                                  <Button fx:id="singleSourceStartAuditBtn" mnemonicParsing="false" onAction="#onSingleSourceStartAuditBtnAction" text="%source-audit.start-single-audit" focusTraversable="false">
+                                  <HBox>
                                       <VBox.margin>
-                                          <Insets left="5.0" top="5.0"/>
+                                          <Insets left="5.0" top="5.0" right="5.0"/>
                                       </VBox.margin>
-                                      <graphic>
-                                          <FontIcon iconLiteral="fa-bullseye:16:gray" />
-                                      </graphic>
-                                  </Button>
+                                      <children>
+                                          <Button fx:id="singleSourceStartAuditBtn" mnemonicParsing="false" onAction="#onSingleSourceStartAuditBtnAction" text="%source-audit.start-single-audit" focusTraversable="false">
+                                              <graphic>
+                                                  <FontIcon iconLiteral="fa-bullseye:16:gray" />
+                                              </graphic>
+                                          </Button>
+                                      </children>
+                                  </HBox>
                               </children>
                           </VBox>
                       </masterNode>

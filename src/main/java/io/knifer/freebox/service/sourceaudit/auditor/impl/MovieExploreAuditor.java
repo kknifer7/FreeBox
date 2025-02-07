@@ -32,11 +32,6 @@ public class MovieExploreAuditor extends SourceAuditor {
     public void audit(SourceAuditContext context, boolean skip) {
         Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
-        GetCategoryContentDTO dto;
-        Consumer<Pair<SourceAuditType, String>> onRequest;
-        Consumer<Pair<SourceAuditType, String>> onResponse;
-        AbsSortXml homeContent;
-        MovieSort.SortData sortData;
 
         if (skip) {
             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, SourceAuditStatus.SKIPPED));
@@ -46,11 +41,19 @@ public class MovieExploreAuditor extends SourceAuditor {
             return;
         }
         onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, SourceAuditStatus.PROCESSING));
-        homeContent = context.getHomeContent();
-        sortData = homeContent.getClasses().getSortList().get(0);
-        dto = GetCategoryContentDTO.of(context.getSourceBean(),sortData, 1);
-        onRequest = context.getOnRequest();
-        onResponse = context.getOnResponse();
+        doAudit(context, 0);
+    }
+
+    private void doAudit(SourceAuditContext context, int retryCount) {
+        Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
+        Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
+        AbsSortXml homeContent = context.getHomeContent();
+        MovieSort.SortData sortData = homeContent.getClasses().getSortList().get(0);
+        GetCategoryContentDTO dto = GetCategoryContentDTO.of(context.getSourceBean(),sortData, 1);
+        Consumer<Pair<SourceAuditType, String>> onRequest = context.getOnRequest();
+        Consumer<Pair<SourceAuditType, String>> onResponse = context.getOnResponse();
+        int maxRetryCount = context.getMaxRetryCount();
+
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getCategoryContent(
                 context.getClientInfo(),
@@ -61,9 +64,15 @@ public class MovieExploreAuditor extends SourceAuditor {
                     boolean needSkip;
 
                     if (categoryContent == null) {
-                        onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, SourceAuditStatus.FAILED));
-                        onFinish.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, List.of(SourceAuditResult.NO_DATA)));
-                        needSkip = true;
+                        if (retryCount >= maxRetryCount) {
+                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, SourceAuditStatus.FAILED));
+                            onFinish.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, List.of(SourceAuditResult.NO_DATA)));
+                            needSkip = true;
+                        } else {
+                            doAudit(context, retryCount + 1);
+
+                            return;
+                        }
                     } else {
                         onResponse.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, GsonUtil.toPrettyJson(categoryContent)));
                         movieData = categoryContent.getMovie();
@@ -72,6 +81,7 @@ public class MovieExploreAuditor extends SourceAuditor {
                             onFinish.accept(Pair.of(
                                     SourceAuditType.MOVIE_EXPLORE, List.of(SourceAuditResult.NO_VIDEO_LIST)
                             ));
+                            needSkip = true;
                         } else {
                             results = new ArrayList<>();
                             if (movieData.getPagecount() < 1 && movieData.getRecordcount() < 1) {
@@ -80,8 +90,8 @@ public class MovieExploreAuditor extends SourceAuditor {
                             context.setCategoryContent(categoryContent);
                             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, SourceAuditStatus.SUCCESS));
                             onFinish.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, results));
+                            needSkip = false;
                         }
-                        needSkip = false;
                     }
                     doNext(context, needSkip);
                 }

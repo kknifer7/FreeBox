@@ -30,9 +30,6 @@ public class HomeAuditor extends SourceAuditor {
     public void audit(SourceAuditContext context, boolean skip) {
         Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
-        Consumer<Pair<SourceAuditType, String>> onRequest;
-        Consumer<Pair<SourceAuditType, String>> onResponse;
-        SourceBean sourceBean;
 
         if (skip) {
             onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, SourceAuditStatus.SKIPPED));
@@ -42,9 +39,17 @@ public class HomeAuditor extends SourceAuditor {
             return;
         }
         onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, SourceAuditStatus.PROCESSING));
-        sourceBean = context.getSourceBean();
-        onRequest = context.getOnRequest();
-        onResponse = context.getOnResponse();
+        doAudit(context, 0);
+    }
+
+    private void doAudit(SourceAuditContext context, int retryCount) {
+        Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
+        Consumer<Pair<SourceAuditType, String>> onRequest = context.getOnRequest();
+        Consumer<Pair<SourceAuditType, String>> onResponse = context.getOnResponse();
+        Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
+        SourceBean sourceBean = context.getSourceBean();
+        int maxRetryCount = context.getMaxRetryCount();
+
         onRequest.accept(Pair.of(SourceAuditType.HOME, GsonUtil.toPrettyJson(sourceBean)));
         kebSocketTemplate.getHomeContent(context.getClientInfo(), sourceBean, content -> {
             List<SourceAuditResult> results;
@@ -53,9 +58,15 @@ public class HomeAuditor extends SourceAuditor {
             boolean needSkip;
 
             if (content == null) {
-                onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, SourceAuditStatus.FAILED));
-                onFinish.accept(Pair.of(SourceAuditType.HOME, List.of(SourceAuditResult.NO_DATA)));
-                needSkip = true;
+                if (retryCount >= maxRetryCount) {
+                    onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, SourceAuditStatus.FAILED));
+                    onFinish.accept(Pair.of(SourceAuditType.HOME, List.of(SourceAuditResult.NO_DATA)));
+                    needSkip = true;
+                } else {
+                    doAudit(context, retryCount + 1);
+
+                    return;
+                }
             } else {
                 onResponse.accept(Pair.of(SourceAuditType.HOME, GsonUtil.toPrettyJson(content)));
                 results = new ArrayList<>();
@@ -63,6 +74,9 @@ public class HomeAuditor extends SourceAuditor {
                 if (movieSort == null || CollectionUtil.isEmpty(movieSort.getSortList())) {
                     status = SourceAuditStatus.FAILED;
                     results.add(SourceAuditResult.NO_MOVIE_SORT);
+                    needSkip = true;
+                } else {
+                    needSkip = false;
                 }
                 if (CollectionUtil.isEmpty(content.getVideoList())) {
                     results.add(SourceAuditResult.NO_VIDEO_LIST);
@@ -70,7 +84,6 @@ public class HomeAuditor extends SourceAuditor {
                 context.setHomeContent(content);
                 onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, status));
                 onFinish.accept(Pair.of(SourceAuditType.HOME, results));
-                needSkip = false;
             }
             doNext(context, needSkip);
         });

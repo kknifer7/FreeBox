@@ -32,12 +32,6 @@ public class MovieDetailAuditor extends SourceAuditor {
     public void audit(SourceAuditContext context, boolean skip) {
         Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
-        GetDetailContentDTO dto;
-        Consumer<Pair<SourceAuditType, String>> onRequest;
-        Consumer<Pair<SourceAuditType, String>> onResponse;
-        AbsXml categoryContent;
-        Movie.Video video;
-        ClientInfo clientInfo;
 
         if (skip) {
             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, SourceAuditStatus.SKIPPED));
@@ -47,12 +41,20 @@ public class MovieDetailAuditor extends SourceAuditor {
             return;
         }
         onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, SourceAuditStatus.PROCESSING));
-        clientInfo = context.getClientInfo();
-        categoryContent = context.getCategoryContent();
-        video = categoryContent.getMovie().getVideoList().get(0);
-        dto = GetDetailContentDTO.of(context.getSourceBean().getKey(), video.getId());
-        onRequest = context.getOnRequest();
-        onResponse = context.getOnResponse();
+        doAudit(context, 0);
+    }
+
+    private void doAudit(SourceAuditContext context, int retryCount) {
+        Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
+        Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
+        Consumer<Pair<SourceAuditType, String>> onRequest = context.getOnRequest();
+        Consumer<Pair<SourceAuditType, String>> onResponse = context.getOnResponse();
+        AbsXml categoryContent = context.getCategoryContent();
+        Movie.Video video = categoryContent.getMovie().getVideoList().get(0);
+        GetDetailContentDTO dto = GetDetailContentDTO.of(context.getSourceBean().getKey(), video.getId());
+        ClientInfo clientInfo = context.getClientInfo();
+        int maxRetryCount = context.getMaxRetryCount();
+
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getDetailContent(
                 clientInfo,
@@ -65,20 +67,20 @@ public class MovieDetailAuditor extends SourceAuditor {
                     Movie.Video.UrlBean urlBean;
 
                     if (detailContent == null) {
-                        onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, SourceAuditStatus.FAILED));
-                        onFinish.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, List.of(SourceAuditResult.NO_DATA)));
-                        needSkip = true;
+                        if (retryCount >= maxRetryCount) {
+                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, SourceAuditStatus.FAILED));
+                            onFinish.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, List.of(SourceAuditResult.NO_DATA)));
+                            needSkip = true;
+                        } else {
+                            doAudit(context, retryCount + 1);
+
+                            return;
+                        }
                     } else {
                         onResponse.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, GsonUtil.toPrettyJson(detailContent)));
                         context.setDetailContent(detailContent);
                         movie = detailContent.getMovie();
-                        if (movie == null) {
-                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, SourceAuditStatus.FAILED));
-                            onFinish.accept(Pair.of(
-                                    SourceAuditType.MOVIE_DETAIL, List.of(SourceAuditResult.NO_VIDEO_LIST_ERROR)
-                            ));
-                            needSkip = true;
-                        } else if ((CollectionUtil.isEmpty(videos = movie.getVideoList()))) {
+                        if (movie == null || (CollectionUtil.isEmpty(videos = movie.getVideoList()))) {
                             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, SourceAuditStatus.FAILED));
                             onFinish.accept(Pair.of(
                                     SourceAuditType.MOVIE_DETAIL, List.of(SourceAuditResult.NO_VIDEO_LIST_ERROR)
@@ -98,8 +100,8 @@ public class MovieDetailAuditor extends SourceAuditor {
                             needSkip = true;
                         } else if (
                                 (urlBean = v.getUrlBean()) == null ||
-                                CollectionUtil.isEmpty(urlBean.getInfoList()) ||
-                                CollectionUtil.isEmpty(urlBean.getInfoList().get(0).getBeanList())
+                                        CollectionUtil.isEmpty(urlBean.getInfoList()) ||
+                                        CollectionUtil.isEmpty(urlBean.getInfoList().get(0).getBeanList())
                         ) {
                             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, SourceAuditStatus.FAILED));
                             onFinish.accept(Pair.of(

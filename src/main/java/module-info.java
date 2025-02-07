@@ -28,6 +28,7 @@ module io.knifer.freebox {
     exports io.knifer.freebox.component.event;
     exports io.knifer.freebox.model.domain;
     exports io.knifer.freebox.model.common;
+    exports io.knifer.freebox.model.c2s;
     exports io.knifer.freebox.component.factory;
     opens io.knifer.freebox to javafx.fxml;
     opens io.knifer.freebox.controller to javafx.fxml;

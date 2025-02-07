@@ -100,6 +100,7 @@ public class VLCPlayer {
     private final AtomicLong initProgress = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
+    private volatile boolean destroyFlag = false;
 
     private Runnable stepForwardRunnable = BaseValues.EMPTY_RUNNABLE;
 
@@ -609,6 +610,9 @@ public class VLCPlayer {
     }
 
     public void play(String url, String videoTitle, @Nullable Long progress) {
+        if (destroyFlag) {
+            return;
+        }
         setLoading(true);
         if (progress != null) {
             initProgress.set(Math.max(progress, -1));
@@ -674,9 +678,11 @@ public class VLCPlayer {
     }
 
     public void destroy() {
+        destroyFlag = true;
         if (mediaPlayer.status().isPlaying()) {
             SystemHelper.allowSleep();
         }
         mediaPlayer.release();
+        log.info("vlc media player released");
     }
 }

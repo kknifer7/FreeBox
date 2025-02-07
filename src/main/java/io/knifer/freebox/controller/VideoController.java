@@ -6,10 +6,7 @@ import com.google.gson.JsonObject;
 import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
-import io.knifer.freebox.helper.HostServiceHelper;
-import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.Movie;
@@ -21,6 +18,7 @@ import io.knifer.freebox.model.s2c.GetMovieCollectedStatusDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.model.s2c.SaveMovieCollectionDTO;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.service.DestoryVLCPlayerService;
 import io.knifer.freebox.util.CollectionUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -214,6 +212,9 @@ public class VideoController extends BaseController {
 
                 children.add(btn);
                 btn.setOnAction(evt -> {
+                    if (btn == selectedEpBtn) {
+                        return;
+                    }
                     // 选集按钮被点击，更新样式，并播放对应选集集视频
                     updateSelectedEpBtn(btn);
                     playVideo(video, urlInfo, bean, null);
@@ -404,9 +405,15 @@ public class VideoController extends BaseController {
     }
 
     private void close() {
+        DestoryVLCPlayerService destoryVLCPlayerService = new DestoryVLCPlayerService(player);
+
+        LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);
         updatePlayInfo();
         onClose.accept(playInfo);
-        player.destroy();
+        destoryVLCPlayerService.setOnSucceeded(evt -> {
+            LoadingHelper.hideLoading();
+        });
+        destoryVLCPlayerService.start();
         Context.INSTANCE.popAndShowLastStage();
     }
 
@@ -431,7 +438,6 @@ public class VideoController extends BaseController {
 
                     playInfo.setReverseSort(reverseMenuItem.isSelected());
                 });
-        onClose.accept(playInfo);
     }
 
     @FXML

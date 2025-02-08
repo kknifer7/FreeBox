@@ -11,7 +11,7 @@ import lombok.AllArgsConstructor;
  * @author Knifer
  */
 @AllArgsConstructor
-public class DestoryVLCPlayerService extends Service<Void> {
+public class VLCPlayerDestroyService extends Service<Void> {
 
     private final VLCPlayer player;
 

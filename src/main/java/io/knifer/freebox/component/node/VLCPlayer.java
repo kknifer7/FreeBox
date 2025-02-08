@@ -25,6 +25,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -68,6 +69,7 @@ public class VLCPlayer {
     private final EmbeddedMediaPlayer mediaPlayer;
     private final ImageView videoImageView;
     private final ProgressIndicator loadingProgressIndicator;
+    private final Label loadingProgressLabel;
     private final Label pauseLabel;
     private final Label stepForwardLabel;
     private final Slider volumeSlider;
@@ -125,6 +127,7 @@ public class VLCPlayer {
         HBox leftToolBarHbox;
         HBox rightToolBarHbox;
         AnchorPane controlBottomAnchorPane;
+        StackPane progressMiddleStackPane;
         AnchorPane controlTopAnchorPane;
 
         stage = WindowHelper.getStage(parent);
@@ -167,9 +170,7 @@ public class VLCPlayer {
 
             @Override
             public void buffering(MediaPlayer mediaPlayer, float newCache) {
-                if (!isLoading()) {
-                    setLoading(true);
-                }
+                Platform.runLater(() -> setLoading(newCache));
             }
 
             @Override
@@ -244,6 +245,9 @@ public class VLCPlayer {
         mediaPlayer.videoSurface().set(new ImageViewVideoSurface(videoImageView));
         loadingProgressIndicator = new ProgressIndicator();
         loadingProgressIndicator.visibleProperty().bind(isLoading);
+        loadingProgressLabel = new Label();
+        loadingProgressLabel.setVisible(false);
+        loadingProgressLabel.getStyleClass().add("dodge-blue");
         // 暂停设置
         pauseLabel = new Label();
         pauseLabel.setGraphic(pauseIcon);
@@ -271,13 +275,6 @@ public class VLCPlayer {
         volumePopOver.getStyleClass().add("vlc-player-pop-over");
         volumePopOver.setDetachable(false);
         volumePopOverHideTimer = new Timer(1000, evt -> volumePopOver.hide());
-        /*volumePopOver.addEventFilter(MouseEvent.ANY, evt -> {
-            if (evt.getEventType() == MouseEvent.MOUSE_EXITED) {
-                volumePopOverHideTimer.stop();
-            } else {
-                volumePopOverHideTimer.restart();
-            }
-        });*/
         volumePopOverInnerVBox.addEventFilter(MouseEvent.ANY, evt -> {
             EventType<? extends MouseEvent> eventType = evt.getEventType();
 
@@ -494,16 +491,20 @@ public class VLCPlayer {
         AnchorPane.setLeftAnchor(controlTopAnchorPane, 0.0);
         AnchorPane.setRightAnchor(controlTopAnchorPane, 0.0);
         AnchorPane.setTopAnchor(controlTopAnchorPane, 0.0);
+        progressMiddleStackPane = new StackPane(loadingProgressIndicator, loadingProgressLabel);
         paneChildren = playerPane.getChildren();
         paneChildren.add(videoImageView);
+        paneChildren.add(progressMiddleStackPane);
         paneChildren.add(controlPane);
-        paneChildren.add(loadingProgressIndicator);
         playerPane.getStyleClass().add("vlc-player");
         bindPlayerPaneWidth(paneWidthProp);
         playerPane.prefHeightProperty().bind(parentHeightProp);
         playerPane.minHeightProperty().bind(parentHeightProp);
         playerPane.maxHeightProperty().bind(parentHeightProp);
         playerPane.setOnMouseClicked(evt -> {
+            if (evt.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
             if (evt.getClickCount() == 1) {
                 changePlayStatus();
             } else {
@@ -586,8 +587,19 @@ public class VLCPlayer {
         }
     }
 
+    private void setLoading(float bufferCached) {
+        setLoading(true);
+        loadingProgressLabel.setText(String.format("%.1f%%", bufferCached));
+        if (!loadingProgressLabel.isVisible()) {
+            loadingProgressLabel.setVisible(true);
+        }
+    }
+
     private void setLoading(boolean loading) {
         isLoading.set(loading);
+        if (!loading && loadingProgressLabel.isVisible()) {
+            loadingProgressLabel.setVisible(false);
+        }
     }
 
     private void bindPlayerPaneWidth(DoubleExpression widthProp) {

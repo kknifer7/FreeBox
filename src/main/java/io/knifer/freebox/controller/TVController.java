@@ -223,6 +223,7 @@ public class TVController extends BaseController {
             videoId = vod.getId();
             if (vod.getPlayFlag() == null) {
                 // 如果playFlag为空，则可能是收藏夹中的影片，尝试获取一下历史记录信息
+                movieCollectionPopOver.hide();
                 template.getOnePlayHistory(
                         clientInfo,
                         GetOnePlayHistoryDTO.of(sourceKey, videoId),
@@ -234,6 +235,7 @@ public class TVController extends BaseController {
                         )
                 );
             } else {
+                movieHistoryPopOver.hide();
                 openVideo(sourceKey, videoId, vod.getName(), VideoPlayInfoBO.of(vod));
             }
         }

@@ -18,7 +18,8 @@ import io.knifer.freebox.model.s2c.GetMovieCollectedStatusDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.model.s2c.SaveMovieCollectionDTO;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
-import io.knifer.freebox.service.DestoryVLCPlayerService;
+import io.knifer.freebox.service.VLCPlayerDestroyService;
+import io.knifer.freebox.service.VLCPlayerStopService;
 import io.knifer.freebox.util.CollectionUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -80,6 +81,7 @@ public class VideoController extends BaseController {
     private KebSocketTemplate template;
     private ClientInfo clientInfo;
     private Consumer<VideoPlayInfoBO> onClose;
+    private VLCPlayerStopService playerStopService;
 
     private Button selectedEpBtn = null;
     private Movie.Video playingVideo;
@@ -99,6 +101,7 @@ public class VideoController extends BaseController {
             template = bo.getTemplate();
             clientInfo = bo.getClientInfo();
             onClose = bo.getOnClose();
+            playerStopService = new VLCPlayerStopService(player);
             if (videoDetail == null || videoDetail.getVideoList().isEmpty()) {
                 ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                 return;
@@ -347,7 +350,7 @@ public class VideoController extends BaseController {
     ) {
         String flag = urlInfo.getFlag();
 
-        player.stop();
+        playerStopService.restart();
         template.getPlayerContent(
                 clientInfo,
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
@@ -405,15 +408,13 @@ public class VideoController extends BaseController {
     }
 
     private void close() {
-        DestoryVLCPlayerService destoryVLCPlayerService = new DestoryVLCPlayerService(player);
+        VLCPlayerDestroyService destroyVLCPlayerService = new VLCPlayerDestroyService(player);
 
         LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);
         updatePlayInfo();
         onClose.accept(playInfo);
-        destoryVLCPlayerService.setOnSucceeded(evt -> {
-            LoadingHelper.hideLoading();
-        });
-        destoryVLCPlayerService.start();
+        destroyVLCPlayerService.setOnSucceeded(evt -> LoadingHelper.hideLoading());
+        destroyVLCPlayerService.start();
         Context.INSTANCE.popAndShowLastStage();
     }
 

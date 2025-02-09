@@ -37,6 +37,12 @@
                              </font>
                          </Label>
                          <Label text="%home.version-info" textFill="blue" />
+                        <HBox fx:id="vlcHBox" alignment="CENTER">
+                           <children>
+                              <Label text="%home.vlc-not-found" textFill="red" />
+                              <Hyperlink onAction="#onVLCDownloadHyperlinkClick" text="%home.vlc-download" />
+                           </children>
+                        </HBox>
                         <Hyperlink onAction="#onFreeBoxRepositoryHyperLinkClick" text="%home.repository" />
                         <Hyperlink onAction="#onTvBoxKRepositoryHyperLinkClick" text="%home.tv-box-k-repository" />
                      </children>
@@ -61,7 +67,7 @@
                               <Insets bottom="40.0" />
                            </VBox.margin>
                         </VBox>
-                        <ListView cellFactory="$clientInfoListCellFactory" fx:id="clientListView" prefHeight="200.0" prefWidth="200.0" />
+                        <ListView fx:id="clientListView" prefHeight="200.0" prefWidth="200.0" />
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                            <children>
                               <Label>

@@ -5,6 +5,8 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.handler.VLCPlayerCheckHandler;
+import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.util.FXMLUtil;
@@ -16,6 +18,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -36,13 +39,21 @@ public class HomeController {
     @FXML
     private Text settingsInfoText;
     @FXML
+    private HBox vlcHBox;
+    @FXML
     public ListView<ClientInfo> clientListView;
+
+    private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER = new WindowsRegistryVLCPlayerCheckHandler();
 
     @FXML
     private void initialize() {
         ObservableList<ClientInfo> clientItems = clientListView.getItems();
+        boolean vlcNotInstalled = !VLC_PLAYER_CHECK_HANDLER.handle();
 
+        vlcHBox.setVisible(vlcNotInstalled);
+        vlcHBox.setManaged(vlcNotInstalled);
         Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
+
             refreshServiceStatusInfo();
             initProgressIndicator.setVisible(false);
             settingsBtn.setDisable(false);
@@ -128,8 +139,18 @@ public class HomeController {
 
     @FXML
     private void onClientListChooseBtnAction() {
-        ClientInfo clientInfo = clientListView.getSelectionModel().getSelectedItem();
+        ClientInfo clientInfo;
 
+        if (!VLC_PLAYER_CHECK_HANDLER.handle()) {
+            ToastHelper.showErrorAlert(
+                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND_TITLE,
+                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND,
+                    evt -> {}
+            );
+
+            return;
+        }
+        clientInfo = clientListView.getSelectionModel().getSelectedItem();
         if (clientInfo == null || !clientInfo.getConnection().isOpen()) {
             return;
         }
@@ -177,5 +198,10 @@ public class HomeController {
         stageAndController.getRight().setData(clientInfo);
         log.info("enter source audit for [{}]", clientInfo.getConnection().getRemoteSocketAddress().getHostName());
         WindowHelper.route(homeStage, sourceAuditStage);
+    }
+
+    @FXML
+    private void onVLCDownloadHyperlinkClick() {
+        HostServiceHelper.showDocument(BaseValues.VLC_DOWNLOAD_URL);
     }
 }

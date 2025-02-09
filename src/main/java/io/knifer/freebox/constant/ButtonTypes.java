@@ -13,6 +13,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ButtonTypes {
 
-    public static final ButtonType EXIT =
-            new ButtonType(I18nHelper.get(I18nKeys.COMMON_EXIT), ButtonBar.ButtonData.CANCEL_CLOSE);
+    public static final ButtonType OK =
+            new ButtonType(I18nHelper.get(I18nKeys.COMMON_OK), ButtonBar.ButtonData.OK_DONE);
 }

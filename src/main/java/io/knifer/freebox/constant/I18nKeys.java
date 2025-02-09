@@ -13,6 +13,8 @@ public class I18nKeys {
     public static final String INIT_IP_CHANGED_MESSAGE = "init.ip-changed-message";
 
     public static final String HOME_SETTINGS_INFO = "home.settings-info";
+    public static final String HOME_MESSAGE_VLC_NOT_FOUND_TITLE = "home.message.vlc-not-found-title";
+    public static final String HOME_MESSAGE_VLC_NOT_FOUND = "home.message.vlc-not-found";
 
     public static final String TV_HOME = "tv.home";
     public static final String TV_LOAD_MORE = "tv.load-more";
@@ -65,10 +67,9 @@ public class I18nKeys {
     public static final String ERROR_CONFIRM = "error.confirm";
     public static final String ERROR_REPORT = "error.report";
     public static final String ERROR_HEADER_TITLE = "error.header-title";
-    public static final String ERROR_MESSAGE_VLC_NOT_FOUND = "error.message.vlc-not-found";
 
     public static final String COMMON_DELETE = "common.delete";
-    public static final String COMMON_EXIT = "common.exit";
+    public static final String COMMON_OK = "common.ok";
     public static final String COMMON_MESSAGE_SUCCESS = "common.message.success";
     public static final String COMMON_MESSAGE_TIMOUT_FAILED = "common.message.timeout-failed";
     public static final String COMMON_MESSAGE_COPY_SUCCEED = "common.message.copy-succeed";

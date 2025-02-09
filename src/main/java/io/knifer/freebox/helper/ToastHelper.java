@@ -126,7 +126,7 @@ public class ToastHelper {
     }
 
     public void showErrorAlert(String headerI18n, String contentI18n, EventHandler<DialogEvent> onCloseRequest) {
-        Alert alert = new Alert(Alert.AlertType.ERROR, I18nHelper.get(contentI18n), ButtonTypes.EXIT);
+        Alert alert = new Alert(Alert.AlertType.ERROR, I18nHelper.get(contentI18n), ButtonTypes.OK);
 
         alert.setTitle(I18nHelper.get(I18nKeys.ERROR));
         alert.setHeaderText(I18nHelper.get(headerI18n));

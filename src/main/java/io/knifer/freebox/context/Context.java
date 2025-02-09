@@ -3,8 +3,6 @@ package io.knifer.freebox.context;
 import com.google.common.eventbus.EventBus;
 import io.knifer.freebox.component.event.EventListener;
 import io.knifer.freebox.constant.AppEvents;
-import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.net.ServiceManager;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
@@ -14,7 +12,6 @@ import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.util.AsyncUtil;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -72,16 +69,6 @@ public enum Context {
 
         this.app = app;
         this.primaryStage = primaryStage;
-        // 检测是否安装VLC Player
-        if (!new WindowsRegistryVLCPlayerCheckHandler().handle()) {
-            ToastHelper.showErrorAlert(
-                    I18nKeys.ERROR_HEADER_TITLE,
-                    I18nKeys.ERROR_MESSAGE_VLC_NOT_FOUND,
-                    ignored -> Platform.exit()
-            );
-
-            return;
-        }
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
             serviceManager.init(callback);

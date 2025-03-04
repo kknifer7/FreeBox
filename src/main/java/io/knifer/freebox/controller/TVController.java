@@ -115,7 +115,7 @@ public class TVController extends BaseController {
                destroy();
                Context.INSTANCE.popAndShowLastStage();
             });
-            movieSearchService = new MovieSearchService(clientInfo, template, keywordAndSearchContent -> {
+            movieSearchService = new MovieSearchService(clientInfo, keywordAndSearchContent -> {
                 String keyword = keywordAndSearchContent.getLeft();
                 AbsXml searchContent;
 

@@ -4,7 +4,7 @@ import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetSearchContentDTO;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
 import io.knifer.freebox.util.CollectionUtil;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 
 /**
  * 检测端口是否被占用服务
+ * TODO 待改造（优化取消逻辑）
  *
  * @author Knifer
  */
@@ -31,11 +32,6 @@ public class MovieSearchService extends Service<Void> {
      * 客户端信息
      */
     private final ClientInfo clientInfo;
-
-    /**
-     * 通信模板对象
-     */
-    private final KebSocketTemplate template;
 
     /**
      * 源ID列表
@@ -80,7 +76,7 @@ public class MovieSearchService extends Service<Void> {
                     return;
                 }
                 sourceKey = sourceKeyIterator.next();
-                template.getSearchContent(
+                KebSocketTemplateImpl.getInstance().getSearchContent(
                         clientInfo,
                         GetSearchContentDTO.of(sourceKey, keyword),
                         searchContent -> {

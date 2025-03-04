@@ -67,7 +67,7 @@
                               <Insets bottom="40.0" />
                            </VBox.margin>
                         </VBox>
-                        <ListView fx:id="clientListView" prefHeight="200.0" prefWidth="200.0" />
+                        <ListView fx:id="clientListView" cellFactory="$clientInfoListCellFactory" prefHeight="200.0" prefWidth="200.0" />
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                            <children>
                               <Label>

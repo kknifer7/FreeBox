@@ -1,6 +1,7 @@
 package io.knifer.freebox.controller;
 
-import io.knifer.freebox.component.factory.SourceBeanListCellFactory;
+import io.knifer.freebox.component.factory.SourceBeanCheckListCellFactory;
+import io.knifer.freebox.component.factory.SourceBeanProblemListCellFactory;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
@@ -25,8 +26,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -37,9 +37,11 @@ import org.controlsfx.control.IndexedCheckModel;
 import org.controlsfx.control.tableview2.TableColumn2;
 import org.controlsfx.control.tableview2.TableView2;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 源审计
@@ -53,6 +55,14 @@ public class SourceAuditController extends BaseController{
     private BorderPane root;
     @FXML
     private CheckListView<SourceBean> sourceBeanCheckListView;
+    @FXML
+    private ListView<SourceBean> problemSourceListView;
+    @FXML
+    private Label nowSourceBeanLabel;
+    @FXML
+    private ProgressIndicator auditingProgressIndicator;
+    @FXML
+    private Label auditingSourceBeanLabel;
     @FXML
     private TableView2<SourceAuditItem> sourceAuditItemTableView;
     @FXML
@@ -86,21 +96,18 @@ public class SourceAuditController extends BaseController{
     private void initialize() {
         template = KebSocketTemplateImpl.getInstance();
 
-        sourceBeanCheckListView.setCellFactory(new SourceBeanListCellFactory(
+        nowSourceBeanProperty.addListener((ob, oldVal, newVal) -> {
+            if (newVal != null) {
+                nowSourceBeanLabel.setText(I18nHelper.getFormatted(
+                        I18nKeys.SOURCE_AUDIT_NOW, newVal.getName()
+                ));
+            }
+        });
+        sourceBeanCheckListView.setCellFactory(new SourceBeanCheckListCellFactory(
                 sourceBeanCheckListView,
-                sourceBean -> {
-                    ObservableList<SourceAuditItem> newItems = sourceKeyAndAuditItemsMap.get(sourceBean.getKey());
-
-                    if (newItems == null) {
-                        return;
-                    }
-                    nowSourceBeanProperty.set(sourceBean);
-                    sourceAuditItemTableView.setItems(newItems);
-                    sourceAuditItemTableView.refresh();
-                    requestRawDataTextArea.clear();
-                    responseRawDataTextArea.clear();
-                }
+                this::updateNowSourceBean
         ));
+        problemSourceListView.setCellFactory(new SourceBeanProblemListCellFactory(this::updateNowSourceBean));
         sourceAuditItemTableView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((ob, oldVal, newVal) -> {
@@ -123,6 +130,8 @@ public class SourceAuditController extends BaseController{
         sourceAuditItemResultInfoTableColumn.setCellValueFactory(new PropertyValueFactory<>("resultInfo"));
         startAuditBtn.disableProperty().bind(loadingProperty);
         singleSourceStartAuditBtn.disableProperty().bind(loadingProperty);
+        auditingProgressIndicator.visibleProperty().bind(loadingProperty);
+        auditingSourceBeanLabel.visibleProperty().bind(loadingProperty);
         requestRawDataTextArea.setOnMouseClicked(ignored -> {
             if (requestRawDataTextArea.getLength() < 1) {
                 return;
@@ -151,9 +160,22 @@ public class SourceAuditController extends BaseController{
             });
             template.getSourceBeanList(clientInfo, sourceBeans -> {
                 fillSourceBeanData(sourceBeans);
-                loadingProperty.set(false);
+                setLoading(false);
             });
         });
+    }
+
+    private void updateNowSourceBean(SourceBean sourceBean) {
+        ObservableList<SourceAuditItem> newItems = sourceKeyAndAuditItemsMap.get(sourceBean.getKey());
+
+        if (newItems == null) {
+            return;
+        }
+        nowSourceBeanProperty.set(sourceBean);
+        sourceAuditItemTableView.setItems(newItems);
+        sourceAuditItemTableView.refresh();
+        requestRawDataTextArea.clear();
+        responseRawDataTextArea.clear();
     }
 
     private ClientInfo getClientInfo() {
@@ -223,8 +245,9 @@ public class SourceAuditController extends BaseController{
             return;
         }
         log.info("single audit operation, sourceBean={}", sourceBean.getName());
-        loadingProperty.set(true);
-        auditSourceBean(sourceBean, () -> loadingProperty.set(false));
+        problemSourceListView.getItems().remove(sourceBean);
+        setLoading(true, sourceBean);
+        auditSourceBean(sourceBean, () -> setLoading(false));
     }
 
     @FXML
@@ -234,16 +257,46 @@ public class SourceAuditController extends BaseController{
         if (items.isEmpty()) {
             return;
         }
-        loadingProperty.set(true);
+        log.info(
+                "batch audit operation, sourceBeans={}",
+                items.stream().map(SourceBean::getName).collect(Collectors.joining(","))
+        );
+        problemSourceListView.getItems().removeAll(items);
+        setLoading(true);
         nextAudit(items.iterator());
     }
 
     private void nextAudit(Iterator<SourceBean> sourceBeanIterator) {
+        SourceBean sourceBean;
+
         if (sourceBeanIterator.hasNext()) {
-            auditSourceBean(sourceBeanIterator.next(), () -> nextAudit(sourceBeanIterator));
+            sourceBean = sourceBeanIterator.next();
+            updateAuditingLabel(sourceBean);
+            auditSourceBean(sourceBean, () -> nextAudit(sourceBeanIterator));
         } else {
-            loadingProperty.set(false);
+            setLoading(false);
         }
+    }
+
+    private void setLoading(boolean flag) {
+        setLoading(flag, null);
+    }
+
+    private void setLoading(boolean flag, @Nullable SourceBean sourceBean) {
+        loadingProperty.set(flag);
+        if (!flag) {
+
+            return;
+        }
+        if (sourceBean != null) {
+            updateAuditingLabel(sourceBean);
+        }
+    }
+
+    private void updateAuditingLabel(SourceBean sourceBean) {
+        auditingSourceBeanLabel.setText(I18nHelper.getFormatted(
+                I18nKeys.SOURCE_AUDIT_AUDITING, sourceBean.getName()
+        ));
     }
 
     private void auditSourceBean(SourceBean sourceBean, Runnable callback) {
@@ -318,6 +371,8 @@ public class SourceAuditController extends BaseController{
                     SourceAuditType auditType;
                     List<SourceAuditResult> results;
                     String key;
+                    boolean problemFlag;
+                    Collection<SourceBean> problemItems;
 
                     auditType = auditTypeAndResults.getLeft();
                     results = auditTypeAndResults.getRight();
@@ -334,6 +389,12 @@ public class SourceAuditController extends BaseController{
                                                     .toArray()
                                     )
                             ));
+                    problemFlag = results.stream()
+                            .anyMatch(r -> r.getLevel() == SourceAuditResult.Level.ERROR);
+                    problemItems = problemSourceListView.getItems();
+                    if (problemFlag && !problemItems.contains(sourceBean)) {
+                        problemItems.add(sourceBean);
+                    }
                     if (key.equals(nowSourceBeanProperty.get().getKey())) {
                         sourceAuditItemTableView.refresh();
                     }

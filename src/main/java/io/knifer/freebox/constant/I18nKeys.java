@@ -75,6 +75,8 @@ public class I18nKeys {
     public static final String COMMON_MESSAGE_COPY_SUCCEED = "common.message.copy-succeed";
 
     public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
+    public static final String SOURCE_AUDIT_NOW = "source-audit.now";
+    public static final String SOURCE_AUDIT_AUDITING = "source-audit.auditing";
     public static final String SOURCE_AUDIT_AUDIT_TABLE_ITEM_HOME = "source-audit.audit-table-item.home";
     public static final String SOURCE_AUDIT_AUDIT_TABLE_ITEM_MOVIE_EXPLORE =
             "source-audit.audit-table-item.movie-explore";

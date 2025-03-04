@@ -78,18 +78,39 @@
                                           </TableColumn2>
                                       </columns>
                                   </TableView2>
-                                  <HBox>
+                                  <VBox>
                                       <VBox.margin>
-                                          <Insets left="5.0" top="5.0" right="5.0"/>
+                                          <Insets left="5.0" top="5.0" bottom="5.0"/>
                                       </VBox.margin>
                                       <children>
-                                          <Button fx:id="singleSourceStartAuditBtn" mnemonicParsing="false" onAction="#onSingleSourceStartAuditBtnAction" text="%source-audit.start-single-audit" focusTraversable="false">
-                                              <graphic>
-                                                  <FontIcon iconLiteral="fa-bullseye:16:gray" />
-                                              </graphic>
-                                          </Button>
+                                          <HBox>
+                                              <children>
+                                                  <HBox alignment="CENTER">
+                                                      <Button fx:id="singleSourceStartAuditBtn" mnemonicParsing="false" onAction="#onSingleSourceStartAuditBtnAction" text="%source-audit.start-single-audit" focusTraversable="false">
+                                                          <graphic>
+                                                              <FontIcon iconLiteral="fa-bullseye:16:gray" />
+                                                          </graphic>
+                                                      </Button>
+                                                  </HBox>
+                                                  <HBox alignment="CENTER">
+                                                      <HBox.margin>
+                                                          <Insets left="5.0"/>
+                                                      </HBox.margin>
+                                                      <children>
+                                                          <Label fx:id="nowSourceBeanLabel"/>
+                                                          <ProgressIndicator fx:id="auditingProgressIndicator" visible="false"/>
+                                                          <Label fx:id="auditingSourceBeanLabel" visible="false"/>
+                                                      </children>
+                                                  </HBox>
+                                              </children>
+                                          </HBox>
+                                          <ListView fx:id="problemSourceListView" VBox.vgrow="ALWAYS">
+                                              <VBox.margin>
+                                                  <Insets top="5.0" bottom="8.0"/>
+                                              </VBox.margin>
+                                          </ListView>
                                       </children>
-                                  </HBox>
+                                  </VBox>
                               </children>
                           </VBox>
                       </masterNode>

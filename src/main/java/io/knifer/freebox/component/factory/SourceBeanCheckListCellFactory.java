@@ -18,10 +18,10 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @RequiredArgsConstructor
-public class SourceBeanListCellFactory implements Callback<ListView<SourceBean>, ListCell<SourceBean>> {
+public class SourceBeanCheckListCellFactory implements Callback<ListView<SourceBean>, ListCell<SourceBean>> {
 
     private final CheckListView<SourceBean> checkListView;
-    private final Consumer<SourceBean> onItemFocus;
+    private final Consumer<SourceBean> onItemSelect;
 
     @Override
     public ListCell<SourceBean> call(ListView<SourceBean> param) {
@@ -40,10 +40,11 @@ public class SourceBeanListCellFactory implements Callback<ListView<SourceBean>,
 
         cell.focusedProperty().addListener((ob, oldValue, newValue) -> {
             if (newValue) {
-                onItemFocus.accept(cell.getItem());
+                onItemSelect.accept(cell.getItem());
             }
         });
         cell.setOnMouseClicked(event -> {
+            onItemSelect.accept(cell.getItem());
             if (event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY) {
                 checkListView.getCheckModel().toggleCheckState(cell.getIndex());
             }

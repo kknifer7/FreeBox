@@ -22,6 +22,12 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 public class MoviePlayAuditor extends SourceAuditor {
+
+    private final static String[] VIDEO_URL_PREFIX = {
+            "http",
+            "magnet"
+    };
+
     @Override
     public boolean support(SourceAuditType sourceAuditType) {
         return sourceAuditType == SourceAuditType.MOVIE_PLAY;
@@ -92,7 +98,7 @@ public class MoviePlayAuditor extends SourceAuditor {
                                     SourceAuditType.MOVIE_PLAY, List.of(SourceAuditResult.NO_VIDEO_URL)
                             ));
                             needSkip = true;
-                        } else if (!urlElem.getAsString().startsWith("http")) {
+                        } else if (!StringUtils.startsWithAny(urlElem.getAsString(), VIDEO_URL_PREFIX)) {
                             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_PLAY, SourceAuditStatus.FAILED));
                             onFinish.accept(Pair.of(
                                     SourceAuditType.MOVIE_PLAY, List.of(SourceAuditResult.INVALID_VIDEO_URL)

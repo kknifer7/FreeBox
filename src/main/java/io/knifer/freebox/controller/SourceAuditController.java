@@ -28,6 +28,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -132,20 +134,6 @@ public class SourceAuditController extends BaseController{
         singleSourceStartAuditBtn.disableProperty().bind(loadingProperty);
         auditingProgressIndicator.visibleProperty().bind(loadingProperty);
         auditingSourceBeanLabel.visibleProperty().bind(loadingProperty);
-        requestRawDataTextArea.setOnMouseClicked(ignored -> {
-            if (requestRawDataTextArea.getLength() < 1) {
-                return;
-            }
-            ClipboardHelper.setContent(requestRawDataTextArea.getText());
-            ToastHelper.showInfoI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
-        });
-        responseRawDataTextArea.setOnMouseClicked(ignored -> {
-            if (responseRawDataTextArea.getLength() < 1) {
-                return;
-            }
-            ClipboardHelper.setContent(responseRawDataTextArea.getText());
-            ToastHelper.showInfoI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
-        });
         Platform.runLater(() -> {
             Stage stage = WindowHelper.getStage(root);
 
@@ -428,5 +416,16 @@ public class SourceAuditController extends BaseController{
             return;
         }
         textArea.setText(content);
+    }
+
+    @FXML
+    private void onRawDataTextAreaClick(MouseEvent evt) {
+        TextArea rawDataTextArea = (TextArea) evt.getSource();
+
+        if (rawDataTextArea.getLength() < 1 || evt.getButton() != MouseButton.PRIMARY) {
+            return;
+        }
+        ClipboardHelper.setContent(rawDataTextArea.getText());
+        ToastHelper.showInfoI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
     }
 }

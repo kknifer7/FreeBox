@@ -117,8 +117,8 @@
                       <detailNode>
                           <SplitPane dividerPositions=".5" orientation="VERTICAL">
                               <items>
-                                  <TextArea fx:id="requestRawDataTextArea" editable="false" wrapText="true" />
-                                  <TextArea fx:id="responseRawDataTextArea" editable="false" wrapText="true" />
+                                  <TextArea fx:id="requestRawDataTextArea" editable="false" wrapText="true" onMouseClicked="#onRawDataTextAreaClick" />
+                                  <TextArea fx:id="responseRawDataTextArea" editable="false" wrapText="true" onMouseClicked="#onRawDataTextAreaClick" />
                               </items>
                           </SplitPane>
                       </detailNode>

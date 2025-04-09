@@ -25,7 +25,8 @@ public class MoviePlayAuditor extends SourceAuditor {
 
     private final static String[] VIDEO_URL_PREFIX = {
             "http",
-            "magnet"
+            "magnet",
+            "data:"
     };
 
     public MoviePlayAuditor(KebSocketTemplate kebSocketTemplate) {

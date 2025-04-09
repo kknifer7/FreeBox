@@ -164,9 +164,9 @@ public class TVController {
             });
             movieCollectionPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
 
-            historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty());
+            historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty().or(sortsLoadingProperty));
             movieHistoryPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
-            collectButton.disableProperty().bind(movieCollectionPopOver.showingProperty());
+            collectButton.disableProperty().bind(movieCollectionPopOver.showingProperty().or(sortsLoadingProperty));
             movieCollectionPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
             sortsLoadingProgressIndicator.visibleProperty().bind(sortsLoadingProperty.or(movieLoadingProperty));
             movieLoadingProgressIndicator.visibleProperty().bind(movieLoadingProperty);
@@ -491,10 +491,16 @@ public class TVController {
             template.getCategoryContent(
                     GetCategoryContentDTO.of(getSourceBean(), sortData, 1),
                     categoryContent -> {
-                        Movie movie = categoryContent.getMovie();
-                        MutablePair<Movie, List<Movie.Video>> movieAndVideos =
-                                MutablePair.of(movie, movie.getVideoList());
+                        Movie movie;
+                        MutablePair<Movie, List<Movie.Video>> movieAndVideos;
 
+                        if (categoryContent == null) {
+                            movieLoadingProperty.set(false);
+
+                            return;
+                        }
+                        movie = categoryContent.getMovie();
+                        movieAndVideos = MutablePair.of(movie, movie.getVideoList());
                         putVideosInView(movieAndVideos, true);
                         MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
                         movieLoadingProperty.set(false);

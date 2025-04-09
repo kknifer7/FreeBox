@@ -1,5 +1,6 @@
 package io.knifer.freebox.controller;
 
+import com.google.common.base.Charsets;
 import io.knifer.freebox.component.factory.SourceBeanCheckListCellFactory;
 import io.knifer.freebox.component.factory.SourceBeanProblemListCellFactory;
 import io.knifer.freebox.constant.I18nKeys;
@@ -7,19 +8,16 @@ import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.context.Context;
-import io.knifer.freebox.helper.ClipboardHelper;
-import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.SourceAuditExecutionBo;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.SourceAuditItem;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
-import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditExecutor;
 import io.knifer.freebox.service.sourceaudit.auditor.impl.SourceAuditExecutorImpl;
+import io.knifer.freebox.util.CastUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -124,8 +122,8 @@ public class SourceAuditController {
                     if (sourceBean == null || !sourceBean.getKey().equals(newVal.getSourceKey())) {
                         return;
                     }
-                    requestRawDataTextArea.setText(newVal.getRequestRawData());
-                    responseRawDataTextArea.setText(newVal.getResponseRawData());
+                    dealWithRawData(requestRawDataTextArea, newVal.getRequestRawData());
+                    dealWithRawData(responseRawDataTextArea, newVal.getResponseRawData());
                 });
         sourceAuditItemNameTableColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         sourceAuditItemStartAtTableColumn.setCellValueFactory(new PropertyValueFactory<>("startAt"));
@@ -138,23 +136,14 @@ public class SourceAuditController {
         auditingSourceBeanLabel.visibleProperty().bind(loadingProperty);
         Platform.runLater(() -> {
             Stage stage = WindowHelper.getStage(root);
-            FutureWaitingService<ClientInfo> service = new FutureWaitingService<>(
-                    clientManager.getCurrentClient()
-            );
+            ClientInfo clientInfo = clientManager.getCurrentClientImmediately();
 
-            service.setOnSucceeded(evt -> {
-                ClientInfo clientInfo = service.getValue();
-
-                if (clientInfo == null) {
-                    return;
-                }
+            if (clientInfo != null) {
                 stage.setTitle(String.format(
                         I18nHelper.get(I18nKeys.SOURCE_AUDIT_WINDOW_TITLE),
                         clientInfo.getConnection().getRemoteSocketAddress().getHostName()
                 ));
-
-            });
-            service.start();
+            }
             stage.setOnCloseRequest(evt -> {
                 destroy();
                 Context.INSTANCE.popAndShowLastStage();
@@ -164,6 +153,19 @@ public class SourceAuditController {
                 setLoading(false);
             });
         });
+    }
+
+    private void dealWithRawData(TextArea rawDataTextArea, String rawData) {
+        List<String> styleClasses = rawDataTextArea.getStyleClass();
+
+        rawDataTextArea.setUserData(rawData);
+        styleClasses.remove("gray");
+        if (StringUtils.getBytes(rawData, Charsets.UTF_8).length > 102400) {
+            rawDataTextArea.setText(I18nHelper.get(I18nKeys.SOURCE_AUDIT_RAW_DATA_TOO_LONG));
+            styleClasses.add("gray");
+        } else {
+            rawDataTextArea.setText(rawData);
+        }
     }
 
     private void updateNowSourceBean(SourceBean sourceBean) {
@@ -179,7 +181,9 @@ public class SourceAuditController {
         responseRawDataTextArea.clear();
     }
 
-    private void destroy() {}
+    private void destroy() {
+        clientManager.clearCurrentClient();
+    }
 
     private void fillSourceBeanData(List<SourceBean> sourceBeans) {
         ObservableList<SourceBean> items = sourceBeanCheckListView.getItems();
@@ -249,7 +253,10 @@ public class SourceAuditController {
 
     @FXML
     private void onStartAuditBtnAction() {
-        ObservableList<SourceBean> items = sourceBeanCheckListView.getCheckModel().getCheckedItems();
+        List<SourceBean> items = sourceBeanCheckListView.getCheckModel()
+                .getCheckedItems()
+                .stream()
+                .toList();
 
         if (items.isEmpty()) {
             return;
@@ -433,7 +440,7 @@ public class SourceAuditController {
         if (rawDataTextArea.getLength() < 1 || evt.getButton() != MouseButton.PRIMARY) {
             return;
         }
-        ClipboardHelper.setContent(rawDataTextArea.getText());
+        ClipboardHelper.setContent(CastUtil.cast(rawDataTextArea.getUserData()));
         ToastHelper.showInfoI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
     }
 }

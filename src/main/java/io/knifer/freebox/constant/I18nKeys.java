@@ -94,4 +94,5 @@ public class I18nKeys {
             "source-audit.audit-status.processing";
     public static final String SOURCE_AUDIT_AUDIT_STATUS_SUCCESS = "source-audit.audit-status.success";
     public static final String SOURCE_AUDIT_AUDIT_STATUS_FAILED = "source-audit.audit-status.failed";
+    public static final String SOURCE_AUDIT_RAW_DATA_TOO_LONG = "source-audit.raw-data-too-long";
 }

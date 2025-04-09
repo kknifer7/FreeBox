@@ -92,6 +92,7 @@ public class ClientManager {
 
     public void clearCurrentClient() {
         currentClient.set(null);
+        shutdownConnectingExecutor();
     }
 
     public void updateCurrentClient(ClientInfo clientInfo) {

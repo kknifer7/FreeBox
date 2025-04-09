@@ -7,7 +7,6 @@ import io.knifer.freebox.model.bo.SourceAuditExecutionBo;
 import io.knifer.freebox.model.common.AbsSortXml;
 import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.domain.ClientInfo;
 import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -21,11 +20,6 @@ import java.util.function.Consumer;
  */
 @Data
 public class SourceAuditContext {
-
-    /**
-     * 客户端信息
-     */
-    private ClientInfo clientInfo;
 
     /**
      * 源信息
@@ -80,7 +74,6 @@ public class SourceAuditContext {
     public static SourceAuditContext of(SourceAuditExecutionBo executionBo) {
         SourceAuditContext context = new SourceAuditContext();
 
-        context.setClientInfo(executionBo.getClientInfo());
         context.setSourceBean(executionBo.getSourceBean());
         context.setOnRequest(executionBo.getOnRequest());
         context.setOnResponse(executionBo.getOnResponse());

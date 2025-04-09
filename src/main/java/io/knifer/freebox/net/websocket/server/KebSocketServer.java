@@ -8,6 +8,7 @@ import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketMessageDispatcher;
 import javafx.application.Platform;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.java_websocket.WebSocket;
@@ -26,7 +27,8 @@ import java.nio.ByteBuffer;
 @Slf4j
 public class KebSocketServer extends WebSocketServer {
 
-	private final ClientManager clientManager = new ClientManager();
+	@Getter
+    private final ClientManager clientManager = new ClientManager();
 
 	private final KebSocketMessageDispatcher messageDispatcher = new KebSocketMessageDispatcher(clientManager);
 
@@ -34,11 +36,7 @@ public class KebSocketServer extends WebSocketServer {
 		super(address);
 	}
 
-	public ClientManager getClientManager() {
-		return clientManager;
-	}
-
-	@Override
+    @Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake) {
 		log.info("new connection to {}: {}", conn.getRemoteSocketAddress(), handshake.getResourceDescriptor());
 	}
@@ -62,13 +60,13 @@ public class KebSocketServer extends WebSocketServer {
 
 	@Override
 	public void onMessage(WebSocket conn, String message) {
-		log.info("received message from "	+ conn.getRemoteSocketAddress() + ": " + message);
+        log.info("received message from {}: {}", conn.getRemoteSocketAddress(), message);
 		messageDispatcher.dispatch(message, conn);
 	}
 
 	@Override
 	public void onMessage(WebSocket conn, ByteBuffer message) {
-		log.info("received ByteBuffer from "	+ conn.getRemoteSocketAddress());
+        log.info("received ByteBuffer from {}", conn.getRemoteSocketAddress());
 		conn.close();
 	}
 

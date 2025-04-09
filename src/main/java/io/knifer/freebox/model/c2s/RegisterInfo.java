@@ -10,5 +10,7 @@ import lombok.Data;
 @Data
 public class RegisterInfo {
 
-    private String name;
+    private String clientId;
+
+    private String clientName;
 }

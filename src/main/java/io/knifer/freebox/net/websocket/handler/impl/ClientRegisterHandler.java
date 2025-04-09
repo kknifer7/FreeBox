@@ -15,6 +15,7 @@ import io.knifer.freebox.net.websocket.handler.KebSocketMessageHandler;
 import io.knifer.freebox.util.GsonUtil;
 import javafx.application.Platform;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.java_websocket.WebSocket;
 
 /**
@@ -42,7 +43,7 @@ public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterIn
         RegisterInfo registerInfo = registerInfoMsg.getData();
         ClientInfo clientInfo;
 
-        if (registerInfo == null) {
+        if (registerInfo == null || StringUtils.isBlank(registerInfo.getClientId())) {
             throw new ForbiddenException(connection);
         } else {
             clientInfo = ClientInfo.of(registerInfo, connection);

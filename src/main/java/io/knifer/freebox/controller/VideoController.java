@@ -12,7 +12,6 @@ import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.common.VodInfo;
-import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.DeleteMovieCollectionDTO;
 import io.knifer.freebox.model.s2c.GetMovieCollectedStatusDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
@@ -79,7 +78,6 @@ public class VideoController extends BaseController {
     private SourceBean source;
     private VLCPlayer player;
     private KebSocketTemplate template;
-    private ClientInfo clientInfo;
     private Consumer<VideoPlayInfoBO> onClose;
     private VLCPlayerStopService playerStopService;
 
@@ -99,7 +97,6 @@ public class VideoController extends BaseController {
             source = bo.getSource();
             player = bo.getPlayer();
             template = bo.getTemplate();
-            clientInfo = bo.getClientInfo();
             onClose = bo.getOnClose();
             playerStopService = new VLCPlayerStopService(player);
             if (videoDetail == null || videoDetail.getVideoList().isEmpty()) {
@@ -109,7 +106,6 @@ public class VideoController extends BaseController {
             // 收藏按钮
             collectBtn.disableProperty().bind(operationLoading);
             template.getMovieCollectedStatus(
-                    clientInfo,
                     GetMovieCollectedStatusDTO.of(source.getKey(), videoDetail.getVideoList().get(0).getId()),
                     this::setCollectBtnByCollectedStatus
             );
@@ -352,7 +348,6 @@ public class VideoController extends BaseController {
 
         playerStopService.restart();
         template.getPlayerContent(
-                clientInfo,
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
                 playerContentJson -> {
                     JsonElement propsElm;
@@ -449,7 +444,6 @@ public class VideoController extends BaseController {
         vodInfo = VodInfo.from(playingVideo);
         if (collectBtn.getGraphic() == COLLECTED_FONT_ICON) {
             template.deleteMovieCollection(
-                    clientInfo,
                     DeleteMovieCollectionDTO.of(vodInfo),
                     () -> {
                         setCollectBtnByCollectedStatus(false);
@@ -458,7 +452,6 @@ public class VideoController extends BaseController {
             );
         } else {
             template.saveMovieCollection(
-                    clientInfo,
                     SaveMovieCollectionDTO.of(vodInfo),
                     () -> {
                         setCollectBtnByCollectedStatus(true);

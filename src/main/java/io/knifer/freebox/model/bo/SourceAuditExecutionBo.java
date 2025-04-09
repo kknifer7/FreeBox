@@ -4,7 +4,6 @@ import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.domain.ClientInfo;
 import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,11 +17,6 @@ import java.util.function.Consumer;
  */
 @Data
 public class SourceAuditExecutionBo {
-
-    /**
-     * 客户端信息
-     */
-    private ClientInfo clientInfo;
 
     /**
      * 待审计源
@@ -60,7 +54,6 @@ public class SourceAuditExecutionBo {
     private int maxRetryCount;
 
     public static SourceAuditExecutionBo of(
-            ClientInfo clientInfo,
             SourceBean sourceBean,
             Consumer<Pair<SourceAuditType, String>> onRequest,
             Consumer<Pair<SourceAuditType, String>> onResponse,
@@ -71,7 +64,6 @@ public class SourceAuditExecutionBo {
     ) {
         SourceAuditExecutionBo result = new SourceAuditExecutionBo();
 
-        result.setClientInfo(clientInfo);
         result.setSourceBean(sourceBean);
         result.setOnRequest(onRequest);
         result.setOnResponse(onResponse);

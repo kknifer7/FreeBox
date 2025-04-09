@@ -67,9 +67,11 @@ public class I18nKeys {
     public static final String ERROR_CONFIRM = "error.confirm";
     public static final String ERROR_REPORT = "error.report";
     public static final String ERROR_HEADER_TITLE = "error.header-title";
+    public static final String ERROR_RECONNECTING_CLIENT = "error.reconnecting-client";
 
     public static final String COMMON_DELETE = "common.delete";
     public static final String COMMON_OK = "common.ok";
+    public static final String COMMON_CANCEL_AND_BACK_TO_HOME = "common.cancel-and-back-to-home";
     public static final String COMMON_MESSAGE_SUCCESS = "common.message.success";
     public static final String COMMON_MESSAGE_TIMOUT_FAILED = "common.message.timeout-failed";
     public static final String COMMON_MESSAGE_COPY_SUCCEED = "common.message.copy-succeed";

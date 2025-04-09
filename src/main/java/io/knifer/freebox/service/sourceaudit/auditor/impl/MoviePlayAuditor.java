@@ -5,8 +5,8 @@ import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.model.common.Movie;
-import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
+import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
 import io.knifer.freebox.util.GsonUtil;
@@ -27,6 +27,10 @@ public class MoviePlayAuditor extends SourceAuditor {
             "http",
             "magnet"
     };
+
+    public MoviePlayAuditor(KebSocketTemplate kebSocketTemplate) {
+        super(kebSocketTemplate);
+    }
 
     @Override
     public boolean support(SourceAuditType sourceAuditType) {
@@ -54,7 +58,6 @@ public class MoviePlayAuditor extends SourceAuditor {
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
         Consumer<Pair<SourceAuditType, String>> onRequest = context.getOnRequest();
         Consumer<Pair<SourceAuditType, String>> onResponse = context.getOnResponse();
-        ClientInfo clientInfo = context.getClientInfo();
         Movie.Video video = context.getDetailContent().getMovie().getVideoList().get(0);
         Movie.Video.UrlBean.UrlInfo urlInfo = video.getUrlBean().getInfoList().get(0);
         GetPlayerContentDTO dto = GetPlayerContentDTO.of(
@@ -67,7 +70,6 @@ public class MoviePlayAuditor extends SourceAuditor {
 
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_PLAY, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getPlayerContent(
-                clientInfo,
                 dto,
                 playerContentJson -> {
                     JsonElement propElm;

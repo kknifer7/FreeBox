@@ -9,6 +9,7 @@ import io.knifer.freebox.handler.VLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.domain.ClientInfo;
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.util.FXMLUtil;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -45,6 +46,8 @@ public class HomeController {
 
     private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER = new WindowsRegistryVLCPlayerCheckHandler();
 
+    private ClientManager clientManager;
+
     @FXML
     private void initialize() {
         ObservableList<ClientInfo> clientItems = clientListView.getItems();
@@ -53,7 +56,7 @@ public class HomeController {
         vlcHBox.setVisible(vlcNotInstalled);
         vlcHBox.setManaged(vlcNotInstalled);
         Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
-
+            clientManager = Context.INSTANCE.getClientManager();
             refreshServiceStatusInfo();
             initProgressIndicator.setVisible(false);
             settingsBtn.setDisable(false);
@@ -62,9 +65,17 @@ public class HomeController {
         Context.INSTANCE.registerEventListener(AppEvents.ClientRegisteredEvent.class, evt -> {
             MultipleSelectionModel<ClientInfo> model = clientListView.getSelectionModel();
             ClientInfo clientInfo = evt.clientInfo();
+            ClientInfo oldClientInfo;
 
-            clientItems.remove(clientInfo);
+            clientItems.removeIf(c -> c.getClientId().equals(clientInfo.getClientId()));
             clientItems.add(clientInfo);
+            oldClientInfo = clientManager.getCurrentClientImmediately();
+            if (
+                    oldClientInfo != null &&
+                    oldClientInfo.getClientId().equals(clientInfo.getClientId())
+            ) {
+                clientManager.updateCurrentClient(clientInfo);
+            }
             if (model.getSelectedItem() == null) {
                 model.select(clientInfo);
             }
@@ -163,7 +174,8 @@ public class HomeController {
         Stage homeStage = WindowHelper.getStage(root);
         Stage tvStage = stageAndController.getLeft();
 
-        stageAndController.getRight().setData(clientInfo);
+        clientManager.shutdownConnectingExecutor();
+        clientManager.updateCurrentClient(clientInfo);
         WindowHelper.route(homeStage, tvStage);
     }
 
@@ -174,7 +186,7 @@ public class HomeController {
         if (clientInfo == null) {
             return;
         }
-        Context.INSTANCE.getClientManager().unregister(clientInfo);
+        clientManager.unregister(clientInfo);
         ToastHelper.showInfoI18n(
                 I18nKeys.MESSAGE_CLIENT_UNREGISTERED,
                 clientInfo.getConnection().getRemoteSocketAddress().getHostName()
@@ -195,7 +207,8 @@ public class HomeController {
         stageAndController = FXMLUtil.load(Views.SOURCE_AUDIT);
         homeStage = WindowHelper.getStage(root);
         sourceAuditStage = stageAndController.getLeft();
-        stageAndController.getRight().setData(clientInfo);
+        clientManager.shutdownConnectingExecutor();
+        clientManager.updateCurrentClient(clientInfo);
         log.info("enter source audit for [{}]", clientInfo.getConnection().getRemoteSocketAddress().getHostName());
         WindowHelper.route(homeStage, sourceAuditStage);
     }

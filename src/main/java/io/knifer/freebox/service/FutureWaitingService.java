@@ -28,6 +28,11 @@ public class FutureWaitingService<T> extends Service<T> {
     private final Future<T> future;
 
     /**
+     * 是否设置超时
+     */
+    private final boolean needTimeout;
+
+    /**
      * 排除显示错误提示的异常类型
      */
     private final Set<Class<? extends Throwable>> ignoringToastThrowableClasses;
@@ -39,6 +44,13 @@ public class FutureWaitingService<T> extends Service<T> {
     public FutureWaitingService(Future<T> future, Set<Class<? extends Throwable>> ignoringToastThrowableClasses) {
         this.future = future;
         this.ignoringToastThrowableClasses = ignoringToastThrowableClasses;
+        this.needTimeout = true;
+    }
+
+    public FutureWaitingService(Future<T> future, boolean needTimeout) {
+        this.future = future;
+        this.needTimeout = needTimeout;
+        this.ignoringToastThrowableClasses = Set.of();
     }
 
     @Override
@@ -48,7 +60,9 @@ public class FutureWaitingService<T> extends Service<T> {
             @Override
             protected T call() {
                 try {
-                    return future.get(BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
+                    return needTimeout ?
+                            future.get() :
+                            future.get(BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
                 } catch (TimeoutException e) {
                     if (ignoringToastThrowableClasses.contains(e.getClass())) {
                         log.warn("Ignored future waiting timeout exception", e);

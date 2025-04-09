@@ -5,6 +5,7 @@ import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.model.common.MovieSort;
 import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
 import io.knifer.freebox.util.CollectionUtil;
@@ -21,6 +22,11 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 public class HomeAuditor extends SourceAuditor {
+
+    public HomeAuditor(KebSocketTemplate kebSocketTemplate) {
+        super(kebSocketTemplate);
+    }
+
     @Override
     public boolean support(SourceAuditType sourceAuditType) {
         return sourceAuditType == SourceAuditType.HOME;
@@ -51,41 +57,44 @@ public class HomeAuditor extends SourceAuditor {
         int maxRetryCount = context.getMaxRetryCount();
 
         onRequest.accept(Pair.of(SourceAuditType.HOME, GsonUtil.toPrettyJson(sourceBean)));
-        kebSocketTemplate.getHomeContent(context.getClientInfo(), sourceBean, content -> {
-            List<SourceAuditResult> results;
-            MovieSort movieSort;
-            SourceAuditStatus status = SourceAuditStatus.SUCCESS;
-            boolean needSkip;
+        kebSocketTemplate.getHomeContent(
+                sourceBean,
+                content -> {
+                    List<SourceAuditResult> results;
+                    MovieSort movieSort;
+                    SourceAuditStatus status = SourceAuditStatus.SUCCESS;
+                    boolean needSkip;
 
-            if (content == null) {
-                if (retryCount >= maxRetryCount) {
-                    onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, SourceAuditStatus.FAILED));
-                    onFinish.accept(Pair.of(SourceAuditType.HOME, List.of(SourceAuditResult.NO_DATA)));
-                    needSkip = true;
-                } else {
-                    doAudit(context, retryCount + 1);
+                    if (content == null) {
+                        if (retryCount >= maxRetryCount) {
+                            onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, SourceAuditStatus.FAILED));
+                            onFinish.accept(Pair.of(SourceAuditType.HOME, List.of(SourceAuditResult.NO_DATA)));
+                            needSkip = true;
+                        } else {
+                            doAudit(context, retryCount + 1);
 
-                    return;
+                            return;
+                        }
+                    } else {
+                        onResponse.accept(Pair.of(SourceAuditType.HOME, GsonUtil.toPrettyJson(content)));
+                        results = new ArrayList<>();
+                        movieSort = content.getClasses();
+                        if (movieSort == null || CollectionUtil.isEmpty(movieSort.getSortList())) {
+                            status = SourceAuditStatus.FAILED;
+                            results.add(SourceAuditResult.NO_MOVIE_SORT);
+                            needSkip = true;
+                        } else {
+                            needSkip = false;
+                        }
+                        if (CollectionUtil.isEmpty(content.getVideoList())) {
+                            results.add(SourceAuditResult.NO_VIDEO_LIST);
+                        }
+                        context.setHomeContent(content);
+                        onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, status));
+                        onFinish.accept(Pair.of(SourceAuditType.HOME, results));
+                    }
+                    doNext(context, needSkip);
                 }
-            } else {
-                onResponse.accept(Pair.of(SourceAuditType.HOME, GsonUtil.toPrettyJson(content)));
-                results = new ArrayList<>();
-                movieSort = content.getClasses();
-                if (movieSort == null || CollectionUtil.isEmpty(movieSort.getSortList())) {
-                    status = SourceAuditStatus.FAILED;
-                    results.add(SourceAuditResult.NO_MOVIE_SORT);
-                    needSkip = true;
-                } else {
-                    needSkip = false;
-                }
-                if (CollectionUtil.isEmpty(content.getVideoList())) {
-                    results.add(SourceAuditResult.NO_VIDEO_LIST);
-                }
-                context.setHomeContent(content);
-                onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, status));
-                onFinish.accept(Pair.of(SourceAuditType.HOME, results));
-            }
-            doNext(context, needSkip);
-        });
+        );
     }
 }

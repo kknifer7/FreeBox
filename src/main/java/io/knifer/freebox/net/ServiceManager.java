@@ -9,6 +9,7 @@ import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import javafx.concurrent.Service;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -22,20 +23,13 @@ import java.util.Collection;
  *
  * @author Knifer
  */
+@Getter
 @Slf4j
 public class ServiceManager {
 
     private final FreeBoxHttpServerHolder httpServer = new FreeBoxHttpServerHolder();
 
     private final KebSocketServerHolder wsServer = new KebSocketServerHolder();
-
-    public FreeBoxHttpServerHolder getHttpServer() {
-        return httpServer;
-    }
-
-    public KebSocketServerHolder getWsServer() {
-        return wsServer;
-    }
 
     public void init(Runnable callback) {
         String ip = ConfigHelper.getServiceIPv4();

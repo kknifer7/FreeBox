@@ -49,6 +49,7 @@ public class WindowHelper {
 
     public void route(Stage currentStage, Stage nextStage) {
         Context.INSTANCE.pushStage(currentStage);
+        Context.INSTANCE.setCurrentStage(nextStage);
         currentStage.hide();
         nextStage.show();
     }

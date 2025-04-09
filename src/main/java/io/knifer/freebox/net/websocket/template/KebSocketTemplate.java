@@ -2,7 +2,6 @@ package io.knifer.freebox.net.websocket.template;
 
 import com.google.gson.JsonObject;
 import io.knifer.freebox.model.common.*;
-import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
 
 import java.util.List;
@@ -17,108 +16,94 @@ public interface KebSocketTemplate {
 
     /**
      * 获取源列表
-     * @param clientInfo 客户端信息
      * @param callback 回调
      */
-    void getSourceBeanList(ClientInfo clientInfo, Consumer<List<SourceBean>> callback);
+    void getSourceBeanList(Consumer<List<SourceBean>> callback);
 
     /**
      * 获取首页内容
-     * @param clientInfo 客户端信息
      * @param sourceBean 源
      * @param callback 回调
      */
-    void getHomeContent(ClientInfo clientInfo, SourceBean sourceBean, Consumer<AbsSortXml> callback);
+    void getHomeContent(SourceBean sourceBean, Consumer<AbsSortXml> callback);
 
     /**
      * 获取指定分类信息
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void getCategoryContent(ClientInfo clientInfo, GetCategoryContentDTO dto, Consumer<AbsXml> callback);
+    void getCategoryContent(GetCategoryContentDTO dto, Consumer<AbsXml> callback);
 
     /**
      * 获取影视详情内容
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void getDetailContent(ClientInfo clientInfo, GetDetailContentDTO dto, Consumer<AbsXml> callback);
+    void getDetailContent(GetDetailContentDTO dto, Consumer<AbsXml> callback);
 
     /**
      * 获取播放信息
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void getPlayerContent(ClientInfo clientInfo, GetPlayerContentDTO dto, Consumer<JsonObject> callback);
+    void getPlayerContent(GetPlayerContentDTO dto, Consumer<JsonObject> callback);
 
     /**
      * 获取历史记录
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void getPlayHistory(ClientInfo clientInfo, GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback);
+    void getPlayHistory(GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback);
 
     /**
      * 获取一条历史记录
-     * @param clientInfo 客户端信息
      * @param dto 参数
      */
-    void getOnePlayHistory(ClientInfo clientInfo, GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback);
+    void getOnePlayHistory(GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback);
 
     /**
      * 影视搜索
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void getSearchContent(ClientInfo clientInfo, GetSearchContentDTO dto, Consumer<AbsXml> callback);
+    void getSearchContent(GetSearchContentDTO dto, Consumer<AbsXml> callback);
 
     /**
      * 保存历史记录
-     * @param clientInfo 客户端信息
      * @param dto 参数
      */
-    <T extends RuntimeException> void savePlayHistory(ClientInfo clientInfo, SavePlayHistoryDTO dto, Consumer<T> onError);
+    <T extends RuntimeException> void savePlayHistory(SavePlayHistoryDTO dto, Consumer<T> onError);
 
     /**
      * 删除历史记录
-     * @param clientInfo 客户端信息
      * @param dto 参数
      */
-    void deletePlayHistory(ClientInfo clientInfo, DeletePlayHistoryDTO dto, Runnable callback);
+    void deletePlayHistory(DeletePlayHistoryDTO dto, Runnable callback);
 
     /**
      * 收藏影片
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void saveMovieCollection(ClientInfo clientInfo, SaveMovieCollectionDTO dto, Runnable callback);
+    void saveMovieCollection(SaveMovieCollectionDTO dto, Runnable callback);
 
     /**
      * 取消收藏
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void deleteMovieCollection(ClientInfo clientInfo, DeleteMovieCollectionDTO dto, Runnable callback);
+    void deleteMovieCollection(DeleteMovieCollectionDTO dto, Runnable callback);
 
     /**
      * 获取收藏列表
-     * @param clientInfo 客户端信息
      * @param callback 回调
      */
-    void getMovieCollection(ClientInfo clientInfo, Consumer<List<VodCollect>> callback);
+    void getMovieCollection(Consumer<List<VodCollect>> callback);
 
     /**
      * 获取影视收藏状态
-     * @param clientInfo 客户端信息
      * @param dto 参数
      * @param callback 回调
      */
-    void getMovieCollectedStatus(ClientInfo clientInfo, GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback);
+    void getMovieCollectedStatus(GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback);
 }

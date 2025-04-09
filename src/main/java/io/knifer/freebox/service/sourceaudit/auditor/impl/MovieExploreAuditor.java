@@ -7,6 +7,7 @@ import io.knifer.freebox.model.common.AbsSortXml;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.MovieSort;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
+import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
 import io.knifer.freebox.util.CollectionUtil;
@@ -23,6 +24,11 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 public class MovieExploreAuditor extends SourceAuditor {
+
+    public MovieExploreAuditor(KebSocketTemplate kebSocketTemplate) {
+        super(kebSocketTemplate);
+    }
+
     @Override
     public boolean support(SourceAuditType sourceAuditType) {
         return sourceAuditType == SourceAuditType.MOVIE_EXPLORE;
@@ -56,7 +62,6 @@ public class MovieExploreAuditor extends SourceAuditor {
 
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_EXPLORE, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getCategoryContent(
-                context.getClientInfo(),
                 dto,
                 categoryContent -> {
                     Movie movieData;

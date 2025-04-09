@@ -20,8 +20,9 @@ import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
-import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
+import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.service.MovieSearchService;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
@@ -57,7 +58,7 @@ import java.util.*;
  * @author Knifer
  */
 @Slf4j
-public class TVController extends BaseController {
+public class TVController {
 
     @FXML
     private BorderPane root;
@@ -91,7 +92,7 @@ public class TVController extends BaseController {
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty searchLoadingProperty = new SimpleBooleanProperty(false);
     private KebSocketTemplate template;
-    private ClientInfo clientInfo;
+    private ClientManager clientManager;
     private Movie.Video fetchMoreItem;
 
     private final MovieSuggestionHandler movieSuggestionHandler = new SoupianMovieSuggestionHandler();
@@ -102,20 +103,32 @@ public class TVController extends BaseController {
 
     @FXML
     private void initialize() {
-        template = KebSocketTemplateImpl.getInstance();
+        template = Context.INSTANCE.getKebSocketTemplate();
         fetchMoreItem = new Movie.Video();
         fetchMoreItem.setId(BaseValues.LOAD_MORE_ITEM_ID);
         fetchMoreItem.setName(I18nHelper.get(I18nKeys.TV_LOAD_MORE));
         Platform.runLater(() -> {
             Stage stage = WindowHelper.getStage(root);
+            FutureWaitingService<ClientInfo> service;
 
-            clientInfo = getClientInfo();
-            stage.setTitle(clientInfo.getConnection().getRemoteSocketAddress().getHostName());
+            clientManager = Context.INSTANCE.getClientManager();
+            service = new FutureWaitingService<>(
+                    clientManager.getCurrentClient()
+            );
+            service.setOnSucceeded(evt -> {
+                ClientInfo clientInfo = service.getValue();
+
+                if (clientInfo == null) {
+                    return;
+                }
+                stage.setTitle(clientInfo.getConnection().getRemoteSocketAddress().getHostName());
+            });
+            service.start();
             stage.setOnCloseRequest(evt -> {
                destroy();
                Context.INSTANCE.popAndShowLastStage();
             });
-            movieSearchService = new MovieSearchService(clientInfo, keywordAndSearchContent -> {
+            movieSearchService = new MovieSearchService(keywordAndSearchContent -> {
                 String keyword = keywordAndSearchContent.getLeft();
                 AbsXml searchContent;
 
@@ -138,7 +151,7 @@ public class TVController extends BaseController {
             movieHistoryPopOver = new MovieInfoListPopOver(I18nKeys.TV_HISTORY, vodInfoDeleting -> {
                 movieHistoryPopOver.clearVodInfoList();
                 template.deletePlayHistory(
-                        clientInfo, DeletePlayHistoryDTO.of(vodInfoDeleting), this::reloadMovieHistoryPopOver
+                        DeletePlayHistoryDTO.of(vodInfoDeleting), this::reloadMovieHistoryPopOver
                 );
             });
             movieHistoryPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
@@ -146,7 +159,7 @@ public class TVController extends BaseController {
             movieCollectionPopOver = new MovieInfoListPopOver(I18nKeys.TV_COLLECTION, vodInfoDeleting -> {
                 movieCollectionPopOver.clearVodInfoList();
                 template.deleteMovieCollection(
-                        clientInfo, DeleteMovieCollectionDTO.of(vodInfoDeleting), this::reloadMovieCollectionPopOver
+                        DeleteMovieCollectionDTO.of(vodInfoDeleting), this::reloadMovieCollectionPopOver
                 );
             });
             movieCollectionPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
@@ -165,7 +178,7 @@ public class TVController extends BaseController {
 
             TextFields.bindAutoCompletion(searchTextField, movieSuggestionHandler::handle);
 
-            template.getSourceBeanList(clientInfo, this::initSourceBeanData);
+            template.getSourceBeanList(this::initSourceBeanData);
         });
     }
 
@@ -173,7 +186,7 @@ public class TVController extends BaseController {
         if (!movieHistoryPopOver.isShowing()) {
             return;
         }
-        template.getPlayHistory(clientInfo, GetPlayHistoryDTO.of(100), playHistory -> {
+        template.getPlayHistory(GetPlayHistoryDTO.of(100), playHistory -> {
             if (CollectionUtil.isNotEmpty(playHistory)) {
                 movieHistoryPopOver.setVodInfoList(playHistory);
             }
@@ -185,7 +198,7 @@ public class TVController extends BaseController {
         if (!movieCollectionPopOver.isShowing()) {
             return;
         }
-        template.getMovieCollection(clientInfo, movieCollection -> {
+        template.getMovieCollection(movieCollection -> {
             if (CollectionUtil.isNotEmpty(movieCollection)) {
                 movieCollectionPopOver.setVodInfoList(
                         movieCollection.stream().map(VodInfo::from).toList()
@@ -225,7 +238,6 @@ public class TVController extends BaseController {
                 // 如果playFlag为空，则可能是收藏夹中的影片，尝试获取一下历史记录信息
                 movieCollectionPopOver.hide();
                 template.getOnePlayHistory(
-                        clientInfo,
                         GetOnePlayHistoryDTO.of(sourceKey, videoId),
                         vodInfo -> openVideo(
                                 sourceKey,
@@ -263,7 +275,6 @@ public class TVController extends BaseController {
         }
         movieCached = movieAndVideoCached.getLeft();
         template.getCategoryContent(
-                clientInfo,
                 GetCategoryContentDTO.of(getSourceBean(), sortData, movieCached.getPage() + 1),
                 categoryContent -> {
                     Movie movie = categoryContent.getMovie();
@@ -313,7 +324,6 @@ public class TVController extends BaseController {
 
         LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_LOADING);
         template.getDetailContent(
-                clientInfo,
                 GetDetailContentDTO.of(sourceBean.getKey(), videoId),
                 detailContent -> {
                     Pair<Stage, VideoController> stageAndController;
@@ -336,7 +346,6 @@ public class TVController extends BaseController {
                             sourceBean,
                             new VLCPlayer((HBox) videoStage.getScene().getRoot()),
                             template,
-                            clientInfo,
                             newPlayInfo -> {
                                 if (newPlayInfo != null) {
                                     savePlayHistory(detailContent, newPlayInfo);
@@ -365,7 +374,7 @@ public class TVController extends BaseController {
         vodInfo.setReverseSort(playInfo.isReverseSort());
         vodInfo.setPlayNote(playInfo.getPlayNote());
         template.savePlayHistory(
-                clientInfo, SavePlayHistoryDTO.of(vodInfo), exception -> {
+                SavePlayHistoryDTO.of(vodInfo), exception -> {
                     ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SAVE_HISTORY_FAILED);
                     ToastHelper.showException(exception);
                 }
@@ -403,7 +412,7 @@ public class TVController extends BaseController {
         sortsLoadingProperty.set(true);
         clearMovieData();
         videosGridView.getItems().clear();
-        template.getHomeContent(clientInfo, getSourceBean(), homeContent -> {
+        template.getHomeContent(getSourceBean(), homeContent -> {
             Movie movie;
             List<Movie.Video> list;
             MovieSort classes;
@@ -480,7 +489,6 @@ public class TVController extends BaseController {
         if (movieAndVideosCached == null) {
             // 拉取影片数据
             template.getCategoryContent(
-                    clientInfo,
                     GetCategoryContentDTO.of(getSourceBean(), sortData, 1),
                     categoryContent -> {
                         Movie movie = categoryContent.getMovie();
@@ -558,14 +566,19 @@ public class TVController extends BaseController {
      * 销毁方法
      */
     private void destroy() {
-        log.info(
-                "[{}]'s tv controller destroy",
-                clientInfo.getConnection().getRemoteSocketAddress().getHostName()
-        );
+        ClientInfo clientInfo = clientManager.getCurrentClientImmediately();
+
+        if (clientInfo != null) {
+            log.info(
+                    "[{}]'s tv controller destroy",
+                    clientInfo.getConnection().getRemoteSocketAddress().getHostName()
+            );
+        }
         clearMovieData();
         if (videosGridView.getCellFactory() instanceof VideoGridCellFactory factory) {
             factory.destroy();
         }
+        clientManager.clearCurrentClient();
     }
 
     private void clearMovieData() {
@@ -575,23 +588,22 @@ public class TVController extends BaseController {
         AsyncUtil.cancelAllTask();
     }
 
-    private ClientInfo getClientInfo() {
-        return getData();
-    }
-
     @FXML
     private void onHistoryBtnAction() {
-        template.getPlayHistory(clientInfo, GetPlayHistoryDTO.of(100), playHistory -> {
-            if (CollectionUtil.isNotEmpty(playHistory)) {
-                movieHistoryPopOver.setVodInfoList(playHistory);
-            }
-            movieHistoryPopOver.show(historyButton);
-        });
+        template.getPlayHistory(
+                GetPlayHistoryDTO.of(100),
+                playHistory -> {
+                    if (CollectionUtil.isNotEmpty(playHistory)) {
+                        movieHistoryPopOver.setVodInfoList(playHistory);
+                    }
+                    movieHistoryPopOver.show(historyButton);
+                }
+        );
     }
 
     @FXML
     private void onCollectBtnAction() {
-        template.getMovieCollection(clientInfo, vodCollects -> {
+        template.getMovieCollection(vodCollects -> {
             if (CollectionUtil.isNotEmpty(vodCollects)) {
                 movieCollectionPopOver.setVodInfoList(
                         vodCollects.stream().map(VodInfo::from).toList()

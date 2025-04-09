@@ -2,7 +2,6 @@ package io.knifer.freebox.service.sourceaudit.auditor;
 
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
-import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -18,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public abstract class SourceAuditor {
 
-    protected final KebSocketTemplate kebSocketTemplate = KebSocketTemplateImpl.getInstance();
+    protected final KebSocketTemplate kebSocketTemplate;
 
     protected SourceAuditor nextAuditor;
 

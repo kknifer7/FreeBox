@@ -15,8 +15,9 @@ import io.knifer.freebox.model.bo.SourceAuditExecutionBo;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.SourceAuditItem;
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
-import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
+import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditExecutor;
 import io.knifer.freebox.service.sourceaudit.auditor.impl.SourceAuditExecutorImpl;
 import javafx.application.Platform;
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
  * @author Knifer
  */
 @Slf4j
-public class SourceAuditController extends BaseController{
+public class SourceAuditController {
 
     @FXML
     private BorderPane root;
@@ -87,16 +88,17 @@ public class SourceAuditController extends BaseController{
     private Button startAuditBtn;
 
     private KebSocketTemplate template;
-    private ClientInfo clientInfo;
-
-    private final SourceAuditExecutor sourceAuditExecutor = SourceAuditExecutorImpl.getInstance();
+    private ClientManager clientManager;
+    private SourceAuditExecutor sourceAuditExecutor;
     private final SimpleObjectProperty<SourceBean> nowSourceBeanProperty = new SimpleObjectProperty<>();
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(true);
     private final Map<String, ObservableList<SourceAuditItem>> sourceKeyAndAuditItemsMap = new HashMap<>();
 
     @FXML
     private void initialize() {
-        template = KebSocketTemplateImpl.getInstance();
+        template = Context.INSTANCE.getKebSocketTemplate();
+        clientManager = Context.INSTANCE.getClientManager();
+        sourceAuditExecutor = new SourceAuditExecutorImpl(template);
 
         nowSourceBeanProperty.addListener((ob, oldVal, newVal) -> {
             if (newVal != null) {
@@ -136,17 +138,28 @@ public class SourceAuditController extends BaseController{
         auditingSourceBeanLabel.visibleProperty().bind(loadingProperty);
         Platform.runLater(() -> {
             Stage stage = WindowHelper.getStage(root);
+            FutureWaitingService<ClientInfo> service = new FutureWaitingService<>(
+                    clientManager.getCurrentClient()
+            );
 
-            clientInfo = getClientInfo();
-            stage.setTitle(String.format(
-                    I18nHelper.get(I18nKeys.SOURCE_AUDIT_WINDOW_TITLE),
-                    clientInfo.getConnection().getRemoteSocketAddress().getHostName()
-            ));
+            service.setOnSucceeded(evt -> {
+                ClientInfo clientInfo = service.getValue();
+
+                if (clientInfo == null) {
+                    return;
+                }
+                stage.setTitle(String.format(
+                        I18nHelper.get(I18nKeys.SOURCE_AUDIT_WINDOW_TITLE),
+                        clientInfo.getConnection().getRemoteSocketAddress().getHostName()
+                ));
+
+            });
+            service.start();
             stage.setOnCloseRequest(evt -> {
                 destroy();
                 Context.INSTANCE.popAndShowLastStage();
             });
-            template.getSourceBeanList(clientInfo, sourceBeans -> {
+            template.getSourceBeanList(sourceBeans -> {
                 fillSourceBeanData(sourceBeans);
                 setLoading(false);
             });
@@ -164,10 +177,6 @@ public class SourceAuditController extends BaseController{
         sourceAuditItemTableView.refresh();
         requestRawDataTextArea.clear();
         responseRawDataTextArea.clear();
-    }
-
-    private ClientInfo getClientInfo() {
-        return getData();
     }
 
     private void destroy() {}
@@ -291,7 +300,6 @@ public class SourceAuditController extends BaseController{
         String sourceKey = sourceBean.getKey();
 
         sourceAuditExecutor.execute(SourceAuditExecutionBo.of(
-                clientInfo,
                 sourceBean,
                 auditTypeAndRequestRawData -> {
                     SourceAuditType auditType = auditTypeAndRequestRawData.getLeft();

@@ -7,13 +7,18 @@ import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.net.ServiceManager;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.core.ClientManager;
+import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
+import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.util.AsyncUtil;
 import javafx.application.Application;
 import javafx.concurrent.Service;
 import javafx.stage.Stage;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -33,6 +38,12 @@ public enum Context {
     private Application app;
 
     private Stage primaryStage;
+
+    @Setter
+    private Stage currentStage;
+
+    @Getter
+    private KebSocketTemplate kebSocketTemplate;
 
     private final ServiceManager serviceManager = new ServiceManager();
 
@@ -64,6 +75,10 @@ public enum Context {
         return primaryStage;
     }
 
+    public Stage getCurrentStage() {
+        return currentStage == null ? primaryStage : currentStage;
+    }
+
     public void init(Application app, Stage primaryStage, Runnable callback) {
         Service<Void> loadConfigService = new LoadConfigService();
 
@@ -71,7 +86,14 @@ public enum Context {
         this.primaryStage = primaryStage;
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
-            serviceManager.init(callback);
+            // 初始化服务管理器
+            serviceManager.init(() -> {
+                // 初始化websocket模板
+                kebSocketTemplate = new KebSocketTemplateImpl(
+                        KebSocketRunner.getInstance(), serviceManager.getWsServer().getClientManager()
+                );
+                callback.run();
+            });
             log.info("application initialized");
             initFlag = true;
         });

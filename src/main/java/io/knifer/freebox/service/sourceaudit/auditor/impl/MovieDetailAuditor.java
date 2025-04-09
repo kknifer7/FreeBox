@@ -5,8 +5,8 @@ import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.model.common.AbsXml;
 import io.knifer.freebox.model.common.Movie;
-import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.GetDetailContentDTO;
+import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
 import io.knifer.freebox.util.CollectionUtil;
@@ -23,6 +23,11 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 public class MovieDetailAuditor extends SourceAuditor {
+
+    public MovieDetailAuditor(KebSocketTemplate kebSocketTemplate) {
+        super(kebSocketTemplate);
+    }
+
     @Override
     public boolean support(SourceAuditType sourceAuditType) {
         return sourceAuditType == SourceAuditType.MOVIE_DETAIL;
@@ -52,12 +57,10 @@ public class MovieDetailAuditor extends SourceAuditor {
         AbsXml categoryContent = context.getCategoryContent();
         Movie.Video video = categoryContent.getMovie().getVideoList().get(0);
         GetDetailContentDTO dto = GetDetailContentDTO.of(context.getSourceBean().getKey(), video.getId());
-        ClientInfo clientInfo = context.getClientInfo();
         int maxRetryCount = context.getMaxRetryCount();
 
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getDetailContent(
-                clientInfo,
                 dto,
                 detailContent -> {
                     boolean needSkip;

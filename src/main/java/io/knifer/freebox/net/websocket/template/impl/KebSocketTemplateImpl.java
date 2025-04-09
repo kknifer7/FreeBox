@@ -6,15 +6,16 @@ import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.model.common.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.util.CastUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -26,123 +27,94 @@ import java.util.function.Consumer;
 @Slf4j
 public class KebSocketTemplateImpl implements KebSocketTemplate {
 
-    private KebSocketTemplateImpl(KebSocketRunner runner) {
-        this.runner = runner;
-    }
-
     private final KebSocketRunner runner;
+
+    private final ClientManager clientManager;
 
     private final Set<Class<? extends Throwable>> ignoringToastThrowableClassesInMovieSearching =
             Set.of(TimeoutException.class);
 
-    private static final KebSocketTemplateImpl INSTANCE = new KebSocketTemplateImpl(KebSocketRunner.getInstance());
-
-    public static KebSocketTemplate getInstance() {
-        return INSTANCE;
+    public KebSocketTemplateImpl(KebSocketRunner runner, ClientManager clientManager) {
+        this.runner = runner;
+        this.clientManager = clientManager;
     }
 
     @Override
-    public void getSourceBeanList(ClientInfo clientInfo, Consumer<List<SourceBean>> callback) {
+    public void getSourceBeanList(Consumer<List<SourceBean>> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_SOURCE_BEAN_LIST,
-                        null,
-                        new TypeToken<List<SourceBean>>(){}
-                ),
+                MessageCodes.GET_SOURCE_BEAN_LIST,
+                null,
+                new TypeToken<List<SourceBean>>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getHomeContent(ClientInfo clientInfo, SourceBean sourceBean, Consumer<AbsSortXml> callback) {
+    public void getHomeContent(SourceBean sourceBean, Consumer<AbsSortXml> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_HOME_CONTENT,
-                        sourceBean,
-                        new TypeToken<AbsSortXml>(){}
-                ),
+                MessageCodes.GET_HOME_CONTENT,
+                sourceBean,
+                new TypeToken<AbsSortXml>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getCategoryContent(ClientInfo clientInfo, GetCategoryContentDTO dto, Consumer<AbsXml> callback) {
+    public void getCategoryContent(GetCategoryContentDTO dto, Consumer<AbsXml> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_CATEGORY_CONTENT,
-                        dto,
-                        new TypeToken<AbsXml>(){}
-                ),
+                MessageCodes.GET_CATEGORY_CONTENT,
+                dto,
+                new TypeToken<AbsXml>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getDetailContent(ClientInfo clientInfo, GetDetailContentDTO dto, Consumer<AbsXml> callback) {
+    public void getDetailContent(GetDetailContentDTO dto, Consumer<AbsXml> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_DETAIL_CONTENT,
-                        dto,
-                        new TypeToken<AbsXml>(){}
-                ),
+                MessageCodes.GET_DETAIL_CONTENT,
+                dto,
+                new TypeToken<AbsXml>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getPlayerContent(ClientInfo clientInfo, GetPlayerContentDTO dto, Consumer<JsonObject> callback) {
+    public void getPlayerContent(GetPlayerContentDTO dto, Consumer<JsonObject> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_PLAYER_CONTENT,
-                        dto,
-                        new TypeToken<JsonObject>(){}
-                ),
+                MessageCodes.GET_PLAYER_CONTENT,
+                dto,
+                new TypeToken<JsonObject>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getPlayHistory(ClientInfo clientInfo, GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback) {
+    public void getPlayHistory(GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_PLAY_HISTORY,
-                        dto,
-                        new TypeToken<List<VodInfo>>(){}
-                ),
+                MessageCodes.GET_PLAY_HISTORY,
+                dto,
+                new TypeToken<List<VodInfo>>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getOnePlayHistory(ClientInfo clientInfo, GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback) {
+    public void getOnePlayHistory(GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_ONE_PLAY_HISTORY,
-                        dto,
-                        new TypeToken<VodInfo>(){}
-                ),
+                MessageCodes.GET_ONE_PLAY_HISTORY,
+                dto,
+                new TypeToken<VodInfo>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getSearchContent(
-            ClientInfo clientInfo, GetSearchContentDTO dto, Consumer<AbsXml> callback
-    ) {
+    public void getSearchContent(GetSearchContentDTO dto, Consumer<AbsXml> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_SEARCH_CONTENT,
-                        dto,
-                        new TypeToken<AbsXml>(){}
-                ),
+                MessageCodes.GET_SEARCH_CONTENT,
+                dto,
+                new TypeToken<AbsXml>(){},
                 msg -> callback.accept(CastUtil.cast(msg)),
                 ignoringToastThrowableClassesInMovieSearching
         );
@@ -150,101 +122,163 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
 
     @Override
     public <T extends RuntimeException> void savePlayHistory(
-            ClientInfo clientInfo, SavePlayHistoryDTO dto, Consumer<T> onError
+            SavePlayHistoryDTO dto, Consumer<T> onError
     ) {
-        try {
-            runner.send(
-                    clientInfo.getConnection(),
-                    MessageCodes.SAVE_PLAY_HISTORY,
-                    dto
-            );
-        } catch (RuntimeException e) {
-            onError.accept(CastUtil.cast(e));
-        }
+        FutureWaitingService<ClientInfo> service = new FutureWaitingService<>(clientManager.getCurrentClient());
+
+        service.setOnSucceeded(evt -> {
+            ClientInfo clientInfo = service.getValue();
+
+            if (clientInfo == null) {
+                return;
+            }
+            try {
+                runner.send(
+                        clientInfo.getConnection(),
+                        MessageCodes.SAVE_PLAY_HISTORY,
+                        dto
+                );
+            } catch (RuntimeException e) {
+                onError.accept(CastUtil.cast(e));
+            }
+        });
+        service.start();
     }
 
     @Override
-    public void deletePlayHistory(ClientInfo clientInfo, DeletePlayHistoryDTO dto, Runnable callback) {
+    public void deletePlayHistory(DeletePlayHistoryDTO dto, Runnable callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.DELETE_PLAY_HISTORY,
-                        dto,
-                        new TypeToken<Void>(){}
-                ),
+                MessageCodes.DELETE_PLAY_HISTORY,
+                dto,
+                new TypeToken<Void>(){},
                 msg -> callback.run()
         );
     }
 
     @Override
     public void saveMovieCollection(
-            ClientInfo clientInfo, SaveMovieCollectionDTO dto, Runnable callback
+            SaveMovieCollectionDTO dto, Runnable callback
     ) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.SAVE_MOVIE_COLLECTION,
-                        dto,
-                        new TypeToken<Void>(){}
-                ),
+                MessageCodes.SAVE_MOVIE_COLLECTION,
+                dto,
+                new TypeToken<Void>(){},
                 ignored -> callback.run()
         );
     }
 
     @Override
     public void deleteMovieCollection(
-            ClientInfo clientInfo, DeleteMovieCollectionDTO dto, Runnable callback
+            DeleteMovieCollectionDTO dto, Runnable callback
     ) {
+
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.DELETE_MOVIE_COLLECTION,
-                        dto,
-                        new TypeToken<Void>(){}
-                ),
+                MessageCodes.DELETE_MOVIE_COLLECTION,
+                dto,
+                new TypeToken<Void>(){},
                 ignored -> callback.run()
         );
     }
 
     @Override
-    public void getMovieCollection(ClientInfo clientInfo, Consumer<List<VodCollect>> callback) {
+    public void getMovieCollection(Consumer<List<VodCollect>> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_MOVIE_COLLECTION,
-                        null,
-                        new TypeToken<List<VodCollect>>(){}
-                ),
+                MessageCodes.GET_MOVIE_COLLECTION,
+                null,
+                new TypeToken<List<VodCollect>>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
     @Override
-    public void getMovieCollectedStatus(ClientInfo clientInfo, GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback) {
+    public void getMovieCollectedStatus(GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback) {
         execute(
-                runner.sendTopic(
-                        clientInfo.getConnection(),
-                        MessageCodes.GET_MOVIE_COLLECTED_STATUS,
-                        dto,
-                        new TypeToken<Boolean>(){}
-                ),
+                MessageCodes.GET_MOVIE_COLLECTED_STATUS,
+                dto,
+                new TypeToken<Boolean>(){},
                 msg -> callback.accept(CastUtil.cast(msg))
         );
     }
 
-    private <T> void execute(Future<T> future, Consumer<T> callback) {
-        FutureWaitingService<T> service = new FutureWaitingService<>(future);
+    private <T, R> void execute(
+            int messageCode,
+            T data,
+            TypeToken<R> typeToken,
+            Consumer<R> callback
+    ) {
+        FutureWaitingService<ClientInfo> service = new FutureWaitingService<>(
+                clientManager.getCurrentClient(), false
+        );
 
-        service.setOnSucceeded(event -> callback.accept(service.getValue()));
-        service.start();
+        dealWithClientInfoFutureWaitingService(
+                service,
+                messageCode,
+                data,
+                typeToken,
+                callback,
+                null
+        );
     }
 
-    private <T> void execute(
-            Future<T> future, Consumer<T> callback, Set<Class<? extends Throwable>> ignoringToastThrowableClasses
+    private <T, R> void execute(
+            int messageCode,
+            T data,
+            TypeToken<R> typeToken,
+            Consumer<R> callback,
+            Set<Class<? extends Throwable>> ignoringToastThrowableClasses
     ) {
-        FutureWaitingService<T> service = new FutureWaitingService<>(future, ignoringToastThrowableClasses);
+        FutureWaitingService<ClientInfo> service = new FutureWaitingService<>(
+                clientManager.getCurrentClient(), false
+        );
 
-        service.setOnSucceeded(event -> callback.accept(service.getValue()));
+        dealWithClientInfoFutureWaitingService(
+                service,
+                messageCode,
+                data,
+                typeToken,
+                callback,
+                ignoringToastThrowableClasses
+        );
+    }
+
+    private <T, R> void dealWithClientInfoFutureWaitingService(
+            FutureWaitingService<ClientInfo> service,
+            int messageCode,
+            T data,
+            TypeToken<R> typeToken,
+            Consumer<R> callback,
+            @Nullable Set<Class<? extends Throwable>> ignoringToastThrowableClasses
+    ) {
+        service.setOnSucceeded(evt -> {
+            ClientInfo clientInfo = service.getValue();
+            FutureWaitingService<R> processService;
+
+            if (clientInfo == null) {
+                return;
+            }
+            if (ignoringToastThrowableClasses == null) {
+                processService = new FutureWaitingService<>(
+                        runner.sendTopic(
+                                clientInfo.getConnection(),
+                                messageCode,
+                                data,
+                                typeToken
+                        )
+                );
+            } else {
+                processService = new FutureWaitingService<>(
+                        runner.sendTopic(
+                                clientInfo.getConnection(),
+                                messageCode,
+                                data,
+                                typeToken
+                        ),
+                        ignoringToastThrowableClasses
+                );
+            }
+            processService.setOnSucceeded(event -> callback.accept(processService.getValue()));
+            processService.start();
+        });
         service.start();
     }
 }

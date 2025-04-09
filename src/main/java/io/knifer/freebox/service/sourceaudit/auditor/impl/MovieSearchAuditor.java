@@ -6,6 +6,7 @@ import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.model.common.Movie;
 import io.knifer.freebox.model.common.SourceBean;
 import io.knifer.freebox.model.s2c.GetSearchContentDTO;
+import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
 import io.knifer.freebox.util.GsonUtil;
@@ -20,6 +21,11 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 public class MovieSearchAuditor extends SourceAuditor {
+
+    public MovieSearchAuditor(KebSocketTemplate kebSocketTemplate) {
+        super(kebSocketTemplate);
+    }
+
     @Override
     public boolean support(SourceAuditType sourceAuditType) {
         return sourceAuditType == SourceAuditType.MOVIE_SEARCH;
@@ -59,7 +65,6 @@ public class MovieSearchAuditor extends SourceAuditor {
 
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, GsonUtil.toPrettyJson(dto)));
         kebSocketTemplate.getSearchContent(
-                context.getClientInfo(),
                 dto,
                 content -> {
                     Movie movieData;

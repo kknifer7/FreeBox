@@ -1,5 +1,7 @@
 package io.knifer.freebox.net.websocket.server;
 
+import io.knifer.freebox.constant.AppEvents;
+import io.knifer.freebox.context.Context;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.ShutdownWebSocketServerService;
 import javafx.concurrent.Service;
@@ -18,6 +20,7 @@ public class KebSocketServerHolder {
     public synchronized void start(String hostname, int port) {
         server = new KebSocketServer(new InetSocketAddress(hostname, port));
         server.start();
+        Context.INSTANCE.postEvent(AppEvents.WS_SERVER_STARTED);
     }
 
     public synchronized void stop(Runnable callback) {

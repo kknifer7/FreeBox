@@ -84,16 +84,16 @@ public enum Context {
 
         this.app = app;
         this.primaryStage = primaryStage;
+        registerEventListener(AppEvents.WsServerStartedEvent.class, evt -> {
+            // 初始化websocket模板
+            kebSocketTemplate = new KebSocketTemplateImpl(
+                    KebSocketRunner.getInstance(), serviceManager.getWsServer().getClientManager()
+            );
+        });
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
             // 初始化服务管理器
-            serviceManager.init(() -> {
-                // 初始化websocket模板
-                kebSocketTemplate = new KebSocketTemplateImpl(
-                        KebSocketRunner.getInstance(), serviceManager.getWsServer().getClientManager()
-                );
-                callback.run();
-            });
+            serviceManager.init(callback);
             log.info("application initialized");
             initFlag = true;
         });

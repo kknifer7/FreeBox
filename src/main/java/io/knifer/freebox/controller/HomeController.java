@@ -56,12 +56,15 @@ public class HomeController {
         vlcHBox.setVisible(vlcNotInstalled);
         vlcHBox.setManaged(vlcNotInstalled);
         Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
-            clientManager = Context.INSTANCE.getClientManager();
             refreshServiceStatusInfo();
             initProgressIndicator.setVisible(false);
             settingsBtn.setDisable(false);
             root.setDisable(false);
         });
+        Context.INSTANCE.registerEventListener(
+                AppEvents.WS_SERVER_STARTED,
+                evt -> clientManager = Context.INSTANCE.getClientManager()
+        );
         Context.INSTANCE.registerEventListener(AppEvents.ClientRegisteredEvent.class, evt -> {
             MultipleSelectionModel<ClientInfo> model = clientListView.getSelectionModel();
             ClientInfo clientInfo = evt.clientInfo();

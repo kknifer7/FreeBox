@@ -1,6 +1,5 @@
 package io.knifer.freebox.component.node;
 
-import javafx.scene.control.Dialog;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
 import javafx.stage.StageStyle;
@@ -10,7 +9,7 @@ import javafx.stage.StageStyle;
  *
  * @author Knifer
  */
-public class LoadingDialog extends Dialog<Void> {
+public class LoadingDialog extends AbstractNotificationDialog<Void> {
 
     private static final StackPane INDICATOR;
 

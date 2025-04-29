@@ -4,8 +4,9 @@ import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -16,14 +17,13 @@ import javafx.stage.StageStyle;
  *
  * @author Knifer
  */
-public class WaitForClientReconnectingDialog extends Dialog<Void> {
+public class WaitForClientReconnectingDialog extends AbstractNotificationDialog<Void> {
 
     public WaitForClientReconnectingDialog() {
         super();
         ProgressIndicator pi = new ProgressIndicator();
         Button cancelBtn = new Button(I18nHelper.get(I18nKeys.COMMON_CANCEL_AND_BACK_TO_HOME));
         DialogPane dialogPane = getDialogPane();
-        Node hiddenBtn;
         VBox root;
 
         cancelBtn.setOnAction(evt -> {
@@ -54,10 +54,5 @@ public class WaitForClientReconnectingDialog extends Dialog<Void> {
         dialogPane.contentProperty().set(root);
         setHeaderText(I18nHelper.get(I18nKeys.ERROR_RECONNECTING_CLIENT));
         initStyle(StageStyle.UNDECORATED);
-        // 要设置一个隐藏的操作按钮，否则基于Dialog的特性，它将无法通过hide或者close方法关闭
-        dialogPane.getButtonTypes().add(ButtonType.CLOSE);
-        hiddenBtn = dialogPane.lookupButton(ButtonType.CLOSE);
-        hiddenBtn.setVisible(false);
-        hiddenBtn.setManaged(false);
     }
 }

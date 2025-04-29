@@ -4,6 +4,7 @@ import io.knifer.freebox.component.factory.VideoGridCellFactory;
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.component.node.MovieInfoListPopOver;
 import io.knifer.freebox.component.node.VLCPlayer;
+import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
@@ -107,6 +108,10 @@ public class TVController {
         fetchMoreItem = new Movie.Video();
         fetchMoreItem.setId(BaseValues.LOAD_MORE_ITEM_ID);
         fetchMoreItem.setName(I18nHelper.get(I18nKeys.TV_LOAD_MORE));
+        Context.INSTANCE.registerEventListener(
+                AppEvents.ClientUnregisteredEvent.class,
+                evt -> LoadingHelper.hideLoading()
+        );
         Platform.runLater(() -> {
             Stage stage = WindowHelper.getStage(root);
             FutureWaitingService<ClientInfo> service;

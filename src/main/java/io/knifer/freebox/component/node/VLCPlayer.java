@@ -50,6 +50,7 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import javax.annotation.Nullable;
 import javax.swing.*;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -621,7 +622,14 @@ public class VLCPlayer {
         minWidthProperty.bind(widthProp);
     }
 
-    public void play(String url, String videoTitle, @Nullable Long progress) {
+    public void play(
+            String url,
+            Map<String, String> headers,
+            String videoTitle,
+            @Nullable Long progress
+    ) {
+        String[] options;
+
         if (destroyFlag) {
             return;
         }
@@ -630,8 +638,49 @@ public class VLCPlayer {
             initProgress.set(Math.max(progress, -1));
         }
         setVideoTitle(videoTitle);
-        mediaPlayer.media().play(url);
+        options = parsePlayOptionsFromHeaders(headers);
+        log.info("play url={}, options={}", url, options);
+        if (options == null) {
+            mediaPlayer.media().play(url);
+        } else {
+            mediaPlayer.media().play(url, options);
+        }
         mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
+    }
+
+    @Nullable
+    private String[] parsePlayOptionsFromHeaders(Map<String, String> headers) {
+        String userAgent;
+        String referer;
+        short size;
+
+        if (headers.isEmpty()) {
+            return null;
+        }
+        userAgent = null;
+        referer = null;
+        size = 0;
+        for (Map.Entry<String, String> keyValue : headers.entrySet()) {
+            if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "User-Agent")) {
+                size++;
+                userAgent = "--http-user-agent=" + keyValue.getValue();
+            } else if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "Referer")) {
+                size++;
+                referer = "--http-referrer=" + keyValue.getValue();
+            }
+        }
+        switch (size) {
+            case 0:
+                return null;
+            case 1:
+                if (userAgent != null) {
+                    return new String[]{userAgent};
+                } else {
+                    return new String[]{referer};
+                }
+            default:
+                return new String[]{userAgent, referer};
+        }
     }
 
     public void setVideoTitle(String videoTitle) {

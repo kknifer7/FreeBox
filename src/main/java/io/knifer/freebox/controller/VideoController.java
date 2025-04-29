@@ -1,6 +1,7 @@
 package io.knifer.freebox.controller;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.knifer.freebox.component.node.VLCPlayer;
@@ -20,6 +21,7 @@ import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.VLCPlayerDestroyService;
 import io.knifer.freebox.service.VLCPlayerStopService;
 import io.knifer.freebox.util.CollectionUtil;
+import io.knifer.freebox.util.GsonUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -47,6 +49,7 @@ import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -356,6 +359,7 @@ public class VideoController extends BaseController {
                     String playUrl;
                     int parse;
                     int jx;
+                    Map<String, String> headers;
                     String videoTitle;
 
                     if (playerContentJson == null) {
@@ -383,9 +387,18 @@ public class VideoController extends BaseController {
                     parse = elm == null ? 0 : elm.getAsInt();
                     elm = propsObj.get("jx");
                     jx = elm == null ? 0 : elm.getAsInt();
+                    elm = propsObj.get("header");
+                    if (elm == null) {
+                        headers = Map.of();
+                    } else {
+                        headers = Maps.transformValues(
+                                GsonUtil.fromJson(elm.getAsString(), JsonObject.class).asMap(),
+                                JsonElement::getAsString
+                        );
+                    }
                     videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
                     if (parse == 0) {
-                        player.play(playUrl, videoTitle, progress);
+                        player.play(playUrl, headers, videoTitle, progress);
                     } else {
                         if (jx != 0) {
                             ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SOURCE_NOT_SUPPORTED);

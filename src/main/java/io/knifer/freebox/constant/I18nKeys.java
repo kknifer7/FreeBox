@@ -20,6 +20,8 @@ public class I18nKeys {
     public static final String TV_LOAD_MORE = "tv.load-more";
     public static final String TV_HISTORY = "tv.history";
     public static final String TV_COLLECTION = "tv.collection";
+    public static final String TV_CLASS_FILTER = "tv.class-filter";
+    public static final String TV_CLASS_FILTER_RESET = "tv.class-filter-reset";
     public static final String TV_ERROR_LOAD_SOURCE_FAILED = "tv.error.load-source-failed";
     public static final String TV_ERROR_LOAD_MOVIE_DETAIL_FAILED = "tv.error.load-movie-detail-failed";
 

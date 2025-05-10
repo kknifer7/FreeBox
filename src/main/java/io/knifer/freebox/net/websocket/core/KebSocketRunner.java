@@ -3,6 +3,7 @@ package io.knifer.freebox.net.websocket.core;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.model.common.Message;
 import io.knifer.freebox.util.GsonUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 
 import java.util.concurrent.Future;
@@ -12,6 +13,7 @@ import java.util.concurrent.Future;
  *
  * @author Knifer
  */
+@Slf4j
 public class KebSocketRunner {
 
     private KebSocketRunner(KebSocketTopicKeeper topicKeeper) {
@@ -51,6 +53,7 @@ public class KebSocketRunner {
     }
 
     public <T> void send(WebSocket connection, Message<T> message) {
+        log.info("send message: {}", message);
         connection.send(GsonUtil.toJson(message));
     }
 }

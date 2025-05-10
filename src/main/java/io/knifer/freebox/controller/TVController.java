@@ -3,6 +3,7 @@ package io.knifer.freebox.controller;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.component.node.MovieInfoListPopOver;
+import io.knifer.freebox.component.node.MovieSortFilterPopOver;
 import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
@@ -78,6 +79,8 @@ public class TVController {
     @FXML
     private Button collectButton;
     @FXML
+    private Button classFilterButton;
+    @FXML
     private Button searchButton;
     @FXML
     private TextField searchTextField;
@@ -88,10 +91,12 @@ public class TVController {
 
     private MovieInfoListPopOver movieHistoryPopOver;
     private MovieInfoListPopOver movieCollectionPopOver;
+    private MovieSortFilterPopOver movieSortFilterPopOver;
 
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty searchLoadingProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty classFilterButtonDisableProperty = new SimpleBooleanProperty(false);
     private KebSocketTemplate template;
     private ClientManager clientManager;
     private Movie.Video fetchMoreItem;
@@ -168,11 +173,22 @@ public class TVController {
                 );
             });
             movieCollectionPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
+            // 影片过滤条件弹出框
+            movieSortFilterPopOver = new MovieSortFilterPopOver(sortData -> {
+                // 影片过滤条件更新，应用最新过滤条件，重新加载影片列表
+                MOVIE_CACHE.remove(sortData.getId());
+                loadMovieBySortData(sortData);
+            });
 
             historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty().or(sortsLoadingProperty));
             movieHistoryPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
             collectButton.disableProperty().bind(movieCollectionPopOver.showingProperty().or(sortsLoadingProperty));
             movieCollectionPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
+            classFilterButton.disableProperty().bind(
+                    movieSortFilterPopOver.showingProperty()
+                            .or(sortsLoadingProperty)
+                            .or(classFilterButtonDisableProperty)
+            );
             sortsLoadingProgressIndicator.visibleProperty().bind(sortsLoadingProperty.or(movieLoadingProperty));
             movieLoadingProgressIndicator.visibleProperty().bind(movieLoadingProperty);
             videosGridView.disableProperty().bind(movieLoadingProperty);
@@ -422,6 +438,7 @@ public class TVController {
             List<Movie.Video> list;
             MovieSort classes;
             List<MovieSort.SortData> sortList;
+            MovieSort.SortData defaultSortData;
 
             items.clear();
             if (homeContent == null) {
@@ -442,7 +459,9 @@ public class TVController {
             sortsLoadingProperty.set(false);
             if (!items.isEmpty()) {
                 classesListView.getSelectionModel().selectFirst();
-                loadMovieBySortData(items.get(0));
+                defaultSortData = items.get(0);
+                loadMovieBySortData(defaultSortData);
+                putSortDataFilterListInMovieSortFilterPopOver(defaultSortData);
             }
         });
     }
@@ -461,6 +480,16 @@ public class TVController {
                 return;
             }
             loadMovieBySortData(sortData);
+            putSortDataFilterListInMovieSortFilterPopOver(sortData);
+        }
+    }
+
+    private void putSortDataFilterListInMovieSortFilterPopOver(MovieSort.SortData sortData) {
+        boolean disableFlag = sortData.getFilters().isEmpty();
+
+        movieSortFilterPopOver.putSortDataFilterList(sortData);
+        if (classFilterButtonDisableProperty.get() != disableFlag) {
+            classFilterButtonDisableProperty.set(disableFlag);
         }
     }
 
@@ -654,5 +683,10 @@ public class TVController {
         movieSearchService.setKeyword(searchKeyword);
         movieSearchService.setSourceKeyIterator(sourceBeanKeyIterator);
         movieSearchService.start();
+    }
+
+    @FXML
+    private void onClassFilterBtnAction() {
+        movieSortFilterPopOver.show(classFilterButton);
     }
 }

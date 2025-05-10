@@ -65,6 +65,7 @@ public class MovieSort implements Serializable {
         }
     }
 
+    @Data
     public static class SortFilter {
         public String key;
         public String name;

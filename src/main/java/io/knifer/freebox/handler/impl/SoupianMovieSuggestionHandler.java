@@ -7,6 +7,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
 import io.knifer.freebox.util.GsonUtil;
 import io.knifer.freebox.util.HttpUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 
@@ -18,6 +19,7 @@ import java.util.Collections;
  *
  * @author Knifer
  */
+@Slf4j
 public class SoupianMovieSuggestionHandler implements MovieSuggestionHandler {
 
     private final String SEARCH_SUGGESTION_REQUEST_URL = "https://soupian.plus/prefix/search?wd=";
@@ -33,12 +35,14 @@ public class SoupianMovieSuggestionHandler implements MovieSuggestionHandler {
         JsonObject resultJsonObj;
         JsonElement resultJsonElm;
 
+
         if (StringUtils.isBlank(userText)) {
             return Collections.emptyList();
         }
         resultBody = HttpUtil.get(
                 SEARCH_SUGGESTION_REQUEST_URL + userText, SEARCH_SUGGESTION_REQUEST_HEADERS
         );
+        log.info("userText: {}, resultBody: {}", userText, resultBody);
         resultJsonObj = GsonUtil.fromJson(resultBody, JsonObject.class);
         if (resultJsonObj == null) {
             return Collections.emptyList();

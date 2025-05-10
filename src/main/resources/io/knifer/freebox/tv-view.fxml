@@ -66,6 +66,11 @@
                <top>
                   <HBox BorderPane.alignment="CENTER">
                      <children>
+                        <Button fx:id="classFilterButton" focusTraversable="false" mnemonicParsing="false" onAction="#onClassFilterBtnAction">
+                           <graphic>
+                              <FontIcon iconLiteral="fa-filter:16" />
+                           </graphic>
+                        </Button>
                         <TextField fx:id="searchTextField" focusTraversable="false" onKeyPressed="#onSearchTextFieldKeyPressed" promptText="%tv.search.prompt" HBox.hgrow="ALWAYS" />
                         <Button fx:id="searchButton" focusTraversable="false" mnemonicParsing="false" onAction="#onSearchBtnAction" text="%tv.search">
                            <graphic>

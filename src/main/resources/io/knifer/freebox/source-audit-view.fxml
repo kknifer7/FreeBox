@@ -127,7 +127,11 @@
           </Tab>
           <Tab text="%source-audit.custom-audit-tab">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <BorderPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                  <center>
+                      <Label text="%common.stay-tuned" styleClass="gray, stay-tuned-label"/>
+                  </center>
+              </BorderPane>
             </content>
           </Tab>
         </tabs>

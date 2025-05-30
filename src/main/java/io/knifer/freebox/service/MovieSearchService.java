@@ -1,8 +1,8 @@
 package io.knifer.freebox.service;
 
 import io.knifer.freebox.context.Context;
-import io.knifer.freebox.model.common.AbsXml;
-import io.knifer.freebox.model.common.Movie;
+import io.knifer.freebox.model.common.tvbox.AbsXml;
+import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.s2c.GetSearchContentDTO;
 import io.knifer.freebox.util.CollectionUtil;
 import javafx.concurrent.Service;
@@ -70,7 +70,7 @@ public class MovieSearchService extends Service<Void> {
                     return;
                 }
                 sourceKey = sourceKeyIterator.next();
-                Context.INSTANCE.getKebSocketTemplate().getSearchContent(
+                Context.INSTANCE.getSpiderTemplate().getSearchContent(
                         GetSearchContentDTO.of(sourceKey, keyword),
                         searchContent -> {
                             List<Movie.Video> videos;

@@ -92,7 +92,7 @@
                                                           </graphic>
                                                       </Button>
                                                   </HBox>
-                                                  <HBox alignment="CENTER">
+                                                  <HBox alignment="CENTER" spacing="5.0">
                                                       <HBox.margin>
                                                           <Insets left="5.0"/>
                                                       </HBox.margin>
@@ -100,6 +100,11 @@
                                                           <Label fx:id="nowSourceBeanLabel"/>
                                                           <ProgressIndicator fx:id="auditingProgressIndicator" visible="false"/>
                                                           <Label fx:id="auditingSourceBeanLabel" visible="false"/>
+                                                          <Button fx:id="stopAuditingSourceBeanBtn" visible="false" mnemonicParsing="false" onAction="#onStopAuditingSourceBeanBtnAction" text="%source-audit.stop-single-audit" focusTraversable="false">
+                                                              <graphic>
+                                                                  <FontIcon iconLiteral="fa-stop-circle-o:16:red" />
+                                                              </graphic>
+                                                          </Button>
                                                       </children>
                                                   </HBox>
                                               </children>

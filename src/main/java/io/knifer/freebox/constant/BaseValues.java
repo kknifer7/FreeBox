@@ -11,9 +11,13 @@ import lombok.experimental.UtilityClass;
 public class BaseValues {
 
     /**
+     * 任意本地IP
+     */
+    public static final String ANY_LOCAL_IP = "0.0.0.0";
+    /**
      * 默认HTTP服务端口
      */
-    public static final Integer DEFAULT_HTTP_PORT = 9897;
+    public static final Integer DEFAULT_HTTP_PORT = 9978;
     /**
      * 默认WS服务端口
      */
@@ -36,4 +40,5 @@ public class BaseValues {
     public static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
     public static final Runnable EMPTY_RUNNABLE = () -> {};
+    public static final String HTTP_GET = "GET";
 }

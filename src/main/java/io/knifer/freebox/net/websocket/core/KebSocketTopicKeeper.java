@@ -4,8 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
-import io.knifer.freebox.model.common.Message;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.model.common.tvbox.Message;
+import io.knifer.freebox.util.json.GsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.thavam.util.concurrent.blockingMap.BlockingHashMap;
 import org.thavam.util.concurrent.blockingMap.BlockingMap;
@@ -78,6 +78,6 @@ public class KebSocketTopicKeeper {
     public void destroy() {
         log.info("destroy KebSocketTopicKeeper......");
         DATA_MAP.clear();
-        EXECUTOR.shutdown();
+        EXECUTOR.shutdownNow();
     }
 }

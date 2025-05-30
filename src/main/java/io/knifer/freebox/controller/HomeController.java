@@ -1,15 +1,15 @@
 package io.knifer.freebox.controller;
 
-import io.knifer.freebox.constant.AppEvents;
-import io.knifer.freebox.constant.BaseValues;
-import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.constant.Views;
+import io.knifer.freebox.component.node.ImportApiDialog;
+import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.handler.VLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.core.ClientManager;
+import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
+import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -28,6 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.net.NetworkInterface;
+import java.util.Collection;
+
 @Slf4j
 public class HomeController {
 
@@ -42,11 +45,11 @@ public class HomeController {
     @FXML
     private HBox vlcHBox;
     @FXML
-    public ListView<ClientInfo> clientListView;
-
-    private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER = new WindowsRegistryVLCPlayerCheckHandler();
+    private ListView<ClientInfo> clientListView;
 
     private ClientManager clientManager;
+
+    private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER = new WindowsRegistryVLCPlayerCheckHandler();
 
     @FXML
     private void initialize() {
@@ -56,14 +59,28 @@ public class HomeController {
         vlcHBox.setVisible(vlcNotInstalled);
         vlcHBox.setManaged(vlcNotInstalled);
         Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
+            clientManager = Context.INSTANCE.getClientManager();
             refreshServiceStatusInfo();
+            StorageHelper.findAll(ClientInfo.class)
+                    .values()
+                    .stream()
+                    .filter(c -> c.getClientType() == ClientType.CATVOD_SPIDER)
+                    .forEach(clientInfo -> {
+                        clientManager.register(clientInfo);
+                        clientItems.add(clientInfo);
+                    });
+            if (!clientItems.isEmpty()) {
+                clientListView.getSelectionModel().selectFirst();
+            }
             initProgressIndicator.setVisible(false);
             settingsBtn.setDisable(false);
             root.setDisable(false);
         });
         Context.INSTANCE.registerEventListener(
-                AppEvents.WS_SERVER_STARTED,
-                evt -> clientManager = Context.INSTANCE.getClientManager()
+                AppEvents.WsServerStartedEvent.class, evt -> refreshServiceStatusInfo()
+        );
+        Context.INSTANCE.registerEventListener(
+                AppEvents.HttpServerStartedEvent.class, evt -> refreshServiceStatusInfo()
         );
         Context.INSTANCE.registerEventListener(AppEvents.ClientRegisteredEvent.class, evt -> {
             MultipleSelectionModel<ClientInfo> model = clientListView.getSelectionModel();
@@ -111,6 +128,8 @@ public class HomeController {
         String httpPort;
         String wsServiceRunningStatus;
         String wsPort;
+        String ip;
+        LoadNetworkInterfaceDataService service;
 
         if (isHttpServiceRunning) {
             httpServiceRunningStatus = I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP);
@@ -126,14 +145,33 @@ public class HomeController {
             wsServiceRunningStatus = I18nHelper.get(I18nKeys.SETTINGS_SERVICE_DOWN);
             wsPort = "--";
         }
-        settingsInfoText.setText(String.format(
-                I18nHelper.get(I18nKeys.HOME_SETTINGS_INFO),
-                ObjectUtils.defaultIfNull(ConfigHelper.getServiceIPv4(), "--"),
-                httpServiceRunningStatus,
-                httpPort,
-                wsServiceRunningStatus,
-                wsPort
-        ));
+        ip = ConfigHelper.getServiceIPv4();
+        if (BaseValues.ANY_LOCAL_IP.equals(ip)) {
+            service = new LoadNetworkInterfaceDataService();
+            service.setOnSucceeded(evt -> {
+                Collection<Pair<NetworkInterface, String>> value = service.getValue();
+
+                settingsInfoText.setText(String.format(
+                        I18nHelper.get(I18nKeys.HOME_SETTINGS_INFO),
+                        CollectionUtil.isEmpty(value) ? ip : value.iterator().next().getValue(),
+                        httpServiceRunningStatus,
+                        httpPort,
+                        wsServiceRunningStatus,
+                        wsPort
+                ));
+            });
+            service.start();
+        } else {
+            settingsInfoText.setText(String.format(
+                    I18nHelper.get(I18nKeys.HOME_SETTINGS_INFO),
+                    ObjectUtils.defaultIfNull(ip, "--"),
+                    httpServiceRunningStatus,
+                    httpPort,
+                    wsServiceRunningStatus,
+                    wsPort
+            ));
+        }
+
     }
 
     @FXML
@@ -165,20 +203,22 @@ public class HomeController {
             return;
         }
         clientInfo = clientListView.getSelectionModel().getSelectedItem();
-        if (clientInfo == null || !clientInfo.getConnection().isOpen()) {
+        if (clientInfo == null) {
             return;
         }
-        log.info("open client [{}]", clientInfo.getConnection().getRemoteSocketAddress().getHostString());
+        log.info("open client [{}]", clientInfo.getName());
         openClient(clientInfo);
     }
 
     private void openClient(ClientInfo clientInfo) {
-        Pair<Stage, TVController> stageAndController = FXMLUtil.load(Views.TV);
         Stage homeStage = WindowHelper.getStage(root);
-        Stage tvStage = stageAndController.getLeft();
+        Stage tvStage;
+        Pair<Stage, TVController> stageAndController;
 
         clientManager.shutdownConnectingExecutor();
         clientManager.updateCurrentClient(clientInfo);
+        stageAndController = FXMLUtil.load(Views.TV);
+        tvStage = stageAndController.getLeft();
         WindowHelper.route(homeStage, tvStage);
     }
 
@@ -190,11 +230,20 @@ public class HomeController {
             return;
         }
         clientManager.unregister(clientInfo);
-        ToastHelper.showInfoI18n(
-                I18nKeys.MESSAGE_CLIENT_UNREGISTERED,
-                clientInfo.getConnection().getRemoteSocketAddress().getHostName()
-        );
         clientListView.getItems().remove(clientInfo);
+        if (clientInfo.getClientType() == ClientType.CATVOD_SPIDER) {
+            StorageHelper.delete(clientInfo);
+            ToastHelper.showInfoI18n(
+                    I18nKeys.HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED,
+                    clientInfo.getName()
+            );
+
+        } else {
+            ToastHelper.showInfoI18n(
+                    I18nKeys.MESSAGE_CLIENT_UNREGISTERED,
+                    clientInfo.getName()
+            );
+        }
     }
 
     @FXML
@@ -204,20 +253,33 @@ public class HomeController {
         Stage homeStage;
         Stage sourceAuditStage;
 
-        if (clientInfo == null || !clientInfo.getConnection().isOpen()) {
+        if (clientInfo == null) {
             return;
         }
+        clientManager.shutdownConnectingExecutor();
+        clientManager.updateCurrentClient(clientInfo);
         stageAndController = FXMLUtil.load(Views.SOURCE_AUDIT);
         homeStage = WindowHelper.getStage(root);
         sourceAuditStage = stageAndController.getLeft();
-        clientManager.shutdownConnectingExecutor();
-        clientManager.updateCurrentClient(clientInfo);
-        log.info("enter source audit for [{}]", clientInfo.getConnection().getRemoteSocketAddress().getHostName());
+        log.info("enter source audit for [{}]", clientInfo.getName());
         WindowHelper.route(homeStage, sourceAuditStage);
     }
 
     @FXML
     private void onVLCDownloadHyperlinkClick() {
         HostServiceHelper.showDocument(BaseValues.VLC_DOWNLOAD_URL);
+    }
+
+    @FXML
+    private void onImportSourceBtnAction() {
+        new ImportApiDialog(clientInfo -> {
+            StorageHelper.save(clientInfo);
+            clientManager.register(clientInfo);
+            Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
+            ToastHelper.showSuccessI18n(
+                    I18nKeys.HOME_IMPORT_API_MESSAGE_SAVE_CONFIG_SUCCEED,
+                    clientInfo.getClientName()
+            );
+        }).show();
     }
 }

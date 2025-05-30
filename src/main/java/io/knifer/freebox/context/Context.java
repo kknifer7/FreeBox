@@ -3,16 +3,19 @@ package io.knifer.freebox.context;
 import com.google.common.eventbus.EventBus;
 import io.knifer.freebox.component.event.EventListener;
 import io.knifer.freebox.constant.AppEvents;
+import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.ServiceManager;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
-import io.knifer.freebox.net.websocket.template.impl.KebSocketTemplateImpl;
 import io.knifer.freebox.service.LoadConfigService;
+import io.knifer.freebox.spider.template.SpiderTemplate;
+import io.knifer.freebox.spider.template.impl.FreeBoxSpiderTemplate;
+import io.knifer.freebox.spider.template.impl.KebSocketSpiderTemplate;
 import io.knifer.freebox.util.AsyncUtil;
 import javafx.application.Application;
 import javafx.concurrent.Service;
@@ -22,6 +25,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Stack;
 
 /**
@@ -42,12 +46,14 @@ public enum Context {
     @Setter
     private Stage currentStage;
 
-    @Getter
-    private KebSocketTemplate kebSocketTemplate;
-
-    private final ServiceManager serviceManager = new ServiceManager();
+    private Map<ClientType, SpiderTemplate> spiderTemplateMap;
 
     private volatile boolean initFlag = false;
+
+    @Getter
+    private final ClientManager clientManager = new ClientManager();
+
+    private final ServiceManager serviceManager = new ServiceManager(clientManager);
 
     private final EventBus eventBus = new EventBus((exception, context) -> {
         if (exception instanceof ClassCastException) {
@@ -86,8 +92,9 @@ public enum Context {
         this.primaryStage = primaryStage;
         registerEventListener(AppEvents.WsServerStartedEvent.class, evt -> {
             // 初始化websocket模板
-            kebSocketTemplate = new KebSocketTemplateImpl(
-                    KebSocketRunner.getInstance(), serviceManager.getWsServer().getClientManager()
+            spiderTemplateMap = Map.of(
+                    ClientType.TVBOX_K, new KebSocketSpiderTemplate(KebSocketRunner.getInstance(), clientManager),
+                    ClientType.CATVOD_SPIDER, new FreeBoxSpiderTemplate(clientManager)
             );
         });
         // 配置读取
@@ -112,17 +119,24 @@ public enum Context {
         return serviceManager.getWsServer();
     }
 
-    public ClientManager getClientManager() {
-        return getWsServer().getClientManager();
+    public SpiderTemplate getSpiderTemplate() {
+        ClientInfo clientInfo = getClientManager().getCurrentClientImmediately();
+
+        if (clientInfo == null) {
+            throw new IllegalStateException("no client connected");
+        }
+
+        return spiderTemplateMap.get(clientInfo.getClientType());
     }
 
     public void destroy() {
         serviceManager.destroy();
         AsyncUtil.destroy();
+        KebSocketTopicKeeper.getInstance().destroy();
         if (initFlag) {
             Context.INSTANCE.getPrimaryStage().close();
+            spiderTemplateMap.values().forEach(SpiderTemplate::destroy);
         }
-        KebSocketTopicKeeper.getInstance().destroy();
         System.exit(0);
     }
 

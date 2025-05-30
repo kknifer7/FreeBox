@@ -1,6 +1,6 @@
 package io.knifer.freebox.component.factory;
 
-import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.CheckBoxListCell;

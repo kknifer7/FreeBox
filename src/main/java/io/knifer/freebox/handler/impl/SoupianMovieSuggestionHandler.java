@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import io.knifer.freebox.util.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

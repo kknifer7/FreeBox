@@ -19,13 +19,13 @@ import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
-import io.knifer.freebox.model.common.*;
+import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.service.MovieSearchService;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
@@ -97,7 +97,7 @@ public class TVController {
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty searchLoadingProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty classFilterButtonDisableProperty = new SimpleBooleanProperty(false);
-    private KebSocketTemplate template;
+    private SpiderTemplate template;
     private ClientManager clientManager;
     private Movie.Video fetchMoreItem;
 
@@ -109,7 +109,7 @@ public class TVController {
 
     @FXML
     private void initialize() {
-        template = Context.INSTANCE.getKebSocketTemplate();
+        template = Context.INSTANCE.getSpiderTemplate();
         fetchMoreItem = new Movie.Video();
         fetchMoreItem.setId(BaseValues.LOAD_MORE_ITEM_ID);
         fetchMoreItem.setName(I18nHelper.get(I18nKeys.TV_LOAD_MORE));
@@ -131,7 +131,7 @@ public class TVController {
                 if (clientInfo == null) {
                     return;
                 }
-                stage.setTitle(clientInfo.getConnection().getRemoteSocketAddress().getHostName());
+                stage.setTitle(clientInfo.getName());
             });
             service.start();
             stage.setOnCloseRequest(evt -> {
@@ -139,22 +139,24 @@ public class TVController {
                Context.INSTANCE.popAndShowLastStage();
             });
             movieSearchService = new MovieSearchService(keywordAndSearchContent -> {
-                String keyword = keywordAndSearchContent.getLeft();
-                AbsXml searchContent;
+                Platform.runLater(() -> {
+                    String keyword = keywordAndSearchContent.getLeft();
+                    AbsXml searchContent;
 
-                if (
-                        movieSearchService.getState() != Service.State.SUCCEEDED ||
-                        !keyword.equals(movieSearchService.getKeyword())
-                ) {
-                    // 任务已取消
+                    if (
+                            movieSearchService.getState() != Service.State.SUCCEEDED ||
+                                    !keyword.equals(movieSearchService.getKeyword())
+                    ) {
+                        // 任务已取消
 
-                    return;
-                }
-                searchContent = keywordAndSearchContent.getRight();
-                putVideosInView(
-                        MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
-                        false
-                );
+                        return;
+                    }
+                    searchContent = keywordAndSearchContent.getRight();
+                    putVideosInView(
+                            MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
+                            false
+                    );
+                });
             }, () -> searchLoadingProperty.set(false));
 
             // 历史记录弹出框
@@ -199,7 +201,12 @@ public class TVController {
 
             TextFields.bindAutoCompletion(searchTextField, movieSuggestionHandler::handle);
 
-            template.getSourceBeanList(this::initSourceBeanData);
+            template.init(success -> {
+                if (!success) {
+                    return;
+                }
+                Platform.runLater(() -> template.getSourceBeanList(this::initSourceBeanData));
+            });
         });
     }
 
@@ -208,10 +215,12 @@ public class TVController {
             return;
         }
         template.getPlayHistory(GetPlayHistoryDTO.of(100), playHistory -> {
-            if (CollectionUtil.isNotEmpty(playHistory)) {
-                movieHistoryPopOver.setVodInfoList(playHistory);
-            }
-            ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+            Platform.runLater(() -> {
+                if (CollectionUtil.isNotEmpty(playHistory)) {
+                    movieHistoryPopOver.setVodInfoList(playHistory);
+                }
+                ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+            });
         });
     }
 
@@ -220,12 +229,14 @@ public class TVController {
             return;
         }
         template.getMovieCollection(movieCollection -> {
-            if (CollectionUtil.isNotEmpty(movieCollection)) {
-                movieCollectionPopOver.setVodInfoList(
-                        movieCollection.stream().map(VodInfo::from).toList()
-                );
-            }
-            ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+            Platform.runLater(() -> {
+                if (CollectionUtil.isNotEmpty(movieCollection)) {
+                    movieCollectionPopOver.setVodInfoList(
+                            movieCollection.stream().map(VodInfo::from).toList()
+                    );
+                }
+                ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+            });
         });
     }
 
@@ -307,17 +318,19 @@ public class TVController {
                         return;
                     }
                     loadMoreItemIdx = items.size() - 1;
-                    items.addAll(videos);
-                    if (movie.getPage() >= movie.getPagecount() || items.size() >= movie.getRecordcount()) {
-                        // 没有更多的项了，移除“获取更多”项
-                        items.remove(loadMoreItemIdx);
-                    } else {
-                        // 将“获取更多”项移动到最后
-                        Collections.swap(items, loadMoreItemIdx, items.size() - 1);
-                    }
-                    movieAndVideoCached.setLeft(movie);
-                    movieAndVideoCached.setRight(new ArrayList<>(items));
-                    loadMoreCell.setDisable(false);
+                    Platform.runLater(() -> {
+                        items.addAll(videos);
+                        if (movie.getPage() >= movie.getPagecount() || items.size() >= movie.getRecordcount()) {
+                            // 没有更多的项了，移除“获取更多”项
+                            items.remove(loadMoreItemIdx);
+                        } else {
+                            // 将“获取更多”项移动到最后
+                            Collections.swap(items, loadMoreItemIdx, items.size() - 1);
+                        }
+                        movieAndVideoCached.setLeft(movie);
+                        movieAndVideoCached.setRight(new ArrayList<>(items));
+                        loadMoreCell.setDisable(false);
+                    });
                 }
         );
     }
@@ -347,34 +360,50 @@ public class TVController {
         template.getDetailContent(
                 GetDetailContentDTO.of(sourceBean.getKey(), videoId),
                 detailContent -> {
-                    Pair<Stage, VideoController> stageAndController;
-                    Stage tvStage;
-                    Stage videoStage;
+                    Platform.runLater(() -> {
+                        Pair<Stage, VideoController> stageAndController;
+                        Stage tvStage;
+                        Stage videoStage;
+                        Movie movie;
+                        List<Movie.Video> videos;
+                        Movie.Video.UrlBean urlBean;
 
-                    if (detailContent == null) {
-                        ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_MOVIE_DETAIL_FAILED);
-                        LoadingHelper.hideLoading();
+                        if (
+                                detailContent == null ||
+                                (movie = detailContent.getMovie()) == null ||
+                                CollectionUtil.isEmpty(videos = movie.getVideoList())
+                        ) {
+                            ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_MOVIE_DETAIL_FAILED);
+                            LoadingHelper.hideLoading();
 
-                        return;
-                    }
-                    stageAndController = FXMLUtil.load(Views.VIDEO);
-                    tvStage = WindowHelper.getStage(root);
-                    videoStage = stageAndController.getLeft();
-                    videoStage.setTitle(videoName);
-                    stageAndController.getRight().setData(VideoDetailsBO.of(
-                            detailContent,
-                            playInfo,
-                            sourceBean,
-                            new VLCPlayer((HBox) videoStage.getScene().getRoot()),
-                            template,
-                            newPlayInfo -> {
-                                if (newPlayInfo != null) {
-                                    savePlayHistory(detailContent, newPlayInfo);
+                            return;
+                        }
+                        urlBean = videos.get(0).getUrlBean();
+                        if (CollectionUtil.isEmpty(urlBean.getInfoList())) {
+                            // 没有播放列表，有可能不是影片，而是源作者自行添加的广告一类的东西
+                            LoadingHelper.hideLoading();
+
+                            return;
+                        }
+                        stageAndController = FXMLUtil.load(Views.VIDEO);
+                        tvStage = WindowHelper.getStage(root);
+                        videoStage = stageAndController.getLeft();
+                        videoStage.setTitle(videoName);
+                        stageAndController.getRight().setData(VideoDetailsBO.of(
+                                detailContent,
+                                playInfo,
+                                sourceBean,
+                                new VLCPlayer((HBox) videoStage.getScene().getRoot()),
+                                template,
+                                newPlayInfo -> {
+                                    if (newPlayInfo != null) {
+                                        savePlayHistory(detailContent, newPlayInfo);
+                                    }
                                 }
-                            }
-                    ));
-                    LoadingHelper.hideLoading();
-                    WindowHelper.route(tvStage, videoStage);
+                        ));
+                        LoadingHelper.hideLoading();
+                        WindowHelper.route(tvStage, videoStage);
+                    });
                 }
         );
     }
@@ -434,35 +463,37 @@ public class TVController {
         clearMovieData();
         videosGridView.getItems().clear();
         template.getHomeContent(getSourceBean(), homeContent -> {
-            Movie movie;
-            List<Movie.Video> list;
-            MovieSort classes;
-            List<MovieSort.SortData> sortList;
-            MovieSort.SortData defaultSortData;
+            Platform.runLater(() -> {
+                Movie movie;
+                List<Movie.Video> list;
+                MovieSort classes;
+                List<MovieSort.SortData> sortList;
+                MovieSort.SortData defaultSortData;
 
-            items.clear();
-            if (homeContent == null) {
-                ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SOURCE_FAILED);
+                items.clear();
+                if (homeContent == null) {
+                    Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SOURCE_FAILED));
+                    sortsLoadingProperty.set(false);
+
+                    return;
+                }
+                movie = homeContent.getList();
+                classes = homeContent.getClasses();
+                sortList = classes.getSortList();
+                if (movie != null && CollectionUtil.isNotEmpty(list = movie.getVideoList())) {
+                    // 该源带有首页推荐影片，新增一个首页推荐类别，并且将影片数据缓存起来
+                    items.add(new MovieSort.SortData(HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)));
+                    MOVIE_CACHE.put(HOME_SORT_DATA_ID, MutablePair.of(movie, list));
+                }
+                items.addAll(sortList);
                 sortsLoadingProperty.set(false);
-
-                return;
-            }
-            movie = homeContent.getList();
-            classes = homeContent.getClasses();
-            sortList = classes.getSortList();
-            if (movie != null && CollectionUtil.isNotEmpty(list = movie.getVideoList())) {
-                // 该源带有首页推荐影片，新增一个首页推荐类别，并且将影片数据缓存起来
-                items.add(new MovieSort.SortData(HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)));
-                MOVIE_CACHE.put(HOME_SORT_DATA_ID, MutablePair.of(movie, list));
-            }
-            items.addAll(sortList);
-            sortsLoadingProperty.set(false);
-            if (!items.isEmpty()) {
-                classesListView.getSelectionModel().selectFirst();
-                defaultSortData = items.get(0);
-                loadMovieBySortData(defaultSortData);
-                putSortDataFilterListInMovieSortFilterPopOver(defaultSortData);
-            }
+                if (!items.isEmpty()) {
+                    classesListView.getSelectionModel().selectFirst();
+                    defaultSortData = items.get(0);
+                    loadMovieBySortData(defaultSortData);
+                    putSortDataFilterListInMovieSortFilterPopOver(defaultSortData);
+                }
+            });
         });
     }
 
@@ -534,6 +565,11 @@ public class TVController {
                             return;
                         }
                         movie = categoryContent.getMovie();
+                        if (movie == null || CollectionUtil.isEmpty(movie.getVideoList())) {
+                            movieLoadingProperty.set(false);
+
+                            return;
+                        }
                         movieAndVideos = MutablePair.of(movie, movie.getVideoList());
                         putVideosInView(movieAndVideos, true);
                         MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
@@ -568,15 +604,17 @@ public class TVController {
         if (videos.isEmpty()) {
             return;
         }
-        items.addAll(videos);
-        if (    showLoadMoreItem &&
-                !items.get(items.size() - 1).equals(fetchMoreItem) &&
-                movie.getPagecount() > movie.getPage() &&
-                movie.getRecordcount() > items.size()
-        ) {
-            // 添加“获取更多”项
-            items.add(fetchMoreItem);
-        }
+        Platform.runLater(() -> {
+            items.addAll(videos);
+            if (    showLoadMoreItem &&
+                    !items.get(items.size() - 1).equals(fetchMoreItem) &&
+                    movie.getPagecount() > movie.getPage() &&
+                    movie.getRecordcount() > items.size()
+            ) {
+                // 添加“获取更多”项
+                items.add(fetchMoreItem);
+            }
+        });
     }
 
     /**
@@ -611,7 +649,7 @@ public class TVController {
         if (clientInfo != null) {
             log.info(
                     "[{}]'s tv controller destroy",
-                    clientInfo.getConnection().getRemoteSocketAddress().getHostName()
+                    clientInfo.getName()
             );
         }
         clearMovieData();
@@ -633,10 +671,12 @@ public class TVController {
         template.getPlayHistory(
                 GetPlayHistoryDTO.of(100),
                 playHistory -> {
-                    if (CollectionUtil.isNotEmpty(playHistory)) {
-                        movieHistoryPopOver.setVodInfoList(playHistory);
-                    }
-                    movieHistoryPopOver.show(historyButton);
+                    Platform.runLater(() -> {
+                        if (CollectionUtil.isNotEmpty(playHistory)) {
+                            movieHistoryPopOver.setVodInfoList(playHistory);
+                        }
+                        movieHistoryPopOver.show(historyButton);
+                    });
                 }
         );
     }
@@ -644,12 +684,14 @@ public class TVController {
     @FXML
     private void onCollectBtnAction() {
         template.getMovieCollection(vodCollects -> {
-            if (CollectionUtil.isNotEmpty(vodCollects)) {
-                movieCollectionPopOver.setVodInfoList(
-                        vodCollects.stream().map(VodInfo::from).toList()
-                );
-            }
-            movieCollectionPopOver.show(collectButton);
+            Platform.runLater(() -> {
+                if (CollectionUtil.isNotEmpty(vodCollects)) {
+                    movieCollectionPopOver.setVodInfoList(
+                            vodCollects.stream().map(VodInfo::from).toList()
+                    );
+                }
+                movieCollectionPopOver.show(collectButton);
+            });
         });
     }
 

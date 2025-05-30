@@ -11,6 +11,7 @@ import org.java_websocket.WebSocket;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -30,25 +31,55 @@ public class ClientManager {
 
     private ThreadPoolExecutor connectingExecutor = null;
 
-    public void register(ClientInfo clientInfo, WebSocket connection) {
-        clients.put(connection.getRemoteSocketAddress().getHostName(), clientInfo);
+    public void register(ClientInfo clientInfo) {
+        clients.put(clientInfo.getClientId(), clientInfo);
         log.info("register client: {}", clientInfo);
     }
 
     public ClientInfo unregister(ClientInfo clientInfo) {
-        return unregister(clientInfo.getConnection());
+        ClientInfo result = clients.remove(clientInfo.getClientId());
+        WebSocket connection;
+
+        if (result == null) {
+            return null;
+        }
+        connection = result.getConnection();
+        if (connection != null && connection.isOpen()) {
+            connection.close();
+        }
+        log.info("unregister client: {}", result);
+
+        return result;
     }
 
     public ClientInfo unregister(WebSocket connection) {
+        Optional<Map.Entry<String, ClientInfo>> entryOptional;
+
         if (connection.isOpen()) {
             connection.close();
         }
+        entryOptional = clients.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().getConnection().equals(connection))
+                .findFirst();
 
-        return clients.remove(connection.getRemoteSocketAddress().getHostName());
+        return entryOptional.map(
+                stringClientInfoEntry ->
+                        clients.remove(stringClientInfoEntry.getValue().getClientId())
+        ).orElse(null);
+
     }
 
     public boolean isRegistered(WebSocket connection) {
-        return clients.containsKey(connection.getRemoteSocketAddress().getHostName());
+        String hostName = connection.getRemoteSocketAddress().getHostName();
+
+        return clients.values()
+                .stream()
+                .anyMatch(clientInfo -> {
+                    WebSocket conn = clientInfo.getConnection();
+
+                    return conn != null && conn.getRemoteSocketAddress().getHostName().equals(hostName);
+                });
     }
 
     public CompletableFuture<ClientInfo> getCurrentClient() {
@@ -56,7 +87,7 @@ public class ClientManager {
                 () -> {
                     ClientInfo clientInfo = getCurrentClientImmediately();
 
-                    if (clientInfo != null && clientInfo.getConnection().isOpen()) {
+                    if (clientInfo != null && clientInfo.isOpen()) {
                         return clientInfo;
                     }
                     Platform.runLater(() -> LoadingHelper.showWaitingReconnecting(Context.INSTANCE.getCurrentStage()));
@@ -106,7 +137,7 @@ public class ClientManager {
                 r -> {
                     Thread t = new Thread(r);
 
-                    t.setName("KebSocket-Connecting-Thread|" + clientInfo.getConnection().getRemoteSocketAddress().getHostName());
+                    t.setName("Client-Connecting-Thread|" + clientInfo.getName());
                     t.setUncaughtExceptionHandler(GlobalExceptionHandler.getInstance());
 
                     return t;

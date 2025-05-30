@@ -18,6 +18,15 @@ module io.knifer.freebox {
     requires uk.co.caprica.vlcj.javafx;
     requires uk.co.caprica.vlcj.natives;
     requires jregistry;
+    requires org.slf4j;
+    requires org.slf4j.simple;
+    requires filelize;
+    requires com.fasterxml.jackson.databind;
+    requires okhttp3;
+    requires kotlin.stdlib;
+    requires annotations;
+    requires org.json;
+    requires cn.hutool;
 
     requires static lombok;
 
@@ -27,13 +36,17 @@ module io.knifer.freebox {
     exports io.knifer.freebox.component.converter;
     exports io.knifer.freebox.component.event;
     exports io.knifer.freebox.model.domain;
-    exports io.knifer.freebox.model.common;
+    exports io.knifer.freebox.model.common.tvbox;
+    exports io.knifer.freebox.model.common.catvod;
     exports io.knifer.freebox.model.c2s;
+    exports io.knifer.freebox.spider;
     exports io.knifer.freebox.component.factory;
     opens io.knifer.freebox to javafx.fxml;
     opens io.knifer.freebox.controller to javafx.fxml;
-    opens io.knifer.freebox.model.domain to com.google.gson;
-    opens io.knifer.freebox.model.common to com.google.gson;
+    opens io.knifer.freebox.model.domain to com.google.gson, com.fasterxml.jackson.databind, filelize;
+    opens io.knifer.freebox.model.common.tvbox to com.google.gson;
+    opens io.knifer.freebox.model.common.catvod to com.google.gson;
     opens io.knifer.freebox.model.c2s to com.google.gson;
     opens io.knifer.freebox.model.s2c to com.google.gson;
+    opens io.knifer.freebox.spider to com.google.gson;
 }

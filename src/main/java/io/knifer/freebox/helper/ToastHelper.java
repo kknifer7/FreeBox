@@ -19,6 +19,7 @@ import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 提示
@@ -28,6 +29,8 @@ import java.util.Optional;
 @Slf4j
 @UtilityClass
 public class ToastHelper {
+
+    private final AtomicBoolean showError = new AtomicBoolean(true);
 
     public void showSuccessI18n(String i18nKey) {
         showSuccess(I18nHelper.get(i18nKey));
@@ -54,6 +57,9 @@ public class ToastHelper {
     }
 
     public void showError(String errorMessage) {
+        if (!showError.get()) {
+            return;
+        }
         createNotification()
                 .ifPresent(n -> n.position(Pos.TOP_CENTER)
                         .text(errorMessage)
@@ -132,5 +138,13 @@ public class ToastHelper {
         alert.setHeaderText(I18nHelper.get(headerI18n));
         alert.setOnCloseRequest(onCloseRequest);
         alert.show();
+    }
+
+    public void enableErrorShow() {
+        showError.set(true);
+    }
+
+    public void disableErrorShow() {
+        showError.set(false);
     }
 }

@@ -14,7 +14,18 @@ public class NetworkInterfaceAndIP2StringConverter extends StringConverter<Pair<
 
     @Override
     public String toString(Pair<NetworkInterface, String> object) {
-        return object == null ? null : String.format("%s (%s)", object.getRight(), object.getLeft().getDisplayName());
+        NetworkInterface networkInterface;
+
+        if (object == null) {
+            return null;
+        }
+        networkInterface = object.getLeft();
+
+        return String.format(
+                "%s (%s)",
+                object.getRight(),
+                networkInterface == null ? "*" : networkInterface.getDisplayName()
+        );
     }
 
     @Override

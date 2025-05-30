@@ -4,7 +4,7 @@ import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.Config;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;

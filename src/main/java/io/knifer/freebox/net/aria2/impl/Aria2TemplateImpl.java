@@ -1,7 +1,7 @@
 package io.knifer.freebox.net.aria2.impl;
 
 import io.knifer.freebox.net.aria2.Aria2Template;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import io.knifer.freebox.util.HttpUtil;
 
 import java.util.Map;

@@ -5,7 +5,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.13'
     id 'org.beryx.jlink' version '2.25.0'
     id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.23'
-    id 'org.gradlex.extra-java-module-info' version '1.8'
+    id 'org.gradlex.extra-java-module-info' version '1.12'
 }
 
 group 'io.knifer'
@@ -45,7 +45,14 @@ ext {
             vlcjJavaFX: '1.2.0',
             vlcj: '4.8.3',
             jregistry: '1.0.0',
-            monacoFX: '0.0.8',
+            commonsCodec: '1.18.0',
+            filelize: '0.9.5',
+            okhttp: '5.0.0-alpha.14',
+            hutoolAll: '5.8.27',
+            jsoup: '1.15.3',
+            jsoupXpath: '2.5.1',
+            json: '20250517',
+            zxingCore: '3.5.3',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]
@@ -64,21 +71,42 @@ dependencies {
     implementation "uk.co.caprica:vlcj:${dv.vlcj}"
     implementation "uk.co.caprica:vlcj-javafx:${dv.vlcjJavaFX}"
     implementation "com.jianggujin:JRegistry:${dv.jregistry}"
+    implementation "io.github.filelize:filelize-java:${dv.filelize}"
+    implementation "com.squareup.okhttp3:okhttp:${dv.okhttp}"
+    implementation "cn.hutool:hutool-all:${dv.hutoolAll}"
+    implementation "org.jsoup:jsoup:${dv.jsoup}"
+    implementation "cn.wanghaomiao:JsoupXpath:${dv.jsoupXpath}"
+    implementation "org.json:json:${dv.json}"
+    implementation "com.google.zxing:core:${dv.zxingCore}"
 
     compileOnly "org.projectlombok:lombok:${dv.lombok}"
     annotationProcessor "org.projectlombok:lombok:${dv.lombok}"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${dv.junit}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${dv.junit}"
+    testCompileOnly "org.projectlombok:lombok:${dv.lombok}"
+    testAnnotationProcessor "org.projectlombok:lombok:${dv.lombok}"
 }
 
 extraJavaModuleInfo {
-    /* 为非模块化项目添加自动模块 */
+    /* 处理非模块化项目、解决模块化相关问题 */
     // javafx controlsFX
     module('org.openjfx:javafx-base', 'javafx.base') {
         patchRealModule()
         exportAllPackages()
     }
+    // okhttp
+    module('org.jetbrains.kotlin:kotlin-stdlib', 'kotlin.stdlib') {
+        patchRealModule()
+        exportAllPackages()
+    }
+    // filelize
+    module('io.github.filelize:filelize-java', 'filelize') {
+        requires 'org.slf4j'
+        requires 'com.fasterxml.jackson.databind'
+        exportAllPackages();
+    }
+    /* 自动处理非模块化项目 */
     // blockingMap
     automaticModule('com.github.sarveswaran-m:util.concurrent.blockingMap', 'blockingMap4j')
     // 解决google guava相关的编译错误
@@ -86,6 +114,10 @@ extraJavaModuleInfo {
     automaticModule('com.google.code.findbugs:jsr305', 'jsr305')
     // JRegistry
     automaticModule('com.jianggujin:JRegistry', 'jregistry')
+    // okhttp
+    automaticModule('org.jetbrains:annotations', 'annotations')
+    // JsoupXpath
+    automaticModule('cn.wanghaomiao:JsoupXpath', 'jsoupXpath')
 }
 
 test {
@@ -124,13 +156,15 @@ jlink {
         installerName = launcherName
         installerType = 'msi'
         appVersion = project.version
+        vendor = 'knifer'
+        icon = "${projectDir}/src/main/resources/io/knifer/freebox/image/logo.ico"
         if (org.gradle.internal.os.OperatingSystem.current().windows) {
             installerOptions = [
                     '--verbose',
                     '--win-dir-chooser',
                     '--win-menu',
                     '--win-shortcut-prompt',
-//                    '--win-upgrade-uuid', 'aabbccdd-eeff-1122-3344-556677889902'
+                    '--win-upgrade-uuid', 'aabbccdd-eeff-1122-3344-556677889905'
             ]
 //            imageOptions = ['--win-console']
         }

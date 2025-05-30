@@ -17,11 +17,15 @@ public class AppEvents {
 
     public static final WsServerStartedEvent WS_SERVER_STARTED = new WsServerStartedEvent();
 
+    public static final HttpServerStartedEvent HTTP_SERVER_STARTED = new HttpServerStartedEvent();
+
     public interface Event {}
 
     public static final class AppInitializedEvent implements Event {}
 
     public static final class WsServerStartedEvent implements Event {}
+
+    public static final class HttpServerStartedEvent implements Event {}
 
     public record ClientRegisteredEvent(ClientInfo clientInfo) implements Event {}
 

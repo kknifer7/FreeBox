@@ -1,6 +1,6 @@
 package io.knifer.freebox.component.factory;
 
-import io.knifer.freebox.model.common.MovieSort;
+import io.knifer.freebox.model.common.tvbox.MovieSort;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;

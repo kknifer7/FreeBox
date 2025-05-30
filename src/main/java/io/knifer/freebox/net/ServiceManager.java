@@ -1,10 +1,12 @@
 package io.knifer.freebox.net;
 
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
@@ -29,7 +31,14 @@ public class ServiceManager {
 
     private final FreeBoxHttpServerHolder httpServer = new FreeBoxHttpServerHolder();
 
-    private final KebSocketServerHolder wsServer = new KebSocketServerHolder();
+    private final KebSocketServerHolder wsServer;
+
+    private final ClientManager clientManager;
+
+    public ServiceManager(ClientManager clientManager) {
+        this.clientManager = clientManager;
+        this.wsServer = new KebSocketServerHolder(clientManager);
+    }
 
     public void init(Runnable callback) {
         String ip = ConfigHelper.getServiceIPv4();
@@ -51,9 +60,10 @@ public class ServiceManager {
         }
         loadNetworkInterfaceService = new LoadNetworkInterfaceDataService();
         loadNetworkInterfaceService.setOnSucceeded(evt -> {
-            boolean ipChangedFlag = loadNetworkInterfaceService.getValue()
-                    .stream()
-                    .noneMatch(pair -> ip.equals(pair.getValue()));
+            boolean ipChangedFlag = !ip.equals(BaseValues.ANY_LOCAL_IP) &&
+                    loadNetworkInterfaceService.getValue()
+                            .stream()
+                            .noneMatch(pair -> ip.equals(pair.getValue()));
             int port;
             CheckPortUsingService httpCheckPortUsingService;
             CheckPortUsingService wsCheckPortUsingService;

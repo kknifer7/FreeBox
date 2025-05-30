@@ -8,7 +8,6 @@ import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketMessageDispatcher;
 import javafx.application.Platform;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.java_websocket.WebSocket;
@@ -27,13 +26,14 @@ import java.nio.ByteBuffer;
 @Slf4j
 public class KebSocketServer extends WebSocketServer {
 
-	@Getter
-    private final ClientManager clientManager = new ClientManager();
+    private final ClientManager clientManager;
 
-	private final KebSocketMessageDispatcher messageDispatcher = new KebSocketMessageDispatcher(clientManager);
+	private final KebSocketMessageDispatcher messageDispatcher;
 
-	public KebSocketServer(InetSocketAddress address) {
+	public KebSocketServer(InetSocketAddress address, ClientManager clientManager) {
 		super(address);
+		this.clientManager = clientManager;
+		this.messageDispatcher = new KebSocketMessageDispatcher(clientManager);
 	}
 
     @Override

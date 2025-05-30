@@ -1,6 +1,6 @@
 package io.knifer.freebox.model.s2c;
 
-import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.model.common.tvbox.VodInfo;
 import lombok.Data;
 
 /**

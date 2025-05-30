@@ -1,7 +1,7 @@
 package io.knifer.freebox.net.websocket.handler.impl;
 
 import io.knifer.freebox.constant.MessageCodes;
-import io.knifer.freebox.model.common.Message;
+import io.knifer.freebox.model.common.tvbox.Message;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.exception.ForbiddenException;
 import io.knifer.freebox.net.websocket.handler.KebSocketMessageHandler;
@@ -33,7 +33,7 @@ public class ValidationHandler implements KebSocketMessageHandler<Void> {
     @Override
     public void handle(Message<Void> message, WebSocket connection) {
         if (!clientManager.isRegistered(connection)) {
-            log.warn("ip [{}] not registered", connection.getRemoteSocketAddress().getAddress().getHostAddress());
+            log.warn("ip [{}] not registered", connection.getRemoteSocketAddress().getHostName());
 
             throw new ForbiddenException(connection);
         }

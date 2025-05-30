@@ -1,6 +1,6 @@
 package io.knifer.freebox.net.websocket.handler;
 
-import io.knifer.freebox.model.common.Message;
+import io.knifer.freebox.model.common.tvbox.Message;
 import org.java_websocket.WebSocket;
 
 /**

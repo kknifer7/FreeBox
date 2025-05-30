@@ -10,18 +10,18 @@ import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
-import io.knifer.freebox.model.common.Movie;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.model.common.tvbox.Movie;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
+import io.knifer.freebox.model.common.tvbox.VodInfo;
 import io.knifer.freebox.model.s2c.DeleteMovieCollectionDTO;
 import io.knifer.freebox.model.s2c.GetMovieCollectedStatusDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.model.s2c.SaveMovieCollectionDTO;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.VLCPlayerDestroyService;
 import io.knifer.freebox.service.VLCPlayerStopService;
 import io.knifer.freebox.util.CollectionUtil;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -80,7 +80,7 @@ public class VideoController extends BaseController {
     private VideoPlayInfoBO playInfo;
     private SourceBean source;
     private VLCPlayer player;
-    private KebSocketTemplate template;
+    private SpiderTemplate template;
     private Consumer<VideoPlayInfoBO> onClose;
     private VLCPlayerStopService playerStopService;
 
@@ -349,68 +349,70 @@ public class VideoController extends BaseController {
     ) {
         String flag = urlInfo.getFlag();
 
-        playerStopService.restart();
+        Platform.runLater(() -> playerStopService.restart());
         template.getPlayerContent(
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
                 playerContentJson -> {
-                    JsonElement propsElm;
-                    JsonObject propsObj;
-                    JsonElement elm;
-                    String playUrl;
-                    int parse;
-                    int jx;
-                    Map<String, String> headers;
-                    String videoTitle;
+                    Platform.runLater(() -> {
+                        JsonElement propsElm;
+                        JsonObject propsObj;
+                        JsonElement elm;
+                        String playUrl;
+                        int parse;
+                        int jx;
+                        Map<String, String> headers;
+                        String videoTitle;
 
-                    if (playerContentJson == null) {
-                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                        return;
-                    }
-                    propsElm = playerContentJson.get("nameValuePairs");
-                    if (propsElm == null) {
-                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                        return;
-                    }
-                    propsObj = propsElm.getAsJsonObject();
-                    elm = propsObj.get("url");
-                    if (elm == null) {
-                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                        return;
-                    }
-                    playUrl = elm.getAsString();
-                    if (StringUtils.isBlank(playUrl)) {
-                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                        return;
-                    }
-                    playUrl = URLDecoder.decode(playUrl, Charsets.UTF_8);
-                    elm = propsObj.get("parse");
-                    parse = elm == null ? 0 : elm.getAsInt();
-                    elm = propsObj.get("jx");
-                    jx = elm == null ? 0 : elm.getAsInt();
-                    elm = propsObj.get("header");
-                    if (elm == null) {
-                        headers = Map.of();
-                    } else {
-                        headers = Maps.transformValues(
-                                GsonUtil.fromJson(elm.getAsString(), JsonObject.class).asMap(),
-                                JsonElement::getAsString
-                        );
-                    }
-                    videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
-                    if (parse == 0) {
-                        player.play(playUrl, headers, videoTitle, progress);
-                    } else {
-                        if (jx != 0) {
-                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SOURCE_NOT_SUPPORTED);
+                        if (playerContentJson == null) {
+                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                             return;
                         }
-                        videoTitle += " （此为解析源，请在弹出的浏览器程序中观看）";
-                        player.setVideoTitle(videoTitle);
-                        HostServiceHelper.showDocument(playUrl);
-                    }
-                    playingVideo = video;
-                    playingUrlInfo = urlInfo;
-                    playingInfoBean = urlInfoBean;
+                        propsElm = playerContentJson.get("nameValuePairs");
+                        if (propsElm == null) {
+                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                            return;
+                        }
+                        propsObj = propsElm.getAsJsonObject();
+                        elm = propsObj.get("url");
+                        if (elm == null) {
+                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                            return;
+                        }
+                        playUrl = elm.getAsString();
+                        if (StringUtils.isBlank(playUrl)) {
+                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                            return;
+                        }
+                        playUrl = URLDecoder.decode(playUrl, Charsets.UTF_8);
+                        elm = propsObj.get("parse");
+                        parse = elm == null ? 0 : elm.getAsInt();
+                        elm = propsObj.get("jx");
+                        jx = elm == null ? 0 : elm.getAsInt();
+                        elm = propsObj.get("header");
+                        if (elm == null) {
+                            headers = Map.of();
+                        } else {
+                            headers = Maps.transformValues(
+                                    GsonUtil.fromJson(elm.getAsString(), JsonObject.class).asMap(),
+                                    JsonElement::getAsString
+                            );
+                        }
+                        videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
+                        if (parse == 0) {
+                            player.play(playUrl, headers, videoTitle, progress);
+                        } else {
+                            if (jx != 0) {
+                                ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SOURCE_NOT_SUPPORTED);
+                                return;
+                            }
+                            videoTitle += " （此为解析源，请在弹出的浏览器程序中观看）";
+                            player.setVideoTitle(videoTitle);
+                            HostServiceHelper.showDocument(playUrl);
+                        }
+                        playingVideo = video;
+                        playingUrlInfo = urlInfo;
+                        playingInfoBean = urlInfoBean;
+                    });
                 }
         );
     }

@@ -1,9 +1,9 @@
 package io.knifer.freebox.model.bo;
 
 import io.knifer.freebox.component.node.VLCPlayer;
-import io.knifer.freebox.model.common.AbsXml;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.model.common.tvbox.AbsXml;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import lombok.Data;
 
 import java.util.function.Consumer;
@@ -39,7 +39,7 @@ public class VideoDetailsBO {
     /**
      * KebSocket通信模板对象
      */
-    private KebSocketTemplate template;
+    private SpiderTemplate template;
 
     /**
      * 界面关闭时回调
@@ -51,7 +51,7 @@ public class VideoDetailsBO {
             VideoPlayInfoBO playInfo,
             SourceBean source,
             VLCPlayer player,
-            KebSocketTemplate template,
+            SpiderTemplate template,
             Consumer<VideoPlayInfoBO> onClose
     ) {
         VideoDetailsBO result = new VideoDetailsBO();

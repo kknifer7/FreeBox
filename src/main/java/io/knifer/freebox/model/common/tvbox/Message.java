@@ -1,4 +1,4 @@
-package io.knifer.freebox.model.common;
+package io.knifer.freebox.model.common.tvbox;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

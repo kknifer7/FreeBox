@@ -55,10 +55,11 @@ public class AsyncUtil {
 
     public void destroy() {
         log.info("shutdown AsyncUtil ThreadPoolExecutor......");
-        EXECUTOR.shutdownNow();
+        EXECUTOR.shutdown();
         try {
             if (!EXECUTOR.awaitTermination(5, TimeUnit.SECONDS)) {
                 log.warn("AsyncUtil ThreadPoolExecutor termination timeout, force shutdown......");
+                EXECUTOR.shutdownNow();
             }
         } catch (InterruptedException ignored) {}
     }

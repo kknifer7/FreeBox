@@ -14,4 +14,9 @@ public interface SourceAuditExecutor {
      * @param bo 审计参数
      */
     void execute(SourceAuditExecutionBo bo);
+
+    /**
+     * 停止审计
+     */
+    void stop();
 }

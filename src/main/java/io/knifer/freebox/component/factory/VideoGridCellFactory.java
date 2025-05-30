@@ -4,8 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
-import io.knifer.freebox.model.common.Movie;
-import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.tvbox.Movie;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.ValidationUtil;
@@ -126,8 +126,9 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                 moviePicImageView = new ImageView(BaseResources.LOAD_MORE_IMG);
             } else {
-                moviePicImage = PICTURE_CACHE.getIfPresent(itemId);
-                if (moviePicImage == null) {
+                if (itemId == null) {
+                    moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                } else if ((moviePicImage = PICTURE_CACHE.getIfPresent(itemId)) == null) {
                     moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER_IMG);
                     picUrl = item.getPic();
                     if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {

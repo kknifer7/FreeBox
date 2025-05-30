@@ -4,9 +4,9 @@ import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.model.bo.SourceAuditExecutionBo;
-import io.knifer.freebox.model.common.AbsSortXml;
-import io.knifer.freebox.model.common.AbsXml;
-import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.tvbox.AbsSortXml;
+import io.knifer.freebox.model.common.tvbox.AbsXml;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
 import lombok.Data;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -49,12 +49,17 @@ public class SourceAuditContext {
     /**
      * 最终回调（结束时调用，只会调用一次）
      */
-    private Runnable beforeAll;
+    private Runnable afterAll;
 
     /**
      * 最大重试次数
      */
     private int maxRetryCount;
+
+    /**
+     * 中断标志
+     */
+    private boolean interrupt;
 
     /**
      * 首页信息
@@ -79,8 +84,9 @@ public class SourceAuditContext {
         context.setOnResponse(executionBo.getOnResponse());
         context.setOnStatusUpdate(executionBo.getOnStatusUpdate());
         context.setOnFinish(executionBo.getOnFinish());
-        context.setBeforeAll(executionBo.getBeforeAll());
+        context.setAfterAll(executionBo.getAfterAll());
         context.setMaxRetryCount(executionBo.getMaxRetryCount());
+        context.setInterrupt(false);
 
         return context;
     }

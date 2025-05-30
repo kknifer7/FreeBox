@@ -1,5 +1,6 @@
 package io.knifer.freebox.component.factory;
 
+import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.model.domain.ClientInfo;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -13,12 +14,6 @@ import org.kordamp.ikonli.javafx.FontIcon;
  */
 public class ClientInfoListCellFactory implements Callback<ListView<ClientInfo>, ListCell<ClientInfo>> {
 
-    private final static FontIcon ICON;
-
-    static {
-        ICON = new FontIcon("fa-tv:20");
-    }
-
     @Override
     public ListCell<ClientInfo> call(ListView<ClientInfo> param) {
 
@@ -30,8 +25,12 @@ public class ClientInfoListCellFactory implements Callback<ListView<ClientInfo>,
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(item.getConnection().getRemoteSocketAddress().getHostName());
-                    setGraphic(ICON);
+                    setText(item.getName());
+                    if (item.getClientType() == ClientType.TVBOX_K) {
+                        setGraphic(new FontIcon("fa-tv:20"));
+                    } else {
+                        setGraphic(new FontIcon("fa-optin-monster:20"));
+                    }
                 }
             }
         };

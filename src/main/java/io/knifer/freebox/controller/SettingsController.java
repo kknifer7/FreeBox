@@ -1,6 +1,7 @@
 package io.knifer.freebox.controller;
 
 import io.knifer.freebox.component.validator.PortValidator;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.*;
@@ -122,6 +123,7 @@ public class SettingsController {
         items = httpIpChoiceBox.getItems();
         wsIpChoiceBox.setItems(items);
         items.clear();
+        items.add(Pair.of(null, BaseValues.ANY_LOCAL_IP));
         items.addAll(networkInterfaceAndIps);
         configIP = ConfigHelper.getServiceIPv4();
         if (StringUtils.isBlank(configIP)) {

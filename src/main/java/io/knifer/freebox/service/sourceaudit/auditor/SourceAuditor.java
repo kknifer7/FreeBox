@@ -1,7 +1,7 @@
 package io.knifer.freebox.service.sourceaudit.auditor;
 
 import io.knifer.freebox.constant.SourceAuditType;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public abstract class SourceAuditor {
 
-    protected final KebSocketTemplate kebSocketTemplate;
+    protected final SpiderTemplate spiderTemplate;
 
     protected SourceAuditor nextAuditor;
 
@@ -41,8 +41,8 @@ public abstract class SourceAuditor {
      * @param skip 是否跳过
      */
     protected void doNext(SourceAuditContext context, boolean skip) {
-        if (nextAuditor == null) {
-            context.getBeforeAll().run();
+        if (nextAuditor == null || context.isInterrupt()) {
+            context.getAfterAll().run();
         } else {
             nextAuditor.audit(context, skip);
         }

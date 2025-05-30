@@ -26,9 +26,4 @@ public class LoadNetworkInterfaceDataService extends Service<Collection<Pair<Net
             }
         };
     }
-
-    @Override
-    protected void succeeded() {
-        log.info("LoadNetworkInterfaceDataService succeeded");
-    }
 }

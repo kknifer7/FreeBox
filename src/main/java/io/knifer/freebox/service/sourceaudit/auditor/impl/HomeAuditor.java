@@ -3,13 +3,13 @@ package io.knifer.freebox.service.sourceaudit.auditor.impl;
 import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
-import io.knifer.freebox.model.common.MovieSort;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.model.common.tvbox.MovieSort;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
 import io.knifer.freebox.util.CollectionUtil;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -23,8 +23,8 @@ import java.util.function.Consumer;
  */
 public class HomeAuditor extends SourceAuditor {
 
-    public HomeAuditor(KebSocketTemplate kebSocketTemplate) {
-        super(kebSocketTemplate);
+    public HomeAuditor(SpiderTemplate spiderTemplate) {
+        super(spiderTemplate);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class HomeAuditor extends SourceAuditor {
         Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
 
-        if (skip) {
+        if (skip || context.isInterrupt()) {
             onStatusUpdate.accept(Pair.of(SourceAuditType.HOME, SourceAuditStatus.SKIPPED));
             onFinish.accept(Pair.of(SourceAuditType.HOME, List.of()));
             doNext(context, true);
@@ -57,7 +57,7 @@ public class HomeAuditor extends SourceAuditor {
         int maxRetryCount = context.getMaxRetryCount();
 
         onRequest.accept(Pair.of(SourceAuditType.HOME, GsonUtil.toPrettyJson(sourceBean)));
-        kebSocketTemplate.getHomeContent(
+        spiderTemplate.getHomeContent(
                 sourceBean,
                 content -> {
                     List<SourceAuditResult> results;

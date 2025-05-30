@@ -1,6 +1,7 @@
 package io.knifer.freebox.net.websocket.server;
 
 import io.knifer.freebox.constant.AppEvents;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.ShutdownWebSocketServerService;
@@ -16,9 +17,18 @@ import java.net.InetSocketAddress;
 public class KebSocketServerHolder {
 
     private volatile KebSocketServer server;
+    private final ClientManager clientManager;
+
+    public KebSocketServerHolder(ClientManager clientManager) {
+        this.clientManager = clientManager;
+    }
 
     public synchronized void start(String hostname, int port) {
-        server = new KebSocketServer(new InetSocketAddress(hostname, port));
+        server = new KebSocketServer(
+                BaseValues.ANY_LOCAL_IP.equals(hostname) ?
+                        new InetSocketAddress(port) : new InetSocketAddress(hostname, port),
+                clientManager
+        );
         server.start();
         Context.INSTANCE.postEvent(AppEvents.WS_SERVER_STARTED);
     }
@@ -47,9 +57,5 @@ public class KebSocketServerHolder {
 
     public boolean isRunning() {
         return server != null;
-    }
-
-    public ClientManager getClientManager() {
-        return server.getClientManager();
     }
 }

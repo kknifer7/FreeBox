@@ -15,6 +15,18 @@ public class I18nKeys {
     public static final String HOME_SETTINGS_INFO = "home.settings-info";
     public static final String HOME_MESSAGE_VLC_NOT_FOUND_TITLE = "home.message.vlc-not-found-title";
     public static final String HOME_MESSAGE_VLC_NOT_FOUND = "home.message.vlc-not-found";
+    public static final String HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED =
+            "home.message.remove-spider-config-succeed";
+    public static final String HOME_IMPORT_API = "home.import-api";
+    public static final String HOME_IMPORT_API_INPUT_PLACEHOLDER = "home.import-api.input-placeholder";
+    public static final String HOME_IMPORT_API_INPUT_LABEL = "home.import-api.input-label";
+    public static final String HOME_IMPORT_API_INVALID_URL = "home.import-api.invalid-url";
+    public static final String HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED =
+            "home.import-api.message.get-config-failed";
+    public static final String HOME_IMPORT_API_MESSAGE_NO_AVAILABLE_SITE =
+            "home.import-api.message.no-available-site";
+    public static final String HOME_IMPORT_API_MESSAGE_SAVE_CONFIG_SUCCEED =
+            "home.import-api.message.save-config-succeed";
 
     public static final String TV_HOME = "tv.home";
     public static final String TV_LOAD_MORE = "tv.load-more";
@@ -24,6 +36,7 @@ public class I18nKeys {
     public static final String TV_CLASS_FILTER_RESET = "tv.class-filter-reset";
     public static final String TV_ERROR_LOAD_SOURCE_FAILED = "tv.error.load-source-failed";
     public static final String TV_ERROR_LOAD_MOVIE_DETAIL_FAILED = "tv.error.load-movie-detail-failed";
+    public static final String TV_ERROR_LOAD_SPIDER_CONFIG_FAILED = "tv.error.load-spider-config-failed";
 
     public static final String VIDEO_COLLECT = "video.collect";
     public static final String VIDEO_UN_COLLECT = "video.un-collect";
@@ -70,6 +83,7 @@ public class I18nKeys {
     public static final String ERROR_REPORT = "error.report";
     public static final String ERROR_HEADER_TITLE = "error.header-title";
     public static final String ERROR_RECONNECTING_CLIENT = "error.reconnecting-client";
+    public static final String ERROR_SPIDER_INVOKE_FAILED = "error.spider-invoke-failed";
 
     public static final String COMMON_DELETE = "common.delete";
     public static final String COMMON_OK = "common.ok";

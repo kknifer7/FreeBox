@@ -2,8 +2,8 @@ package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
+import io.knifer.freebox.model.common.tvbox.VodInfo;
 import io.knifer.freebox.util.CollectionUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

@@ -8,15 +8,18 @@ import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.context.Context;
-import io.knifer.freebox.helper.*;
+import io.knifer.freebox.helper.ClipboardHelper;
+import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.SourceAuditExecutionBo;
-import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.SourceAuditItem;
 import io.knifer.freebox.net.websocket.core.ClientManager;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditExecutor;
 import io.knifer.freebox.service.sourceaudit.auditor.impl.SourceAuditExecutorImpl;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CastUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -84,17 +87,20 @@ public class SourceAuditController {
     private Button singleSourceStartAuditBtn;
     @FXML
     private Button startAuditBtn;
+    @FXML
+    private Button stopAuditingSourceBeanBtn;
 
-    private KebSocketTemplate template;
+    private SpiderTemplate template;
     private ClientManager clientManager;
     private SourceAuditExecutor sourceAuditExecutor;
+    private final SimpleBooleanProperty interruptAuditFlag = new SimpleBooleanProperty(true);
     private final SimpleObjectProperty<SourceBean> nowSourceBeanProperty = new SimpleObjectProperty<>();
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(true);
     private final Map<String, ObservableList<SourceAuditItem>> sourceKeyAndAuditItemsMap = new HashMap<>();
 
     @FXML
     private void initialize() {
-        template = Context.INSTANCE.getKebSocketTemplate();
+        template = Context.INSTANCE.getSpiderTemplate();
         clientManager = Context.INSTANCE.getClientManager();
         sourceAuditExecutor = new SourceAuditExecutorImpl(template);
 
@@ -134,6 +140,8 @@ public class SourceAuditController {
         singleSourceStartAuditBtn.disableProperty().bind(loadingProperty);
         auditingProgressIndicator.visibleProperty().bind(loadingProperty);
         auditingSourceBeanLabel.visibleProperty().bind(loadingProperty);
+        stopAuditingSourceBeanBtn.visibleProperty().bind(loadingProperty);
+        stopAuditingSourceBeanBtn.disableProperty().bind(interruptAuditFlag);
         Platform.runLater(() -> {
             Stage stage = WindowHelper.getStage(root);
             ClientInfo clientInfo = clientManager.getCurrentClientImmediately();
@@ -141,16 +149,22 @@ public class SourceAuditController {
             if (clientInfo != null) {
                 stage.setTitle(String.format(
                         I18nHelper.get(I18nKeys.SOURCE_AUDIT_WINDOW_TITLE),
-                        clientInfo.getConnection().getRemoteSocketAddress().getHostName()
+                        clientInfo.getName()
                 ));
             }
             stage.setOnCloseRequest(evt -> {
                 destroy();
                 Context.INSTANCE.popAndShowLastStage();
             });
-            template.getSourceBeanList(sourceBeans -> {
-                fillSourceBeanData(sourceBeans);
-                setLoading(false);
+            template.init(success -> {
+                if (!success) {
+                    return;
+                }
+                template.getSourceBeanList(sourceBeans -> {
+                    fillSourceBeanData(sourceBeans);
+                    interruptAuditFlag.set(false);
+                    setLoading(false);
+                });
             });
         });
     }
@@ -168,9 +182,13 @@ public class SourceAuditController {
         }
     }
 
-    private void updateNowSourceBean(SourceBean sourceBean) {
-        ObservableList<SourceAuditItem> newItems = sourceKeyAndAuditItemsMap.get(sourceBean.getKey());
+    private void updateNowSourceBean(@Nullable SourceBean sourceBean) {
+        ObservableList<SourceAuditItem> newItems;
 
+        if (sourceBean == null) {
+            return;
+        }
+        newItems = sourceKeyAndAuditItemsMap.get(sourceBean.getKey());
         if (newItems == null) {
             return;
         }
@@ -182,6 +200,7 @@ public class SourceAuditController {
     }
 
     private void destroy() {
+        onStopAuditingSourceBeanBtnAction();
         clientManager.clearCurrentClient();
     }
 
@@ -248,7 +267,12 @@ public class SourceAuditController {
         log.info("single audit operation, sourceBean={}", sourceBean.getName());
         problemSourceListView.getItems().remove(sourceBean);
         setLoading(true, sourceBean);
-        auditSourceBean(sourceBean, () -> setLoading(false));
+        auditSourceBean(sourceBean, () -> {
+            if (interruptAuditFlag.get()) {
+                interruptAuditFlag.set(false);
+            }
+            setLoading(false);
+        });
     }
 
     @FXML
@@ -267,18 +291,21 @@ public class SourceAuditController {
         );
         problemSourceListView.getItems().removeAll(items);
         setLoading(true);
+        ToastHelper.disableErrorShow();
         nextAudit(items.iterator());
     }
 
     private void nextAudit(Iterator<SourceBean> sourceBeanIterator) {
         SourceBean sourceBean;
 
-        if (sourceBeanIterator.hasNext()) {
+        if (sourceBeanIterator.hasNext() && !interruptAuditFlag.get()) {
             sourceBean = sourceBeanIterator.next();
             updateAuditingLabel(sourceBean);
             auditSourceBean(sourceBean, () -> nextAudit(sourceBeanIterator));
         } else {
+            interruptAuditFlag.set(false);
             setLoading(false);
+            ToastHelper.enableErrorShow();
         }
     }
 
@@ -298,9 +325,9 @@ public class SourceAuditController {
     }
 
     private void updateAuditingLabel(SourceBean sourceBean) {
-        auditingSourceBeanLabel.setText(I18nHelper.getFormatted(
-                I18nKeys.SOURCE_AUDIT_AUDITING, sourceBean.getName()
-        ));
+        Platform.runLater(() -> auditingSourceBeanLabel.setText(
+                I18nHelper.getFormatted(I18nKeys.SOURCE_AUDIT_AUDITING, sourceBean.getName()))
+        );
     }
 
     private void auditSourceBean(SourceBean sourceBean, Runnable callback) {
@@ -442,5 +469,11 @@ public class SourceAuditController {
         }
         ClipboardHelper.setContent(CastUtil.cast(rawDataTextArea.getUserData()));
         ToastHelper.showInfoI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
+    }
+
+    @FXML
+    private void onStopAuditingSourceBeanBtnAction() {
+        sourceAuditExecutor.stop();
+        interruptAuditFlag.set(true);
     }
 }

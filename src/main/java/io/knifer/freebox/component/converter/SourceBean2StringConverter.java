@@ -1,7 +1,7 @@
 package io.knifer.freebox.component.converter;
 
 import com.google.common.base.Strings;
-import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.StringUtils;
 

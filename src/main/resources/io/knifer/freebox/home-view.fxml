@@ -8,7 +8,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <?import org.kordamp.ikonli.javafx.*?>
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/home-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.HomeController">
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/home-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.HomeController">
     <fx:define>
         <ClientInfoListCellFactory fx:id="clientInfoListCellFactory" />
     </fx:define>
@@ -68,42 +69,55 @@
                            </VBox.margin>
                         </VBox>
                         <ListView fx:id="clientListView" cellFactory="$clientInfoListCellFactory" prefHeight="200.0" prefWidth="200.0" />
-                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                        <AnchorPane>
                            <children>
-                              <Label>
-                                  <graphic>
-                                      <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
-                                  </graphic>
-                                  <tooltip>
-                                      <Tooltip showDelay="200ms" showDuration="1m" text="%home.client-list-help">
-                                          <font>
-                                              <Font size="14" />
-                                          </font>
-                                      </Tooltip>
-                                  </tooltip>
-                              </Label>
-                              <Button mnemonicParsing="false" onAction="#onClientListChooseBtnAction" text="%home.client-list-choose">
-                                  <graphic>
-                                      <FontIcon iconLiteral="fa-arrow-right:16:green" />
-                                  </graphic>
-                              </Button>
-                              <Button mnemonicParsing="false" onAction="#onSourceAuditBtnAction" text="%home.source-audit">
-                                  <graphic>
-                                      <FontIcon iconLiteral="fa-code:16:blue" />
-                                  </graphic>
-                              </Button>
-                               <Button mnemonicParsing="false" onAction="#onClientListCloseBtnAction" text="%home.client-list-close">
-                                   <graphic>
-                                       <FontIcon iconLiteral="fa-times:16:red" />
-                                   </graphic>
-                               </Button>
-                              <Button mnemonicParsing="false" onAction="#onExitBtnClick" text="%home.exit">
-                                  <graphic>
-                                      <FontIcon iconLiteral="fa-power-off:16:red" />
-                                  </graphic>
-                              </Button>
+                              <HBox alignment="CENTER" spacing="10.0" AnchorPane.leftAnchor="0.0">
+                                 <children>
+                                    <Label>
+                                        <graphic>
+                                            <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
+                                        </graphic>
+                                        <tooltip>
+                                            <Tooltip showDelay="200ms" showDuration="1m" text="%home.client-list-help">
+                                                <font>
+                                                    <Font size="14" />
+                                                </font>
+                                            </Tooltip>
+                                        </tooltip>
+                                    </Label>
+                                    <Button mnemonicParsing="false" onAction="#onImportSourceBtnAction" text="%home.import-api">
+                                        <graphic>
+                                            <FontIcon iconLiteral="fa-link:16:gray"/>
+                                        </graphic>
+                                    </Button>
+                                 </children>
+                              </HBox>
+                              <HBox alignment="CENTER_RIGHT" layoutX="0.8067226409912109" spacing="10.0" AnchorPane.rightAnchor="0.0">
+                                 <children>
+                                    <Button mnemonicParsing="false" onAction="#onClientListChooseBtnAction" text="%home.client-list-choose">
+                                        <graphic>
+                                            <FontIcon iconLiteral="fa-arrow-right:16:green" />
+                                        </graphic>
+                                    </Button>
+                                    <Button mnemonicParsing="false" onAction="#onSourceAuditBtnAction" text="%home.source-audit">
+                                        <graphic>
+                                            <FontIcon iconLiteral="fa-code:16:blue" />
+                                        </graphic>
+                                    </Button>
+                                     <Button mnemonicParsing="false" onAction="#onClientListCloseBtnAction" text="%home.client-list-close">
+                                         <graphic>
+                                             <FontIcon iconLiteral="fa-times:16:red" />
+                                         </graphic>
+                                     </Button>
+                                    <Button mnemonicParsing="false" onAction="#onExitBtnClick" text="%home.exit">
+                                        <graphic>
+                                            <FontIcon iconLiteral="fa-power-off:16:red" />
+                                        </graphic>
+                                    </Button>
+                                 </children>
+                              </HBox>
                            </children>
-                        </HBox>
+                        </AnchorPane>
                      </children>
                   </VBox>
                </center>

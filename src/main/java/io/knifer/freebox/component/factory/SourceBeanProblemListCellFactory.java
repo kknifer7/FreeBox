@@ -1,6 +1,7 @@
 package io.knifer.freebox.component.factory;
 
-import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -28,11 +29,20 @@ public class SourceBeanProblemListCellFactory implements Callback<ListView<Sourc
         ListCell<SourceBean> cell = new ListCell<>() {
             @Override
             public void updateItem(SourceBean item, boolean empty) {
+                if (Platform.isFxApplicationThread()) {
+                    update(item, empty);
+                } else {
+                    Platform.runLater(() -> update(item, empty));
+                }
+            }
+
+            private void update(SourceBean item, boolean empty) {
                 Label label;
 
                 super.updateItem(item, empty);
                 if (item == null || empty) {
                     setText(StringUtils.EMPTY);
+                    setGraphic(null);
 
                     return;
                 }

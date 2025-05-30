@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * HTTP
@@ -17,7 +18,9 @@ import java.net.http.HttpResponse;
 @UtilityClass
 public class HttpUtil {
 
-    private final static HttpClient client = HttpClient.newHttpClient();
+    private final static HttpClient client = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
 
 
     public String get(String url) {
@@ -34,6 +37,32 @@ public class HttpUtil {
         } catch (InterruptedException e) {
             return null;
         }
+    }
+
+    public byte[] getFile(String url) {
+        try {
+            return client.send(
+                    HttpRequest.newBuilder()
+                            .GET()
+                            .uri(URI.create(url))
+                            .build(),
+                    HttpResponse.BodyHandlers.ofByteArray()
+            ).body();
+        } catch (IOException e) {
+            throw new FBException("Error while sending request to " + url, e);
+        } catch (InterruptedException e) {
+            return null;
+        }
+    }
+
+    public CompletableFuture<String> getAsync(String url) {
+        return client.sendAsync(
+                HttpRequest.newBuilder()
+                        .GET()
+                        .uri(URI.create(url))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString()
+        ).thenApply(HttpResponse::body);
     }
 
     public String get(String url, String... headers) {

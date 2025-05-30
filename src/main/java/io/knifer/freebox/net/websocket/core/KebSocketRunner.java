@@ -1,8 +1,8 @@
 package io.knifer.freebox.net.websocket.core;
 
 import com.google.gson.reflect.TypeToken;
-import io.knifer.freebox.model.common.Message;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.model.common.tvbox.Message;
+import io.knifer.freebox.util.json.GsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 

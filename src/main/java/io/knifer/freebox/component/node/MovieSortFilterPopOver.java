@@ -2,7 +2,7 @@ package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.model.common.MovieSort;
+import io.knifer.freebox.model.common.tvbox.MovieSort;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

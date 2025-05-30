@@ -16,6 +16,8 @@ public class PortValidator implements Validator<String> {
 
     private final static PortValidator INSTANCE = new PortValidator();
 
+    private PortValidator() {}
+
     public static PortValidator getInstance() {
         return INSTANCE;
     }

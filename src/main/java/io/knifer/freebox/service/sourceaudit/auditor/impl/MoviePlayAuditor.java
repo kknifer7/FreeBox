@@ -4,12 +4,12 @@ import com.google.gson.JsonElement;
 import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
 import io.knifer.freebox.constant.SourceAuditType;
-import io.knifer.freebox.model.common.Movie;
+import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -29,8 +29,8 @@ public class MoviePlayAuditor extends SourceAuditor {
             "data:"
     };
 
-    public MoviePlayAuditor(KebSocketTemplate kebSocketTemplate) {
-        super(kebSocketTemplate);
+    public MoviePlayAuditor(SpiderTemplate spiderTemplate) {
+        super(spiderTemplate);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class MoviePlayAuditor extends SourceAuditor {
         Consumer<Pair<SourceAuditType, SourceAuditStatus>> onStatusUpdate = context.getOnStatusUpdate();
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
 
-        if (skip) {
+        if (skip || context.isInterrupt()) {
             onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_PLAY, SourceAuditStatus.SKIPPED));
             onFinish.accept(Pair.of(SourceAuditType.MOVIE_PLAY, List.of()));
             doNext(context, true);
@@ -70,7 +70,7 @@ public class MoviePlayAuditor extends SourceAuditor {
         int maxRetryCount = context.getMaxRetryCount();
 
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_PLAY, GsonUtil.toPrettyJson(dto)));
-        kebSocketTemplate.getPlayerContent(
+        spiderTemplate.getPlayerContent(
                 dto,
                 playerContentJson -> {
                     JsonElement propElm;

@@ -3,7 +3,7 @@ package io.knifer.freebox.helper;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.domain.Config;
 import io.knifer.freebox.service.SaveConfigService;
-import io.knifer.freebox.util.GsonUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
@@ -107,10 +107,11 @@ public class ConfigHelper {
             try {
                 config = new Config();
                 config.setUuid(UUID.randomUUID().toString());
+                config.setServiceIPv4(BaseValues.ANY_LOCAL_IP);
                 config.setHttpPort(BaseValues.DEFAULT_HTTP_PORT);
                 config.setWsPort(BaseValues.DEFAULT_WS_PORT);
-                config.setAutoStartHttp(false);
-                config.setAutoStartWs(false);
+                config.setAutoStartHttp(true);
+                config.setAutoStartWs(true);
                 Files.createDirectories(CONFIG_PATH.getParent());
                 Files.writeString(CONFIG_PATH, GsonUtil.toJson(config));
 

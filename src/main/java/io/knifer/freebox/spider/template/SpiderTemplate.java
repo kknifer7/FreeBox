@@ -1,18 +1,24 @@
-package io.knifer.freebox.net.websocket.template;
+package io.knifer.freebox.spider.template;
 
 import com.google.gson.JsonObject;
-import io.knifer.freebox.model.common.*;
+import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.s2c.*;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * TV服务
+ * Spider模板接口
  *
  * @author Knifer
  */
-public interface KebSocketTemplate {
+public interface SpiderTemplate {
+
+    default void init(Consumer<Boolean> callback) {
+        callback.accept(true);
+    }
+
+    default void destroy() {}
 
     /**
      * 获取源列表

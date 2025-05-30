@@ -1,7 +1,7 @@
 package io.knifer.freebox.service.sourceaudit.auditor.impl;
 
 import io.knifer.freebox.model.bo.SourceAuditExecutionBo;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditExecutor;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
@@ -17,12 +17,14 @@ public class SourceAuditExecutorImpl implements SourceAuditExecutor {
 
     private final List<SourceAuditor> AUDITORS;
 
-    public SourceAuditExecutorImpl(KebSocketTemplate kebSocketTemplate) {
-        MovieSearchAuditor movieSearchAuditor = new MovieSearchAuditor(kebSocketTemplate);
-        HomeAuditor homeAuditor = new HomeAuditor(kebSocketTemplate);
-        MovieExploreAuditor movieExploreAuditor = new MovieExploreAuditor(kebSocketTemplate);
-        MovieDetailAuditor movieDetailAuditor = new MovieDetailAuditor(kebSocketTemplate);
-        MoviePlayAuditor moviePlayAuditor = new MoviePlayAuditor(kebSocketTemplate);
+    private SourceAuditContext context;
+
+    public SourceAuditExecutorImpl(SpiderTemplate spiderTemplate) {
+        MovieSearchAuditor movieSearchAuditor = new MovieSearchAuditor(spiderTemplate);
+        HomeAuditor homeAuditor = new HomeAuditor(spiderTemplate);
+        MovieExploreAuditor movieExploreAuditor = new MovieExploreAuditor(spiderTemplate);
+        MovieDetailAuditor movieDetailAuditor = new MovieDetailAuditor(spiderTemplate);
+        MoviePlayAuditor moviePlayAuditor = new MoviePlayAuditor(spiderTemplate);
 
         movieSearchAuditor.setNextAuditor(homeAuditor);
         homeAuditor.setNextAuditor(movieExploreAuditor);
@@ -33,6 +35,15 @@ public class SourceAuditExecutorImpl implements SourceAuditExecutor {
 
     @Override
     public void execute(SourceAuditExecutionBo bo) {
-        AUDITORS.get(0).audit(SourceAuditContext.of(bo), false);
+        context = SourceAuditContext.of(bo);
+        AUDITORS.get(0).audit(context, false);
+    }
+
+    @Override
+    public void stop() {
+        if (context == null) {
+            throw new IllegalStateException();
+        }
+        context.setInterrupt(true);
     }
 }

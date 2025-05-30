@@ -6,8 +6,8 @@ import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.model.common.SourceBean;
-import io.knifer.freebox.model.common.VodInfo;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
+import io.knifer.freebox.model.common.tvbox.VodInfo;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
@@ -111,8 +111,9 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                 moviePicImageView = new ImageView(BaseResources.LOAD_MORE_IMG);
             } else {
-                moviePicImage = PICTURE_CACHE.getIfPresent(itemId);
-                if (moviePicImage == null) {
+                if (itemId == null) {
+                    moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                } else if ((moviePicImage = PICTURE_CACHE.getIfPresent(itemId)) == null) {
                     moviePicImageView = new ImageView(BaseResources.PICTURE_PLACEHOLDER_IMG);
                     picUrl = item.getPic();
                     if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {

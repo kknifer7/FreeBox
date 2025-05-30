@@ -1,6 +1,8 @@
-package io.knifer.freebox.util;
+package io.knifer.freebox.util.json;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import lombok.experimental.UtilityClass;
 

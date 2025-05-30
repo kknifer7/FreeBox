@@ -1,7 +1,7 @@
 package io.knifer.freebox.model.s2c;
 
-import io.knifer.freebox.model.common.MovieSort;
-import io.knifer.freebox.model.common.SourceBean;
+import io.knifer.freebox.model.common.tvbox.MovieSort;
+import io.knifer.freebox.model.common.tvbox.SourceBean;
 import lombok.Data;
 
 /**

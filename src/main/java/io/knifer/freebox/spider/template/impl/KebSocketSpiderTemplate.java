@@ -1,14 +1,14 @@
-package io.knifer.freebox.net.websocket.template.impl;
+package io.knifer.freebox.spider.template.impl;
 
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
-import io.knifer.freebox.model.common.*;
+import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
-import io.knifer.freebox.net.websocket.template.KebSocketTemplate;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.util.CastUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +20,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
- * TV服务实现
+ * TVBox KebSocket 爬虫模板实现
  *
  * @author Knifer
  */
 @Slf4j
-public class KebSocketTemplateImpl implements KebSocketTemplate {
+public class KebSocketSpiderTemplate implements SpiderTemplate {
 
     private final KebSocketRunner runner;
 
@@ -34,7 +34,7 @@ public class KebSocketTemplateImpl implements KebSocketTemplate {
     private final Set<Class<? extends Throwable>> ignoringToastThrowableClassesInMovieSearching =
             Set.of(TimeoutException.class);
 
-    public KebSocketTemplateImpl(KebSocketRunner runner, ClientManager clientManager) {
+    public KebSocketSpiderTemplate(KebSocketRunner runner, ClientManager clientManager) {
         this.runner = runner;
         this.clientManager = clientManager;
     }

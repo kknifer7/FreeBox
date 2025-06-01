@@ -45,7 +45,6 @@ ext {
             vlcjJavaFX: '1.2.0',
             vlcj: '4.8.3',
             jregistry: '1.0.0',
-            commonsCodec: '1.18.0',
             filelize: '0.9.5',
             okhttp: '5.0.0-alpha.14',
             hutoolAll: '5.8.27',
@@ -104,7 +103,7 @@ extraJavaModuleInfo {
     module('io.github.filelize:filelize-java', 'filelize') {
         requires 'org.slf4j'
         requires 'com.fasterxml.jackson.databind'
-        exportAllPackages();
+        exportAllPackages()
     }
     /* 自动处理非模块化项目 */
     // blockingMap
@@ -166,7 +165,7 @@ jlink {
                     '--win-shortcut-prompt',
                     '--win-upgrade-uuid', 'aabbccdd-eeff-1122-3344-556677889905'
             ]
-//            imageOptions = ['--win-console']
+            imageOptions = ['--win-console']
         }
     }
 }

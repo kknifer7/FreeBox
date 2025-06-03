@@ -149,6 +149,13 @@ jlink {
     launcher {
         name = 'FreeBox'
     }
+    mergedModule {
+        requires 'java.logging'
+        requires 'jdk.httpserver'
+        requires 'java.sql'
+        requires 'jdk.crypto.ec'
+        uses 'cn.hutool.core.convert.Converter'
+    }
     jpackage {
         mainClassName = application.mainClass
         applicationName = launcherName

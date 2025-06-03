@@ -42,7 +42,7 @@ public class SourceAuditExecutorImpl implements SourceAuditExecutor {
     @Override
     public void stop() {
         if (context == null) {
-            throw new IllegalStateException();
+            return;
         }
         context.setInterrupt(true);
     }

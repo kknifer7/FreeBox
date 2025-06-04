@@ -1,5 +1,7 @@
 package io.knifer.freebox.controller;
 
+import cn.hutool.setting.Setting;
+import com.google.common.io.Resources;
 import io.knifer.freebox.component.node.ImportApiDialog;
 import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
@@ -14,10 +16,7 @@ import io.knifer.freebox.util.FXMLUtil;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.MultipleSelectionModel;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
@@ -45,6 +44,8 @@ public class HomeController {
     @FXML
     private HBox vlcHBox;
     @FXML
+    private Label versionInfoLabel;
+    @FXML
     private ListView<ClientInfo> clientListView;
 
     private ClientManager clientManager;
@@ -55,9 +56,15 @@ public class HomeController {
     private void initialize() {
         ObservableList<ClientInfo> clientItems = clientListView.getItems();
         boolean vlcNotInstalled = !VLC_PLAYER_CHECK_HANDLER.handle();
+        Setting setting = new Setting(Resources.getResource("x.properties").getPath());
 
         vlcHBox.setVisible(vlcNotInstalled);
         vlcHBox.setManaged(vlcNotInstalled);
+        setting.load();
+        versionInfoLabel.setText(String.format(
+                I18nHelper.get(I18nKeys.HOME_VERSION_INFO),
+                setting.get("app-version")
+        ));
         Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
             clientManager = Context.INSTANCE.getClientManager();
             refreshServiceStatusInfo();

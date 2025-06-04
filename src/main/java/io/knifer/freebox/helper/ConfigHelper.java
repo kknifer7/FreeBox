@@ -19,8 +19,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @UtilityClass
 public class ConfigHelper {
-
-    private static final Path CONFIG_PATH = Path.of("config", "config.json");
+    private static final Path CONFIG_PATH = SystemHelper.getLocalStoragePath()
+            .resolve(Path.of("config", "config.json"));
 
     private volatile static Config config;
 

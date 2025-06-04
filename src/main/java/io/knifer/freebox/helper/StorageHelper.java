@@ -15,7 +15,9 @@ import java.util.Optional;
 @UtilityClass
 public class StorageHelper {
 
-    private final Filelizer filelizer = new Filelizer("data");
+    private final Filelizer filelizer = new Filelizer(
+            SystemHelper.getLocalStoragePath().resolve("data").toString()
+    );
 
     public <T> String save(T object) {
         return filelizer.save(object);

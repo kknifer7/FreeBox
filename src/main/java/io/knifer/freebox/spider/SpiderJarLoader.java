@@ -2,6 +2,7 @@ package io.knifer.freebox.spider;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.FreeBoxApiConfig;
 import io.knifer.freebox.util.CastUtil;
@@ -43,7 +44,8 @@ public class SpiderJarLoader {
     private final static String SPIDER_PACKAGE_NAME = "com.github.catvod.spider";
     private final static String SPIDER_PROXY_CLASS_NAME = SPIDER_PACKAGE_NAME + ".Proxy";
     private final static String SPIDER_INIT_CLASS_NAME = SPIDER_PACKAGE_NAME + ".Init";
-    private final static Path SPIDER_CACHE_PATH = Paths.get("data", "spider_cache");
+    private final static Path SPIDER_CACHE_PATH = SystemHelper.getLocalStoragePath()
+            .resolve(Path.of("data", "spider_cache"));
     private final static SpiderJarLoader INSTANCE = new SpiderJarLoader();
 
     static {

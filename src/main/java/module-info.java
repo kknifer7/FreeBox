@@ -27,6 +27,7 @@ module io.knifer.freebox {
     requires annotations;
     requires org.json;
     requires cn.hutool;
+    requires java.sql;
 
     requires static lombok;
 

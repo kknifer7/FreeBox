@@ -8,8 +8,19 @@ plugins {
     id 'org.gradlex.extra-java-module-info' version '1.12'
 }
 
+// 读取配置文件
+def versionProps = new Properties()
+def versionPropsFile = file("${projectDir}/src/main/resources/x.properties")
+if (versionPropsFile.exists()) {
+    versionProps.load(new FileInputStream(versionPropsFile))
+} else {
+    throw new GradleException("x.properties file not found!")
+}
+// 获取版本信息
+def buildVersion = versionProps.getProperty('app-version', '1.0.0')
+
 group 'io.knifer'
-version '1.0.0'
+version buildVersion
 
 repositories {
     mavenCentral()
@@ -131,6 +142,10 @@ sourceSets {
     }
 }
 
+clean {
+    delete "${projectDir}/jpackage_temp"
+}
+
 jar {
     manifest {
         attributes = [
@@ -152,9 +167,11 @@ jlink {
     mergedModule {
         requires 'java.logging'
         requires 'jdk.httpserver'
-        requires 'java.sql'
         requires 'jdk.crypto.ec'
         uses 'cn.hutool.core.convert.Converter'
+    }
+    jpackage.doFirst {
+        delete "${projectDir}/jpackage_temp"
     }
     jpackage {
         mainClassName = application.mainClass
@@ -167,10 +184,13 @@ jlink {
         if (org.gradle.internal.os.OperatingSystem.current().windows) {
             installerOptions = [
                     '--verbose',
+                    '--temp', 'jpackage_temp',
                     '--win-dir-chooser',
                     '--win-menu',
+                    '--win-shortcut',
                     '--win-shortcut-prompt',
-                    '--win-upgrade-uuid', 'aabbccdd-eeff-1122-3344-556677889905'
+                    '--win-upgrade-uuid', '8EA2474F-D1AB-A3A7-CD9A-ED7895F4CAA4',
+                    '--resource-dir', "${projectDir}/wix"
             ]
             imageOptions = ['--win-console']
         }

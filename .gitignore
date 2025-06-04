@@ -44,7 +44,7 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-### config ###
-config/
-data/
+### jpackage ###
+jpackage_temp/
+### app data ###
 TV/

@@ -37,7 +37,7 @@
                                  <Font size="15.0" />
                              </font>
                          </Label>
-                         <Label text="%home.version-info" textFill="blue" />
+                         <Label fx:id="versionInfoLabel" textFill="blue" />
                         <HBox fx:id="vlcHBox" alignment="CENTER">
                            <children>
                               <Label text="%home.vlc-not-found" textFill="red" />

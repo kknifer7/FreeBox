@@ -1,5 +1,6 @@
 package io.knifer.freebox.controller;
 
+import cn.hutool.core.io.FileUtil;
 import io.knifer.freebox.component.validator.PortValidator;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
@@ -10,6 +11,8 @@ import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
+import io.knifer.freebox.util.CastUtil;
+import io.knifer.freebox.util.FormattingUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -75,6 +78,8 @@ public class SettingsController {
     private TextField wsPortTextField;
     @FXML
     private CheckBox wsAutoStartCheckBox;
+    @FXML
+    private Label applicationDataLabel;
 
     private final ObjectProperty<Pair<NetworkInterface, String>> ipValueProp = new SimpleObjectProperty<>();
     private final BooleanProperty ipChoiceBoxDisableProp = new SimpleBooleanProperty();
@@ -98,7 +103,6 @@ public class SettingsController {
             networkAndServiceHBox.setVisible(true);
             saveBtn.setDisable(false);
         });
-
         loadConfigService.start();
     }
 
@@ -159,6 +163,8 @@ public class SettingsController {
     }
 
     private void setupComponent() {
+        String applicationDataSize;
+
         // 注册表单验证器
         validationSupport.registerValidator(httpPortTextField, PortValidator.getInstance());
         validationSupport.registerValidator(wsPortTextField, PortValidator.getInstance());
@@ -204,6 +210,10 @@ public class SettingsController {
             );
             wsServiceStopBtn.setDisable(true);
         }
+
+        // 常规设置tab
+        applicationDataSize = FormattingUtil.sizeFormat(FileUtil.size(StorageHelper.getLocalStoragePath().toFile()));
+        applicationDataLabel.setText(I18nHelper.getFormatted(I18nKeys.SETTINGS_APPLICATION_DATA, applicationDataSize));
     }
 
     private void disableHttpServiceForm() {
@@ -458,5 +468,21 @@ public class SettingsController {
     private void disableWsServiceBtn() {
         wsServiceStartBtn.setDisable(true);
         wsServiceStopBtn.setDisable(true);
+    }
+
+    @FXML
+    private void onDeleteApplicationDataButtonAction() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        Button okBtn;
+
+        alert.setContentText(I18nHelper.get(I18nKeys.SETTINGS_DELETE_APPLICATION_DATA_ALERT));
+        alert.getButtonTypes().add(ButtonType.CLOSE);
+        okBtn = CastUtil.cast(alert.getDialogPane().lookupButton(ButtonType.OK));
+        okBtn.setOnAction(evt -> {
+            LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);
+            StorageHelper.clearData();
+            Context.INSTANCE.destroy();
+        });
+        alert.show();
     }
 }

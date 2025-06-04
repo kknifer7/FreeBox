@@ -1,1 +1,9 @@
 @import "base/color.css";
+
+.large {
+    -fx-font-size: 16px;
+}
+
+.bold {
+    -fx-font-weight: bold;
+}

@@ -181,6 +181,25 @@
                   </StackPane>
                </content>
             </Tab>
+            <Tab closable="false" text="%settings.general">
+               <graphic>
+                  <FontIcon iconLiteral="fa-cog:12:gray" />
+               </graphic>
+               <content>
+                  <StackPane prefHeight="400.0" prefWidth="600.0">
+                     <VBox alignment="TOP_CENTER" spacing="20.0" styleClass="general-setting-panel">
+                        <HBox alignment="CENTER" spacing="50.0">
+                           <Label fx:id="applicationDataLabel" text="%settings.application-data" styleClass="large, bold"/>
+                           <Button text="%settings.delete-application-data" focusTraversable="false" onAction="#onDeleteApplicationDataButtonAction">
+                              <graphic>
+                                 <FontIcon iconLiteral="fa-trash:12:red" />
+                              </graphic>
+                           </Button>
+                        </HBox>
+                     </VBox>
+                  </StackPane>
+               </content>
+            </Tab>
          </tabs>
       </TabPane>
    </center>

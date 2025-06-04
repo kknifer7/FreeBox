@@ -1,1 +1,5 @@
 @import "../common.css";
+
+.general-setting-panel {
+    -fx-padding: 50px;
+}

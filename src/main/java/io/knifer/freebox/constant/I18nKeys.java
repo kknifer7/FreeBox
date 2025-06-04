@@ -68,6 +68,8 @@ public class I18nKeys {
     public static final String SETTINGS_HTTP_SERVICE_DOWN = "settings.http.service-down";
     public static final String SETTINGS_WS_SERVICE_UP = "settings.ws.service-up";
     public static final String SETTINGS_WS_SERVICE_DOWN = "settings.ws.service-down";
+    public static final String SETTINGS_APPLICATION_DATA = "settings.application-data";
+    public static final String SETTINGS_DELETE_APPLICATION_DATA_ALERT = "settings.delete-application-data-alert";
 
     public static final String VIDEO_ERROR_NO_DATA = "video.error.no-data";
     public static final String VIDEO_ERROR_NO_RESOURCE = "video.error.no-resource";

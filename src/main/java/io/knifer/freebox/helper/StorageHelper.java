@@ -1,9 +1,13 @@
 package io.knifer.freebox.helper;
 
+import cn.hutool.core.io.FileUtil;
 import io.github.filelize.Filelizer;
+import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.model.domain.Savable;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.SystemUtils;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
@@ -15,9 +19,28 @@ import java.util.Optional;
 @UtilityClass
 public class StorageHelper {
 
-    private final Filelizer filelizer = new Filelizer(
-            SystemHelper.getLocalStoragePath().resolve("data").toString()
-    );
+    private final Path LOCAL_STORAGE_PATH;
+    private final Filelizer filelizer;
+
+    static {
+        if (!SystemUtils.IS_OS_WINDOWS) {
+            throw new FBException("Only Windows is supported");
+        }
+        LOCAL_STORAGE_PATH = Path.of(
+                System.getProperty("user.home"), "AppData", "Local", "FreeBox"
+        );
+        filelizer = new Filelizer(
+                LOCAL_STORAGE_PATH.resolve("data").toString()
+        );
+    }
+
+    public void clearData() {
+        FileUtil.del(LOCAL_STORAGE_PATH);
+    }
+
+    public Path getLocalStoragePath() {
+        return LOCAL_STORAGE_PATH;
+    }
 
     public <T> String save(T object) {
         return filelizer.save(object);

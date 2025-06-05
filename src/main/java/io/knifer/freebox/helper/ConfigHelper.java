@@ -1,9 +1,12 @@
 package io.knifer.freebox.helper;
 
+import io.knifer.freebox.constant.AppVersions;
+import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.domain.Config;
 import io.knifer.freebox.service.SaveConfigService;
 import io.knifer.freebox.util.json.GsonUtil;
+import javafx.application.Platform;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
@@ -81,6 +84,17 @@ public class ConfigHelper {
         return config.getWsPort();
     }
 
+    public String getAppVersion() {
+        assertIfConfigLoaded();
+
+        return config.getAppVersion();
+    }
+
+    public void setAppVersion(String appVersion) {
+        assertIfConfigLoaded();
+        config.setAppVersion(appVersion);
+    }
+
     private void assertIfConfigLoaded() {
         if (config == null) {
             throw new IllegalStateException("config is not loaded");
@@ -92,34 +106,38 @@ public class ConfigHelper {
     }
 
     private Config loadConfigFromLocalPath() {
-        Config config;
+        Config configLoaded;
         String configJson;
 
         if (Files.exists(CONFIG_PATH)) {
             try {
                 configJson = Files.readString(CONFIG_PATH);
-
-                return GsonUtil.fromJson(configJson, Config.class);
+                configLoaded = GsonUtil.fromJson(configJson, Config.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else {
             try {
-                config = new Config();
-                config.setUuid(UUID.randomUUID().toString());
-                config.setServiceIPv4(BaseValues.ANY_LOCAL_IP);
-                config.setHttpPort(BaseValues.DEFAULT_HTTP_PORT);
-                config.setWsPort(BaseValues.DEFAULT_WS_PORT);
-                config.setAutoStartHttp(true);
-                config.setAutoStartWs(true);
+                configLoaded = new Config();
+                configLoaded.setUuid(UUID.randomUUID().toString());
+                configLoaded.setAppVersion(BaseResources.X_PROPERTIES.get(
+                        BaseValues.X_APP_VERSION, AppVersions.ONE_ZERO_ZERO
+                ));
+                configLoaded.setServiceIPv4(BaseValues.ANY_LOCAL_IP);
+                configLoaded.setHttpPort(BaseValues.DEFAULT_HTTP_PORT);
+                configLoaded.setWsPort(BaseValues.DEFAULT_WS_PORT);
+                configLoaded.setAutoStartHttp(true);
+                configLoaded.setAutoStartWs(true);
                 Files.createDirectories(CONFIG_PATH.getParent());
-                Files.writeString(CONFIG_PATH, GsonUtil.toJson(config));
-
-                return config;
+                Files.writeString(CONFIG_PATH, GsonUtil.toJson(configLoaded));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Platform.runLater(() -> ToastHelper.showException(e));
+
+                return null;
             }
         }
+
+        return configLoaded;
     }
 
     public void markToUpdate() {
@@ -149,6 +167,18 @@ public class ConfigHelper {
     public synchronized void saveAnyWay() {
         updateFlag.set(false);
         new SaveConfigService(config).start();
+    }
+
+    /**
+     * 立即保存配置
+     */
+    public synchronized void saveAnyWay(Runnable callback) {
+        SaveConfigService service;
+
+        updateFlag.set(false);
+        service = new SaveConfigService(config);
+        service.setOnSucceeded(evt -> callback.run());
+        service.start();
     }
 
     public Path getConfigPath() {

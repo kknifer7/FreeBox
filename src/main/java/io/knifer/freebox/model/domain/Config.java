@@ -16,6 +16,11 @@ public class Config {
     private String uuid;
 
     /**
+     * 应用版本
+     */
+    private String appVersion;
+
+    /**
      * HTTP服务端口
      */
     private Integer httpPort;

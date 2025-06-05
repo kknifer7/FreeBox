@@ -1,6 +1,5 @@
 package io.knifer.freebox.service;
 
-import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.Config;
@@ -32,7 +31,6 @@ public class SaveConfigService extends Service<Void> {
             @Override
             protected Void call() {
                 saveConfigOnDisk();
-                Platform.runLater(() -> ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_SAVED));
 
                 return null;
             }
@@ -43,7 +41,7 @@ public class SaveConfigService extends Service<Void> {
         try {
             Files.writeString(CONFIG_PATH, GsonUtil.toJson(config));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            Platform.runLater(() -> ToastHelper.showException(e));
         }
     }
 }

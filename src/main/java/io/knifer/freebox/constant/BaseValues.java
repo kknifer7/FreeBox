@@ -37,6 +37,15 @@ public class BaseValues {
      * “获取更多”项ID
      */
     public static final String LOAD_MORE_ITEM_ID = "load-more";
+
+    /**
+     * x.properties key
+     */
+    public static final String X_APP_VERSION = "app-version";
+
+    /**
+     * 其他
+     */
     public static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
     public static final Runnable EMPTY_RUNNABLE = () -> {};

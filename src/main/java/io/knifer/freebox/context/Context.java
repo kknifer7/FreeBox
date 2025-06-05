@@ -3,7 +3,10 @@ package io.knifer.freebox.context;
 import com.google.common.eventbus.EventBus;
 import io.knifer.freebox.component.event.EventListener;
 import io.knifer.freebox.constant.AppEvents;
+import io.knifer.freebox.constant.BaseResources;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ClientType;
+import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.ServiceManager;
@@ -99,12 +102,27 @@ public enum Context {
         });
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
-            // 初始化服务管理器
-            serviceManager.init(callback);
-            log.info("application initialized");
-            initFlag = true;
+            String appVersion = ConfigHelper.getAppVersion();
+            String newestAppVersion = BaseResources.X_PROPERTIES.get(BaseValues.X_APP_VERSION);
+
+            if (newestAppVersion != null && !newestAppVersion.equals(appVersion)) {
+                // config版本号与x.properties中的版本号不一致，说明用户刚刚安装了新版本，可对比新旧版本号，做一些更新后置操作
+                // ...
+                // 后置操作完成，保存最新版本号到config
+                ConfigHelper.setAppVersion(newestAppVersion);
+                ConfigHelper.saveAnyWay(() -> doInit(callback));
+            } else {
+                doInit(callback);
+            }
         });
         loadConfigService.start();
+    }
+
+    private void doInit(Runnable callback) {
+        // 初始化服务管理器
+        serviceManager.init(callback);
+        log.info("application initialized");
+        initFlag = true;
     }
 
     public boolean isInitialized() {

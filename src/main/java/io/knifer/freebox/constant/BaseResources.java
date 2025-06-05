@@ -1,5 +1,7 @@
 package io.knifer.freebox.constant;
 
+import cn.hutool.setting.Setting;
+import com.google.common.io.Resources;
 import io.knifer.freebox.FreeBoxApplication;
 import javafx.scene.image.Image;
 import lombok.experimental.UtilityClass;
@@ -21,5 +23,9 @@ public class BaseResources {
 
     public static final Image LOAD_MORE_IMG = new Image(
             FreeBoxApplication.class.getResourceAsStream("image/load_more.png")
+    );
+
+    public static final Setting X_PROPERTIES = new Setting(
+            Resources.getResource("x.properties").getPath()
     );
 }

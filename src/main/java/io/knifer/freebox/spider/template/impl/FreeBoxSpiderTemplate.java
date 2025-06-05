@@ -1,6 +1,5 @@
 package io.knifer.freebox.spider.template.impl;
 
-import cn.hutool.core.net.URLEncodeUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -308,13 +307,6 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
                 callback.accept(null);
 
                 return;
-            }
-            if (sourceResult.has("url")) {
-                url = sourceResult.get("url").getAsString();
-                if (StringUtils.startsWith(url, "http://127.0.0.1")) {
-                    url = HttpUtil.get(url);
-                }
-                sourceResult.addProperty("url", URLEncodeUtil.encode(url));
             }
             result = new JsonObject();
             result.add("nameValuePairs", sourceResult);

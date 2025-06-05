@@ -14,9 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 代理服务检测处理
@@ -35,21 +35,28 @@ public class ProxyHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) {
         try (httpExchange) {
-            Map<String, String> parameterMap = parseParameterMap(httpExchange.getRequestURI().getQuery());
+            Map<String, String> parameterMap = parseParameterMap(httpExchange);
             Object[] proxyInvokeResult = SpiderJarLoader.getInstance().proxyInvoke(parameterMap);
-            String url;
-            byte[] respBytes;
             int code;
 
-            log.info("spider proxyInvoke result: {}", proxyInvokeResult);
+            log.info("parameters: {}, spider proxyInvoke result: {}", parameterMap, proxyInvokeResult);
             if (ArrayUtils.isEmpty(proxyInvokeResult)) {
                 httpExchange.sendResponseHeaders(HttpStatus.HTTP_INTERNAL_ERROR, -1);
             } else if (proxyInvokeResult[0] instanceof Response proxyResp) {
                 try (proxyResp) {
-                    url = proxyResp.request().url().toString();
-                    respBytes = url.getBytes();
-                    httpExchange.sendResponseHeaders(HttpStatus.HTTP_OK, respBytes.length);
-                    httpExchange.getResponseBody().write(respBytes);
+                    proxyResp.headers().forEach(nameValPair -> {
+                        String name = nameValPair.getFirst();
+
+                        if (HttpHeaders.CONTENT_DISPOSITION.equalsIgnoreCase(name)) {
+                            // 移除可能导致错误的响应头
+                            return;
+                        }
+                        httpExchange.getResponseHeaders().put(
+                                name, List.of(nameValPair.getSecond())
+                        );
+                    });
+                    httpExchange.sendResponseHeaders(proxyResp.code(), proxyResp.body().contentLength());
+                    proxyResp.body().byteStream().transferTo(httpExchange.getResponseBody());
                 }
             } else {
                 try {
@@ -88,15 +95,23 @@ public class ProxyHandler implements HttpHandler {
         }
     }
 
-    private Map<String, String> parseParameterMap(String parameters) {
+    private Map<String, String> parseParameterMap(HttpExchange exchange) {
         Map<String, String> result;
         String[] entry;
+        String query = exchange.getRequestURI().getQuery();
 
-        if (StringUtils.isBlank(parameters)) {
+        if (StringUtils.isBlank(query)) {
             return Map.of();
         }
-        result = new HashMap<>();
-        for (String param : parameters.split("&")) {
+        result = exchange.getRequestHeaders()
+                .entrySet()
+                .stream()
+                .map(nameAndValue -> Map.entry(
+                        nameAndValue.getKey(),
+                        StringUtils.join(nameAndValue.getValue(), ",")
+                ))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        for (String param : query.split("&")) {
             entry = param.split("=");
             if (entry.length > 1) {
                 result.put(

@@ -136,7 +136,7 @@ public class VLCPlayer {
         playerPane = new StackPane();
         stage.setFullScreenExitHint(StringUtils.EMPTY);
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-        mediaPlayer = new MediaPlayerFactory().mediaPlayers().newEmbeddedMediaPlayer();
+        mediaPlayer = new MediaPlayerFactory(List.of("-vvv")).mediaPlayers().newEmbeddedMediaPlayer();
         mediaPlayer.fullScreen().strategy(new JavaFXFullScreenStrategy(stage){
             @Override
             public void onBeforeEnterFullScreen() {
@@ -640,11 +640,7 @@ public class VLCPlayer {
         setVideoTitle(videoTitle);
         options = parsePlayOptionsFromHeaders(headers);
         log.info("play url={}, options={}", url, options);
-        if (options == null) {
-            mediaPlayer.media().play(url);
-        } else {
-            mediaPlayer.media().play(url, options);
-        }
+        mediaPlayer.media().play(url, options);
         mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
     }
 
@@ -655,7 +651,7 @@ public class VLCPlayer {
         short size;
 
         if (headers.isEmpty()) {
-            return null;
+            return new String[] {":http-range-length=1048576"};
         }
         userAgent = null;
         referer = null;
@@ -663,10 +659,10 @@ public class VLCPlayer {
         for (Map.Entry<String, String> keyValue : headers.entrySet()) {
             if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "User-Agent")) {
                 size++;
-                userAgent = "--http-user-agent=" + keyValue.getValue();
+                userAgent = ":http-user-agent=" + keyValue.getValue();
             } else if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "Referer")) {
                 size++;
-                referer = "--http-referrer=" + keyValue.getValue();
+                referer = ":http-referer=" + keyValue.getValue();
             }
         }
         switch (size) {

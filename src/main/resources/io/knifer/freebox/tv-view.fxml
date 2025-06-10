@@ -21,6 +21,11 @@
             <HBox BorderPane.alignment="CENTER">
                <children>
                   <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" converter="$sourceBean2StringConverter" prefWidth="150.0" />
+                  <Button fx:id="sourceBeanBlockButton" focusTraversable="false" mnemonicParsing="false" onAction="#onSourceBeanBlockButtonAction">
+                     <graphic>
+                        <FontIcon iconLiteral="fa-filter:16:brown" />
+                     </graphic>
+                  </Button>
                   <Button fx:id="historyButton" focusTraversable="false" mnemonicParsing="false" onAction="#onHistoryBtnAction">
                      <graphic>
                         <FontIcon iconLiteral="fa-history:16:#4169E1" />
@@ -80,7 +85,8 @@
                         <ProgressIndicator fx:id="searchLoadingProgressIndicator" prefHeight="20.0" prefWidth="20.0" visible="false">
                            <HBox.margin>
                               <Insets left="10.0" />
-                           </HBox.margin></ProgressIndicator>
+                           </HBox.margin>
+                        </ProgressIndicator>
                      </children>
                      <opaqueInsets>
                         <Insets />

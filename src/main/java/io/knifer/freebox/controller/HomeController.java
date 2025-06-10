@@ -7,6 +7,9 @@ import io.knifer.freebox.handler.VLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.domain.ClientInfo;
+import io.knifer.freebox.model.domain.MovieCollection;
+import io.knifer.freebox.model.domain.MovieHistory;
+import io.knifer.freebox.model.domain.SourceBeanBlockList;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import io.knifer.freebox.util.CollectionUtil;
@@ -90,12 +93,12 @@ public class HomeController {
             ClientInfo clientInfo = evt.clientInfo();
             ClientInfo oldClientInfo;
 
-            clientItems.removeIf(c -> c.getClientId().equals(clientInfo.getClientId()));
+            clientItems.removeIf(c -> c.getId().equals(clientInfo.getId()));
             clientItems.add(clientInfo);
             oldClientInfo = clientManager.getCurrentClientImmediately();
             if (
                     oldClientInfo != null &&
-                    oldClientInfo.getClientId().equals(clientInfo.getClientId())
+                    oldClientInfo.getId().equals(clientInfo.getId())
             ) {
                 clientManager.updateCurrentClient(clientInfo);
             }
@@ -228,13 +231,18 @@ public class HomeController {
     @FXML
     private void onClientListCloseBtnAction() {
         ClientInfo clientInfo = clientListView.getSelectionModel().getSelectedItem();
+        String clientId;
 
         if (clientInfo == null) {
             return;
         }
         clientManager.unregister(clientInfo);
         clientListView.getItems().remove(clientInfo);
+        clientId = clientInfo.getId();
+        StorageHelper.delete(clientId, SourceBeanBlockList.class);
         if (clientInfo.getClientType() == ClientType.CATVOD_SPIDER) {
+            StorageHelper.delete(clientId, MovieHistory.class);
+            StorageHelper.delete(clientId, MovieCollection.class);
             StorageHelper.delete(clientInfo);
             ToastHelper.showInfoI18n(
                     I18nKeys.HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED,
@@ -277,8 +285,10 @@ public class HomeController {
     private void onImportSourceBtnAction() {
         new ImportApiDialog(clientInfo -> {
             StorageHelper.save(clientInfo);
-            clientManager.register(clientInfo);
-            Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
+            if (!clientManager.isRegistered(clientInfo)) {
+                clientManager.register(clientInfo);
+                Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
+            }
             ToastHelper.showSuccessI18n(
                     I18nKeys.HOME_IMPORT_API_MESSAGE_SAVE_CONFIG_SUCCEED,
                     clientInfo.getClientName()

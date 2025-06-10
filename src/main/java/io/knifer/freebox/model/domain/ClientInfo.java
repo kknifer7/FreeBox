@@ -24,7 +24,7 @@ import org.java_websocket.WebSocket;
 public class ClientInfo implements Savable {
 
     @Id
-    private String clientId;
+    private String id;
 
     private String clientName;
 
@@ -33,11 +33,6 @@ public class ClientInfo implements Savable {
     private WebSocket connection;
 
     private String configUrl;
-
-    @Override
-    public String getId() {
-        return clientId;
-    }
 
     /**
      * 获取名称
@@ -63,7 +58,7 @@ public class ClientInfo implements Savable {
     public static ClientInfo of(RegisterInfo registerInfo, WebSocket connection) {
         ClientInfo clientInfo = new ClientInfo();
 
-        clientInfo.clientId = Strings.nullToEmpty(registerInfo.getClientId());
+        clientInfo.id = Strings.nullToEmpty(registerInfo.getClientId());
         clientInfo.clientName = Strings.nullToEmpty(registerInfo.getClientName());
         clientInfo.clientType = ClientType.TVBOX_K;
         clientInfo.connection = connection;
@@ -74,7 +69,7 @@ public class ClientInfo implements Savable {
     public static ClientInfo of(String configUrl) {
         ClientInfo clientInfo = new ClientInfo();
 
-        clientInfo.clientId = DigestUtil.md5Hex(configUrl);
+        clientInfo.id = DigestUtil.md5Hex(configUrl);
         clientInfo.clientName = configUrl;
         clientInfo.clientType = ClientType.CATVOD_SPIDER;
         clientInfo.configUrl = configUrl;

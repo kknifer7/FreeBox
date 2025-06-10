@@ -39,7 +39,6 @@ public class ImportApiDialog extends TextInputDialog {
         DialogPane dialogPane = getDialogPane();
         TextField editor = getEditor();
         Button okBtn;
-        ProgressIndicator loadingIndicator;
 
         validationSupport = new ValidationSupport();
         loadingProperty = new SimpleBooleanProperty(false);

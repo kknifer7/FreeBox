@@ -32,12 +32,12 @@ public class ClientManager {
     private ThreadPoolExecutor connectingExecutor = null;
 
     public void register(ClientInfo clientInfo) {
-        clients.put(clientInfo.getClientId(), clientInfo);
+        clients.put(clientInfo.getId(), clientInfo);
         log.info("register client: {}", clientInfo);
     }
 
     public ClientInfo unregister(ClientInfo clientInfo) {
-        ClientInfo result = clients.remove(clientInfo.getClientId());
+        ClientInfo result = clients.remove(clientInfo.getId());
         WebSocket connection;
 
         if (result == null) {
@@ -60,14 +60,22 @@ public class ClientManager {
         }
         entryOptional = clients.entrySet()
                 .stream()
-                .filter(entry -> entry.getValue().getConnection().equals(connection))
+                .filter(entry -> {
+                    WebSocket conn = entry.getValue().getConnection();
+
+                    return conn != null && conn.equals(connection);
+                })
                 .findFirst();
 
         return entryOptional.map(
                 stringClientInfoEntry ->
-                        clients.remove(stringClientInfoEntry.getValue().getClientId())
+                        clients.remove(stringClientInfoEntry.getValue().getId())
         ).orElse(null);
 
+    }
+
+    public boolean isRegistered(ClientInfo clientInfo) {
+        return clients.containsKey(clientInfo.getId());
     }
 
     public boolean isRegistered(WebSocket connection) {

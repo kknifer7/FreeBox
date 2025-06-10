@@ -4,6 +4,7 @@ import io.knifer.freebox.component.factory.VideoGridCellFactory;
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.component.node.MovieInfoListPopOver;
 import io.knifer.freebox.component.node.MovieSortFilterPopOver;
+import io.knifer.freebox.component.node.SourceBeanBlockPopOver;
 import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
@@ -75,6 +76,8 @@ public class TVController {
     @FXML
     private ProgressIndicator movieLoadingProgressIndicator;
     @FXML
+    private Button sourceBeanBlockButton;
+    @FXML
     private Button historyButton;
     @FXML
     private Button collectButton;
@@ -89,6 +92,7 @@ public class TVController {
 
     private MovieSearchService movieSearchService;
 
+    private SourceBeanBlockPopOver sourceBeanBlockPopOver;
     private MovieInfoListPopOver movieHistoryPopOver;
     private MovieInfoListPopOver movieCollectionPopOver;
     private MovieSortFilterPopOver movieSortFilterPopOver;
@@ -159,6 +163,12 @@ public class TVController {
                 });
             }, () -> searchLoadingProperty.set(false));
 
+            // 源屏蔽弹出框
+            sourceBeanBlockPopOver = new SourceBeanBlockPopOver(sourceBeans -> {
+                clearMovieData();
+                videosGridView.getItems().clear();
+                updateSourceBeanData(sourceBeans);
+            });
             // 历史记录弹出框
             movieHistoryPopOver = new MovieInfoListPopOver(I18nKeys.TV_HISTORY, vodInfoDeleting -> {
                 movieHistoryPopOver.clearVodInfoList();
@@ -182,6 +192,9 @@ public class TVController {
                 loadMovieBySortData(sortData);
             });
 
+            sourceBeanBlockButton.disableProperty().bind(
+                    sourceBeanBlockPopOver.showingProperty().or(sortsLoadingProperty)
+            );
             historyButton.disableProperty().bind(movieHistoryPopOver.showingProperty().or(sortsLoadingProperty));
             movieHistoryPopOver.loadingPropertyProperty().bind(movieLoadingProperty);
             collectButton.disableProperty().bind(movieCollectionPopOver.showingProperty().or(sortsLoadingProperty));
@@ -436,12 +449,28 @@ public class TVController {
      * @param sourceBeanList 源对象列表
      */
     private void initSourceBeanData(List<SourceBean> sourceBeanList) {
+        List<SourceBean> activeSourceBeans = sourceBeanBlockPopOver.setSourceBeans(sourceBeanList);
+
+        if (!activeSourceBeans.isEmpty()) {
+            updateSourceBeanData(activeSourceBeans);
+        }
+    }
+
+    /**
+     * 更新源列表
+     * @param sourceBeanList 源对象列表
+     */
+    private void updateSourceBeanData(List<SourceBean> sourceBeanList) {
         List<SourceBean> items = sourceBeanComboBox.getItems();
         VideoGridCellFactory videoGridCellFactory;
+        SingleSelectionModel<SourceBean> selectionModel;
 
         items.clear();
         if (sourceBeanList.isEmpty()) {
-            sortsLoadingProperty.set(false);
+            if (sortsLoadingProperty.get()) {
+                sortsLoadingProperty.set(false);
+            }
+
             return;
         }
         items.addAll(sourceBeanList);
@@ -449,7 +478,10 @@ public class TVController {
         videoGridCellFactory.setSourceBeans(sourceBeanList);
         movieHistoryPopOver.setSourceBeans(sourceBeanList);
         movieCollectionPopOver.setSourceBeans(sourceBeanList);
-        sourceBeanComboBox.getSelectionModel().selectFirst();
+        selectionModel = sourceBeanComboBox.getSelectionModel();
+        if (selectionModel.getSelectedItem() == null) {
+            selectionModel.selectFirst();
+        }
     }
 
     /**
@@ -457,12 +489,17 @@ public class TVController {
      */
     @FXML
     private void onSourceBeanComboBoxAction() {
-        ObservableList<MovieSort.SortData> items = classesListView.getItems();
+        SourceBean sourceBean = getSourceBean();
+        ObservableList<MovieSort.SortData> items;
 
+        if (sourceBean == null) {
+            return;
+        }
+        items = classesListView.getItems();
         sortsLoadingProperty.set(true);
         clearMovieData();
         videosGridView.getItems().clear();
-        template.getHomeContent(getSourceBean(), homeContent -> {
+        template.getHomeContent(sourceBean, homeContent -> {
             Platform.runLater(() -> {
                 Movie movie;
                 List<Movie.Video> list;
@@ -664,6 +701,11 @@ public class TVController {
         MOVIE_CACHE.clear();
         resetMovieSearchService();
         AsyncUtil.cancelAllTask();
+    }
+
+    @FXML
+    private void onSourceBeanBlockButtonAction() {
+        sourceBeanBlockPopOver.show(sourceBeanBlockButton);
     }
 
     @FXML

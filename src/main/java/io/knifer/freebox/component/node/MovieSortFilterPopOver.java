@@ -33,12 +33,12 @@ public class MovieSortFilterPopOver extends PopOver {
 
     public MovieSortFilterPopOver(Consumer<MovieSort.SortData> onFilterAction) {
         super();
-        setTitle(I18nHelper.get(I18nKeys.TV_CLASS_FILTER));
         Button okBtn = new Button(I18nHelper.get(I18nKeys.COMMON_OK));
-        Button resetBtn = new Button(I18nHelper.get(I18nKeys.TV_CLASS_FILTER_RESET));
+        Button resetBtn = new Button(I18nHelper.get(I18nKeys.COMMON_RESET));
         HBox btnHBox;
         VBox root;
 
+        setTitle(I18nHelper.get(I18nKeys.TV_CLASS_FILTER));
         treeView = new CheckTreeView<>();
         treeView.setFocusTraversable(false);
         treeView.setShowRoot(false);

@@ -24,13 +24,14 @@ public class ClientInfoListCellFactory implements Callback<ListView<ClientInfo>,
                 if (empty) {
                     setText(null);
                     setGraphic(null);
+
+                    return;
+                }
+                setText(item.getName());
+                if (item.getClientType() == ClientType.TVBOX_K) {
+                    setGraphic(new FontIcon("fa-tv:20"));
                 } else {
-                    setText(item.getName());
-                    if (item.getClientType() == ClientType.TVBOX_K) {
-                        setGraphic(new FontIcon("fa-tv:20"));
-                    } else {
-                        setGraphic(new FontIcon("fa-optin-monster:20"));
-                    }
+                    setGraphic(new FontIcon("fa-optin-monster:20"));
                 }
             }
         };

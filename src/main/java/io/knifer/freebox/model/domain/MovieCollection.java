@@ -21,21 +21,17 @@ public class MovieCollection implements Savable {
      * ID
      */
     @Id
-    private String clientId;
+    private String id;
 
     /**
      * 数据（key=md5(sourceKey+vodId), value=VodInfo）
      */
     private Map<String, VodCollect> data;
 
-    public String getId() {
-        return clientId;
-    }
-
-    public static MovieCollection of(String clientId, Map<String, VodCollect> data) {
+    public static MovieCollection of(String id, Map<String, VodCollect> data) {
         MovieCollection result = new MovieCollection();
 
-        result.clientId = clientId;
+        result.id = id;
         result.data = data;
 
         return result;

@@ -21,22 +21,17 @@ public class MovieHistory implements Savable {
      * ID
      */
     @Id
-    private String clientId;
+    private String id;
 
     /**
      * 数据（key=md5(sourceKey+vodId), value=VodInfo）
      */
     private Map<String, VodInfo> data;
 
-    @Override
-    public String getId() {
-        return clientId;
-    }
-
-    public static MovieHistory of(String clientId, Map<String, VodInfo> data) {
+    public static MovieHistory of(String id, Map<String, VodInfo> data) {
         MovieHistory movieHistory = new MovieHistory();
 
-        movieHistory.clientId = clientId;
+        movieHistory.id = id;
         movieHistory.data = data;
 
         return movieHistory;

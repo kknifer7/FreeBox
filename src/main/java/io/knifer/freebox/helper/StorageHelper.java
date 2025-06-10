@@ -8,6 +8,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,8 +47,16 @@ public class StorageHelper {
         return filelizer.save(object);
     }
 
+    public <T> List<String> saveAll(List<T> objects) {
+        return filelizer.saveAll(objects);
+    }
+
     public void delete(Savable savable) {
         filelizer.delete(savable.getId(), savable.getClass());
+    }
+
+    public void delete(String id, Class<?> valueType) {
+        filelizer.delete(id, valueType);
     }
 
     public <T> Optional<T> find(String id, Class<T> valueType) {

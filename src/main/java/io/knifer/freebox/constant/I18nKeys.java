@@ -31,10 +31,11 @@ public class I18nKeys {
 
     public static final String TV_HOME = "tv.home";
     public static final String TV_LOAD_MORE = "tv.load-more";
+    public static final String TV_SOURCE_BEAN_BLOCK = "tv.source-bean-block";
+    public static final String TV_BLOCK = "tv.block";
     public static final String TV_HISTORY = "tv.history";
     public static final String TV_COLLECTION = "tv.collection";
     public static final String TV_CLASS_FILTER = "tv.class-filter";
-    public static final String TV_CLASS_FILTER_RESET = "tv.class-filter-reset";
     public static final String TV_ERROR_LOAD_SOURCE_FAILED = "tv.error.load-source-failed";
     public static final String TV_ERROR_LOAD_MOVIE_DETAIL_FAILED = "tv.error.load-movie-detail-failed";
     public static final String TV_ERROR_LOAD_SPIDER_CONFIG_FAILED = "tv.error.load-spider-config-failed";
@@ -90,6 +91,7 @@ public class I18nKeys {
     public static final String COMMON_DELETE = "common.delete";
     public static final String COMMON_OK = "common.ok";
     public static final String COMMON_CANCEL_AND_BACK_TO_HOME = "common.cancel-and-back-to-home";
+    public static final String COMMON_RESET = "common.reset";
     public static final String COMMON_MESSAGE_SUCCESS = "common.message.success";
     public static final String COMMON_MESSAGE_TIMOUT_FAILED = "common.message.timeout-failed";
     public static final String COMMON_MESSAGE_COPY_SUCCEED = "common.message.copy-succeed";

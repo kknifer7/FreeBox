@@ -103,7 +103,7 @@ public enum Context {
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
             String appVersion = ConfigHelper.getAppVersion();
-            String newestAppVersion = BaseResources.X_PROPERTIES.get(BaseValues.X_APP_VERSION);
+            String newestAppVersion = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION);
 
             if (newestAppVersion != null && !newestAppVersion.equals(appVersion)) {
                 // config版本号与x.properties中的版本号不一致，说明用户刚刚安装了新版本，可对比新旧版本号，做一些更新后置操作

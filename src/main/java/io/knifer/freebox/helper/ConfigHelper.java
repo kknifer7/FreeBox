@@ -120,7 +120,7 @@ public class ConfigHelper {
             try {
                 configLoaded = new Config();
                 configLoaded.setUuid(UUID.randomUUID().toString());
-                configLoaded.setAppVersion(BaseResources.X_PROPERTIES.get(
+                configLoaded.setAppVersion(BaseResources.X_PROPERTIES.getProperty(
                         BaseValues.X_APP_VERSION, AppVersions.ONE_ZERO_ZERO
                 ));
                 configLoaded.setServiceIPv4(BaseValues.ANY_LOCAL_IP);

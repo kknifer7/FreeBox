@@ -9,15 +9,15 @@ plugins {
 }
 
 // 读取配置文件
-def versionProps = new Properties()
+def xProps = new Properties()
 def versionPropsFile = file("${projectDir}/src/main/resources/x.properties")
 if (versionPropsFile.exists()) {
-    versionProps.load(new FileInputStream(versionPropsFile))
+    xProps.load(new FileInputStream(versionPropsFile))
 } else {
     throw new GradleException("x.properties file not found!")
 }
 // 获取版本信息
-def buildVersion = versionProps.getProperty('app-version', '1.0.0')
+def buildVersion = xProps.getProperty('app-version', '1.0.0')
 
 group 'io.knifer'
 version buildVersion
@@ -192,7 +192,9 @@ jlink {
                     '--win-upgrade-uuid', '8EA2474F-D1AB-A3A7-CD9A-ED7895F4CAA4',
                     '--resource-dir', "${projectDir}/wix"
             ]
-            imageOptions = ['--win-console']
+            if ('true' == xProps.get('debug')) {
+                imageOptions = ['--win-console']
+            }
         }
     }
 }

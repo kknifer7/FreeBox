@@ -2,6 +2,7 @@ package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.helper.WindowHelper;
@@ -130,13 +131,16 @@ public class VLCPlayer {
         AnchorPane controlBottomAnchorPane;
         StackPane progressMiddleStackPane;
         AnchorPane controlTopAnchorPane;
+        MediaPlayerFactory mediaPlayerFactory;
 
         stage = WindowHelper.getStage(parent);
         scene = stage.getScene();
         playerPane = new StackPane();
         stage.setFullScreenExitHint(StringUtils.EMPTY);
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-        mediaPlayer = new MediaPlayerFactory(List.of("-vvv")).mediaPlayers().newEmbeddedMediaPlayer();
+        mediaPlayerFactory = Context.INSTANCE.isDebug() ?
+                new MediaPlayerFactory(List.of("-vvv")) : new MediaPlayerFactory();
+        mediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
         mediaPlayer.fullScreen().strategy(new JavaFXFullScreenStrategy(stage){
             @Override
             public void onBeforeEnterFullScreen() {

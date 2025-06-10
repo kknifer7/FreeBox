@@ -68,6 +68,8 @@ public enum Context {
 
     private final Stack<Stage> stageStack = new Stack<>();
 
+    private final boolean debugFlag = "true".equals(BaseResources.X_PROPERTIES.getProperty(BaseValues.X_DEBUG));
+
     public Application getApp() {
         if (!initFlag) {
             throw new IllegalStateException("application has not started yet");
@@ -123,6 +125,10 @@ public enum Context {
         serviceManager.init(callback);
         log.info("application initialized");
         initFlag = true;
+    }
+
+    public boolean isDebug() {
+        return debugFlag;
     }
 
     public boolean isInitialized() {

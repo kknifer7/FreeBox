@@ -42,6 +42,7 @@ public class BaseValues {
      * x.properties key
      */
     public static final String X_APP_VERSION = "app-version";
+    public static final String X_DEBUG = "debug";
 
     /**
      * 其他

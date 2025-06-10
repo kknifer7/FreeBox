@@ -369,7 +369,9 @@ public class TVController {
     private void openVideo(String sourceKey, String videoId, String videoName, @Nullable VideoPlayInfoBO playInfo) {
         SourceBean sourceBean = getSourceBean(sourceKey);
 
-        LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_LOADING);
+        Platform.runLater(
+                () -> LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_LOADING)
+        );
         template.getDetailContent(
                 GetDetailContentDTO.of(sourceBean.getKey(), videoId),
                 detailContent -> {

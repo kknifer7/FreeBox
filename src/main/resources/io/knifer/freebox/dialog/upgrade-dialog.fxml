@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.TextFlow?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-      prefHeight="400.0" prefWidth="600.0" spacing="15"
-      xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-      fx:id="root"
-      fx:controller="io.knifer.freebox.controller.dialog.UpgradeDialogController"
-      stylesheets="@../css/dialog/upgrade-dialog.css"
-      styleClass="dialog"
->
+<?import javafx.scene.text.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<VBox fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" spacing="15" styleClass="dialog" stylesheets="@../css/dialog/upgrade-dialog.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.dialog.UpgradeDialogController">
 
    <padding>
       <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
    </padding>
 
    <!-- 标题区域 -->
-   <Label styleClass="dialog-header"
-          text="%settings.upgrade.new-version-found" />
+   <Label styleClass="dialog-header" text="%settings.upgrade.new-version-found" />
 
    <!-- 版本信息 -->
    <HBox alignment="CENTER_LEFT" spacing="10">
@@ -34,13 +27,11 @@
    <Label styleClass="bold" text="%settings.upgrade.changelog" />
 
    <!-- 更新日志内容 (可滚动) -->
-   <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="150.0" styleClass="changelog-scroll-pane">
-      <TextFlow styleClass="changelog-text-flow">
+   <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="532.0" styleClass="changelog-scroll-pane">
+      <TextFlow fx:id="changelogTextFlow" styleClass="changelog-text-flow">
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
-         <!-- 内容将在控制器中动态添加 -->
-         <Label fx:id="changelogLabel" />
       </TextFlow>
    </ScrollPane>
 
@@ -50,8 +41,7 @@
          <Label styleClass="bold" text="%settings.upgrade.download-progress" />
          <Label fx:id="progressLabel" styleClass="light-blue" text="-- / --" />
       </HBox>
-      <ProgressBar fx:id="downloadProgressBar" prefHeight="25.0" prefWidth="460.0"
-                   progress="0.0" styleClass="light-blue"/>
+      <ProgressBar fx:id="downloadProgressBar" prefHeight="25.0" prefWidth="460.0" progress="0.0" styleClass="light-blue" />
    </VBox>
 
    <!-- 按钮区域 -->
@@ -61,17 +51,17 @@
          <Insets top="10.0" />
       </VBox.margin>
 
-      <Button fx:id="upgradeButton" defaultButton="true" mnemonicParsing="false" text="%settings.upgrade.upgrade-now" onAction="#onUpgradeButtonAction">
+      <Button fx:id="upgradeButton" defaultButton="true" mnemonicParsing="false" onAction="#onUpgradeButtonAction" text="%settings.upgrade.upgrade-now">
           <graphic>
               <FontIcon iconLiteral="fa-download:16:green" />
           </graphic>
       </Button>
-      <Button mnemonicParsing="false" text="%settings.upgrade.manual-upgrade" onAction="#onManualUpgradeButtonAction">
+      <Button mnemonicParsing="false" onAction="#onManualUpgradeButtonAction" text="%settings.upgrade.manual-upgrade">
           <graphic>
               <FontIcon iconLiteral="fa-external-link:16:#4169E1" />
           </graphic>
       </Button>
-      <Button mnemonicParsing="false" text="%common.cancel" onAction="#onCancelButtonAction">
+      <Button mnemonicParsing="false" onAction="#onCancelButtonAction" text="%common.cancel">
           <graphic>
               <FontIcon iconLiteral="fa-times:16:red" />
           </graphic>

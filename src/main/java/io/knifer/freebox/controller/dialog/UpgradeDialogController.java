@@ -22,6 +22,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -41,7 +43,7 @@ public class UpgradeDialogController extends BaseController {
     @FXML
     private Label sizeLabel;
     @FXML
-    private Label changelogLabel;
+    private TextFlow changelogTextFlow;
     @FXML
     private Label progressLabel;
     @FXML
@@ -65,7 +67,7 @@ public class UpgradeDialogController extends BaseController {
                     .toFile();
             versionLabel.setText(upgradeConfig.getVersion());
             sizeLabel.setText(FormattingUtil.sizeFormat(releaseFileInfo.getFileSize()));
-            changelogLabel.setText(upgradeConfig.getChangelog());
+            changelogTextFlow.getChildren().add(new Text(upgradeConfig.getChangelog()));
 
             upgradeButton.disableProperty().bind(upgradingProperty);
         });

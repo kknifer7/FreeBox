@@ -6,9 +6,9 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <?import org.kordamp.ikonli.javafx.*?>
-<BorderPane fx:id="root" stylesheets="@css/view/settings-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
+<BorderPane fx:id="root" stylesheets="@css/view/settings-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
    <fx:define>
-      <NetworkInterfaceAndIP2StringConverter fx:id="ipChoiceBoxConverter"/>
+      <NetworkInterfaceAndIP2StringConverter fx:id="ipChoiceBoxConverter" />
    </fx:define>
    <center>
       <TabPane BorderPane.alignment="CENTER">
@@ -38,7 +38,7 @@
                                              </Label>
                                              <Label>
                                                 <graphic>
-                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF"/>
+                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
                                                 </graphic>
                                                 <font>
                                                    <Font size="20.0" />
@@ -110,8 +110,8 @@
                                        </HBox>
                                        <HBox alignment="CENTER" spacing="10.0">
                                           <children>
-                                             <TextField fx:id="wsPortTextField"  alignment="center" promptText="%settings.hint-port" />
-                                             <CheckBox fx:id="wsAutoStartCheckBox" onAction="#onWsAutoStartCheckBoxAction" mnemonicParsing="false" text="%settings.auto-start" />
+                                             <TextField fx:id="wsPortTextField" alignment="center" promptText="%settings.hint-port" />
+                                             <CheckBox fx:id="wsAutoStartCheckBox" mnemonicParsing="false" onAction="#onWsAutoStartCheckBoxAction" text="%settings.auto-start" />
                                           </children>
                                        </HBox>
                                     </children></VBox>
@@ -130,7 +130,7 @@
                                                    <Font size="20.0" />
                                                 </font>
                                                 <graphic>
-                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF"/>
+                                                   <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
                                                 </graphic>
                                                 <tooltip>
                                                    <Tooltip showDelay="200ms" showDuration="1m" text="%settings.ws.tooltip">
@@ -168,8 +168,8 @@
                                        <Insets bottom="90.0" />
                                     </BorderPane.margin>
                                     <children>
-                                       <Button fx:id="wsServiceStartBtn" onAction="#onWsServiceStartBtnAction" mnemonicParsing="false" text="%settings.service-start" />
-                                       <Button fx:id="wsServiceStopBtn" onAction="#onWsServiceStopBtnAction" mnemonicParsing="false" text="%settings.service-stop" />
+                                       <Button fx:id="wsServiceStartBtn" mnemonicParsing="false" onAction="#onWsServiceStartBtnAction" text="%settings.service-start" />
+                                       <Button fx:id="wsServiceStopBtn" mnemonicParsing="false" onAction="#onWsServiceStopBtnAction" text="%settings.service-stop" />
                                     </children>
                                  </HBox>
                               </bottom></BorderPane>
@@ -188,14 +188,37 @@
                <content>
                   <StackPane prefHeight="400.0" prefWidth="600.0">
                      <VBox alignment="TOP_CENTER" spacing="20.0" styleClass="general-setting-panel">
-                        <HBox alignment="CENTER" spacing="50.0">
-                           <Label fx:id="applicationDataLabel" text="%settings.application-data" styleClass="large, bold"/>
-                           <Button text="%settings.delete-application-data" focusTraversable="false" onAction="#onDeleteApplicationDataButtonAction">
-                              <graphic>
-                                 <FontIcon iconLiteral="fa-trash:12:red" />
-                              </graphic>
-                           </Button>
-                        </HBox>
+                        <GridPane hgap="30" vgap="30" VBox.vgrow="ALWAYS">
+                          <columnConstraints>
+                             <ColumnConstraints halignment="LEFT" hgrow="NEVER"/>
+                             <ColumnConstraints halignment="LEFT" hgrow="ALWAYS"/>
+                          </columnConstraints>
+                          <rowConstraints>
+                             <RowConstraints valignment="CENTER" />
+                             <RowConstraints valignment="CENTER" />
+                          </rowConstraints>
+                           <children>
+                              <Label fx:id="applicationDataLabel" styleClass="large, bold" text="%settings.application-data" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                              <Button focusTraversable="false" onAction="#onDeleteApplicationDataButtonAction" text="%settings.delete-application-data" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                                 <graphic>
+                                    <FontIcon iconLiteral="fa-trash:12:red" />
+                                 </graphic>
+                              </Button>
+                              <Label fx:id="applicationVersionLabel" styleClass="large, bold" text="%settings.application-version" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                              <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                                 <Button fx:id="checkUpgradeButton" focusTraversable="false" onAction="#onCheckUpgradeButtonAction" text="%settings.check-upgrade">
+                                    <graphic>
+                                       <FontIcon iconLiteral="fa-cloud-download:12:#1E90FF" />
+                                    </graphic>
+                                 </Button>
+                                 <Label fx:id="alreadyLatestVersionLabel" visible="false" text="%settings.upgrade.already-latest-version">
+                                    <graphic>
+                                       <FontIcon iconLiteral="fa-check-circle-o:16:green" />
+                                    </graphic>
+                                 </Label>
+                              </HBox>
+                           </children>
+                        </GridPane>
                      </VBox>
                   </StackPane>
                </content>
@@ -211,7 +234,7 @@
                 <FontIcon iconLiteral="fa-check:16:green" />
              </graphic>
           </Button>
-            <Button mnemonicParsing="false" onAction="#onCancelBtnAction" text="%settings.cancel" />
+            <Button mnemonicParsing="false" onAction="#onCancelBtnAction" text="%common.cancel" />
         </buttons>
          <BorderPane.margin>
             <Insets left="20.0" right="20.0" />

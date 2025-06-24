@@ -2,9 +2,12 @@ package io.knifer.freebox.util;
 
 import io.knifer.freebox.FreeBoxApplication;
 import io.knifer.freebox.constant.BaseResources;
+import io.knifer.freebox.constant.BaseValues;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -22,6 +25,21 @@ import java.util.ResourceBundle;
 public class FXMLUtil {
 
     public <T> Pair<Stage, T> load(String path) {
+        return load(path, BaseValues.DEFAULT_WINDOW_WIDTH, BaseValues.DEFAULT_WINDOW_HEIGHT);
+    }
+
+    public <T> Pair<Stage, T> loadDialog(String path) {
+        Pair<Stage, T> stageAndController =
+                load(path, BaseValues.DEFAULT_DIALOG_WIDTH, BaseValues.DEFAULT_DIALOG_HEIGHT);
+        Stage stage = stageAndController.getLeft();
+
+        stage.initStyle(StageStyle.TRANSPARENT);
+        stage.initModality(Modality.APPLICATION_MODAL);
+
+        return stageAndController;
+    }
+
+    public <T> Pair<Stage, T> load(String path, double width, double height) {
         FXMLLoader loader = new FXMLLoader(
                 FreeBoxApplication.class.getResource(path),
                 ResourceBundle.getBundle("i18n.chs")
@@ -30,7 +48,7 @@ public class FXMLUtil {
         Stage stage;
 
         try {
-            scene = new Scene(loader.load(), 960, 720);
+            scene = new Scene(loader.load(), width, height);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -42,6 +60,10 @@ public class FXMLUtil {
     }
 
     public void load(String path, Stage stage) {
+        load(path, stage, 960, 720);
+    }
+
+    public void load(String path, Stage stage, double width, double height) {
         FXMLLoader loader = new FXMLLoader(
                 FreeBoxApplication.class.getResource(path),
                 ResourceBundle.getBundle("i18n.chs")
@@ -49,7 +71,7 @@ public class FXMLUtil {
         Scene scene;
 
         try {
-            scene = new Scene(loader.load(), 960, 720);
+            scene = new Scene(loader.load(), width, height);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -103,12 +103,13 @@ public class NetworkUtil {
 
     public boolean isPortUsing(String hostname, int port) {
         boolean flag = false;
-        InetAddress address = null;
+        InetSocketAddress address = null;
 
         try {
-            address = InetAddress.getByName(hostname);
-        } catch (UnknownHostException ignored) {}
-        try (Socket ignored1 = new Socket(address, port)){
+            address = InetSocketAddress.createUnresolved(hostname, port);
+        } catch (IllegalArgumentException ignored) {}
+        try (Socket socket = new Socket()) {
+            socket.connect(address, 500);
             flag = true;
         } catch (IOException ignored) {}
 

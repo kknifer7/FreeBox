@@ -4,14 +4,19 @@ import cn.hutool.core.io.FileUtil;
 import io.knifer.freebox.component.validator.PortValidator;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.controller.dialog.UpgradeDialogController;
 import io.knifer.freebox.helper.*;
+import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
+import io.knifer.freebox.service.UpgradeCheckService;
 import io.knifer.freebox.util.CastUtil;
+import io.knifer.freebox.util.FXMLUtil;
 import io.knifer.freebox.util.FormattingUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -19,12 +24,15 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,11 +43,15 @@ import java.net.NetworkInterface;
 import java.util.Collection;
 import java.util.Objects;
 
+
+
+
 /**
  * 设置
  *
  * @author Knifer
  */
+@Slf4j
 public class SettingsController {
 
     @FXML
@@ -80,6 +92,12 @@ public class SettingsController {
     private CheckBox wsAutoStartCheckBox;
     @FXML
     private Label applicationDataLabel;
+    @FXML
+    private Label applicationVersionLabel;
+    @FXML
+    private Button checkUpgradeButton;
+    @FXML
+    private Label alreadyLatestVersionLabel;
 
     private final ObjectProperty<Pair<NetworkInterface, String>> ipValueProp = new SimpleObjectProperty<>();
     private final BooleanProperty ipChoiceBoxDisableProp = new SimpleBooleanProperty();
@@ -214,6 +232,9 @@ public class SettingsController {
         // 常规设置tab
         applicationDataSize = FormattingUtil.sizeFormat(FileUtil.size(StorageHelper.getLocalStoragePath().toFile()));
         applicationDataLabel.setText(I18nHelper.getFormatted(I18nKeys.SETTINGS_APPLICATION_DATA, applicationDataSize));
+        applicationVersionLabel.setText(
+                I18nHelper.getFormatted(I18nKeys.SETTINGS_APPLICATION_VERSION, ConfigHelper.getAppVersion())
+        );
     }
 
     private void disableHttpServiceForm() {
@@ -484,5 +505,32 @@ public class SettingsController {
             Context.INSTANCE.destroy();
         });
         alert.show();
+    }
+
+    @FXML
+    private void onCheckUpgradeButtonAction() {
+        Service<UpgradeCheckResultBO> service;
+
+        checkUpgradeButton.setDisable(true);
+        if (alreadyLatestVersionLabel.isVisible()) {
+            alreadyLatestVersionLabel.setVisible(false);
+        }
+        service = new UpgradeCheckService();
+        service.setOnSucceeded(evt -> {
+            UpgradeCheckResultBO upgradeCheckResult = service.getValue();
+            Pair<Stage, UpgradeDialogController> stageAndController;
+
+            log.info("Upgrade check result: {}", upgradeCheckResult);
+            checkUpgradeButton.setDisable(false);
+            if (!upgradeCheckResult.isHasNewVersion()) {
+                alreadyLatestVersionLabel.setVisible(true);
+
+                return;
+            }
+            stageAndController = FXMLUtil.loadDialog(Views.UPGRADE_DIALOG);
+            stageAndController.getRight().setData(upgradeCheckResult);
+            stageAndController.getLeft().showAndWait();
+        });
+        service.start();
     }
 }

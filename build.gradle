@@ -165,6 +165,7 @@ jlink {
         name = 'FreeBox'
     }
     mergedModule {
+        requires 'java.sql'
         requires 'java.logging'
         requires 'jdk.httpserver'
         requires 'jdk.crypto.ec'

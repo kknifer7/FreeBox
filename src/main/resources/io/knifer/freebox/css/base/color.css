@@ -1,3 +1,7 @@
+.light-blue {
+    -fx-text-fill: #3498db;
+}
+
 .dodge-blue {
     -fx-text-fill: #1E90FF;
 }

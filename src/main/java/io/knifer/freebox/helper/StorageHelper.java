@@ -21,6 +21,7 @@ import java.util.Optional;
 public class StorageHelper {
 
     private final Path LOCAL_STORAGE_PATH;
+    private final Path TEMP_STORAGE_PATH;
     private final Filelizer filelizer;
 
     static {
@@ -30,6 +31,7 @@ public class StorageHelper {
         LOCAL_STORAGE_PATH = Path.of(
                 System.getProperty("user.home"), "AppData", "Local", "FreeBox"
         );
+        TEMP_STORAGE_PATH = LOCAL_STORAGE_PATH.resolve("temp");
         filelizer = new Filelizer(
                 LOCAL_STORAGE_PATH.resolve("data").toString()
         );
@@ -39,8 +41,16 @@ public class StorageHelper {
         FileUtil.del(LOCAL_STORAGE_PATH);
     }
 
+    public void clearTemp() {
+        FileUtil.clean(TEMP_STORAGE_PATH.toString());
+    }
+
     public Path getLocalStoragePath() {
         return LOCAL_STORAGE_PATH;
+    }
+
+    public Path getTempStoragePath() {
+        return TEMP_STORAGE_PATH;
     }
 
     public <T> String save(T object) {

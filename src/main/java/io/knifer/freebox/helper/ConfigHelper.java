@@ -8,6 +8,7 @@ import io.knifer.freebox.service.SaveConfigService;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -95,6 +96,17 @@ public class ConfigHelper {
         config.setAppVersion(appVersion);
     }
 
+    public Integer getAppVersionCode() {
+        assertIfConfigLoaded();
+
+        return config.getAppVersionCode();
+    }
+
+    public void setAppVersionCode(Integer appVersionCode) {
+        assertIfConfigLoaded();
+        config.setAppVersionCode(appVersionCode);
+    }
+
     private void assertIfConfigLoaded() {
         if (config == null) {
             throw new IllegalStateException("config is not loaded");
@@ -108,6 +120,7 @@ public class ConfigHelper {
     private Config loadConfigFromLocalPath() {
         Config configLoaded;
         String configJson;
+        String versionCodeStr;
 
         if (Files.exists(CONFIG_PATH)) {
             try {
@@ -123,6 +136,10 @@ public class ConfigHelper {
                 configLoaded.setAppVersion(BaseResources.X_PROPERTIES.getProperty(
                         BaseValues.X_APP_VERSION, AppVersions.ONE_ZERO_ZERO
                 ));
+                versionCodeStr = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
+                configLoaded.setAppVersionCode(
+                        NumberUtils.isCreatable(versionCodeStr) ? Integer.parseInt(versionCodeStr) : 0
+                );
                 configLoaded.setServiceIPv4(BaseValues.ANY_LOCAL_IP);
                 configLoaded.setHttpPort(BaseValues.DEFAULT_HTTP_PORT);
                 configLoaded.setWsPort(BaseValues.DEFAULT_WS_PORT);

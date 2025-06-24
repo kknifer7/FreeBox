@@ -7,6 +7,7 @@ import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.helper.ConfigHelper;
+import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.ServiceManager;
@@ -26,6 +27,7 @@ import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -104,15 +106,24 @@ public enum Context {
         });
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
-            String appVersion = ConfigHelper.getAppVersion();
-            String newestAppVersion = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION);
+            Integer appVersionCode = ConfigHelper.getAppVersionCode();
+            String newestAppVersionCodeStr = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
+            int newestAppVersionCode;
+            String newestAppVersion;
 
-            if (newestAppVersion != null && !newestAppVersion.equals(appVersion)) {
-                // config版本号与x.properties中的版本号不一致，说明用户刚刚安装了新版本，可对比新旧版本号，做一些更新后置操作
+            newestAppVersionCode = NumberUtils.isCreatable(newestAppVersionCodeStr) ?
+                    Integer.parseInt(newestAppVersionCodeStr) : 0;
+            if (appVersionCode < newestAppVersionCode) {
+                // config版本与x.properties中的版本不一致，说明用户刚刚安装了新版本，可对比新旧版本号，做一些更新后置操作
                 // ...
                 // 后置操作完成，保存最新版本号到config
+                newestAppVersion = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION);
                 ConfigHelper.setAppVersion(newestAppVersion);
-                ConfigHelper.saveAnyWay(() -> doInit(callback));
+                ConfigHelper.setAppVersionCode(newestAppVersionCode);
+                ConfigHelper.saveAnyWay(() -> {
+                    log.info("application upgraded to {}", newestAppVersion);
+                    doInit(callback);
+                });
             } else {
                 doInit(callback);
             }
@@ -121,6 +132,8 @@ public enum Context {
     }
 
     private void doInit(Runnable callback) {
+        // 清理临时目录
+        StorageHelper.clearTemp();
         // 初始化服务管理器
         serviceManager.init(callback);
         log.info("application initialized");

@@ -1,0 +1,15 @@
+@import "../common.css";
+
+.dialog-header {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.changelog-scroll-pane {
+    -fx-background: white;
+    -fx-border-color: #e0e0e0;
+}
+
+.changelog-text-flow {
+    -fx-background-color: #f9f9f9;
+}

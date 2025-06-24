@@ -1,0 +1,14 @@
+{
+	"version": "v1.0.0",
+	"versionCode": 0,
+	"changelog": "这是更新日志",
+	"releaseUrl": "https://www.baidu.com/",
+	"releaseDate": "2025-06-16",
+	"releaseFiles": [
+		{
+			"platform": "windows",
+			"fileSize": "100",
+			"downloadLink": "https://www.baidu.com/"
+		}
+	]
+}

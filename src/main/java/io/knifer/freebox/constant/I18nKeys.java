@@ -56,6 +56,7 @@ public class I18nKeys {
     public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";
     public static final String MESSAGE_LOADING = "message.loading";
     public static final String MESSAGE_QUIT_LOADING = "message.quit-loading";
+    public static final String MESSAGE_UPGRADE_QUIT_LOADING = "message.upgrade-quit-loading";
 
     public static final String SETTINGS = "settings";
     public static final String SETTINGS_FORM_HINT_NO_AVAILABLE_IP = "settings.no-available-ip";
@@ -70,6 +71,7 @@ public class I18nKeys {
     public static final String SETTINGS_WS_SERVICE_DOWN = "settings.ws.service-down";
     public static final String SETTINGS_APPLICATION_DATA = "settings.application-data";
     public static final String SETTINGS_DELETE_APPLICATION_DATA_ALERT = "settings.delete-application-data-alert";
+    public static final String SETTINGS_APPLICATION_VERSION = "settings.application-version";
 
     public static final String VIDEO_ERROR_NO_DATA = "video.error.no-data";
     public static final String VIDEO_ERROR_NO_RESOURCE = "video.error.no-resource";

@@ -1,6 +1,7 @@
 package io.knifer.freebox.constant;
 
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.SystemUtils;
 
 /**
  * 常量
@@ -42,7 +43,17 @@ public class BaseValues {
      * x.properties key
      */
     public static final String X_APP_VERSION = "app-version";
+    public static final String X_APP_VERSION_CODE = "app-version-code";
+    public static final String X_UPGRADE_CONFIG_URL = "upgrade-config-url";
     public static final String X_DEBUG = "debug";
+
+    /**
+     * FXML相关默认值
+     */
+    public static final double DEFAULT_WINDOW_WIDTH = 960;
+    public static final double DEFAULT_WINDOW_HEIGHT = 720;
+    public static final double DEFAULT_DIALOG_WIDTH = 600;
+    public static final double DEFAULT_DIALOG_HEIGHT = 400;
 
     /**
      * 其他
@@ -51,4 +62,17 @@ public class BaseValues {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
     public static final Runnable EMPTY_RUNNABLE = () -> {};
     public static final String HTTP_GET = "GET";
+    public static final Platform CURRENT_PLATFORM;
+
+    static {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            CURRENT_PLATFORM = Platform.WINDOWS;
+        } else if (SystemUtils.IS_OS_MAC) {
+            CURRENT_PLATFORM = Platform.MAC;
+        } else if (SystemUtils.IS_OS_LINUX) {
+            CURRENT_PLATFORM = Platform.LINUX;
+        } else {
+            throw new AssertionError();
+        }
+    }
 }

@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * 检测端口是否被占用服务
- * TODO 待改造（优化取消逻辑）
+ * 影视搜索服务
  *
  * @author Knifer
  */
@@ -76,7 +75,6 @@ public class MovieSearchService extends Service<Void> {
                             List<Movie.Video> videos;
 
                             if (isCancelled()) {
-                                // 这里的检测取消是无效的，并没有进行取消操作，同时经测试，取消Service或者Task也无法成功终止任务，待优化
 
                                 return;
                             }

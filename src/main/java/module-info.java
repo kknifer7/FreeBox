@@ -34,6 +34,7 @@ module io.knifer.freebox {
     exports io.knifer.freebox;
     exports io.knifer.freebox.constant;
     exports io.knifer.freebox.controller;
+    exports io.knifer.freebox.controller.dialog;
     exports io.knifer.freebox.component.converter;
     exports io.knifer.freebox.component.event;
     exports io.knifer.freebox.model.domain;
@@ -44,6 +45,7 @@ module io.knifer.freebox {
     exports io.knifer.freebox.component.factory;
     opens io.knifer.freebox to javafx.fxml;
     opens io.knifer.freebox.controller to javafx.fxml;
+    opens io.knifer.freebox.controller.dialog to javafx.fxml;
     opens io.knifer.freebox.model.domain to com.google.gson, com.fasterxml.jackson.databind, filelize;
     opens io.knifer.freebox.model.common.tvbox to com.google.gson;
     opens io.knifer.freebox.model.common.catvod to com.google.gson;

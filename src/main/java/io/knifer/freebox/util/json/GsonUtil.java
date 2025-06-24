@@ -6,6 +6,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import lombok.experimental.UtilityClass;
 
+import java.time.LocalDate;
+
 /**
  * JSON工具类
  *
@@ -15,9 +17,14 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class GsonUtil {
 
-    private final static Gson gson = new GsonBuilder().create();
+    private final static Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
+            .create();
 
-    private final static Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
+    private final static Gson prettyGson = new GsonBuilder()
+            .setPrettyPrinting()
+            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
+            .create();
 
     public String toJson(Object object){
         return gson.toJson(object);

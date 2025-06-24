@@ -21,6 +21,11 @@ public class Config {
     private String appVersion;
 
     /**
+     * 应用版本码
+     */
+    private Integer appVersionCode;
+
+    /**
      * HTTP服务端口
      */
     private Integer httpPort;

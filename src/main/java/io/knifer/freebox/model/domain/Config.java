@@ -26,6 +26,11 @@ public class Config {
     private Integer appVersionCode;
 
     /**
+     * 自动检查更新
+     */
+    private Boolean autoCheckUpgrade;
+
+    /**
      * HTTP服务端口
      */
     private Integer httpPort;

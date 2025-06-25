@@ -6,7 +6,7 @@
 <?import javafx.scene.text.*?>
 <?import org.kordamp.ikonli.javafx.*?>
 
-<VBox fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" spacing="15" styleClass="dialog" stylesheets="@../css/dialog/upgrade-dialog.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.dialog.UpgradeDialogController">
+<VBox fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="600.0" spacing="20" styleClass="dialog" stylesheets="@../css/dialog/upgrade-dialog.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.dialog.UpgradeDialogController">
 
    <padding>
       <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
@@ -27,7 +27,15 @@
    <Label styleClass="bold" text="%settings.upgrade.changelog" />
 
    <!-- 更新日志内容 (可滚动) -->
-   <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="532.0" styleClass="changelog-scroll-pane">
+   <ScrollPane
+           fitToWidth="true"
+           hbarPolicy="NEVER"
+           prefHeight="150"
+           minHeight="100"
+           maxHeight="200"
+           VBox.vgrow="ALWAYS"
+           styleClass="changelog-scroll-pane"
+   >
       <TextFlow fx:id="changelogTextFlow" styleClass="changelog-text-flow">
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -36,19 +44,19 @@
    </ScrollPane>
 
    <!-- 下载进度区域 -->
-   <VBox spacing="8">
+   <VBox spacing="8" prefHeight="80" prefWidth="60">
       <HBox alignment="CENTER_LEFT" spacing="5">
          <Label styleClass="bold" text="%settings.upgrade.download-progress" />
          <Label fx:id="progressLabel" styleClass="light-blue" text="-- / --" />
       </HBox>
-      <ProgressBar fx:id="downloadProgressBar" prefHeight="25.0" prefWidth="460.0" progress="0.0" styleClass="light-blue" />
+      <ProgressBar fx:id="downloadProgressBar" prefHeight="15.0" prefWidth="460.0" progress="0.0" styleClass="light-blue" />
    </VBox>
 
    <!-- 按钮区域 -->
    <HBox alignment="BOTTOM_RIGHT" spacing="10">
 
       <VBox.margin>
-         <Insets top="10.0" />
+         <Insets top="20.0" />
       </VBox.margin>
 
       <Button fx:id="upgradeButton" defaultButton="true" mnemonicParsing="false" onAction="#onUpgradeButtonAction" text="%settings.upgrade.upgrade-now">

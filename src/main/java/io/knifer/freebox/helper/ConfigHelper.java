@@ -91,7 +91,7 @@ public class ConfigHelper {
         return config.getAppVersion();
     }
 
-    public void setAppVersion(String appVersion) {
+    public synchronized void setAppVersion(String appVersion) {
         assertIfConfigLoaded();
         config.setAppVersion(appVersion);
     }
@@ -102,9 +102,20 @@ public class ConfigHelper {
         return config.getAppVersionCode();
     }
 
-    public void setAppVersionCode(Integer appVersionCode) {
+    public synchronized void setAppVersionCode(Integer appVersionCode) {
         assertIfConfigLoaded();
         config.setAppVersionCode(appVersionCode);
+    }
+
+    public Boolean getAutoCheckUpgrade() {
+        assertIfConfigLoaded();
+
+        return config.getAutoCheckUpgrade();
+    }
+
+    public synchronized void setAutoCheckUpgrade(Boolean autoCheckUpgrade) {
+        assertIfConfigLoaded();
+        config.setAutoCheckUpgrade(autoCheckUpgrade);
     }
 
     private void assertIfConfigLoaded() {

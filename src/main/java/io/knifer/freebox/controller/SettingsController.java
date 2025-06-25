@@ -98,6 +98,8 @@ public class SettingsController {
     private Button checkUpgradeButton;
     @FXML
     private Label alreadyLatestVersionLabel;
+    @FXML
+    private CheckBox autoCheckUpgradeCheckBox;
 
     private final ObjectProperty<Pair<NetworkInterface, String>> ipValueProp = new SimpleObjectProperty<>();
     private final BooleanProperty ipChoiceBoxDisableProp = new SimpleBooleanProperty();
@@ -178,6 +180,7 @@ public class SettingsController {
         }
         httpAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartHttp()));
         wsAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartWs()));
+        autoCheckUpgradeCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoCheckUpgrade()));
     }
 
     private void setupComponent() {
@@ -520,7 +523,6 @@ public class SettingsController {
             UpgradeCheckResultBO upgradeCheckResult = service.getValue();
             Pair<Stage, UpgradeDialogController> stageAndController;
 
-            log.info("Upgrade check result: {}", upgradeCheckResult);
             checkUpgradeButton.setDisable(false);
             if (!upgradeCheckResult.isHasNewVersion()) {
                 alreadyLatestVersionLabel.setVisible(true);
@@ -532,5 +534,11 @@ public class SettingsController {
             stageAndController.getLeft().showAndWait();
         });
         service.start();
+    }
+
+    @FXML
+    private void onAutoCheckUpgradeCheckBoxAction() {
+        ConfigHelper.setAutoCheckUpgrade(autoCheckUpgradeCheckBox.isSelected());
+        ConfigHelper.markToUpdate();
     }
 }

@@ -2,13 +2,12 @@ package io.knifer.freebox.context;
 
 import com.google.common.eventbus.EventBus;
 import io.knifer.freebox.component.event.EventListener;
-import io.knifer.freebox.constant.AppEvents;
-import io.knifer.freebox.constant.BaseResources;
-import io.knifer.freebox.constant.BaseValues;
-import io.knifer.freebox.constant.ClientType;
+import io.knifer.freebox.constant.*;
+import io.knifer.freebox.controller.dialog.UpgradeDialogController;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.ServiceManager;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
@@ -17,17 +16,21 @@ import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
+import io.knifer.freebox.service.UpgradeCheckService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.spider.template.impl.FreeBoxSpiderTemplate;
 import io.knifer.freebox.spider.template.impl.KebSocketSpiderTemplate;
 import io.knifer.freebox.util.AsyncUtil;
+import io.knifer.freebox.util.FXMLUtil;
 import javafx.application.Application;
 import javafx.concurrent.Service;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -134,10 +137,35 @@ public enum Context {
     private void doInit(Runnable callback) {
         // 清理临时目录
         StorageHelper.clearTemp();
+        // 自动检查更新
+        checkUpgradeIfNeeded();
         // 初始化服务管理器
         serviceManager.init(callback);
         log.info("application initialized");
         initFlag = true;
+    }
+
+    private void checkUpgradeIfNeeded() {
+        Service<UpgradeCheckResultBO> service;
+
+        if (!BooleanUtils.toBoolean(ConfigHelper.getAutoCheckUpgrade())) {
+
+            return;
+        }
+        service = new UpgradeCheckService();
+        service.setOnSucceeded(evt -> {
+            UpgradeCheckResultBO result = service.getValue();
+            Pair<Stage, UpgradeDialogController> stageAndController;
+
+            if (!result.isHasNewVersion()) {
+
+                return;
+            }
+            stageAndController = FXMLUtil.loadDialog(Views.UPGRADE_DIALOG);
+            stageAndController.getRight().setData(result);
+            stageAndController.getLeft().showAndWait();
+        });
+        service.start();
     }
 
     public boolean isDebug() {

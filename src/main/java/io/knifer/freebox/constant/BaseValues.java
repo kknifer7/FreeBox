@@ -53,7 +53,7 @@ public class BaseValues {
     public static final double DEFAULT_WINDOW_WIDTH = 960;
     public static final double DEFAULT_WINDOW_HEIGHT = 720;
     public static final double DEFAULT_DIALOG_WIDTH = 600;
-    public static final double DEFAULT_DIALOG_HEIGHT = 400;
+    public static final double DEFAULT_DIALOG_HEIGHT = 500;
 
     /**
      * 其他

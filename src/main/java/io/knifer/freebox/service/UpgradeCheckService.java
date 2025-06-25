@@ -26,8 +26,11 @@ public class UpgradeCheckService extends Service<UpgradeCheckResultBO> {
             @Override
             protected UpgradeCheckResultBO call() {
                 UpgradeConfig upgradeConfig = GsonUtil.fromJson(HttpUtil.get(PROPS_URL), UpgradeConfig.class);
+                UpgradeCheckResultBO result = UpgradeCheckResultBO.from(upgradeConfig);
 
-                return UpgradeCheckResultBO.from(upgradeConfig);
+                log.info("upgrade check result: {}", result);
+
+                return result;
             }
         };
     }

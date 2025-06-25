@@ -1,0 +1,55 @@
+@import "../common.css";
+
+.dialog-header {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.header {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-alignment: center;
+}
+
+.agreement-box {
+    -fx-padding: 15;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1px 1px 1px 1px;
+    -fx-background-color: #f9fafb;
+}
+
+.agreement-label {
+    -fx-text-fill: #4b5563;
+    -fx-font-weight: bold;
+}
+
+.button-box {
+    -fx-padding: 15;
+    -fx-spacing: 15;
+}
+
+.agree-button {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.agree-button:hover {
+    -fx-background-color: #2563eb;
+}
+
+.disagree-button {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.disagree-button:hover {
+    -fx-background-color: #dc2626;
+}

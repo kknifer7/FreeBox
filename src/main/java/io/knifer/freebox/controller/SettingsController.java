@@ -6,6 +6,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.controller.dialog.LicenseDialogController;
 import io.knifer.freebox.controller.dialog.UpgradeDialogController;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
@@ -540,5 +541,12 @@ public class SettingsController {
     private void onAutoCheckUpgradeCheckBoxAction() {
         ConfigHelper.setAutoCheckUpgrade(autoCheckUpgradeCheckBox.isSelected());
         ConfigHelper.markToUpdate();
+    }
+
+    @FXML
+    private void onShowLicenseButtonAction() {
+        Pair<Stage, LicenseDialogController> stageAndController = FXMLUtil.loadDialog(Views.LICENSE_DIALOG);
+
+        stageAndController.getLeft().showAndWait();
     }
 }

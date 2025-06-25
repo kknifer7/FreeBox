@@ -3,18 +3,23 @@ package io.knifer.freebox.controller;
 import io.knifer.freebox.component.node.ImportApiDialog;
 import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.controller.dialog.LicenseDialogController;
+import io.knifer.freebox.controller.dialog.UpgradeDialogController;
 import io.knifer.freebox.handler.VLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
+import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.MovieCollection;
 import io.knifer.freebox.model.domain.MovieHistory;
 import io.knifer.freebox.model.domain.SourceBeanBlockList;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
+import io.knifer.freebox.service.UpgradeCheckService;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -25,6 +30,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -78,6 +84,10 @@ public class HomeController {
                     I18nHelper.get(I18nKeys.HOME_VERSION_INFO),
                     ConfigHelper.getAppVersion()
             ));
+            // 展示许可协议
+            openLicenseDialogIfNeeded();
+            // 自动检查更新
+            openUpgradeDialogIfNeeded();
             initProgressIndicator.setVisible(false);
             settingsBtn.setDisable(false);
             root.setDisable(false);
@@ -114,6 +124,40 @@ public class HomeController {
                 model.selectFirst();
             }
         });
+    }
+
+    private void openLicenseDialogIfNeeded() {
+        Pair<Stage, LicenseDialogController> stageAndController;
+
+        if (BooleanUtils.isFalse(ConfigHelper.getShowLicense())) {
+
+            return;
+        }
+        stageAndController = FXMLUtil.loadDialog(Views.LICENSE_DIALOG);
+        stageAndController.getLeft().showAndWait();
+    }
+
+    private void openUpgradeDialogIfNeeded() {
+        Service<UpgradeCheckResultBO> service;
+
+        if (!BooleanUtils.toBoolean(ConfigHelper.getAutoCheckUpgrade())) {
+
+            return;
+        }
+        service = new UpgradeCheckService();
+        service.setOnSucceeded(evt -> {
+            UpgradeCheckResultBO result = service.getValue();
+            Pair<Stage, UpgradeDialogController> stageAndController;
+
+            if (!result.isHasNewVersion()) {
+
+                return;
+            }
+            stageAndController = FXMLUtil.loadDialog(Views.UPGRADE_DIALOG);
+            stageAndController.getRight().setData(result);
+            stageAndController.getLeft().showAndWait();
+        });
+        service.start();
     }
 
     @FXML

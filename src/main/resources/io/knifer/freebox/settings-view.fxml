@@ -222,6 +222,9 @@
 
                               <Label styleClass="large, bold" text="%settings.auto-check-upgrade" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                               <CheckBox fx:id="autoCheckUpgradeCheckBox" text="%settings.auto-check-upgrade-enable" onAction="#onAutoCheckUpgradeCheckBoxAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                              <Label styleClass="large, bold" text="%settings.license" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                              <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
                            </children>
                         </GridPane>
                      </VBox>

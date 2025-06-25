@@ -22,4 +22,5 @@ public class Views {
 
 
     public static final String UPGRADE_DIALOG = "dialog/upgrade-dialog.fxml";
+    public static final String LICENSE_DIALOG = "dialog/license-dialog.fxml";
 }

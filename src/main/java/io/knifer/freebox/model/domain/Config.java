@@ -26,6 +26,11 @@ public class Config {
     private Integer appVersionCode;
 
     /**
+     * 是否展示许可协议
+     */
+    private Boolean showLicense;
+
+    /**
      * 自动检查更新
      */
     private Boolean autoCheckUpgrade;

@@ -52,6 +52,9 @@ public class I18nKeys {
     public static final String VIDEO_MOVIE_DETAILS_INTRO = "video.movie-details.intro";
     public static final String VIDEO_REVERSE = "video.reverse";
 
+    public static final String LICENSE_AGREE = "license.agree";
+    public static final String LICENSE_CLOSE = "license.close";
+
     public static final String MESSAGE_CLIENT_REGISTERED = "message.client-registered";
     public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";
     public static final String MESSAGE_LOADING = "message.loading";

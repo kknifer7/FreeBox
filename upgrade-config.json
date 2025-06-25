@@ -1,9 +1,9 @@
 {
-	"version": "v1.0.0",
+	"version": "v0.1.0",
 	"versionCode": 0,
-	"changelog": "这是更新日志",
+	"changelog": "开发测试版",
 	"releaseUrl": "https://github.com/kknifer7/FreeBox/releases/",
-	"releaseDate": "2025-06-24",
+	"releaseDate": "2025-06-25",
 	"releaseFiles": [
 		{
 			"platform": "windows",

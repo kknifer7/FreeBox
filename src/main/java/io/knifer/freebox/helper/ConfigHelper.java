@@ -118,6 +118,17 @@ public class ConfigHelper {
         config.setAutoCheckUpgrade(autoCheckUpgrade);
     }
 
+    public Boolean getShowLicense() {
+        assertIfConfigLoaded();
+
+        return config.getShowLicense();
+    }
+
+    public synchronized void setShowLicense(Boolean showLicense) {
+        assertIfConfigLoaded();
+        config.setShowLicense(showLicense);
+    }
+
     private void assertIfConfigLoaded() {
         if (config == null) {
             throw new IllegalStateException("config is not loaded");
@@ -151,6 +162,8 @@ public class ConfigHelper {
                 configLoaded.setAppVersionCode(
                         NumberUtils.isCreatable(versionCodeStr) ? Integer.parseInt(versionCodeStr) : 0
                 );
+                configLoaded.setShowLicense(true);
+                configLoaded.setAutoCheckUpgrade(true);
                 configLoaded.setServiceIPv4(BaseValues.ANY_LOCAL_IP);
                 configLoaded.setHttpPort(BaseValues.DEFAULT_HTTP_PORT);
                 configLoaded.setWsPort(BaseValues.DEFAULT_WS_PORT);

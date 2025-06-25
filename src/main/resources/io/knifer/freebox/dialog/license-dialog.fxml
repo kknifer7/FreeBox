@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox
+        xmlns="http://javafx.com/javafx"
+        xmlns:fx="http://javafx.com/fxml"
+        fx:controller="io.knifer.freebox.controller.dialog.LicenseDialogController"
+        stylesheets="@../css/dialog/license-dialog.css"
+        styleClass="dialog"
+        spacing="20.0"
+>
+    <padding>
+        <Insets left="20.0" right="20.0" top="20.0" bottom="20.0"/>
+    </padding>
+    <!-- 标题区域 -->
+    <Label styleClass="dialog-header" text="%license.title" />
+
+    <!-- 协议内容区域 -->
+    <TextArea fx:id="licenseText" editable="false" wrapText="true" VBox.vgrow="ALWAYS"/>
+
+    <!-- 同意条款区域 -->
+    <HBox alignment="CENTER_LEFT" styleClass="agreement-box">
+        <Label fx:id="agreementLabel" styleClass="agreement-label" text="%license.i-agree" onMouseClicked="#onAgreementLabelMouseClicked">
+            <graphic>
+                <CheckBox fx:id="agreeCheckBox" />
+            </graphic>
+        </Label>
+    </HBox>
+
+    <!-- 按钮区域 -->
+    <HBox alignment="CENTER_RIGHT" styleClass="button-box">
+        <Button fx:id="agreeButton" onAction="#onAgreeButtonAction" mnemonicParsing="false" styleClass="agree-button" />
+        <Button fx:id="disagreeButton" onAction="#onDisagreeButtonAction" mnemonicParsing="false" styleClass="disagree-button" text="%license.disagree" />
+    </HBox>
+</VBox>

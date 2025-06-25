@@ -1,7 +1,6 @@
 package io.knifer.freebox.controller.dialog;
 
-import cn.hutool.core.io.resource.ResourceUtil;
-import com.google.common.base.Charsets;
+import cn.hutool.core.io.IoUtil;
 import io.knifer.freebox.FreeBoxApplication;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
@@ -16,7 +15,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 
-import java.net.URL;
+import java.io.InputStream;
 
 /**
  * 许可协议对话框
@@ -53,13 +52,13 @@ public class LicenseDialogController {
     }
 
     private void loadLicenseContent() {
-        URL resource = FreeBoxApplication.class.getResource("doc/license.txt");
+        InputStream resource = FreeBoxApplication.class.getResourceAsStream("doc/license.txt");
         String license;
 
         if (resource == null) {
             throw new FBException("no license");
         }
-        license = ResourceUtil.readStr(resource.toString(), Charsets.UTF_8);
+        license = IoUtil.readUtf8(resource);
         licenseText.setText(license);
     }
 

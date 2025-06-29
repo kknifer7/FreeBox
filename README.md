@@ -70,7 +70,7 @@ TVBox-K下载👇
 
 软件目前支持**导入源**和**TVBox源**两种，其中：
 
-- 导入源：是指将接口链接直接配置进本软件，只支持Java格式的Spider（type=3），其他类型的Spider后续将按需考虑支持。本地源Spider项目指路👉[CatVodSpider-FreeBox](https://github.com/kknifer7/CatVodSpider-FreeBox)
+- 导入源：是指将接口链接直接配置进本软件，只支持Java格式的Spider（type=3），其他类型的Spider后续将按需考虑支持。
 
 - TVBox源：为了**缓解**PC端不能播放安卓端接口的问题，以及为实现后续更多的功能（如弹幕、放映厅、异地多端同步播放等），本软件可以与特定的[TVBox-K](https://github.com/kknifer7/TVBoxOS-K)项目一起使用，实现用PC端来播放安卓端资源。
 
@@ -192,9 +192,7 @@ TVBox-K下载👇
 
 ### 1. 软件界面截图
 
-影视点播：
 
-![movie](doc/movie.jpg)
 
 影视播放：
 

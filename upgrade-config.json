@@ -1,14 +1,14 @@
 {
-	"version": "v0.1.0",
-	"versionCode": 0,
-	"changelog": "开发测试版",
-	"releaseUrl": "https://github.com/kknifer7/FreeBox/releases/",
-	"releaseDate": "2025-06-25",
+	"version": "v1.0.0",
+	"versionCode": 1,
+	"changelog": "正式版发布",
+	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.0.0/",
+	"releaseDate": "2025-06-29",
 	"releaseFiles": [
 		{
 			"platform": "windows",
-			"fileSize": "100",
-			"downloadLink": "https://www.baidu.com/"
+			"fileSize": "51120493",
+			"downloadLink": "https://sourceforge.net/projects/freeboxk/files/v1.0.0/FreeBox-1.0.0.msi/download?use_mirror=master"
 		}
 	]
 }

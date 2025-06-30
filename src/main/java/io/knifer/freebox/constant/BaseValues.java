@@ -29,7 +29,7 @@ public class BaseValues {
     public static final String REPOSITORY_URL = "https://github.com/kknifer7/FreeBox";
     public static final String REPOSITORY_NEW_ISSUE_URL = "https://github.com/kknifer7/FreeBox/issues/new";
     public static final String TV_BOX_K_REPOSITORY_URL = "https://github.com/kknifer7/TVBoxOS-K";
-    public static final String VLC_DOWNLOAD_URL = "https://mirror.nju.edu.cn/videolan-ftp/vlc/3.0.21/win32/vlc-3.0.21-win32.exe";
+    public static final String VLC_DOWNLOAD_URL = "https://mirror.aarnet.edu.au/pub/videolan/vlc/3.0.21/win64/vlc-3.0.21-win64.exe";
     /**
      * KebSocket通信超时时间
      */

@@ -72,7 +72,7 @@ public class KebSocketServer extends WebSocketServer {
 
 	@Override
 	public void onError(WebSocket conn, Exception ex) {
-		log.error("an error occurred on connection {}", conn.getRemoteSocketAddress(), ex);
+		log.error("an error occurred on connection {}", conn, ex);
 	}
 	
 	@Override

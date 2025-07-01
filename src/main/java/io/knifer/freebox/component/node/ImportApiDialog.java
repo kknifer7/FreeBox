@@ -73,6 +73,12 @@ public class ImportApiDialog extends TextInputDialog {
 
                         return;
                     }
+                    if (apiConfig == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED);
+                        loadingProperty.set(false);
+
+                        return;
+                    }
                     apiConfig.setUrl(url);
                     log.info("apiConfig: {}", apiConfig);
                     if (CollectionUtil.isEmpty(apiConfig.getSites())) {

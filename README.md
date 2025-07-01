@@ -36,7 +36,9 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 
 ## 二、快速开始
 
-（稍后会在B站发介绍视频）
+请看介绍视频：
+
+<iframe src="//player.bilibili.com/player.html?isOutside=true&aid=114776407547579&bvid=BV1AXgmzUENg&cid=30787832618&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
 
 ### 1. 下载
 

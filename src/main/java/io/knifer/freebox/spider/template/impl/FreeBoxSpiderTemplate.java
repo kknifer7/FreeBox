@@ -34,6 +34,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * FreeBox爬虫模板实现
@@ -227,7 +228,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
                                 return new Movie.Video.UrlBean.UrlInfo.InfoBean(ep[0], ep[1]);
                             })
                             .filter(Objects::nonNull)
-                            .toList();
+                            .collect(Collectors.toList());
                     urlInfo.setBeanList(infoBeans);
                     urlInfos.add(urlInfo);
                 }

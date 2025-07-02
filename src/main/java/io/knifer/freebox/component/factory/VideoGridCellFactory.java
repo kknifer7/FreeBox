@@ -62,7 +62,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
         SOURCE_KEY_AND_NAME_MAP.clear();
         SOURCE_KEY_AND_NAME_MAP.putAll(
                 sourceBeans.stream().collect(Collectors.toUnmodifiableMap(
-                        SourceBean::getKey, SourceBean::getName
+                        SourceBean::getKey, SourceBean::getName, (v1, v2) -> v2
                 ))
         );
     }

@@ -1,5 +1,7 @@
 package io.knifer.freebox.spider.template.impl;
 
+import cn.hutool.core.net.Ipv4Util;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
@@ -12,6 +14,7 @@ import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.util.CastUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RegExUtils;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -85,7 +88,33 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
                 MessageCodes.GET_PLAYER_CONTENT,
                 dto,
                 new TypeToken<JsonObject>(){},
-                msg -> callback.accept(CastUtil.cast(msg))
+                msg -> {
+                    JsonElement jsonElem;
+                    JsonObject jsonObject;
+                    String url;
+                    ClientInfo clientInfo;
+
+                    if (msg.has("nameValuePairs")) {
+                        jsonElem = msg.getAsJsonObject("nameValuePairs");
+                        if (jsonElem.isJsonObject()) {
+                            jsonObject = jsonElem.getAsJsonObject();
+                            if (jsonObject.has("url")) {
+                                clientInfo = clientManager.getCurrentClientImmediately();
+                                if (clientInfo == null) {
+                                    throw new AssertionError();
+                                }
+                                url = jsonObject.get("url").getAsString();
+                                url = RegExUtils.replaceAll(
+                                        url,
+                                        Ipv4Util.LOCAL_IP,
+                                        clientInfo.getConnection().getRemoteSocketAddress().getHostName()
+                                );
+                                jsonObject.addProperty("url", url);
+                            }
+                        }
+                    }
+                    callback.accept(CastUtil.cast(msg));
+                }
         );
     }
 

@@ -107,7 +107,7 @@ public class SpiderJarLoader {
         if(!md5.isEmpty() && Objects.equals(parseJarUrl(jar), md5)){
             load(key, Paths.get(parseJarUrl(jar)));
         }else if (jar.startsWith("file")) {
-            load(key, Paths.get(jar));
+            load(key, Paths.get(jar.replace("file:///", StringUtils.EMPTY)));
         } else if (jar.startsWith("http")) {
             jarPath = download(jar);
             if (jarPath == null) {

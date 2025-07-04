@@ -1,6 +1,8 @@
 package io.knifer.freebox.spider.template.impl;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import io.knifer.freebox.constant.I18nKeys;
@@ -78,10 +80,20 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
 
         EXECUTOR.execute(() -> {
             String configUrl = clientInfo.getConfigUrl();
+            String jsonVal;
             String spiderUrl;
 
+            if (configUrl.startsWith("http")) {
+                jsonVal = HttpUtil.get(configUrl);
+            } else if (configUrl.startsWith("file:///")) {
+                jsonVal = FileUtil.readString(configUrl, Charsets.UTF_8);
+            } else {
+                ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_INVALID_CONFIG_URL);
+
+                return;
+            }
             try {
-                apiConfig = GsonUtil.fromJson(HttpUtil.get(configUrl), FreeBoxApiConfig.class);
+                apiConfig = GsonUtil.fromJson(jsonVal, FreeBoxApiConfig.class);
             } catch (JsonSyntaxException e) {
                 Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
                 log.error("load api config error", e);
@@ -300,7 +312,6 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
                     SpiderInvokeUtil.playerContent(spider, dto.getPlayFlag(), dto.getId(), List.of()),
                     JsonObject.class
             );
-            String url;
             JsonObject result;
 
             log.info("getPlayerContent: {}", sourceResult);

@@ -27,6 +27,8 @@ public class I18nKeys {
             "home.import-api.message.no-available-site";
     public static final String HOME_IMPORT_API_MESSAGE_SAVE_CONFIG_SUCCEED =
             "home.import-api.message.save-config-succeed";
+    public static final String HOME_IMPORT_API_MESSAGE_INVALID_CONFIG_URL =
+            "home.import-api.message.invalid-config-url";
     public static final String HOME_VERSION_INFO = "home.version-info";
 
     public static final String TV_HOME = "tv.home";

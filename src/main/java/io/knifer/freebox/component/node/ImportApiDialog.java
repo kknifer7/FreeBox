@@ -1,5 +1,7 @@
 package io.knifer.freebox.component.node;
 
+import cn.hutool.core.io.FileUtil;
+import com.google.common.base.Charsets;
 import com.google.gson.JsonSyntaxException;
 import io.knifer.freebox.component.validator.URLValidator;
 import io.knifer.freebox.constant.I18nKeys;
@@ -60,40 +62,50 @@ public class ImportApiDialog extends TextInputDialog {
             if (ValidationHelper.validate(validationSupport, editor) && StringUtils.isNotEmpty(url)) {
                 loadingProperty.set(true);
                 log.info("import source json from: {}", url);
-                service = new FutureWaitingService<>(HttpUtil.getAsync(url));
-                service.setOnSucceeded(ignored -> {
-                    String jsonVal = service.getValue();
-                    FreeBoxApiConfig apiConfig;
+                if (url.startsWith("http")) {
+                    service = new FutureWaitingService<>(HttpUtil.getAsync(url));
+                    service.setOnSucceeded(
+                            ignored -> dealWithApiConfig(service.getValue(), url, onAction)
+                    );
+                    service.start();
 
-                    try {
-                        apiConfig = GsonUtil.fromJson(jsonVal, FreeBoxApiConfig.class);
-                    } catch (JsonSyntaxException e) {
-                        ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED);
-                        loadingProperty.set(false);
-
-                        return;
-                    }
-                    if (apiConfig == null) {
-                        ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED);
-                        loadingProperty.set(false);
-
-                        return;
-                    }
-                    apiConfig.setUrl(url);
-                    log.info("apiConfig: {}", apiConfig);
-                    if (CollectionUtil.isEmpty(apiConfig.getSites())) {
-                        ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_NO_AVAILABLE_SITE);
-                        loadingProperty.set(false);
-
-                        return;
-                    }
-                    loadingProperty.set(false);
-                    close();
-                    onAction.accept(ClientInfo.of(url));
-                });
-                service.start();
+                } else if (url.startsWith("file:///")) {
+                    dealWithApiConfig(FileUtil.readString(url, Charsets.UTF_8), url, onAction);
+                } else {
+                    ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_INVALID_CONFIG_URL);
+                }
             }
             evt.consume();
         });
+    }
+
+    private void dealWithApiConfig(String jsonVal, String url, Consumer<ClientInfo> onAction) {
+        FreeBoxApiConfig apiConfig;
+
+        try {
+            apiConfig = GsonUtil.fromJson(jsonVal, FreeBoxApiConfig.class);
+        } catch (JsonSyntaxException e) {
+            ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED);
+            loadingProperty.set(false);
+
+            return;
+        }
+        if (apiConfig == null) {
+            ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED);
+            loadingProperty.set(false);
+
+            return;
+        }
+        apiConfig.setUrl(url);
+        log.info("apiConfig: {}", apiConfig);
+        if (CollectionUtil.isEmpty(apiConfig.getSites())) {
+            ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_NO_AVAILABLE_SITE);
+            loadingProperty.set(false);
+
+            return;
+        }
+        loadingProperty.set(false);
+        close();
+        onAction.accept(ClientInfo.of(url));
     }
 }

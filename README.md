@@ -62,6 +62,10 @@ TVBox-K下载👇
 
 软件会自动检测你的电脑上是否安装了VLC播放器，如果软件在首页提示你“未安装VLC播放器”，请点击软件中的蓝色提示，到 [VLC播放器官网](https://www.videolan.org/vlc/) 去下载安装
 
+### 4. Spider项目
+
+有能力有需要编写PC端爬虫的，可以参考：[kknifer7/CatVodSpider-PC](https://github.com/kknifer7/CatVodSpider-PC)
+
 ---
 
 ## 三、主要功能
@@ -191,8 +195,6 @@ TVBox-K下载👇
 ## 杂项
 
 ### 1. 软件界面截图
-
-
 
 影视播放：
 

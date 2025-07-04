@@ -1,15 +1,15 @@
 {
-	"version": "v1.0.1",
-	"versionCode": 2,
-	"changelog": "修复问题：\n1. 首页VLC下载链接指向了错误的32位安装包，已更换为64位链接，若已下载安装32位的VLC并出现了播放影片报错的情况，请卸载VLC后重装再试\n2. 打开主界面时偶现的空指针异常",
-	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.0.1/",
-	"releaseDate": "2025-06-30",
+	"version": "v1.0.2",
+	"versionCode": 3,
+	"changelog": "新功能：\n\n1. 导入源新增对本地文件的支持（链接需以“file:///”开头）\n\n\n\n修复问题：\n\n1. 通过TVBox-K连接观看时，无法加载4K网盘等代理类型的影片，现已支持\n\n2. 修复了源配置里站点key重复导致的源屏蔽报错问题\n\n3. 修复了导入源的影片剧集，点击倒序时的报错问题\n\n4. 导入源配置新增判空逻辑，避免报错\n\n\n\n另外，电脑端的猫影视Spider项目已发布，详情到Github仓库页了解",
+	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.0.2/",
+	"releaseDate": "2025-07-04",
 	"releaseFiles": [
 		{
 			"platform": "windows",
 			"fileSize": "51120493",
-			"fileName": "FreeBox-1.0.1.msi",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.0.1/FreeBox-1.0.1.msi"
+			"fileName": "FreeBox-1.0.2.msi",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.0.2/FreeBox-1.0.2.msi"
 		}
 	]
 }

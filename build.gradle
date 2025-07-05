@@ -55,7 +55,6 @@ ext {
             blockingMap: '0.91',
             vlcjJavaFX: '1.2.0',
             vlcj: '4.8.3',
-            jregistry: '1.0.0',
             filelize: '0.9.5',
             okhttp: '5.0.0-alpha.14',
             hutoolAll: '5.8.27',
@@ -80,7 +79,6 @@ dependencies {
     implementation "com.github.sarveswaran-m:util.concurrent.blockingMap:${dv.blockingMap}"
     implementation "uk.co.caprica:vlcj:${dv.vlcj}"
     implementation "uk.co.caprica:vlcj-javafx:${dv.vlcjJavaFX}"
-    implementation "com.jianggujin:JRegistry:${dv.jregistry}"
     implementation "io.github.filelize:filelize-java:${dv.filelize}"
     implementation "com.squareup.okhttp3:okhttp:${dv.okhttp}"
     implementation "cn.hutool:hutool-all:${dv.hutoolAll}"
@@ -122,8 +120,6 @@ extraJavaModuleInfo {
     // 解决google guava相关的编译错误
     automaticModule('com.google.guava:listenablefuture', 'listenablefutureAvoidConflict')
     automaticModule('com.google.code.findbugs:jsr305', 'jsr305')
-    // JRegistry
-    automaticModule('com.jianggujin:JRegistry', 'jregistry')
     // okhttp
     automaticModule('org.jetbrains:annotations', 'annotations')
     // JsoupXpath

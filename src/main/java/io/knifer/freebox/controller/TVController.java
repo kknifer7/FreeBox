@@ -759,6 +759,7 @@ public class TVController {
                 .stream()
                 .filter(SourceBean::isSearchable)
                 .map(SourceBean::getKey)
+                .toList()
                 .iterator();
         if (!sourceBeanKeyIterator.hasNext()) {
             return;

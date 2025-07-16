@@ -27,7 +27,7 @@ public class FreeBoxApplication extends Application {
                     stage,
                     () -> Context.INSTANCE.postEvent(AppEvents.APP_INITIALIZED)
             );
-        } catch (Exception e) {
+        } catch (Throwable e) {
             log.error("app start failed", e);
             ToastHelper.showException(e);
         }

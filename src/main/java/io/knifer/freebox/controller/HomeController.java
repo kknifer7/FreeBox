@@ -8,6 +8,7 @@ import io.knifer.freebox.controller.dialog.UpgradeDialogController;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.VLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.LinuxVLCPlayerCheckHandler;
+import io.knifer.freebox.handler.impl.MacVLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
@@ -69,6 +70,9 @@ public class HomeController {
             case RPM_LINUX:
             case OTHER_LINUX:
                 VLC_PLAYER_CHECK_HANDLER = new LinuxVLCPlayerCheckHandler();
+                break;
+            case MAC:
+                VLC_PLAYER_CHECK_HANDLER = new MacVLCPlayerCheckHandler();
                 break;
             default:
                 throw new FBException("unsupported platform");

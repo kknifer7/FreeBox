@@ -129,6 +129,7 @@ public class UpgradeDialogController extends BaseController {
                         switch (SystemHelper.getPlatform()) {
                             case WINDOWS -> startInstallOnWindows();
                             case DEB_LINUX, RPM_LINUX, OTHER_LINUX -> startInstallOnLinux();
+                            case MAC -> startInstallOnMac();
                             default -> throw new FBException("unsupported platform");
                         }
                     });
@@ -177,6 +178,11 @@ public class UpgradeDialogController extends BaseController {
                                 }
                         );
         alert.show();
+    }
+
+    private void startInstallOnMac() {
+        RuntimeUtil.exec("open", storagePath.getAbsolutePath());
+        exitApp();
     }
 
     private void exitApp() {

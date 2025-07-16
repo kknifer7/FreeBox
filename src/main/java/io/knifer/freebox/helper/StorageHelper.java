@@ -34,6 +34,7 @@ public class StorageHelper {
             case DEB_LINUX:
             case RPM_LINUX:
             case OTHER_LINUX:
+            case MAC:
                 LOCAL_STORAGE_PATH = Path.of(System.getProperty("user.home"), ".freebox");
                 TEMP_STORAGE_PATH = Path.of("/tmp/freebox/");
                 break;

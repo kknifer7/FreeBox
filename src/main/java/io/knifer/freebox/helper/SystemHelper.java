@@ -3,8 +3,8 @@ package io.knifer.freebox.helper;
 import cn.hutool.core.util.RuntimeUtil;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
+import io.knifer.freebox.constant.Platform;
 import io.knifer.freebox.exception.FBException;
-import javafx.application.Platform;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -52,15 +52,14 @@ public class SystemHelper {
     }
 
     private void sendThreadExecutionState() {
-        Platform.runLater(() -> {
-            if (SystemUtils.IS_OS_WINDOWS) {
-                Kernel32.INSTANCE.SetThreadExecutionState(
-                        WinBase.ES_CONTINUOUS |
-                                WinBase.ES_SYSTEM_REQUIRED |
-                                WinBase.ES_DISPLAY_REQUIRED
-                );
-            }
-        });
+        switch (CURRENT_PLATFORM) {
+            case WINDOWS -> Kernel32.INSTANCE.SetThreadExecutionState(
+                    WinBase.ES_CONTINUOUS |
+                            WinBase.ES_SYSTEM_REQUIRED |
+                            WinBase.ES_DISPLAY_REQUIRED
+            );
+            case MAC -> RuntimeUtil.exec("caffeinate -di -t 60");
+        }
     }
 
     public void allowSleep() {
@@ -69,11 +68,9 @@ public class SystemHelper {
     }
 
     private void clearThreadExecutionState() {
-        Platform.runLater(() -> {
-            if (SystemUtils.IS_OS_WINDOWS) {
-                Kernel32.INSTANCE.SetThreadExecutionState(WinBase.ES_CONTINUOUS);
-            }
-        });
+        if (CURRENT_PLATFORM == Platform.WINDOWS) {
+            Kernel32.INSTANCE.SetThreadExecutionState(WinBase.ES_CONTINUOUS);
+        }
     }
 
     public void preventSleep() {

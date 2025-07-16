@@ -1,7 +1,6 @@
 package io.knifer.freebox.constant;
 
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.SystemUtils;
 
 /**
  * 常量
@@ -29,7 +28,8 @@ public class BaseValues {
     public static final String REPOSITORY_URL = "https://github.com/kknifer7/FreeBox";
     public static final String REPOSITORY_NEW_ISSUE_URL = "https://github.com/kknifer7/FreeBox/issues/new";
     public static final String TV_BOX_K_REPOSITORY_URL = "https://github.com/kknifer7/TVBoxOS-K";
-    public static final String VLC_DOWNLOAD_URL = "https://mirror.aarnet.edu.au/pub/videolan/vlc/3.0.21/win64/vlc-3.0.21-win64.exe";
+    public static final String VLC_DOWNLOAD_URL_WINDOWS = "https://mirror.aarnet.edu.au/pub/videolan/vlc/3.0.21/win64/vlc-3.0.21-win64.exe";
+    public static final String VLC_DOWNLOAD_URL = "https://www.videolan.org/vlc";
     /**
      * KebSocket通信超时时间
      */
@@ -62,17 +62,4 @@ public class BaseValues {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
     public static final Runnable EMPTY_RUNNABLE = () -> {};
     public static final String HTTP_GET = "GET";
-    public static final Platform CURRENT_PLATFORM;
-
-    static {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            CURRENT_PLATFORM = Platform.WINDOWS;
-        } else if (SystemUtils.IS_OS_MAC) {
-            CURRENT_PLATFORM = Platform.MAC;
-        } else if (SystemUtils.IS_OS_LINUX) {
-            CURRENT_PLATFORM = Platform.LINUX;
-        } else {
-            throw new AssertionError();
-        }
-    }
 }

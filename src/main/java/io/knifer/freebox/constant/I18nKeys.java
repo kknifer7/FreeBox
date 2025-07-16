@@ -122,4 +122,9 @@ public class I18nKeys {
     public static final String SOURCE_AUDIT_AUDIT_STATUS_SUCCESS = "source-audit.audit-status.success";
     public static final String SOURCE_AUDIT_AUDIT_STATUS_FAILED = "source-audit.audit-status.failed";
     public static final String SOURCE_AUDIT_RAW_DATA_TOO_LONG = "source-audit.raw-data-too-long";
+
+    public static final String UPGRADE_INSTALL_DIALOG_TITLE = "upgrade.install-dialog.title";
+    public static final String UPGRADE_INSTALL_DIALOG_CONTENT = "upgrade.install-dialog.content";
+    public static final String UPGRADE_INSTALL_DIALOG_OPEN_DIRECTLY = "upgrade.install-dialog.open-directly";
+    public static final String UPGRADE_INSTALL_DIALOG_OPEN_PATH = "upgrade.install-dialog.open-path";
 }

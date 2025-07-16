@@ -159,6 +159,9 @@ jlink {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
         name = 'FreeBox'
+        jvmArgs = [
+                "--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls"
+        ]
     }
     mergedModule {
         requires 'java.sql'
@@ -177,21 +180,34 @@ jlink {
         installerType = 'msi'
         appVersion = project.version
         vendor = 'knifer'
-        icon = "${projectDir}/src/main/resources/io/knifer/freebox/image/logo.ico"
+        installerOptions = [
+                '--verbose',
+                '--temp', 'jpackage_temp',
+        ]
         if (org.gradle.internal.os.OperatingSystem.current().windows) {
-            installerOptions = [
-                    '--verbose',
-                    '--temp', 'jpackage_temp',
+            icon = "${projectDir}/resources/logo/FreeBox.ico"
+            installerOptions += [
                     '--win-dir-chooser',
                     '--win-menu',
                     '--win-shortcut',
                     '--win-shortcut-prompt',
                     '--win-upgrade-uuid', '8EA2474F-D1AB-A3A7-CD9A-ED7895F4CAA4',
-                    '--resource-dir', "${projectDir}/wix"
+                    '--resource-dir', "${projectDir}/resources/wix"
             ]
             if ('true' == xProps.get('debug')) {
                 imageOptions = ['--win-console']
             }
+        } else if (org.gradle.internal.os.OperatingSystem.current().linux) {
+            icon = "${projectDir}/resources/logo/FreeBox.png"
+            installerOptions += [
+                    '--linux-package-name', 'freebox',
+                    '--linux-shortcut',
+                    '--linux-deb-maintainer', 'knifer@duck.com',
+                    '--linux-menu-group', 'AudioVideo;Audio;Video;',
+                    '--linux-app-category', 'video;',
+                    '--linux-rpm-license-type', 'GPL-3.0-only',
+                    '--resource-dir', "${projectDir}/resources/logo"
+            ]
         }
     }
 }

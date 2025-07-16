@@ -15,4 +15,10 @@ public class ButtonTypes {
 
     public static final ButtonType OK =
             new ButtonType(I18nHelper.get(I18nKeys.COMMON_OK), ButtonBar.ButtonData.OK_DONE);
+
+    public static final ButtonType OPEN_DIRECTLY =
+            new ButtonType(I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_OPEN_DIRECTLY), ButtonBar.ButtonData.OK_DONE);
+
+    public static final ButtonType OPEN_PATH =
+            new ButtonType(I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_OPEN_PATH), ButtonBar.ButtonData.OK_DONE);
 }

@@ -5,7 +5,6 @@ import io.github.filelize.Filelizer;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.model.domain.Savable;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.SystemUtils;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -25,13 +24,22 @@ public class StorageHelper {
     private final Filelizer filelizer;
 
     static {
-        if (!SystemUtils.IS_OS_WINDOWS) {
-            throw new FBException("Only Windows is supported");
+        switch (SystemHelper.getPlatform()) {
+            case WINDOWS:
+                LOCAL_STORAGE_PATH = Path.of(
+                        System.getProperty("user.home"), "AppData", "Local", "FreeBox"
+                );
+                TEMP_STORAGE_PATH = LOCAL_STORAGE_PATH.resolve("temp");
+                break;
+            case DEB_LINUX:
+            case RPM_LINUX:
+            case OTHER_LINUX:
+                LOCAL_STORAGE_PATH = Path.of(System.getProperty("user.home"), ".freebox");
+                TEMP_STORAGE_PATH = Path.of("/tmp/freebox/");
+                break;
+            default:
+                throw new FBException("unsupported platform");
         }
-        LOCAL_STORAGE_PATH = Path.of(
-                System.getProperty("user.home"), "AppData", "Local", "FreeBox"
-        );
-        TEMP_STORAGE_PATH = LOCAL_STORAGE_PATH.resolve("temp");
         filelizer = new Filelizer(
                 LOCAL_STORAGE_PATH.resolve("data").toString()
         );

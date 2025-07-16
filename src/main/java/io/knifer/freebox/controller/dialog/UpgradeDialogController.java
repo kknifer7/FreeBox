@@ -2,13 +2,12 @@ package io.knifer.freebox.controller.dialog;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RuntimeUtil;
+import io.knifer.freebox.constant.ButtonTypes;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.BaseController;
-import io.knifer.freebox.helper.HostServiceHelper;
-import io.knifer.freebox.helper.LoadingHelper;
-import io.knifer.freebox.helper.StorageHelper;
-import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.exception.FBException;
+import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.model.domain.UpgradeConfig;
 import io.knifer.freebox.service.DownloadService;
@@ -17,10 +16,9 @@ import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -127,14 +125,12 @@ public class UpgradeDialogController extends BaseController {
                 },
                 () -> {
                     log.info("upgrade download complete, installing......");
-                    RuntimeUtil.exec("msiexec", "/i", "\"" + storagePath.getAbsolutePath() + "\"");
                     Platform.runLater(() -> {
-                        upgradingProperty.set(false);
-                        LoadingHelper.showLoading(
-                                WindowHelper.getStage(root),
-                                I18nKeys.MESSAGE_UPGRADE_QUIT_LOADING
-                        );
-                        Context.INSTANCE.destroy();
+                        switch (SystemHelper.getPlatform()) {
+                            case WINDOWS -> startInstallOnWindows();
+                            case DEB_LINUX, RPM_LINUX, OTHER_LINUX -> startInstallOnLinux();
+                            default -> throw new FBException("unsupported platform");
+                        }
                     });
                 }
         );
@@ -145,5 +141,52 @@ public class UpgradeDialogController extends BaseController {
         UpgradeCheckResultBO upgradeCheckResult = getData();
 
         return upgradeCheckResult.getAvailableReleaseFileInfo();
+    }
+
+    private void startInstallOnWindows() {
+        RuntimeUtil.exec("msiexec", "/i", "\"" + storagePath.getAbsolutePath() + "\"");
+        exitApp();
+    }
+
+    private void startInstallOnLinux() {
+        Alert alert = new Alert(
+                Alert.AlertType.INFORMATION,
+                I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_CONTENT),
+                ButtonTypes.OPEN_DIRECTLY,
+                ButtonTypes.OPEN_PATH
+        );
+        DialogPane dialogPane;
+
+        alert.setTitle(I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_TITLE));
+        alert.setHeaderText(I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_TITLE));
+        dialogPane = alert.getDialogPane();
+        dialogPane.lookupButton(ButtonTypes.OPEN_DIRECTLY)
+                        .addEventFilter(
+                                ActionEvent.ACTION,
+                                evt -> {
+                                    RuntimeUtil.exec("xdg-open", storagePath.getAbsolutePath());
+                                    exitApp();
+                                }
+                        );
+        dialogPane.lookupButton(ButtonTypes.OPEN_PATH)
+                        .addEventFilter(
+                                ActionEvent.ACTION,
+                                evt -> {
+                                    RuntimeUtil.exec("xdg-open", storagePath.getParent());
+                                    exitApp();
+                                }
+                        );
+        alert.show();
+    }
+
+    private void exitApp() {
+        Platform.runLater(() -> {
+            upgradingProperty.set(false);
+            LoadingHelper.showLoading(
+                    WindowHelper.getStage(root),
+                    I18nKeys.MESSAGE_UPGRADE_QUIT_LOADING
+            );
+            Context.INSTANCE.destroy();
+        });
     }
 }

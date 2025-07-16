@@ -6,7 +6,6 @@ import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.VLCPlayerCheckHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.SystemUtils;
 
 /**
  * 注册表方式检测 VCL Player 是否安装
@@ -18,9 +17,6 @@ public class WindowsRegistryVLCPlayerCheckHandler implements VLCPlayerCheckHandl
 
     @Override
     public boolean handle() {
-        if (!SystemUtils.IS_OS_WINDOWS) {
-            throw new FBException("only support windows.");
-        }
         try {
             String[] keys = Advapi32Util.registryGetKeys(WinReg.HKEY_CLASSES_ROOT, "Applications");
 

@@ -24,6 +24,8 @@ public class DownloadService extends Service<Void> {
     private final Consumer<Pair<Long, Long>> onProgress;
     private final Runnable onFinish;
 
+    private long lastProgressSize = 0;
+
     @Override
     protected Task<Void> createTask() {
         return new Task<>() {
@@ -43,9 +45,12 @@ public class DownloadService extends Service<Void> {
 
                             @Override
                             public void progress(long total, long progressSize) {
-                                if (isCancelled()) {
+                                if (isCancelled() || progressSize - lastProgressSize < 1024) {
+                                    lastProgressSize = progressSize;
+
                                     return;
                                 }
+                                lastProgressSize = progressSize;
                                 onProgress.accept(new Pair<>(total, progressSize));
                             }
 

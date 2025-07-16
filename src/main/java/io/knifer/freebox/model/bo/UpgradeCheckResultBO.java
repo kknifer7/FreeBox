@@ -2,6 +2,8 @@ package io.knifer.freebox.model.bo;
 
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.constant.Platform;
+import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.model.domain.UpgradeConfig;
 import io.knifer.freebox.util.CollectionUtil;
 import lombok.Data;
@@ -27,14 +29,16 @@ public class UpgradeCheckResultBO {
         UpgradeCheckResultBO result = new UpgradeCheckResultBO();
         String appVersionCode = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
         List<UpgradeConfig.ReleaseFileInfo> releaseFiles = upgradeConfig.getReleaseFiles();
+        Platform platform;
 
         result.setUpgradeConfig(upgradeConfig);
         if (CollectionUtil.isEmpty(releaseFiles)) {
             result.setHasNewVersion(false);
         } else {
+            platform = SystemHelper.getPlatform();
             releaseFiles.stream()
                     .filter(
-                            releaseFileInfo -> releaseFileInfo.getPlatform() == BaseValues.CURRENT_PLATFORM
+                            releaseFileInfo -> releaseFileInfo.getPlatform() == platform
                     )
                     .findFirst()
                     .ifPresentOrElse(

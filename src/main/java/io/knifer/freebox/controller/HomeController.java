@@ -5,7 +5,9 @@ import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.dialog.LicenseDialogController;
 import io.knifer.freebox.controller.dialog.UpgradeDialogController;
+import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.VLCPlayerCheckHandler;
+import io.knifer.freebox.handler.impl.LinuxVLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
@@ -28,7 +30,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -57,7 +58,22 @@ public class HomeController {
 
     private ClientManager clientManager;
 
-    private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER = new WindowsRegistryVLCPlayerCheckHandler();
+    private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER;
+
+    static {
+        switch (SystemHelper.getPlatform()) {
+            case WINDOWS:
+                VLC_PLAYER_CHECK_HANDLER = new WindowsRegistryVLCPlayerCheckHandler();
+                break;
+            case DEB_LINUX:
+            case RPM_LINUX:
+            case OTHER_LINUX:
+                VLC_PLAYER_CHECK_HANDLER = new LinuxVLCPlayerCheckHandler();
+                break;
+            default:
+                throw new FBException("unsupported platform");
+        }
+    }
 
     @FXML
     private void initialize() {
@@ -164,7 +180,6 @@ public class HomeController {
     private void onSettingsBtnClick() {
         Stage stage = FXMLUtil.load(Views.SETTINGS).getLeft();
 
-        stage.initStyle(StageStyle.UTILITY);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle(I18nHelper.get(I18nKeys.SETTINGS));
         stage.showAndWait();
@@ -322,7 +337,11 @@ public class HomeController {
 
     @FXML
     private void onVLCDownloadHyperlinkClick() {
-        HostServiceHelper.showDocument(BaseValues.VLC_DOWNLOAD_URL);
+        if (SystemHelper.getPlatform() == Platform.WINDOWS) {
+            HostServiceHelper.showDocument(BaseValues.VLC_DOWNLOAD_URL_WINDOWS);
+        } else {
+            HostServiceHelper.showDocument(BaseValues.VLC_DOWNLOAD_URL);
+        }
     }
 
     @FXML

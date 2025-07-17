@@ -161,9 +161,11 @@ public class SourceAuditController {
                     return;
                 }
                 template.getSourceBeanList(sourceBeans -> {
-                    fillSourceBeanData(sourceBeans);
-                    interruptAuditFlag.set(false);
-                    setLoading(false);
+                    Platform.runLater(() -> {
+                        fillSourceBeanData(sourceBeans);
+                        interruptAuditFlag.set(false);
+                        setLoading(false);
+                    });
                 });
             });
         });

@@ -59,6 +59,7 @@ public class SystemHelper {
                             WinBase.ES_DISPLAY_REQUIRED
             );
             case MAC -> RuntimeUtil.exec("caffeinate -di -t 60");
+            case DEB_LINUX, RPM_LINUX, OTHER_LINUX -> RuntimeUtil.exec("xdg-screensaver reset");
         }
     }
 

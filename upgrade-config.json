@@ -1,15 +1,33 @@
 {
-	"version": "v1.0.2",
-	"versionCode": 3,
-	"changelog": "新功能：\n\n1. 导入源新增对本地文件的支持（链接需以“file:///”开头）\n\n\n\n修复问题：\n\n1. 通过TVBox-K连接观看时，无法加载4K网盘等代理类型的影片，现已支持\n\n2. 修复了源配置里站点key重复导致的源屏蔽报错问题\n\n3. 修复了导入源的影片剧集，点击倒序时的报错问题\n\n4. 导入源配置新增判空逻辑，避免报错\n\n\n\n另外，电脑端的猫影视Spider项目已发布，详情到Github仓库页了解",
-	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.0.2/",
-	"releaseDate": "2025-07-04",
+	"version": "v1.1.0",
+	"versionCode": 4,
+	"changelog": "新功能：\n1. 新增对MacOS、Linux平台的支持（x86_64），由于jpackage构建工具限制，Linux目前只提供deb和rpm两种格式的安装包，后续视大家反馈情况考虑提供AppImage格式\n\n修复问题：\n1. 部分Windows用户闪退、无法打开软件的问题\n2. 搜索状态下进行源屏蔽的报错\n3. 源审计初始化时的FX线程报错\n4. 端口占用检测无效，导致服务启动时的报错",
+	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.1.0/",
+	"releaseDate": "2025-07-22",
 	"releaseFiles": [
 		{
 			"platform": "windows",
-			"fileSize": "51120493",
-			"fileName": "FreeBox-1.0.2.msi",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.0.2/FreeBox-1.0.2.msi"
+			"fileSize": "51116397",
+			"fileName": "FreeBox-1.1.0.msi",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.msi"
+		},
+		{
+			"platform": "mac",
+			"fileSize": "53397017",
+			"fileName": "FreeBox-1.1.0.dmg",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.dmg"
+		},
+		{
+			"platform": "deb_linux",
+			"fileSize": "53809256",
+			"fileName": "FreeBox-1.1.0.deb",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.deb"
+		},
+		{
+			"platform": "rpm_linux",
+			"fileSize": "55428852",
+			"fileName": "FreeBox-1.1.0.rpm",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.rpm"
 		}
 	]
 }

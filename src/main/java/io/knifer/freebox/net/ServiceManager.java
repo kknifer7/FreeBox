@@ -76,7 +76,7 @@ public class ServiceManager {
             }
             if (httpAutoStartFlag) {
                 port = ConfigHelper.getHttpPort();
-                httpCheckPortUsingService = new CheckPortUsingService(ip, port);
+                httpCheckPortUsingService = new CheckPortUsingService(port);
                 httpCheckPortUsingService.setOnSucceeded(ignore -> {
                     Boolean isPortUsing = httpCheckPortUsingService.getValue();
                     Integer httpPort = httpCheckPortUsingService.getPort();
@@ -99,7 +99,7 @@ public class ServiceManager {
             }
             if(wsAutoStartFlag) {
                 port = ConfigHelper.getWsPort();
-                wsCheckPortUsingService = new CheckPortUsingService(ip, port);
+                wsCheckPortUsingService = new CheckPortUsingService(port);
                 wsCheckPortUsingService.setOnSucceeded(ignore -> {
                     Boolean isPortUsing = wsCheckPortUsingService.getValue();
                     Integer wsPort = wsCheckPortUsingService.getPort();

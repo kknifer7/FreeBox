@@ -106,12 +106,14 @@ public class NetworkUtil {
         InetSocketAddress address = null;
 
         try {
-            address = InetSocketAddress.createUnresolved(hostname, port);
+            address = new InetSocketAddress(hostname, port);
         } catch (IllegalArgumentException ignored) {}
         try (Socket socket = new Socket()) {
             socket.connect(address, 500);
             flag = true;
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+            ignored.printStackTrace();
+        }
 
         return flag;
     }

@@ -19,6 +19,10 @@ public class CheckPortUsingService extends Service<Boolean> {
 
     private final Integer port;
 
+    public CheckPortUsingService(Integer port) {
+        this("localhost", port);
+    }
+
     @Override
     protected Task<Boolean> createTask() {
         return new Task<>() {

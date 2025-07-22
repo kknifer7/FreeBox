@@ -335,7 +335,7 @@ public class SettingsController {
     public void onHttpServiceStartBtnAction() {
         Integer httpPort = ConfigHelper.getHttpPort();
         String ip = ConfigHelper.getServiceIPv4();
-        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(ip, httpPort);
+        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(httpPort);
 
         disableHttpServiceBtn();
         disableHttpServiceForm();
@@ -423,7 +423,7 @@ public class SettingsController {
     private void onWsServiceStartBtnAction() {
         Integer wsPort = ConfigHelper.getWsPort();
         String ip = ConfigHelper.getServiceIPv4();
-        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(ip, wsPort);
+        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(wsPort);
 
         disableWsServiceBtn();
         disableWsServiceForm();

@@ -7,6 +7,10 @@
 ---
 
 <p align="center">
+    <a href="https://github.com/kknifer7/FreeBox?tab=readme-ov-file#%E4%BA%8C%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">快速开始</a>
+</p>
+
+<p align="center">
     <a href="https://github.com/kknifer7/FreeBox"><img src="https://img.shields.io/github/release/kknifer7/FreeBox" alt="Release version"></a>
     <a href="https://sourceforge.net/projects/freeboxk/files/latest/download"><img alt="Download FreeBox" src="https://img.shields.io/sourceforge/dm/freeboxk.svg" ></a>
     <a href="https://gluonhq.com/products/javafx/"><img src="https://img.shields.io/badge/javafx-^17.0.6-blue" alt="JavaFX"></a>
@@ -26,7 +30,13 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 
 - ~~开箱即用~~：前提是你安装一个[VLC播放器](https://www.videolan.org/vlc/)
 
-只支持64位系统，推荐在Windows10或以上系统运行，Windows7理论可行，可以试试看
+支持平台（64位）：
+
+- Windows：推荐在Windows10或以上系统运行，Windows7理论可行，可以试试看
+
+- MacOS
+
+- Linux：提供deb和rpm两种格式的安装包，视大家反馈情况考虑提供AppImage格式
 
 **本软件完全免费、开源，如果您下载或使用了本软件，视为您已阅读并同意本软件的[许可协议](https://sourceforge.net/p/freeboxk/main/ci/main/tree/src/main/resources/io/knifer/freebox/doc/license.txt?format=raw)，该许可协议也会在软件第一次打开时弹出**
 
@@ -37,6 +47,8 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 ## 二、快速开始
 
 前往B站查看介绍视频：[点击这里](https://www.bilibili.com/video/BV1AXgmzUENg/)
+
+如遇软件的安装、升级问题，请到 [这里](https://github.com/kknifer7/FreeBox/wiki/%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E3%80%81%E5%8D%87%E7%BA%A7) 阅读安装、升级步骤
 
 ### 1. 下载
 

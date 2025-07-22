@@ -19,6 +19,12 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.validation.ValidationSupport;
@@ -40,6 +46,9 @@ public class ImportApiDialog extends TextInputDialog {
         super();
         DialogPane dialogPane = getDialogPane();
         TextField editor = getEditor();
+        GridPane dialogContentGridPane;
+        Text warningText;
+        VBox contentVBox;
         Button okBtn;
 
         validationSupport = new ValidationSupport();
@@ -47,6 +56,12 @@ public class ImportApiDialog extends TextInputDialog {
         setTitle(I18nHelper.get(I18nKeys.HOME_IMPORT_API));
         setHeaderText(I18nHelper.get(I18nKeys.HOME_IMPORT_API_INPUT_PLACEHOLDER));
         setContentText(I18nHelper.get(I18nKeys.HOME_IMPORT_API_INPUT_LABEL));
+        dialogContentGridPane = ((GridPane) dialogPane.getContent());
+        warningText = new Text(I18nHelper.get(I18nKeys.HOME_IMPORT_API_INPUT_PLACEHOLDER_WARNING));
+        warningText.setFill(Paint.valueOf(Color.RED.toString()));
+        contentVBox = new VBox(dialogContentGridPane, new TextFlow(warningText));
+        contentVBox.setSpacing(10d);
+        dialogPane.setContent(contentVBox);
         dialogPane.setPrefWidth(500);
         setOnShowing(evt -> validationSupport.registerValidator(editor, URLValidator.getInstance()));
         editor.textProperty().addListener(

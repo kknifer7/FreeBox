@@ -19,6 +19,7 @@ public class I18nKeys {
             "home.message.remove-spider-config-succeed";
     public static final String HOME_IMPORT_API = "home.import-api";
     public static final String HOME_IMPORT_API_INPUT_PLACEHOLDER = "home.import-api.input-placeholder";
+    public static final String HOME_IMPORT_API_INPUT_PLACEHOLDER_WARNING = "home.import-api.input-placeholder-warning";
     public static final String HOME_IMPORT_API_INPUT_LABEL = "home.import-api.input-label";
     public static final String HOME_IMPORT_API_INVALID_URL = "home.import-api.invalid-url";
     public static final String HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED =

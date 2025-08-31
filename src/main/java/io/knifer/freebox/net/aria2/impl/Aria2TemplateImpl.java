@@ -1,10 +1,6 @@
 package io.knifer.freebox.net.aria2.impl;
 
 import io.knifer.freebox.net.aria2.Aria2Template;
-import io.knifer.freebox.util.json.GsonUtil;
-import io.knifer.freebox.util.HttpUtil;
-
-import java.util.Map;
 
 /**
  * Aria2下载器操作模板实现
@@ -18,7 +14,7 @@ public class Aria2TemplateImpl implements Aria2Template {
 
     @Override
     public String addUri(String id, String uri) {
-        return HttpUtil.post(
+        /*return HttpUtil.post(
                 ARIA2_URL,
                 GsonUtil.toJson(Map.of(
                         "jsonrpc", JSON_RPC_VERSION,
@@ -26,6 +22,8 @@ public class Aria2TemplateImpl implements Aria2Template {
                         "method", "aria2.addUri",
                         "params", new Object[]{new String[]{uri}}
                 ))
-        );
+        );*/
+
+        return null;
     }
 }

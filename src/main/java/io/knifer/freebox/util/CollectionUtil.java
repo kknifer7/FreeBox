@@ -2,6 +2,7 @@ package io.knifer.freebox.util;
 
 import lombok.experimental.UtilityClass;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
@@ -40,5 +41,17 @@ public class CollectionUtil {
         }
 
         return Optional.empty();
+    }
+
+    @Nullable
+    public <T> T getFirst(Collection<T> collection) {
+        Iterator<T> iterator;
+
+        if (isEmpty(collection)) {
+            return null;
+        }
+        iterator = collection.iterator();
+
+        return iterator.hasNext() ? iterator.next() : null;
     }
 }

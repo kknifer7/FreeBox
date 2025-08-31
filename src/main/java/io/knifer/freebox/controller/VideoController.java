@@ -17,9 +17,8 @@ import io.knifer.freebox.model.s2c.DeleteMovieCollectionDTO;
 import io.knifer.freebox.model.s2c.GetMovieCollectedStatusDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.model.s2c.SaveMovieCollectionDTO;
-import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.VLCPlayerDestroyService;
-import io.knifer.freebox.service.VLCPlayerStopService;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
@@ -82,7 +81,6 @@ public class VideoController extends BaseController {
     private VLCPlayer player;
     private SpiderTemplate template;
     private Consumer<VideoPlayInfoBO> onClose;
-    private VLCPlayerStopService playerStopService;
 
     private Button selectedEpBtn = null;
     private Movie.Video playingVideo;
@@ -101,7 +99,6 @@ public class VideoController extends BaseController {
             player = bo.getPlayer();
             template = bo.getTemplate();
             onClose = bo.getOnClose();
-            playerStopService = new VLCPlayerStopService(player);
             if (videoDetail == null || videoDetail.getVideoList().isEmpty()) {
                 ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                 return;
@@ -349,7 +346,7 @@ public class VideoController extends BaseController {
     ) {
         String flag = urlInfo.getFlag();
 
-        Platform.runLater(() -> playerStopService.restart());
+        Platform.runLater(() -> player.stop());
         template.getPlayerContent(
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
                 playerContentJson -> {

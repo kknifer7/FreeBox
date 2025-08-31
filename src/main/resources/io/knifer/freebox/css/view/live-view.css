@@ -1,0 +1,10 @@
+@import "../common.css";
+
+.root {
+    -fx-background-color: black;
+}
+
+.loading-label {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+}

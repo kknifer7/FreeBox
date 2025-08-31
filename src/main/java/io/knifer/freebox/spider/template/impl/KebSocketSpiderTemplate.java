@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.ClientInfo;
+import io.knifer.freebox.model.domain.FreeBoxLive;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
@@ -309,5 +310,10 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
             processService.start();
         });
         service.start();
+    }
+
+    @Override
+    public List<FreeBoxLive> getLives() {
+        return List.of();
     }
 }

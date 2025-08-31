@@ -5,6 +5,7 @@ import cn.hutool.crypto.digest.DigestUtil;
 import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
@@ -17,11 +18,13 @@ import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.*;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
+import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.spider.SpiderJarLoader;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.ValidationUtil;
+import io.knifer.freebox.util.catvod.ApiConfigUtil;
 import io.knifer.freebox.util.catvod.SpiderInvokeUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
@@ -80,48 +83,71 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
 
         EXECUTOR.execute(() -> {
             String configUrl = clientInfo.getConfigUrl();
-            String jsonVal;
-            String spiderUrl;
+            FutureWaitingService<String> service;
 
             if (configUrl.startsWith("http")) {
-                jsonVal = HttpUtil.get(configUrl);
+                service = new FutureWaitingService<>(HttpUtil.getAsync(
+                        configUrl,
+                        BaseValues.FETCH_CAT_VOD_API_CONFIG_HTTP_HEADERS
+                ));
+                service.setOnSucceeded(evt -> {
+                    String jsonVal = service.getValue();
+
+                    if (StringUtils.isBlank(jsonVal)) {
+                        Platform.runLater(
+                                () -> ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED)
+                        );
+                    } else {
+                        jsonVal = ApiConfigUtil.parseApiConfigJson(jsonVal.trim());
+                    }
+                    doInit(configUrl, jsonVal, callback);
+                });
+                service.start();
             } else if (configUrl.startsWith("file:///")) {
-                jsonVal = FileUtil.readString(configUrl, Charsets.UTF_8);
+                doInit(
+                        configUrl,
+                        ApiConfigUtil.parseApiConfigJson(FileUtil.readString(configUrl, Charsets.UTF_8).trim()),
+                        callback
+                );
             } else {
-                ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_INVALID_CONFIG_URL);
-
-                return;
+                Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_INVALID_CONFIG_URL));
+                doInit(configUrl, null, callback);
             }
-            try {
-                apiConfig = GsonUtil.fromJson(jsonVal, FreeBoxApiConfig.class);
-            } catch (JsonSyntaxException e) {
-                Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
-                log.error("load api config error", e);
-                callback.accept(false);
-
-                return;
-            }
-            apiConfig.setUrl(configUrl);
-            spiderUrl = apiConfig.getSpider();
-            if (
-                    !StringUtils.startsWith(spiderUrl, "./") &&
-                    !StringUtils.startsWith(spiderUrl, "../") &&
-                    !ValidationUtil.isURL(spiderUrl)
-            ) {
-                Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
-                log.error("load api config error, spider url invalid");
-                callback.accept(false);
-
-                return;
-            }
-            spiderJarLoader.setApiConfig(apiConfig);
-            sourceBeans = apiConfig.getSites()
-                    .stream()
-                    .map(FreeBoxSourceBean::toSourceBean)
-                    .toList();
-            log.info("load api config success");
-            callback.accept(true);
         });
+    }
+
+    private void doInit(String configUrl, String jsonVal, Consumer<Boolean> callback) {
+        String spiderUrl;
+
+        try {
+            apiConfig = GsonUtil.fromJson(jsonVal, FreeBoxApiConfig.class);
+        } catch (JsonSyntaxException e) {
+            Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
+            log.error("load api config error", e);
+            callback.accept(false);
+
+            return;
+        }
+        apiConfig.setUrl(configUrl);
+        spiderUrl = apiConfig.getSpider();
+        if (
+                !StringUtils.startsWith(spiderUrl, "./") &&
+                        !StringUtils.startsWith(spiderUrl, "../") &&
+                        !ValidationUtil.isURL(spiderUrl)
+        ) {
+            Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
+            log.error("load api config error, spider url invalid");
+            callback.accept(false);
+
+            return;
+        }
+        spiderJarLoader.setApiConfig(apiConfig);
+        sourceBeans = apiConfig.getSites()
+                .stream()
+                .map(FreeBoxSourceBean::toSourceBean)
+                .toList();
+        log.info("load api config success");
+        callback.accept(true);
     }
 
     @Override
@@ -570,5 +596,10 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
                 sourceBean.getExt(),
                 hasCustomJar ? customJar : apiConfig.getSpider()
         );
+    }
+
+    @Override
+    public List<FreeBoxLive> getLives() {
+        return apiConfig.getLives();
     }
 }

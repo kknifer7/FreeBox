@@ -27,6 +27,10 @@ public class BaseResources {
             FreeBoxApplication.class.getResourceAsStream("image/load_more.png")
     );
 
+    public static final Image PLAYING_GIF = new Image(
+            FreeBoxApplication.class.getResourceAsStream("image/playing.gif")
+    );
+
     public static final Properties X_PROPERTIES = new Properties() {
         {
             try (InputStream in = Resources.getResource("x.properties").openStream()) {

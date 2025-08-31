@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<VBox fx:id="root" styleClass="root" stylesheets="@css/view/live-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.LiveController">
+   <children>
+      <MenuBar fx:id="menuBar">
+        <menus>
+          <Menu fx:id="switchLiveSourceMenu" disable="true" mnemonicParsing="false" text="%live.switch-live-source">
+              <graphic>
+                  <FontIcon iconLiteral="fa-caret-down:16" />
+              </graphic>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <StackPane>
+         <children>
+            <HBox fx:id="playerHBox" />
+            <Label fx:id="loadingLabel" styleClass="loading-label" text="%message.loading" />
+         </children>
+      </StackPane>
+   </children>
+</VBox>

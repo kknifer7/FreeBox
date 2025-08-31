@@ -56,6 +56,7 @@ ext {
             vlcjJavaFX: '1.2.0',
             vlcj: '4.8.3',
             filelize: '0.9.5',
+            m3uParser: '1.4.0',
             okhttp: '5.0.0-alpha.14',
             hutoolAll: '5.8.27',
             jsoup: '1.15.3',
@@ -80,6 +81,7 @@ dependencies {
     implementation "uk.co.caprica:vlcj:${dv.vlcj}"
     implementation "uk.co.caprica:vlcj-javafx:${dv.vlcjJavaFX}"
     implementation "io.github.filelize:filelize-java:${dv.filelize}"
+    implementation "com.github.bjoernpetersen:m3u-parser:${dv.m3uParser}"
     implementation "com.squareup.okhttp3:okhttp:${dv.okhttp}"
     implementation "cn.hutool:hutool-all:${dv.hutoolAll}"
     implementation "org.jsoup:jsoup:${dv.jsoup}"

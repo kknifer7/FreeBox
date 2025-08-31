@@ -99,6 +99,11 @@
                                             <FontIcon iconLiteral="fa-arrow-right:16:green" />
                                         </graphic>
                                     </Button>
+                                    <Button mnemonicParsing="false" onAction="#onLiveBtnAction" text="%home.live">
+                                        <graphic>
+                                            <FontIcon iconLiteral="fa-play:16:green" />
+                                        </graphic>
+                                    </Button>
                                     <Button mnemonicParsing="false" onAction="#onSourceAuditBtnAction" text="%home.source-audit">
                                         <graphic>
                                             <FontIcon iconLiteral="fa-code:16:blue" />

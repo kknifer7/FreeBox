@@ -1,0 +1,22 @@
+package io.knifer.freebox.model.domain;
+
+import lombok.Data;
+
+/**
+ * 直播配置
+ *
+ * @author Knifer
+ */
+@Data
+public class FreeBoxLive {
+
+    private String name;
+
+    private String url;
+
+    private String ua;
+
+    private String epg;
+
+    private String logo;
+}

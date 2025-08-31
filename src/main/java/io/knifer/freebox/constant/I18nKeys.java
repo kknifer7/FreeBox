@@ -63,6 +63,7 @@ public class I18nKeys {
     public static final String MESSAGE_LOADING = "message.loading";
     public static final String MESSAGE_QUIT_LOADING = "message.quit-loading";
     public static final String MESSAGE_UPGRADE_QUIT_LOADING = "message.upgrade-quit-loading";
+    public static final String MESSAGE_AUTO_CHECK_UPGRADE_FAILED = "message.auto-check-upgrade-failed";
 
     public static final String SETTINGS = "settings";
     public static final String SETTINGS_FORM_HINT_NO_AVAILABLE_IP = "settings.no-available-ip";
@@ -128,4 +129,16 @@ public class I18nKeys {
     public static final String UPGRADE_INSTALL_DIALOG_CONTENT = "upgrade.install-dialog.content";
     public static final String UPGRADE_INSTALL_DIALOG_OPEN_DIRECTLY = "upgrade.install-dialog.open-directly";
     public static final String UPGRADE_INSTALL_DIALOG_OPEN_PATH = "upgrade.install-dialog.open-path";
+
+    public static final String LIVE_WINDOW_TITLE = "live.window-title";
+    public static final String LIVE_UNGROUPED = "live.ungrouped";
+    public static final String LIVE_UNTITLED = "live.untitled";
+    public static final String LIVE_LINE = "live.line";
+    public static final String LIVE_PLAYER_CURRENT_PROGRAM = "live.player.current-program";
+    public static final String LIVE_PLAYER_NEXT_PROGRAM = "live.player.next-program";
+    public static final String LIVE_PLAYER_PLAY_TIME = "live.player.play-time";
+    public static final String LIVE_PLAYER_START_TIME = "live.player.start-time";
+    public static final String LIVE_PLAYER_DEFAULT_PROGRAM = "live.player.default-program";
+    public static final String LIVE_MESSAGE_INVALID_LIVE_URL = "live.message.invalid-live-url";
+    public static final String LIVE_MESSAGE_INVALID_LIVE = "live.message.invalid-live";
 }

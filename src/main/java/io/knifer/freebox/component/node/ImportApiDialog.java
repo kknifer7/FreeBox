@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import com.google.common.base.Charsets;
 import com.google.gson.JsonSyntaxException;
 import io.knifer.freebox.component.validator.URLValidator;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
@@ -13,6 +14,7 @@ import io.knifer.freebox.model.domain.FreeBoxApiConfig;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.HttpUtil;
+import io.knifer.freebox.util.catvod.ApiConfigUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -78,9 +80,15 @@ public class ImportApiDialog extends TextInputDialog {
                 loadingProperty.set(true);
                 log.info("import source json from: {}", url);
                 if (url.startsWith("http")) {
-                    service = new FutureWaitingService<>(HttpUtil.getAsync(url));
+                    service = new FutureWaitingService<>(HttpUtil.getAsync(
+                            url, BaseValues.FETCH_CAT_VOD_API_CONFIG_HTTP_HEADERS
+                    ));
                     service.setOnSucceeded(
-                            ignored -> dealWithApiConfig(service.getValue(), url, onAction)
+                            ignored -> dealWithApiConfig(
+                                    ApiConfigUtil.parseApiConfigJson(StringUtils.trim(service.getValue())),
+                                    url,
+                                    onAction
+                            )
                     );
                     service.start();
 
@@ -113,7 +121,7 @@ public class ImportApiDialog extends TextInputDialog {
         }
         apiConfig.setUrl(url);
         log.info("apiConfig: {}", apiConfig);
-        if (CollectionUtil.isEmpty(apiConfig.getSites())) {
+        if (CollectionUtil.isEmpty(apiConfig.getSites()) && CollectionUtil.isEmpty(apiConfig.getLives())) {
             ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_NO_AVAILABLE_SITE);
             loadingProperty.set(false);
 

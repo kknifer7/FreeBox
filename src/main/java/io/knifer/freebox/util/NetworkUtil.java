@@ -111,9 +111,7 @@ public class NetworkUtil {
         try (Socket socket = new Socket()) {
             socket.connect(address, 500);
             flag = true;
-        } catch (IOException ignored) {
-            ignored.printStackTrace();
-        }
+        } catch (IOException ignored) {}
 
         return flag;
     }

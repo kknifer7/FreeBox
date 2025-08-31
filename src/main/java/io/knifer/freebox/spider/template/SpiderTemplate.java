@@ -2,6 +2,7 @@ package io.knifer.freebox.spider.template;
 
 import com.google.gson.JsonObject;
 import io.knifer.freebox.model.common.tvbox.*;
+import io.knifer.freebox.model.domain.FreeBoxLive;
 import io.knifer.freebox.model.s2c.*;
 
 import java.util.List;
@@ -112,4 +113,10 @@ public interface SpiderTemplate {
      * @param callback 回调
      */
     void getMovieCollectedStatus(GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback);
+
+    /**
+     * 获取直播配置列表
+     * @return 直播配置列表
+     */
+    List<FreeBoxLive> getLives();
 }

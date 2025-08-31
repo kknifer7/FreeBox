@@ -17,4 +17,6 @@ public class FreeBoxApiConfig {
     private String spider;
 
     private List<FreeBoxSourceBean> sites;
+
+    private List<FreeBoxLive> lives;
 }

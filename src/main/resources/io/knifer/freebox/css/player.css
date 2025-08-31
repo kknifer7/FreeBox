@@ -1,0 +1,170 @@
+.vlc-player {
+    -fx-background-color: black;
+}
+
+.vlc-player-title {
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+}
+
+.vlc-player-anchor-pane {
+    -fx-pref-height: 46px;
+    -fx-min-height: 46px;
+    -fx-max-height: 46px;
+    -fx-background-color: rgba(0,0,0,0.5);
+}
+
+.vlc-player-control-label {
+    -fx-pref-width: 40px;
+    -fx-pref-height: 40px;
+}
+
+.vlc-player-progress-label {
+    -fx-text-fill: white;
+    -fx-font-size: 24px;
+}
+
+.vlc-player-pop-over {
+    -fx-padding: 10px;
+}
+
+.vlc-player-live-channel-banner {
+    -fx-max-width: 700px;
+    -fx-max-height: 100px;
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12;
+    -fx-spacing: 15;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);
+}
+
+.vlc-player-live-channel-banner-channel-name-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+    -fx-text-fill: white;
+}
+
+.vlc-player-live-channel-banner-program-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-text-fill: white;
+}
+
+.vlc-player-live-channel-banner-program-time-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: lightgray;
+}
+
+.vlc-player-live-channel-banner-logo-placeholder-label {
+    -fx-alignment: center;
+}
+
+.vlc-player-live-channel-list-view {
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);
+}
+
+.vlc-player-live-channel-group-list-cell {
+    -fx-background-color: rgba(0, 0, 0, 0.2);
+    -fx-padding: 10;
+}
+
+.vlc-player-live-channel-list-cell {
+    -fx-background-color: rgba(0, 0, 0, 0.2);
+    -fx-padding: 5;
+}
+
+
+.vlc-player-live-channel-list-view-title-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-cursor: hand;
+    -fx-text-overrun: ellipsis;
+    -fx-padding: 5 5 5 5;
+}
+
+.vlc-player-live-channel-list-view-title-label-focused {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3498DB;
+    -fx-underline: true;
+    -fx-text-overrun: ellipsis;
+    -fx-padding: 5 5 5 5;
+}
+
+.vlc-player-live-channel-line-label {
+    -fx-font-size: 18;
+    -fx-text-fill: white;
+    -fx-padding: 3;
+    -fx-cursor: hand;
+}
+
+.vlc-player-live-channel-line-label-focused {
+    -fx-font-size: 18;
+    -fx-text-fill: #3498DB;
+    -fx-padding: 3;
+    -fx-border-width: 1;
+    -fx-border-color: #3498DB;
+    -fx-border-radius: 5;
+}
+
+
+/* 垂直滚动条容器 */
+.vlc-player .list-view .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-background-radius: 2em;
+    -fx-padding: 5px;
+}
+/* 垂直滚动条轨道 */
+.vlc-player .list-view .scroll-bar:vertical .track {
+    -fx-background-color: rgba(50, 50, 50, 0.3);
+    -fx-background-radius: 2em;
+    -fx-border-radius: 2em;
+}
+/* 垂直滚动条滑块 */
+.vlc-player .list-view .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(100, 100, 100, 0.7);
+    -fx-background-insets: 2, 0, 0;
+    -fx-background-radius: 2em;
+}
+.vlc-player .list-view .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: rgba(120, 120, 120, 0.9);
+}
+.vlc-player .list-view .scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: rgba(140, 140, 140, 0.9);
+}
+/* 垂直滚动条按钮 */
+.vlc-player .list-view .scroll-bar:vertical .increment-button,
+.vlc-player .list-view .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-padding: 5px;
+}
+.vlc-player .list-view .scroll-bar:vertical .increment-arrow,
+.vlc-player .list-view .scroll-bar:vertical .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
+}
+.vlc-player .list-view .scroll-bar:vertical .increment-button:hover,
+.vlc-player .list-view .scroll-bar:vertical .decrement-button:hover {
+    -fx-background-color: rgba(80, 80, 80, 0.4);
+}
+
+/* 隐藏水平滚动条 */
+.vlc-player .scroll-bar:horizontal {
+    -fx-opacity: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+    -fx-max-height: 0;
+}
+.vlc-player .scroll-bar:horizontal .track,
+.vlc-player .scroll-bar:horizontal .thumb,
+.vlc-player .scroll-bar:horizontal .increment-button,
+.vlc-player .scroll-bar:horizontal .decrement-button {
+    -fx-opacity: 0;
+    -fx-pref-height: 0;
+    -fx-min-height: 0;
+    -fx-max-height: 0;
+}

@@ -5,14 +5,17 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
-import io.knifer.freebox.util.json.GsonUtil;
 import io.knifer.freebox.util.HttpUtil;
+import io.knifer.freebox.util.json.GsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * 搜片网影视建议处理器
@@ -39,9 +42,19 @@ public class SoupianMovieSuggestionHandler implements MovieSuggestionHandler {
         if (StringUtils.isBlank(userText)) {
             return Collections.emptyList();
         }
-        resultBody = HttpUtil.get(
-                SEARCH_SUGGESTION_REQUEST_URL + userText, SEARCH_SUGGESTION_REQUEST_HEADERS
-        );
+        try {
+            resultBody = HttpUtil.getAsync(
+                    SEARCH_SUGGESTION_REQUEST_URL + userText, SEARCH_SUGGESTION_REQUEST_HEADERS
+            ).get(6, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            log.warn("request timeout", e);
+
+            return Collections.emptyList();
+        } catch (ExecutionException | InterruptedException e) {
+            log.warn("request error", e);
+
+            return Collections.emptyList();
+        }
         log.info("userText: {}, resultBody: {}", userText, resultBody);
         resultJsonObj = GsonUtil.fromJson(resultBody, JsonObject.class);
         if (resultJsonObj == null) {

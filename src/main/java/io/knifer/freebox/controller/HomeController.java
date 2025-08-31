@@ -169,7 +169,7 @@ public class HomeController {
             UpgradeCheckResultBO result = service.getValue();
             Pair<Stage, UpgradeDialogController> stageAndController;
 
-            if (!result.isHasNewVersion()) {
+            if (result == null || !result.isHasNewVersion()) {
 
                 return;
             }
@@ -361,5 +361,24 @@ public class HomeController {
                     clientInfo.getClientName()
             );
         }).show();
+    }
+
+    @FXML
+    private void onLiveBtnAction() {
+        ClientInfo clientInfo = clientListView.getSelectionModel().getSelectedItem();
+        Pair<Stage, LiveController> stageAndController;
+        Stage homeStage;
+        Stage liveStage;
+
+        if (clientInfo == null) {
+            return;
+        }
+        clientManager.shutdownConnectingExecutor();
+        clientManager.updateCurrentClient(clientInfo);
+        stageAndController = FXMLUtil.load(Views.LIVE);
+        homeStage = WindowHelper.getStage(root);
+        liveStage = stageAndController.getLeft();
+        liveStage.setTitle(I18nHelper.getFormatted(I18nKeys.LIVE_WINDOW_TITLE, clientInfo.getName()));
+        WindowHelper.route(homeStage, liveStage);
     }
 }

@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 public class SoupianMovieSuggestionHandler implements MovieSuggestionHandler {
 
-    private final String SEARCH_SUGGESTION_REQUEST_URL = "https://soupian.plus/prefix/search?wd=";
+    private static final String SEARCH_SUGGESTION_REQUEST_URL = "https://soupian.plus/prefix/search?wd=";
     private final String[] SEARCH_SUGGESTION_REQUEST_HEADERS = {
             HttpHeaders.USER_AGENT, BaseValues.USER_AGENT,
             HttpHeaders.REFERER, "https://soupian.plus/"
@@ -46,11 +46,7 @@ public class SoupianMovieSuggestionHandler implements MovieSuggestionHandler {
             resultBody = HttpUtil.getAsync(
                     SEARCH_SUGGESTION_REQUEST_URL + userText, SEARCH_SUGGESTION_REQUEST_HEADERS
             ).get(6, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            log.warn("request timeout", e);
-
-            return Collections.emptyList();
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (TimeoutException | ExecutionException | InterruptedException e) {
             log.warn("request error", e);
 
             return Collections.emptyList();

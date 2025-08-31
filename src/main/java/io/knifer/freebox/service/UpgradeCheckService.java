@@ -38,11 +38,11 @@ public class UpgradeCheckService extends Service<UpgradeCheckResultBO> {
 
                 try {
                     jsonContent = HttpUtil.getAsync(PROPS_URL).get(10, TimeUnit.SECONDS);
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (InterruptedException e) {
                     Platform.runLater(() -> ToastHelper.showException(e));
 
                     return null;
-                } catch (TimeoutException e) {
+                } catch (TimeoutException | ExecutionException e) {
                     Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.MESSAGE_AUTO_CHECK_UPGRADE_FAILED));
 
                     return null;

@@ -8,9 +8,13 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.FBException;
+import io.knifer.freebox.handler.EpgFetchingHandler;
+import io.knifer.freebox.handler.impl.ParameterizedEggFetchingHandler;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.SystemHelper;
+import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.model.common.diyp.Epg;
 import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
 import io.knifer.freebox.util.AsyncUtil;
@@ -51,10 +55,13 @@ import javafx.util.Callback;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
@@ -71,9 +78,16 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import javax.annotation.Nullable;
 import javax.swing.*;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -94,6 +108,10 @@ public class VLCPlayer {
     private final ImageView videoImageView;
     private final ProgressIndicator loadingProgressIndicator;
     private final Label loadingProgressLabel;
+    private final ImageView pausedPlayButtonImageView;
+    private final Label loadingErrorIconLabel;
+    private final Label loadingErrorLabel;
+    private final VBox loadingErrorVBox;
     private final Label pauseLabel;
     private final Label stepBackwardLabel;
     private final Label stepForwardLabel;
@@ -118,6 +136,8 @@ public class VLCPlayer {
     private final StackPane playerPane;
     private final LiveChannelBanner liveChannelBanner;
     private final LiveDrawer liveChannelDrawer;
+    private final EpgFetchingHandler epgFetchingHandler;
+    private final DateTimeFormatter LOCAL_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private final FontIcon pauseIcon = FontIcon.of(FontAwesome.PAUSE, 32, Color.WHITE);
     private final FontIcon playIcon = FontIcon.of(FontAwesome.PLAY, 32, Color.WHITE);
     private final FontIcon stepBackwardIcon = FontIcon.of(FontAwesome.STEP_BACKWARD, 32, Color.WHITE);
@@ -131,11 +151,14 @@ public class VLCPlayer {
     private final AtomicLong initProgress = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
+    private final BooleanProperty isError = new SimpleBooleanProperty(false);
     private volatile boolean destroyFlag = false;
 
     private List<LiveChannelGroup> liveChannelGroups = null;
     private LiveInfoBO selectedLive = null;
     private LiveInfoBO playingLive = null;
+    @Setter
+    private String epgServiceUrl = null;
 
     private Runnable stepBackwardRunnable = BaseValues.EMPTY_RUNNABLE;
     private Runnable stepForwardRunnable = BaseValues.EMPTY_RUNNABLE;
@@ -147,7 +170,8 @@ public class VLCPlayer {
     }
 
     public VLCPlayer(HBox parent, @Nullable Config config) {
-        boolean liveMode = config != null && BooleanUtils.toBoolean(config.getLiveMode());
+        boolean hasConfig = config != null;
+        boolean liveMode = hasConfig && BooleanUtils.toBoolean(config.getLiveMode());
         ObservableList<Node> parentChildren = parent.getChildren();
         ReadOnlyDoubleProperty parentWidthProp = parent.widthProperty();
         DoubleBinding paneWidthProp = liveMode ? parentWidthProp.multiply(1) : parentWidthProp.multiply(0.8);
@@ -232,6 +256,7 @@ public class VLCPlayer {
                     if (isLoading()) {
                         setLoading(false);
                     }
+                    pausedPlayButtonImageView.setVisible(true);
                     pauseLabel.setGraphic(playIcon);
                 });
             }
@@ -243,7 +268,12 @@ public class VLCPlayer {
                     if (isLoading()) {
                         setLoading(false);
                     }
-                    pauseLabel.setGraphic(pauseIcon);
+                    if (pauseLabel.getGraphic() != pauseIcon) {
+                        pauseLabel.setGraphic(pauseIcon);
+                    }
+                    if (pausedPlayButtonImageView.isVisible()) {
+                        pausedPlayButtonImageView.setVisible(false);
+                    }
                 });
             }
 
@@ -297,7 +327,8 @@ public class VLCPlayer {
             @Override
             public void error(MediaPlayer mediaPlayer) {
                 SystemHelper.allowSleep();
-                log.error("VLCPlayer error");
+                setError(true);
+                setLoading(false);
             }
         });
         videoImageView = new ImageView();
@@ -306,10 +337,23 @@ public class VLCPlayer {
         videoImageView.fitHeightProperty().bind(playerPane.heightProperty());
         mediaPlayer.videoSurface().set(new ImageViewVideoSurface(videoImageView));
         loadingProgressIndicator = new ProgressIndicator();
-        loadingProgressIndicator.visibleProperty().bind(isLoading);
+        loadingProgressIndicator.visibleProperty().bind(isLoading.and(isError.not()));
         loadingProgressLabel = new Label();
         loadingProgressLabel.setVisible(false);
         loadingProgressLabel.getStyleClass().add("dodge-blue");
+        pausedPlayButtonImageView = new ImageView(BaseResources.PLAY_BUTTON_IMG);
+        pausedPlayButtonImageView.setFitWidth(64);
+        pausedPlayButtonImageView.setFitHeight(64);
+        pausedPlayButtonImageView.setPreserveRatio(true);
+        pausedPlayButtonImageView.setVisible(false);
+        loadingErrorIconLabel = new Label();
+        loadingErrorIconLabel.setGraphic(FontIcon.of(FontAwesome.WARNING, 32, Color.WHITE));
+        loadingErrorLabel = new Label(I18nHelper.get(I18nKeys.COMMON_VIDEO_LOADING_ERROR));
+        loadingErrorLabel.getStyleClass().add("vlc-player-loading-error-label");
+        loadingErrorVBox = new VBox(loadingErrorIconLabel, loadingErrorLabel);
+        loadingErrorVBox.setSpacing(3);
+        loadingErrorVBox.setAlignment(Pos.CENTER);
+        loadingErrorVBox.visibleProperty().bind(isLoading.not().and(isError));
         // 暂停设置
         pauseLabel = new Label();
         pauseLabel.setGraphic(pauseIcon);
@@ -323,6 +367,7 @@ public class VLCPlayer {
         stepForwardLabel.setGraphic(stepForwardIcon);
         stepForwardLabel.getStyleClass().add("vlc-player-control-label");
         if (liveMode) {
+            epgFetchingHandler = new ParameterizedEggFetchingHandler();
             selectedLive = new LiveInfoBO();
             playingLive = new LiveInfoBO();
             stepBackwardLabel.setOnMouseClicked(evt -> {
@@ -390,6 +435,7 @@ public class VLCPlayer {
                 stepForwardRunnable.run();
             });
         } else {
+            epgFetchingHandler = null;
             stepBackwardLabel.setOnMouseClicked(evt -> stepBackwardRunnable.run());
             stepForwardLabel.setOnMouseClicked(evt -> stepForwardRunnable.run());
         }
@@ -598,7 +644,7 @@ public class VLCPlayer {
                 mediaPlayer.controls().setPosition(((float) videoProgressBar.getProgress()));
                 isVideoProgressBarUsing.set(false);
             });
-            videoProgressBar.disableProperty().bind(isLoading);
+            videoProgressBar.disableProperty().bind(isLoading.and(isError.not()));
             videoProgressSplitLabel = new Label("/");
             videoProgressSplitLabel.getStyleClass().add("vlc-player-progress-label");
             videoProgressLengthLabel = new Label("-:-:-");
@@ -641,7 +687,12 @@ public class VLCPlayer {
         AnchorPane.setLeftAnchor(controlTopAnchorPane, 0.0);
         AnchorPane.setRightAnchor(controlTopAnchorPane, 0.0);
         AnchorPane.setTopAnchor(controlTopAnchorPane, 0.0);
-        progressMiddleStackPane = new StackPane(loadingProgressIndicator, loadingProgressLabel);
+        progressMiddleStackPane = new StackPane(
+                loadingProgressIndicator,
+                loadingProgressLabel,
+                pausedPlayButtonImageView,
+                loadingErrorVBox
+        );
         paneChildren = playerPane.getChildren();
         paneChildren.add(videoImageView);
         paneChildren.add(progressMiddleStackPane);
@@ -652,6 +703,18 @@ public class VLCPlayer {
             StackPane.setAlignment(liveChannelBanner, Pos.BOTTOM_CENTER);
             paneChildren.add(liveChannelBanner);
             liveChannelDrawer = new LiveDrawer(selectedLive, playingLive, playerPane, this);
+            liveChannelDrawer.addEventFilter(MouseEvent.ANY, evt -> {
+                EventType<? extends MouseEvent> eventType = evt.getEventType();
+
+                if (eventType == MouseEvent.MOUSE_ENTERED) {
+                    setControlsAutoHide(false);
+                } else if (eventType == MouseEvent.MOUSE_EXITED) {
+                    setControlsAutoHide(true);
+                } else if (eventType == MouseEvent.MOUSE_MOVED) {
+                    // 消费掉鼠标移动事件，避免controls被唤起
+                    evt.consume();
+                }
+            });
             paneChildren.add(liveChannelDrawer);
             StackPane.setAlignment(liveChannelDrawer, Pos.CENTER_LEFT);
         } else {
@@ -692,7 +755,7 @@ public class VLCPlayer {
             }
         });
         // 鼠标移动事件处理
-        parent.addEventFilter(MouseEvent.MOUSE_MOVED, evt -> setControlsVisible(true));
+        parent.addEventHandler(MouseEvent.MOUSE_MOVED, evt -> setControlsVisible(true));
         parentChildren.add(0, playerPane);
         parent.requestFocus();
         setLoading(true);
@@ -767,9 +830,20 @@ public class VLCPlayer {
 
     private void setLoading(boolean loading) {
         isLoading.set(loading);
-        if (!loading && loadingProgressLabel.isVisible()) {
+        if (loading) {
+            setError(false);
+        }
+        if (!loading && loadingProgressLabel.isVisible() && !isError()) {
             loadingProgressLabel.setVisible(false);
         }
+    }
+
+    private void setError(boolean flag) {
+        isError.set(flag);
+    }
+
+    private boolean isError() {
+        return isError.get();
     }
 
     private void bindPlayerPaneWidth(DoubleExpression widthProp) {
@@ -863,9 +937,11 @@ public class VLCPlayer {
     }
 
     public void changePlayStatus() {
-        if (!mediaPlayer.status().canPause()) {
+        if (!mediaPlayer.status().canPause() || isError() || isLoading()) {
+
             return;
         }
+        // 调用暂停API时可能出现短暂延迟，为用户体验考虑，显示一下loading告知用户等待
         setLoading(true);
         mediaPlayer.controls().pause();
     }
@@ -896,10 +972,6 @@ public class VLCPlayer {
                 mediaPlayer.controls().stop();
             }
         });
-    }
-
-    public void setMute(boolean flag) {
-        mediaPlayer.audio().setMute(flag);
     }
 
     public void setOnStepBackward(Runnable runnable) {
@@ -961,7 +1033,10 @@ public class VLCPlayer {
         liveChannelDrawer.select(liveChannelGroup, liveChannel);
 
         play(liveChannelLine.getUrl(), Map.of(), liveChannel.getTitle(), null);
-        showLiveChannelBanner(liveChannel, liveChannelLine);
+        if (lastPlayingLiveChannel != liveChannel) {
+            // 切换频道时，显示banner（同一个频道切换线路时不显示）
+            showLiveChannelBanner(liveChannel, liveChannelLine);
+        }
         updateLiveChannelLinesHBox(lastPlayingLiveChannel, liveChannel, liveChannelLine);
     }
 
@@ -1023,12 +1098,92 @@ public class VLCPlayer {
     }
 
     private void showLiveChannelBanner(LiveChannel liveChannel, LiveChannel.Line liveChannelLine) {
-        // TODO EPG
-        liveChannelBanner.setChannelInfo(liveChannel.getTitle(), liveChannelLine.getLogoUrl());
-//        liveChannelBanner.setCurrentProgram("舌尖上的中国·导演精编版", "19:00", "19:30");
+        String channelTitle = liveChannel.getTitle();
+
+        liveChannelBanner.setChannelInfo(channelTitle, liveChannelLine.getLogoUrl());
         liveChannelBanner.setCurrentProgram(null, null, null);
-//        liveChannelBanner.setNextProgram("天气预报", "19:35");
         liveChannelBanner.setNextProgram(null, null);
+        if (epgServiceUrl != null) {
+            fetchAndApplyEpgAsync(channelTitle);
+        }
+        liveChannelBanner.show();
+    }
+
+    private void fetchAndApplyEpgAsync(String channelTitle) {
+        AsyncUtil.execute(() -> {
+            Epg epg = null;
+            LocalDateTime now = LocalDateTime.now();
+            LocalTime nowTime;
+            String epgStartTimeStr;
+            String epgEndTimeStr;
+            LocalTime epgStartTime;
+            LocalTime epgEndTime;
+            MutableTriple<String, String, String> currentProgramTitleAndStartTimeAndEndTimeTriple;
+            MutablePair<String, String> nextProgramTitleAndStartTimeAndEndTime;
+            Epg.Data epgData;
+
+            try {
+                epg = epgFetchingHandler.handle(epgServiceUrl, channelTitle, now.toLocalDate())
+                        .get(4, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Platform.runLater(() -> ToastHelper.showException(e));
+            } catch (ExecutionException | TimeoutException e) {
+                log.warn(
+                        "Exception while fetching epg, channelTitle={}, epgServiceUrl={}",
+                        channelTitle,
+                        epgServiceUrl,
+                        e
+                );
+            }
+            if (epg == null) {
+
+                return;
+            }
+            nowTime = now.toLocalTime();
+            currentProgramTitleAndStartTimeAndEndTimeTriple = MutableTriple.of(null, null, null);
+            nextProgramTitleAndStartTimeAndEndTime = MutablePair.of(null, null);
+            List<Epg.Data> data = epg.getEpgData();
+            for (int i = 0; i < data.size(); i++) {
+                epgData = data.get(i);
+                epgStartTimeStr = epgData.getStart();
+                epgEndTimeStr = epgData.getEnd();
+                if (epgStartTimeStr == null || epgEndTimeStr == null) {
+                    break;
+                }
+                try {
+                    epgStartTime = LocalTime.parse(epgData.getStart(), LOCAL_TIME_FORMATTER);
+                    epgEndTime = LocalTime.parse(epgData.getEnd(), LOCAL_TIME_FORMATTER);
+                } catch (DateTimeParseException e) {
+                    log.warn(
+                            "Invalid epg time format, channelTitle={}, epgServiceUrl={}, epgData={}",
+                            channelTitle, epgServiceUrl, epgData
+                    );
+                    break;
+                }
+                if (!nowTime.isBefore(epgStartTime) && nowTime.isBefore(epgEndTime)) {
+                    currentProgramTitleAndStartTimeAndEndTimeTriple.setLeft(epgData.getTitle());
+                    currentProgramTitleAndStartTimeAndEndTimeTriple.setMiddle(epgStartTimeStr);
+                    currentProgramTitleAndStartTimeAndEndTimeTriple.setRight(epgEndTimeStr);
+                    if (i < data.size() - 1) {
+                        epgData = data.get(i + 1);
+                        nextProgramTitleAndStartTimeAndEndTime.setLeft(epgData.getTitle());
+                        nextProgramTitleAndStartTimeAndEndTime.setRight(epgData.getStart());
+                    }
+                    Platform.runLater(() -> {
+                        liveChannelBanner.setCurrentProgram(
+                                currentProgramTitleAndStartTimeAndEndTimeTriple.getLeft(),
+                                currentProgramTitleAndStartTimeAndEndTimeTriple.getMiddle(),
+                                currentProgramTitleAndStartTimeAndEndTimeTriple.getRight()
+                        );
+                        liveChannelBanner.setNextProgram(
+                                nextProgramTitleAndStartTimeAndEndTime.getLeft(),
+                                nextProgramTitleAndStartTimeAndEndTime.getRight()
+                        );
+                    });
+                    break;
+                }
+            }
+        });
     }
 
     /**
@@ -1054,6 +1209,7 @@ public class VLCPlayer {
         private final Label nextProgramLabel = new Label();
         private final Label nextProgramTimeLabel = new Label();
         private final Map<String, Image> logoUrlAndLogoImage = new HashMap<>();
+        private final Timer hideTimer = new Timer(6000, evt -> setVisible(false));
 
         public LiveChannelBanner() {
             super();
@@ -1098,16 +1254,22 @@ public class VLCPlayer {
             showLogoPlaceholder(false);
         }
 
+        public void show() {
+            setVisible(true);
+            hideTimer.restart();
+        }
+
         /**
          * 设置频道信息
          * @param name 名称
          * @param logoUrl LOGO地址
          */
+        @SuppressWarnings("ConstantConditions")
         public void setChannelInfo(String name, @Nullable String logoUrl) {
             Image logo;
 
             channelNameLabel.setText(name);
-            if (logoUrl != null && ValidationUtil.isURL(logoUrl)) {
+            if (ValidationUtil.isURL(logoUrl)) {
                 if (logoUrlAndLogoImage.containsKey(logoUrl)) {
                     logoView.setImage(logoUrlAndLogoImage.get(logoUrl));
                 } else {
@@ -1116,7 +1278,7 @@ public class VLCPlayer {
                     logo = new Image(logoUrl, true);
                     logo.progressProperty()
                             .addListener((ob, oldVal, newVal) -> {
-                                if (newVal.doubleValue() >= 1.0) {
+                                if (newVal.doubleValue() >= 1.0 && !logo.isError()) {
                                     logoUrlAndLogoImage.put(logoUrl, logo);
                                     logoView.setImage(logo);
                                     showLogoPlaceholder(false);
@@ -1229,18 +1391,29 @@ public class VLCPlayer {
 
         public LiveDrawer(LiveInfoBO selectedLive, LiveInfoBO playingLive, StackPane playerPane, VLCPlayer player) {
             super();
+            this.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
             HBox listViewHBox = new HBox();
             Button actionBtn = new Button(">");
+            DoubleProperty minHeightProp = minHeightProperty();
+            DoubleProperty maxHeightProp = maxHeightProperty();
+            DoubleProperty minWidthProp = minWidthProperty();
+            DoubleProperty maxWidthProp = maxWidthProperty();
+            ReadOnlyDoubleProperty playerPaneHeightProp = playerPane.heightProperty();
+            ReadOnlyDoubleProperty playerPaneWidthProp = playerPane.widthProperty();
+            ReadOnlyDoubleProperty listViewHBoxWidthProp = listViewHBox.widthProperty();
+            ReadOnlyDoubleProperty actionBtnWidthProp = actionBtn.widthProperty();
             ObservableList<Node> liveDrawerChildren = getChildren();
             ObservableList<Node> listViewHBoxChildren = listViewHBox.getChildren();
 
             // 样式
-            minHeightProperty().bind(playerPane.heightProperty().divide(1.2));
-            maxHeightProperty().bind(playerPane.heightProperty().divide(1.2));
-            minWidthProperty().bind(playerPane.widthProperty().divide(2));
-            maxWidthProperty().bind(playerPane.widthProperty().divide(2));
+            minHeightProp.bind(playerPaneHeightProp.divide(1.2));
+            maxHeightProp.bind(playerPaneHeightProp.divide(1.2));
+            minWidthProp.bind(actionBtnWidthProp);
+            maxWidthProp.bind(actionBtnWidthProp);
             listViewHBox.setManaged(false);
             listViewHBox.setVisible(false);
+            listViewHBox.minWidthProperty().bind(playerPaneWidthProp.divide(2.8));
+            listViewHBox.maxWidthProperty().bind(playerPaneWidthProp.divide(2.8));
             liveDrawerChildren.add(listViewHBox);
             liveDrawerChildren.add(new StackPane(actionBtn));
             // 节目列表
@@ -1249,6 +1422,7 @@ public class VLCPlayer {
             liveChannelListView.setCellFactory(liveChannelListViewCellFactory);
             liveChannelListView.getStyleClass().add("vlc-player-live-channel-list-view");
             liveChannelListView.setFocusTraversable(false);
+            HBox.setHgrow(liveChannelListView, Priority.ALWAYS);
             // 节目分组列表
             liveChannelGroupListView = new ListView<>();
             liveChannelGroupListViewCellFactory = new LiveChannelGroupListViewCellFactory(
@@ -1266,9 +1440,16 @@ public class VLCPlayer {
             actionBtn.setOnMouseClicked(evt -> {
                 listViewHBox.setManaged(!listViewHBox.isManaged());
                 listViewHBox.setVisible(!listViewHBox.isVisible());
+                // 根据显示状态，更新Drawer的宽度
+                minWidthProp.unbind();
+                maxWidthProp.unbind();
                 if (listViewHBox.isVisible()) {
+                    minWidthProp.bind(listViewHBoxWidthProp.add(actionBtnWidthProp));
+                    maxWidthProp.bind(listViewHBoxWidthProp.add(actionBtnWidthProp));
                     actionBtn.setText("<");
                 } else {
+                    minWidthProp.bind(actionBtnWidthProp);
+                    maxWidthProp.bind(actionBtnWidthProp);
                     actionBtn.setText(">");
                 }
             });
@@ -1468,6 +1649,7 @@ public class VLCPlayer {
         }
 
         @Override
+        @SuppressWarnings("ConstantConditions")
         public ListCell<LiveChannel> call(ListView<LiveChannel> liveChannelListView) {
             return new ListCell<>() {
                 @Override
@@ -1538,7 +1720,7 @@ public class VLCPlayer {
                         logoPlaceholder = new LogoPlaceholder(LOGO_PLACE_HOLDER_SIZE, LOGO_PLACE_HOLDER_FONT_SIZE);
                         logoPlaceholder.setPlaceholderText(liveChannel.getTitle().substring(0, 1));
                         graphicBorderPane.setLeft(logoPlaceholder);
-                        if (logoUrl != null && ValidationUtil.isURL(logoUrl)) {
+                        if (ValidationUtil.isURL(logoUrl)) {
                             // 后台加载台标
                             logo = new Image(logoUrl, true);
                             logoImageView = new ImageView(logo);

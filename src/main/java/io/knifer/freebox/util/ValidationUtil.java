@@ -16,6 +16,9 @@ import java.net.URL;
 public class ValidationUtil {
 
     public boolean isURL(String cs) {
+        if (cs == null || cs.isBlank()) {
+            return false;
+        }
         try {
             new URL(cs).toURI();
         } catch (MalformedURLException | URISyntaxException e) {

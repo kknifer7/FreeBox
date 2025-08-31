@@ -26,6 +26,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -150,18 +151,26 @@ public class LiveController {
     private void switchLiveSource(FreeBoxLive live) {
         loadLiveChannelGroupService = new LoadLiveChannelGroupService(live, LIVE_CONFIG_CACHE_PATH);
         loadingProperty.set(true);
-        player.setMute(true);
         loadLiveChannelGroupService.setOnSucceeded(evt -> {
             List<LiveChannelGroup> liveChannelGroups = loadLiveChannelGroupService.getValue();
+            String epgServiceUrl;
 
             log.info("switch live source, liveChannelGroup count: {}", liveChannelGroups.size());
             if (!liveChannelGroups.isEmpty()) {
                 player.setLiveChannelGroups(liveChannelGroups);
+                epgServiceUrl = live.getEpg();
+                player.setEpgServiceUrl(validEpgServiceUrl(epgServiceUrl) ? epgServiceUrl : null);
                 player.play(0, 0, 0);
             }
-            player.setMute(false);
             loadingProperty.set(false);
         });
         loadLiveChannelGroupService.start();
+    }
+
+    private boolean validEpgServiceUrl(String epgServiceUrl) {
+        return epgServiceUrl != null &&
+                epgServiceUrl.startsWith("http") &&
+                StringUtils.countMatches(epgServiceUrl, "{name}") == 1 &&
+                StringUtils.countMatches(epgServiceUrl, "{date}") == 1;
     }
 }

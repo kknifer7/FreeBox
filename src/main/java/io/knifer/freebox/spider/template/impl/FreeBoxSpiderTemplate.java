@@ -600,6 +600,6 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
 
     @Override
     public List<FreeBoxLive> getLives() {
-        return apiConfig.getLives();
+        return ObjectUtils.defaultIfNull(apiConfig.getLives(), List.of());
     }
 }

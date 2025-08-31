@@ -22,9 +22,10 @@ public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
-//        if (shouldIgnore(e)) {
-//            return;
-//        }
+        if (shouldIgnore(e)) {
+
+            return;
+        }
         if (Context.INSTANCE.isInitialized()) {
             if (Platform.isFxApplicationThread()) {
                 ToastHelper.showException(e);
@@ -38,11 +39,10 @@ public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
     private boolean shouldIgnore(Throwable e) {
         StackTraceElement stElm = e.getStackTrace()[0];
 
-        // okhttp 库固定抛出的异常，忽略
-        return e instanceof IllegalArgumentException &&
-                StringUtils.equals(stElm.getFileName(), "HttpUrl.kt") &&
-                StringUtils.equals(stElm.getClassName(), "okhttp3.HttpUrl$Builder") &&
-                StringUtils.equals(stElm.getMethodName(), "parse$okhttp") &&
-                stElm.getLineNumber() == 1441;
+        // 视频窗口关闭，vlc播放器释放后又尝试加载视频产生的异常，没找到方法避免，暂时忽略
+        return e instanceof Error &&
+                StringUtils.equals(e.getMessage(), "Invalid memory access") &&
+                StringUtils.equals(stElm.getFileName(), "LibVlc.java") &&
+                StringUtils.equals(stElm.getClassName(), "uk.co.caprica.vlcj.binding.lib.LibVlc");
     }
 }

@@ -24,6 +24,11 @@
     -fx-font-size: 24px;
 }
 
+.vlc-player-loading-error-label {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+}
+
 .vlc-player-pop-over {
     -fx-padding: 10px;
 }
@@ -31,6 +36,10 @@
 .vlc-player-live-channel-banner {
     -fx-max-width: 700px;
     -fx-max-height: 100px;
+    -fx-min-width: 700px;
+    -fx-min-height: 100px;
+    -fx-pref-width: 700px;
+    -fx-pref-height: 100px;
     -fx-background-color: rgba(0, 0, 0, 0.7);
     -fx-background-radius: 10;
     -fx-border-radius: 10;

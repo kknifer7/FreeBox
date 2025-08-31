@@ -49,6 +49,7 @@ module io.knifer.freebox {
     opens io.knifer.freebox.model.domain to com.google.gson, com.fasterxml.jackson.databind, filelize;
     opens io.knifer.freebox.model.common.tvbox to com.google.gson;
     opens io.knifer.freebox.model.common.catvod to com.google.gson;
+    opens io.knifer.freebox.model.common.diyp to com.google.gson;
     opens io.knifer.freebox.model.c2s to com.google.gson;
     opens io.knifer.freebox.model.s2c to com.google.gson;
     opens io.knifer.freebox.spider to com.google.gson;

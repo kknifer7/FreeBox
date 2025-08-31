@@ -59,7 +59,7 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                 String liveConfigContent;
                 List<LiveChannelGroup> liveChannelGroups;
 
-                if (url == null || !ValidationUtil.isURL(url)) {
+                if (!ValidationUtil.isURL(url)) {
                     Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_INVALID_LIVE_URL));
 
                     return List.of();
@@ -79,13 +79,13 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                         liveConfigContent = StringUtils.isBlank(ua) ?
                                 HttpUtil.getAsync(url).get(10, TimeUnit.SECONDS) :
                                 HttpUtil.getAsync(url, HttpHeaders.USER_AGENT, ua).get(10, TimeUnit.SECONDS);
-                    } catch (TimeoutException e) {
+                    } catch (TimeoutException | ExecutionException e) {
                         if (!isCancelled()) {
                             Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_INVALID_LIVE));
                         }
 
                         return List.of();
-                    } catch (ExecutionException | InterruptedException e) {
+                    } catch (InterruptedException e) {
                         if (!isCancelled()) {
                             Platform.runLater(() -> ToastHelper.showException(e));
                         }

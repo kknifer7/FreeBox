@@ -1391,9 +1391,11 @@ public class VLCPlayer {
 
         public LiveDrawer(LiveInfoBO selectedLive, LiveInfoBO playingLive, StackPane playerPane, VLCPlayer player) {
             super();
-            this.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
             HBox listViewHBox = new HBox();
-            Button actionBtn = new Button(">");
+            Button actionBtn = new Button();
+            ObservableList<String> actionBtnStyleClasses = actionBtn.getStyleClass();
+            FontIcon actionBtnRightIcon = FontIcon.of(FontAwesome.ANGLE_DOUBLE_RIGHT, 20, Color.WHITESMOKE);
+            FontIcon actionBtnLeftIcon = FontIcon.of(FontAwesome.ANGLE_DOUBLE_LEFT, 20, Color.WHITESMOKE);
             DoubleProperty minHeightProp = minHeightProperty();
             DoubleProperty maxHeightProp = maxHeightProperty();
             DoubleProperty minWidthProp = minWidthProperty();
@@ -1406,6 +1408,8 @@ public class VLCPlayer {
             ObservableList<Node> listViewHBoxChildren = listViewHBox.getChildren();
 
             // 样式
+            actionBtnStyleClasses.add("vlc-player-live-channel-list-toggle-button");
+            actionBtn.setGraphic(actionBtnRightIcon);
             minHeightProp.bind(playerPaneHeightProp.divide(1.2));
             maxHeightProp.bind(playerPaneHeightProp.divide(1.2));
             minWidthProp.bind(actionBtnWidthProp);
@@ -1437,7 +1441,7 @@ public class VLCPlayer {
 
             // 展开/收起 按钮
             actionBtn.setFocusTraversable(false);
-            actionBtn.setOnMouseClicked(evt -> {
+            actionBtn.setOnAction(evt -> {
                 listViewHBox.setManaged(!listViewHBox.isManaged());
                 listViewHBox.setVisible(!listViewHBox.isVisible());
                 // 根据显示状态，更新Drawer的宽度
@@ -1446,11 +1450,13 @@ public class VLCPlayer {
                 if (listViewHBox.isVisible()) {
                     minWidthProp.bind(listViewHBoxWidthProp.add(actionBtnWidthProp));
                     maxWidthProp.bind(listViewHBoxWidthProp.add(actionBtnWidthProp));
-                    actionBtn.setText("<");
+                    actionBtnStyleClasses.add("collapsed");
+                    actionBtn.setGraphic(actionBtnLeftIcon);
                 } else {
                     minWidthProp.bind(actionBtnWidthProp);
                     maxWidthProp.bind(actionBtnWidthProp);
-                    actionBtn.setText(">");
+                    actionBtnStyleClasses.remove("collapsed");
+                    actionBtn.setGraphic(actionBtnRightIcon);
                 }
             });
             actionBtn.setMinWidth(30);

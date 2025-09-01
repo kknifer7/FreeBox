@@ -177,3 +177,35 @@
     -fx-min-height: 0;
     -fx-max-height: 0;
 }
+
+
+/* 频道侧边栏按钮 */
+/* 展开/收起按钮基础样式 */
+.vlc-player-live-channel-list-toggle-button {
+    -fx-background-color: rgba(50, 50, 50, 0.8);
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: rgba(100, 100, 100, 0.6);
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 6px 12px;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 4, 0.2, 0, 1);
+}
+/* 按钮悬停效果 */
+.vlc-player-live-channel-list-toggle-button:hover {
+    -fx-background-color: rgba(70, 70, 70, 0.9);
+    -fx-border-color: rgba(130, 130, 130, 0.7);
+}
+/* 按钮按下效果 */
+.vlc-player-live-channel-list-toggle-button:pressed {
+    -fx-background-color: rgba(40, 40, 40, 0.9);
+    -fx-border-color: rgba(90, 90, 90, 0.7);
+    -fx-translate-y: 1px;
+}
+/* 按钮禁用状态 */
+.vlc-player-live-channel-list-toggle-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}

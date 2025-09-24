@@ -1,6 +1,6 @@
 package io.knifer.freebox.handler;
 
-import io.knifer.freebox.model.common.diyp.Epg;
+import io.knifer.freebox.model.common.diyp.EPG;
 
 import java.time.LocalDate;
 import java.util.concurrent.CompletableFuture;
@@ -10,5 +10,5 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface EpgFetchingHandler {
 
-    CompletableFuture<Epg> handle(String epgServiceUrl, String channelName, LocalDate date);
+    CompletableFuture<EPG> handle(String epgServiceUrl, String channelName, LocalDate date);
 }

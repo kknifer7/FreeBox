@@ -140,6 +140,17 @@ public class I18nKeys {
     public static final String LIVE_PLAYER_PLAY_TIME = "live.player.play-time";
     public static final String LIVE_PLAYER_START_TIME = "live.player.start-time";
     public static final String LIVE_PLAYER_DEFAULT_PROGRAM = "live.player.default-program";
+    public static final String LIVE_PLAYER_EPG = "live.player.epg";
+    public static final String LIVE_EPG_SEARCH_ADD_HINT = "live.epg.search-add-hint";
+    public static final String LIVE_EPG_MORNING = "live.epg.morning";
+    public static final String LIVE_EPG_AFTERNOON = "live.epg.afternoon";
+    public static final String LIVE_EPG_NO_EPG_DATA = "live.epg.no-epg-data";
+    public static final String LIVE_EPG_PROGRAM_TITLE = "live.epg.program.title";
+    public static final String LIVE_EPG_PROGRAM_START_TIME = "live.epg.program.start-time";
+    public static final String LIVE_EPG_PROGRAM_END_TIME = "live.epg.program.end-time";
+    public static final String LIVE_EPG_PROGRAM_DURATION = "live.epg.program.duration";
+    public static final String LIVE_EPG_PROGRAM_DESCRIPTION = "live.epg.program.description";
+    public static final String LIVE_EPG_MESSAGE_LIVE_CHANNEL_ALREADY_ADDED = "live.epg.message.live-channel-already-added";
     public static final String LIVE_MESSAGE_INVALID_LIVE_URL = "live.message.invalid-live-url";
     public static final String LIVE_MESSAGE_INVALID_LIVE = "live.message.invalid-live";
 }

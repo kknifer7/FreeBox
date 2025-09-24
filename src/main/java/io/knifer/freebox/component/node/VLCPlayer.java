@@ -6,21 +6,24 @@ import io.knifer.freebox.FreeBoxApplication;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.controller.EPGOverviewController;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.EpgFetchingHandler;
-import io.knifer.freebox.handler.impl.ParameterizedEggFetchingHandler;
+import io.knifer.freebox.handler.impl.ParameterizedEpgFetchingHandler;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
-import io.knifer.freebox.model.common.diyp.Epg;
+import io.knifer.freebox.model.bo.EPGOverviewBO;
+import io.knifer.freebox.model.common.diyp.EPG;
 import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
-import io.knifer.freebox.util.ValidationUtil;
+import io.knifer.freebox.util.FXMLUtil;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.DoubleExpression;
@@ -38,7 +41,6 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -46,10 +48,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import lombok.Builder;
@@ -58,7 +56,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.MutableTriple;
@@ -104,6 +101,8 @@ public class VLCPlayer {
     private final Scene scene;
     private final AnchorPane controlPane;
     private final Timer controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
+    private final Timer volumePopOverHideTimer;
+    private final Timer settingsPopOverHideTimer;
     private final EmbeddedMediaPlayer mediaPlayer;
     private final ImageView videoImageView;
     private final ProgressIndicator loadingProgressIndicator;
@@ -133,6 +132,8 @@ public class VLCPlayer {
     private final Label videoProgressLengthLabel;
     private final Label fullScreenLabel;
     private final Label videoTitleLabel;
+    private final Label epgOpenLabel;
+    private final HBox controlTopHBox;
     private final StackPane playerPane;
     private final LiveChannelBanner liveChannelBanner;
     private final LiveDrawer liveChannelDrawer;
@@ -160,6 +161,8 @@ public class VLCPlayer {
     @Setter
     private String epgServiceUrl = null;
 
+    private Stage epgStage;
+
     private Runnable stepBackwardRunnable = BaseValues.EMPTY_RUNNABLE;
     private Runnable stepForwardRunnable = BaseValues.EMPTY_RUNNABLE;
     private Runnable fullScreenRunnable = BaseValues.EMPTY_RUNNABLE;
@@ -180,7 +183,6 @@ public class VLCPlayer {
         List<Node> paneChildren;
         VBox volumePopOverInnerVBox;
         PopOver volumePopOver;
-        Timer volumePopOverHideTimer;
         Label rateSettingTitleLabel;
         HBox rateSettingRadioButtonHBox;
         HBox rateSettingHBox;
@@ -188,7 +190,6 @@ public class VLCPlayer {
         HBox reloadSettingsHBox;
         VBox settingsPopOverInnerVBox;
         PopOver settingsPopOver;
-        Timer settingsPopOverHideTimer;
         HBox progressLabelHBox;
         HBox leftToolBarHbox;
         HBox rightToolBarHbox;
@@ -367,7 +368,7 @@ public class VLCPlayer {
         stepForwardLabel.setGraphic(stepForwardIcon);
         stepForwardLabel.getStyleClass().add("vlc-player-control-label");
         if (liveMode) {
-            epgFetchingHandler = new ParameterizedEggFetchingHandler();
+            epgFetchingHandler = ParameterizedEpgFetchingHandler.getInstance();
             selectedLive = new LiveInfoBO();
             playingLive = new LiveInfoBO();
             stepBackwardLabel.setOnMouseClicked(evt -> {
@@ -672,13 +673,15 @@ public class VLCPlayer {
         // 顶端标题
         videoTitleLabel = new Label();
         videoTitleLabel.getStyleClass().add("vlc-player-title");
-        controlTopAnchorPane = new AnchorPane(videoTitleLabel);
+        controlTopHBox = new HBox(videoTitleLabel);
+        controlTopHBox.setSpacing(10);
+        controlTopAnchorPane = new AnchorPane(controlTopHBox);
         controlTopAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
         controlTopAnchorPane.setOnMouseClicked(Event::consume);
-        AnchorPane.setLeftAnchor(videoTitleLabel, 10.0);
-        AnchorPane.setRightAnchor(videoTitleLabel, 10.0);
-        AnchorPane.setTopAnchor(videoTitleLabel, 10.0);
-        AnchorPane.setBottomAnchor(videoTitleLabel, 10.0);
+        AnchorPane.setLeftAnchor(controlTopHBox, 10.0);
+        AnchorPane.setRightAnchor(controlTopHBox, 10.0);
+        AnchorPane.setTopAnchor(controlTopHBox, 10.0);
+        AnchorPane.setBottomAnchor(controlTopHBox, 10.0);
         // 摆放布局组件
         controlPane = new AnchorPane(controlBottomAnchorPane, controlTopAnchorPane);
         AnchorPane.setLeftAnchor(controlBottomAnchorPane, 0.0);
@@ -698,6 +701,17 @@ public class VLCPlayer {
         paneChildren.add(progressMiddleStackPane);
         paneChildren.add(controlPane);
         if (liveMode) {
+            epgOpenLabel = new Label(I18nHelper.get(I18nKeys.LIVE_PLAYER_EPG));
+            epgOpenLabel.getStyleClass().add("vlc-player-live-epg-label");
+            epgOpenLabel.setOnMouseClicked(evt -> {
+                Pair<Stage, EPGOverviewController> stageAndController = FXMLUtil.load(Views.EPG_OVERVIEW);
+
+                stageAndController.getRight()
+                        .setData(EPGOverviewBO.of(liveChannelGroups, playingLive.getLiveChannel(), epgServiceUrl));
+                epgStage = stageAndController.getLeft();
+                epgStage.show();
+            });
+            controlTopHBox.getChildren().add(epgOpenLabel);
             liveChannelBanner = new LiveChannelBanner();
             StackPane.setMargin(liveChannelBanner, new Insets(0, 0, 50, 0));
             StackPane.setAlignment(liveChannelBanner, Pos.BOTTOM_CENTER);
@@ -718,6 +732,7 @@ public class VLCPlayer {
             paneChildren.add(liveChannelDrawer);
             StackPane.setAlignment(liveChannelDrawer, Pos.CENTER_LEFT);
         } else {
+            epgOpenLabel = null;
             liveChannelBanner = null;
             liveChannelDrawer = null;
         }
@@ -1004,6 +1019,17 @@ public class VLCPlayer {
 
     public void destroy() {
         destroyFlag = true;
+        controlPaneHideTimer.stop();
+        volumePopOverHideTimer.stop();
+        settingsPopOverHideTimer.stop();
+        Platform.runLater(() -> {
+            if (epgStage != null && epgStage.isShowing()) {
+                epgStage.hide();
+            }
+            if (liveChannelBanner != null) {
+                liveChannelBanner.destroy();
+            }
+        });
         if (mediaPlayer.status().isPlaying()) {
             SystemHelper.allowSleep();
         }
@@ -1111,7 +1137,7 @@ public class VLCPlayer {
 
     private void fetchAndApplyEpgAsync(String channelTitle) {
         AsyncUtil.execute(() -> {
-            Epg epg = null;
+            EPG epg = null;
             LocalDateTime now = LocalDateTime.now();
             LocalTime nowTime;
             String epgStartTimeStr;
@@ -1120,7 +1146,7 @@ public class VLCPlayer {
             LocalTime epgEndTime;
             MutableTriple<String, String, String> currentProgramTitleAndStartTimeAndEndTimeTriple;
             MutablePair<String, String> nextProgramTitleAndStartTimeAndEndTime;
-            Epg.Data epgData;
+            EPG.Data epgData;
 
             try {
                 epg = epgFetchingHandler.handle(epgServiceUrl, channelTitle, now.toLocalDate())
@@ -1142,7 +1168,7 @@ public class VLCPlayer {
             nowTime = now.toLocalTime();
             currentProgramTitleAndStartTimeAndEndTimeTriple = MutableTriple.of(null, null, null);
             nextProgramTitleAndStartTimeAndEndTime = MutablePair.of(null, null);
-            List<Epg.Data> data = epg.getEpgData();
+            List<EPG.Data> data = epg.getEpgData();
             for (int i = 0; i < data.size(); i++) {
                 epgData = data.get(i);
                 epgStartTimeStr = epgData.getStart();
@@ -1201,36 +1227,25 @@ public class VLCPlayer {
 
     private static class LiveChannelBanner extends HBox {
 
-        private final LogoPlaceholder logoPlaceHolder = new LogoPlaceholder(60, 24);
-        private final ImageView logoView = new ImageView();
+        private final LogoPane logoPane = new LogoPane(60, 24);
         private final Label channelNameLabel = new Label();
         private final Label currentProgramLabel = new Label();
         private final Label programTimeLabel = new Label();
         private final Label nextProgramLabel = new Label();
         private final Label nextProgramTimeLabel = new Label();
-        private final Map<String, Image> logoUrlAndLogoImage = new HashMap<>();
         private final Timer hideTimer = new Timer(6000, evt -> setVisible(false));
 
         public LiveChannelBanner() {
             super();
 
-            Rectangle clip;
             HBox epgInfoHBox;
             VBox currentProgramVBox;
             VBox nextProgramVBox;
             VBox programInfoVBox;
 
             // 基本样式设置
-            setAlignment(Pos.BOTTOM_CENTER);
+            setAlignment(Pos.CENTER);
             getStyleClass().add("vlc-player-live-channel-banner");
-            setupLogoContainer();
-
-            // 创建台标容器
-            clip = new Rectangle(60, 60);
-            logoView.setClip(clip);
-            logoView.setFitWidth(60);
-            logoView.setFitHeight(60);
-            logoView.setPreserveRatio(true);
 
             // 样式
             channelNameLabel.getStyleClass().add("vlc-player-live-channel-banner-channel-name-label");
@@ -1247,11 +1262,7 @@ public class VLCPlayer {
             programInfoVBox.setAlignment(Pos.CENTER_LEFT);
 
             // 主布局组装
-            getChildren().addAll(logoPlaceHolder, new StackPane(logoView), programInfoVBox);
-        }
-
-        private void setupLogoContainer() {
-            showLogoPlaceholder(false);
+            getChildren().addAll(logoPane, programInfoVBox);
         }
 
         public void show() {
@@ -1266,40 +1277,8 @@ public class VLCPlayer {
          */
         @SuppressWarnings("ConstantConditions")
         public void setChannelInfo(String name, @Nullable String logoUrl) {
-            Image logo;
-
             channelNameLabel.setText(name);
-            if (ValidationUtil.isURL(logoUrl)) {
-                if (logoUrlAndLogoImage.containsKey(logoUrl)) {
-                    logoView.setImage(logoUrlAndLogoImage.get(logoUrl));
-                } else {
-                    logoPlaceHolder.setPlaceholderText(name.substring(0, 1));
-                    showLogoPlaceholder(true);
-                    logo = new Image(logoUrl, true);
-                    logo.progressProperty()
-                            .addListener((ob, oldVal, newVal) -> {
-                                if (newVal.doubleValue() >= 1.0 && !logo.isError()) {
-                                    logoUrlAndLogoImage.put(logoUrl, logo);
-                                    logoView.setImage(logo);
-                                    showLogoPlaceholder(false);
-                                }
-                            });
-                }
-            } else {
-                logoPlaceHolder.setPlaceholderText(name.substring(0, 1));
-                showLogoPlaceholder(true);
-            }
-        }
-
-        /**
-         * 设置是否展示默认LOGO
-         * @param show 是否展示
-         */
-        public void showLogoPlaceholder(boolean show) {
-            logoPlaceHolder.setVisible(show);
-            logoPlaceHolder.setManaged(show);
-            logoView.setVisible(!show);
-            logoView.setManaged(!show);
+            logoPane.setTitleAndLogoUrl(name, logoUrl);
         }
 
         /**
@@ -1339,46 +1318,9 @@ public class VLCPlayer {
             nextProgramLabel.setText(I18nHelper.getFormatted(I18nKeys.LIVE_PLAYER_NEXT_PROGRAM, title));
             nextProgramTimeLabel.setText(I18nHelper.getFormatted(I18nKeys.LIVE_PLAYER_START_TIME, startTime));
         }
-    }
 
-    private static class LogoPlaceholder extends StackPane {
-
-        private final Label placeholderLabel;
-        private final static List<Pair<Paint, Paint>> BACKGROUND_TEXT_PAINT_PAIRS = List.of(
-                Pair.of(Color.rgb(70, 130, 180), Color.WHITE),
-                Pair.of(Color.rgb(255, 127, 80), Color.WHITE),
-                Pair.of(Color.rgb(39, 139, 34), Color.WHITE),
-                Pair.of(Color.rgb(200, 160, 0), Color.WHITE),
-                Pair.of(Color.rgb(85, 107, 47), Color.WHITE),
-                Pair.of(Color.rgb(255, 140, 0), Color.WHITE),
-                Pair.of(Color.rgb(188, 10, 40), Color.WHITE),
-                Pair.of(Pair.of(Color.rgb(138, 43, 226), Color.WHITE)),
-                Pair.of(Color.rgb(65, 105, 225), Color.WHITE),
-                Pair.of(Color.rgb(255, 105, 180), Color.WHITE),
-                Pair.of(Color.rgb(210, 105, 30), Color.WHITE),
-                Pair.of(Color.rgb(0, 139, 139), Color.WHITE)
-        );
-
-        public LogoPlaceholder(double size, double fontSize) {
-            super();
-            Rectangle background = new Rectangle(size, size);
-            int colorPairIdx = RandomUtils.nextInt(0, BACKGROUND_TEXT_PAINT_PAIRS.size() - 1);
-            Pair<Paint, Paint> colorPair = BACKGROUND_TEXT_PAINT_PAIRS.get(colorPairIdx);
-
-            placeholderLabel = new Label();
-            placeholderLabel.getStyleClass().add("vlc-player-live-channel-banner-logo-placeholder-label");
-            placeholderLabel.setFont(Font.font(null, FontWeight.BOLD, fontSize));
-            placeholderLabel.setTextFill(colorPair.getRight());
-            this.setPrefSize(size, size);
-            this.setMinSize(size, size);
-            background.setFill(colorPair.getLeft());
-            background.setArcWidth(20);
-            background.setArcHeight(20);
-            this.getChildren().addAll(background, placeholderLabel);
-        }
-
-        public void setPlaceholderText(String text) {
-            placeholderLabel.setText(text);
+        public void destroy() {
+            hideTimer.stop();
         }
     }
 
@@ -1634,7 +1576,7 @@ public class VLCPlayer {
         private final Map<LiveChannel, HBox> liveChannelAndTitleHBoxMap;
 
         private final static double LOGO_IMAGE_SIZE = 50;
-        private final static double LOGO_PLACE_HOLDER_SIZE = 30;
+        private final static double LOGO_PLACE_HOLDER_SIZE = 35;
         private final static double LOGO_PLACE_HOLDER_FONT_SIZE = 18;
         private final static ImageView PLAYING_GIF_IMAGE_VIEW;
 
@@ -1668,9 +1610,7 @@ public class VLCPlayer {
                     LiveChannel selectedLiveChannel;
                     List<Node> titleHBoxChildren;
                     String logoUrl;
-                    LogoPlaceholder logoPlaceholder;
-                    Image logo;
-                    ImageView logoImageView;
+                    LogoPane logoPane;
 
                     super.updateItem(liveChannel, empty);
                     styleClasses = getStyleClass();
@@ -1703,6 +1643,7 @@ public class VLCPlayer {
                             player.play(liveChannelGroup, liveChannel, liveChannel.getLines().get(0));
                         });
                         titleHBox = new HBox(titleLabel);
+                        titleHBox.setAlignment(Pos.CENTER_LEFT);
                         liveChannelAndTitleHBoxMap.put(liveChannel, titleHBox);
                         selectedLiveChannel = selectedLive.getLiveChannel();
                         if (selectedLiveChannel != null && liveChannel == selectedLiveChannel) {
@@ -1722,24 +1663,12 @@ public class VLCPlayer {
                                 .filter(StringUtils::isNotBlank)
                                 .findFirst()
                                 .orElse(null);
-                        // 默认台标
-                        logoPlaceholder = new LogoPlaceholder(LOGO_PLACE_HOLDER_SIZE, LOGO_PLACE_HOLDER_FONT_SIZE);
-                        logoPlaceholder.setPlaceholderText(liveChannel.getTitle().substring(0, 1));
-                        graphicBorderPane.setLeft(logoPlaceholder);
-                        if (ValidationUtil.isURL(logoUrl)) {
-                            // 后台加载台标
-                            logo = new Image(logoUrl, true);
-                            logoImageView = new ImageView(logo);
-                            logoImageView.setFitWidth(LOGO_IMAGE_SIZE);
-                            logoImageView.setFitHeight(LOGO_IMAGE_SIZE);
-                            logoImageView.setPreserveRatio(true);
-                            logo.progressProperty()
-                                    .addListener((ob, oldVal, newVal) -> {
-                                        if (newVal.doubleValue() >= 1 && !logo.isError()) {
-                                            graphicBorderPane.setLeft(logoImageView);
-                                        }
-                                    });
-                        }
+                        // 台标
+                        logoPane = new LogoPane(
+                                LOGO_IMAGE_SIZE, LOGO_PLACE_HOLDER_SIZE, LOGO_PLACE_HOLDER_FONT_SIZE
+                        );
+                        logoPane.setTitleAndLogoUrl(liveChannel.getTitle(), logoUrl);
+                        graphicBorderPane.setLeft(logoPane);
                     }
                     setGraphic(graphicBorderPane);
                     setAlignment(Pos.CENTER);

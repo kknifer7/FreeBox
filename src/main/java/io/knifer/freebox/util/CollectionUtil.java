@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -22,6 +23,14 @@ public class CollectionUtil {
 
     public boolean isNotEmpty(Collection<?> collection) {
         return !isEmpty(collection);
+    }
+
+    public boolean isEmpty(Map<?, ?> map) {
+        return map == null || map.isEmpty();
+    }
+
+    public boolean isNotEmpty(Map<?, ?> map) {
+        return !isEmpty(map);
     }
 
     public <T> Optional<T> findFirst(Collection<T> collection, Predicate<T> predicate) {

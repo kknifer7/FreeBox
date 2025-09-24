@@ -128,6 +128,13 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
 
             return;
         }
+        if (apiConfig == null) {
+            Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
+            log.error("api config is null");
+            callback.accept(false);
+
+            return;
+        }
         apiConfig.setUrl(configUrl);
         spiderUrl = apiConfig.getSpider();
         if (

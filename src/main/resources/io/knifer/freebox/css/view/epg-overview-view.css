@@ -1,0 +1,173 @@
+@import "../common.css";
+
+.dark-box {
+    -fx-background-color: #252525;
+}
+
+.control-bar {
+    -fx-background-color: #2d2d2d;
+}
+
+.datetime-label {
+    -fx-text-fill: #eeeeee;
+    -fx-font-size: 16px;
+}
+
+.operation-button {
+    -fx-background-color: #3d3d3d;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+.operation-button:hover {
+    -fx-background-color: #4d4d4d;
+}
+.operation-button:pressed {
+    -fx-translate-y: 1px;
+    -fx-background-color: #3d3d3d;
+}
+
+.search-add-channel-combo-box {
+    -fx-background-color: #3d3d3d;
+    -fx-prompt-text-fill: #aaaaaa;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #555555;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+.search-add-channel-combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+.search-add-channel-combo-box .arrow {
+    -fx-background-color: #b0b0b0;
+}
+.search-add-channel-combo-box:hover {
+    -fx-background-color: #454545;
+    -fx-border-color: #666666;
+}
+.search-add-channel-combo-box:focused {
+    -fx-border-color: #4a88c7;
+    -fx-effect: dropshadow(gaussian, rgba(74, 136, 199, 0.3), 10, 0, 0, 0);
+}
+.search-add-channel-combo-box .list-view {
+    -fx-background-color: #3d3d3d;
+    -fx-border-color: transparent
+}
+.search-add-channel-combo-box .list-cell {
+    -fx-background-color: #3d3d3d;
+    -fx-text-fill: #e0e0e0;
+    -fx-padding: 5px 10px;
+}
+.search-add-channel-combo-box .text-field {
+    -fx-background-color: #3d3d3d;
+    -fx-prompt-text-fill: #aaaaaa;
+    -fx-text-fill: #e0e0e0;
+}
+.scroll-bar {
+    -fx-background-color: #3d3d3d;
+}
+.scroll-bar .track {
+    -fx-background-color: #3d3d3d;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #666666;
+    -fx-background-radius: 5px;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: #777777;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #3d3d3d;
+    -fx-padding: 2px;
+}
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: #b0b0b0;
+}
+
+.timeline-label {
+    -fx-text-fill: #cccccc;
+    -fx-font-size: 12px;
+}
+
+.dark-scroll-pane {
+    -fx-background-color: #252525;
+    -fx-border-width: 0;
+}
+.dark-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.channel-info-box {
+    -fx-background-color: transparent;
+    -fx-padding: 20;
+}
+
+.epg-channel-info-error-icon {
+    -fx-text-fill: #eeeeee;
+    -fx-font-size: 14;
+}
+
+.epg-channel-info-name-label {
+    -fx-background-color: transparent;
+    -fx-text-fill: #eeeeee;
+    -fx-font-size: 14;
+    -fx-cursor: hand;
+}
+.epg-channel-info-name-label:hover {
+    -fx-text-fill: #cccccc;
+    -fx-underline: true;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0, 0, 0);
+}
+.epg-channel-info-name-label:pressed {
+    -fx-translate-y: 1;
+}
+
+.epg-program-block-pane {
+    -fx-background-color: #3d3d3d;
+    -fx-border-color: #555555;
+    -fx-border-width: 1;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-padding: 20;
+    -fx-pref-height: 100;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0, 0, 0)
+}
+.epg-program-block-pane:hover {
+    -fx-background-color: #505050;
+}
+
+.epg-program-info-tooltip {
+    -fx-font-size: 14px;
+    -fx-background-color: #252525;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0, 0, 0);
+    -fx-text-fill: #eeeeee;
+}
+
+.epg-program-title-label {
+    -fx-text-fill: #eeeeee;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-wrap-text: true;
+}
+
+.epg-program-time-label {
+    -fx-text-fill: #aaaaaa;
+    -fx-font-size: 12px;
+}
+
+.epg-program-time-label-icon {
+    -fx-fill: #eeeeee;
+    -fx-font-size: 12px;
+}
+
+.epg-program-data-list-content {
+    -fx-font-size: 16;
+}
+
+.epg-program-block-pop-over {
+    -fx-font-size: 16;
+    -fx-alignment: center-left;
+    -fx-padding: 12;
+}

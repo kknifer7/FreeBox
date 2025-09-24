@@ -9,6 +9,7 @@ import javafx.concurrent.Task;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -63,14 +64,14 @@ public class FutureWaitingService<T> extends Service<T> {
                     return needTimeout ?
                             future.get() :
                             future.get(BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
-                } catch (TimeoutException e) {
+                } catch (TimeoutException | ExecutionException e) {
                     if (ignoringToastThrowableClasses.contains(e.getClass())) {
                         log.warn("Ignored future waiting timeout exception", e);
                     } else {
                         Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.COMMON_MESSAGE_TIMOUT_FAILED));
                     }
                 } catch (Exception e) {
-                    // InterruptedException | ExecutionException | JsonSyntaxException
+                    // InterruptedException | JsonSyntaxException
                     if (ignoringToastThrowableClasses.contains(e.getClass())) {
                         log.warn("Ignored future waiting exception", e);
                     } else {

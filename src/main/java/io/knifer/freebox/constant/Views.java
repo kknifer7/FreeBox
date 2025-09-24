@@ -20,6 +20,8 @@ public class Views {
 
     public static final String LIVE = "live-view.fxml";
 
+    public static final String EPG_OVERVIEW = "epg-overview-view.fxml";
+
     public static final String SOURCE_AUDIT = "source-audit-view.fxml";
 
     public static final String UPGRADE_DIALOG = "dialog/upgrade-dialog.fxml";

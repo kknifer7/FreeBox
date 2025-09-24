@@ -7,6 +7,19 @@
     -fx-font-size: 24px;
 }
 
+.vlc-player-live-epg-label {
+    -fx-font-size: 18;
+    -fx-text-fill: #3498DB;
+    -fx-padding: 3;
+    -fx-border-width: 1;
+    -fx-border-color: #3498DB;
+    -fx-cursor: hand;
+}
+
+.vlc-player-live-epg-label:hover {
+    -fx-underline: true;
+}
+
 .vlc-player-anchor-pane {
     -fx-pref-height: 46px;
     -fx-min-height: 46px;
@@ -63,10 +76,6 @@
 .vlc-player-live-channel-banner-program-time-label {
     -fx-font-size: 14px;
     -fx-text-fill: lightgray;
-}
-
-.vlc-player-live-channel-banner-logo-placeholder-label {
-    -fx-alignment: center;
 }
 
 .vlc-player-live-channel-list-view {

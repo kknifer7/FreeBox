@@ -2,7 +2,7 @@ package io.knifer.freebox.handler.impl;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
 import io.knifer.freebox.handler.EpgFetchingHandler;
-import io.knifer.freebox.model.common.diyp.Epg;
+import io.knifer.freebox.model.common.diyp.EPG;
 import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -15,10 +15,12 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Knifer
  */
-public class ParameterizedEggFetchingHandler implements EpgFetchingHandler {
+public class ParameterizedEpgFetchingHandler implements EpgFetchingHandler {
+
+    private static final ParameterizedEpgFetchingHandler INSTANCE = new ParameterizedEpgFetchingHandler();
 
     @Override
-    public CompletableFuture<Epg> handle(String epgServiceUrl, String channelName, LocalDate date) {
+    public CompletableFuture<EPG> handle(String epgServiceUrl, String channelName, LocalDate date) {
         String url = epgServiceUrl.replace("{name}", channelName)
                 .replace("{date}", LocalDateTimeUtil.formatNormal(date));
 
@@ -29,7 +31,11 @@ public class ParameterizedEggFetchingHandler implements EpgFetchingHandler {
                         return null;
                     }
 
-                    return GsonUtil.fromJson(jsonContent, Epg.class);
+                    return GsonUtil.fromJson(jsonContent, EPG.class);
                 });
+    }
+
+    public static ParameterizedEpgFetchingHandler getInstance() {
+        return INSTANCE;
     }
 }

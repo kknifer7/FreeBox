@@ -12,6 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
+/**
+ * TODO 影片卡片图片加载优化
+ */
+
 @Slf4j
 public class FreeBoxApplication extends Application {
 

@@ -20,3 +20,14 @@
     -fx-border-color: #e0e0e0;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.5, 0, 0);
 }
+
+.link-label {
+    -fx-text-fill: #3498DB;
+    -fx-cursor: hand;
+}
+.link-label:hover {
+    -fx-underline: true;
+}
+.link-label:pressed {
+    -fx-translate-y: 1;
+}

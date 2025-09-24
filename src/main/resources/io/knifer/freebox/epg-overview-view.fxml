@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.controlsfx.control.*?>
+
+<VBox fx:id="root" styleClass="dark-box" stylesheets="@css/view/epg-overview-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.EPGOverviewController">
+
+   <children>
+      <HBox fx:id="controlBarHBox" alignment="CENTER_LEFT" styleClass="control-bar">
+         <padding>
+            <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+         </padding>
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label fx:id="dateLabel" styleClass="datetime-label" />
+                  <Label fx:id="timeLabel" styleClass="datetime-label" />
+                  <Button mnemonicParsing="false" styleClass="operation-button" text="%live.epg.yesterday" userData="-1" onAction="#onSwitchDateButtonAction" />
+                  <Button mnemonicParsing="false" styleClass="operation-button" text="%live.epg.today" userData="0" onAction="#onSwitchDateButtonAction" />
+                  <Button mnemonicParsing="false" styleClass="operation-button" text="%live.epg.tomorrow" userData="1" onAction="#onSwitchDateButtonAction" />
+                  <SearchableComboBox fx:id="searchAddChannelComboBox" promptText="%live.epg.search-add-prompt" styleClass="search-add-channel-combo-box" HBox.hgrow="ALWAYS" />
+               </children></HBox>
+            <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+               <children>
+                  <SegmentedButton fx:id="timelineChangeSegmentedButton">
+                     <buttons>
+                        <ToggleButton mnemonicParsing="false" styleClass="operation-button" text="正点" userData="0" />
+                        <ToggleButton mnemonicParsing="false" styleClass="operation-button" text="上午" userData="1" />
+                        <ToggleButton mnemonicParsing="false" styleClass="operation-button" text="下午" userData="2" />
+                        <ToggleButton mnemonicParsing="false" styleClass="operation-button" text="全天" userData="3" />
+                     </buttons>
+                  </SegmentedButton>
+               </children>
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin>
+            </HBox>
+         </children></HBox>
+      <HBox VBox.vgrow="ALWAYS">
+         <children>
+            <ScrollPane fx:id="channelInfoScrollPane" styleClass="dark-scroll-pane">
+               <content>
+                  <VBox fx:id="channelInfoVBox" alignment="CENTER" />
+               </content>
+               <HBox.margin>
+                  <Insets top="40.0" />
+               </HBox.margin>
+            </ScrollPane>
+            <ScrollPane fx:id="timelineScrollPane" styleClass="dark-scroll-pane" vbarPolicy="NEVER" HBox.hgrow="ALWAYS">
+               <content>
+                  <VBox alignment="CENTER_LEFT" styleClass="dark-box">
+                         <children>
+                        <AnchorPane prefHeight="40.0" styleClass="dark-box">
+                           <children>
+                              <Label fx:id="timelineStartLabel" styleClass="timeline-label" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                              <Label fx:id="timelineEndLabel" styleClass="timeline-label" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                           </children>
+                        </AnchorPane>
+                        <ScrollPane fx:id="programScrollPane" styleClass="dark-scroll-pane">
+                           <content>
+                              <VBox fx:id="programBlockVBox" />
+                           </content>
+                        </ScrollPane>
+                     </children>
+                  </VBox>
+               </content>
+            </ScrollPane>
+         </children>
+      </HBox>
+   </children>
+</VBox>

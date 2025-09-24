@@ -1,6 +1,7 @@
 package io.knifer.freebox.model.common.diyp;
 
 import com.google.gson.annotations.SerializedName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;
@@ -11,11 +12,12 @@ import java.util.List;
  * @author Knifer
  */
 @Data
-public class Epg {
+public class EPG {
 
     /**
      * 频道名称
      */
+    @SerializedName("channel_name")
     private String channelName;
 
     /**
@@ -29,6 +31,7 @@ public class Epg {
     @SerializedName("epg_data")
     private List<Data> epgData;
 
+    @AllArgsConstructor
     @lombok.Data
     public static class Data {
 

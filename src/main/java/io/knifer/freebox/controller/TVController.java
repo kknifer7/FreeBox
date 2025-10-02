@@ -142,7 +142,7 @@ public class TVController {
                destroy();
                Context.INSTANCE.popAndShowLastStage();
             });
-            movieSearchService = new MovieSearchService(keywordAndSearchContent -> {
+            movieSearchService = new MovieSearchService(keywordAndSearchContent ->
                 Platform.runLater(() -> {
                     String keyword = keywordAndSearchContent.getLeft();
                     AbsXml searchContent;
@@ -160,8 +160,7 @@ public class TVController {
                             MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
                             false
                     );
-                });
-            }, () -> searchLoadingProperty.set(false));
+                }), () -> searchLoadingProperty.set(false));
 
             // 源屏蔽弹出框
             sourceBeanBlockPopOver = new SourceBeanBlockPopOver(sourceBeans -> {
@@ -227,30 +226,28 @@ public class TVController {
         if (!movieHistoryPopOver.isShowing()) {
             return;
         }
-        template.getPlayHistory(GetPlayHistoryDTO.of(100), playHistory -> {
+        template.getPlayHistory(GetPlayHistoryDTO.of(100), playHistory ->
             Platform.runLater(() -> {
                 if (CollectionUtil.isNotEmpty(playHistory)) {
                     movieHistoryPopOver.setVodInfoList(playHistory);
                 }
                 ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
-            });
-        });
+            })
+        );
     }
 
     private void reloadMovieCollectionPopOver() {
         if (!movieCollectionPopOver.isShowing()) {
             return;
         }
-        template.getMovieCollection(movieCollection -> {
-            Platform.runLater(() -> {
-                if (CollectionUtil.isNotEmpty(movieCollection)) {
-                    movieCollectionPopOver.setVodInfoList(
-                            movieCollection.stream().map(VodInfo::from).toList()
-                    );
-                }
-                ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
-            });
-        });
+        template.getMovieCollection(movieCollection -> Platform.runLater(() -> {
+            if (CollectionUtil.isNotEmpty(movieCollection)) {
+                movieCollectionPopOver.setVodInfoList(
+                        movieCollection.stream().map(VodInfo::from).toList()
+                );
+            }
+            ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+        }));
     }
 
     /**
@@ -269,6 +266,10 @@ public class TVController {
             // TV界面影片
             video = cell.getItem();
             videoId = video.getId();
+            if (videoId == null) {
+
+                return;
+            }
             if (videoId.equals(BaseValues.LOAD_MORE_ITEM_ID)) {
                 loadMoreMovie(cell);
             } else if (evt.getClickCount() > 1) {
@@ -279,6 +280,10 @@ public class TVController {
             vod = cell.getItem();
             sourceKey = vod.getSourceKey();
             videoId = vod.getId();
+            if (videoId == null) {
+
+                return;
+            }
             if (vod.getPlayFlag() == null) {
                 // 如果playFlag为空，则可能是收藏夹中的影片，尝试获取一下历史记录信息
                 movieCollectionPopOver.hide();
@@ -374,7 +379,7 @@ public class TVController {
         );
         template.getDetailContent(
                 GetDetailContentDTO.of(sourceBean.getKey(), videoId),
-                detailContent -> {
+                detailContent ->
                     Platform.runLater(() -> {
                         Pair<Stage, VideoController> stageAndController;
                         Stage tvStage;
@@ -418,8 +423,7 @@ public class TVController {
                         ));
                         LoadingHelper.hideLoading();
                         WindowHelper.route(tvStage, videoStage);
-                    });
-                }
+                    })
         );
     }
 
@@ -501,7 +505,7 @@ public class TVController {
         sortsLoadingProperty.set(true);
         clearMovieData();
         videosGridView.getItems().clear();
-        template.getHomeContent(sourceBean, homeContent -> {
+        template.getHomeContent(sourceBean, homeContent ->
             Platform.runLater(() -> {
                 Movie movie;
                 List<Movie.Video> list;
@@ -532,8 +536,8 @@ public class TVController {
                     loadMovieBySortData(defaultSortData);
                     putSortDataFilterListInMovieSortFilterPopOver(defaultSortData);
                 }
-            });
-        });
+            })
+        );
     }
 
     /**
@@ -714,20 +718,18 @@ public class TVController {
     private void onHistoryBtnAction() {
         template.getPlayHistory(
                 GetPlayHistoryDTO.of(100),
-                playHistory -> {
-                    Platform.runLater(() -> {
-                        if (CollectionUtil.isNotEmpty(playHistory)) {
-                            movieHistoryPopOver.setVodInfoList(playHistory);
-                        }
-                        movieHistoryPopOver.show(historyButton);
-                    });
-                }
+                playHistory -> Platform.runLater(() -> {
+                    if (CollectionUtil.isNotEmpty(playHistory)) {
+                        movieHistoryPopOver.setVodInfoList(playHistory);
+                    }
+                    movieHistoryPopOver.show(historyButton);
+                })
         );
     }
 
     @FXML
     private void onCollectBtnAction() {
-        template.getMovieCollection(vodCollects -> {
+        template.getMovieCollection(vodCollects ->
             Platform.runLater(() -> {
                 if (CollectionUtil.isNotEmpty(vodCollects)) {
                     movieCollectionPopOver.setVodInfoList(
@@ -735,8 +737,8 @@ public class TVController {
                     );
                 }
                 movieCollectionPopOver.show(collectButton);
-            });
-        });
+            })
+        );
     }
 
     @FXML

@@ -56,7 +56,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
         sourceKeyAndNameMap.clear();
         sourceKeyAndNameMap.putAll(
                 sourceBeans.stream().collect(Collectors.toUnmodifiableMap(
-                        SourceBean::getKey, SourceBean::getName
+                        SourceBean::getKey, SourceBean::getName, (v1, v2) -> v2
                 ))
         );
     }

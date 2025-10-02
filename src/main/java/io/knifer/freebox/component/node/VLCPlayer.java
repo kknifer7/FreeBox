@@ -125,7 +125,7 @@ public class VLCPlayer {
     private final ToggleSwitch fillWindowToggleSwitch;
     private final Button reloadButton;
     private final Label settingsLabel;
-    private final HBox liveChannelLinesHBox;
+    private final VLCPLayerLiveChannelLinesWithPaginator liveChannelLinesWithPaginator;
     private final ProgressBar videoProgressBar;
     private final Label videoProgressLabel;
     private final Label videoProgressSplitLabel;
@@ -582,14 +582,19 @@ public class VLCPlayer {
             videoProgressLabel = null;
             videoProgressSplitLabel = null;
             videoProgressLengthLabel = null;
-            liveChannelLinesHBox = new HBox();
-            liveChannelLinesHBox.setSpacing(8);
+            liveChannelLinesWithPaginator = new VLCPLayerLiveChannelLinesWithPaginator(
+                    line -> play(
+                            playingLive.getLiveChannelGroup(),
+                            playingLive.getLiveChannel(),
+                            line
+                    )
+            );
             leftToolBarHbox = new HBox(
-                    pauseLabel, stepBackwardLabel, stepForwardLabel, volumeLabel, settingsLabel, liveChannelLinesHBox
+                    pauseLabel, stepBackwardLabel, stepForwardLabel, volumeLabel, settingsLabel, liveChannelLinesWithPaginator
             );
             controlBottomAnchorPane = new AnchorPane(leftToolBarHbox, rightToolBarHbox);
         } else {
-            liveChannelLinesHBox = null;
+            liveChannelLinesWithPaginator = null;
             // 进度条组件
             videoProgressBar = new ProgressBar(0);
             videoProgressLabel = new Label("00:00:00");
@@ -1063,61 +1068,17 @@ public class VLCPlayer {
             // 切换频道时，显示banner（同一个频道切换线路时不显示）
             showLiveChannelBanner(liveChannel, liveChannelLine);
         }
-        updateLiveChannelLinesHBox(lastPlayingLiveChannel, liveChannel, liveChannelLine);
+        updateLiveChannelLinesHBox(lastPlayingLiveChannel, liveChannel);
     }
 
     private void updateLiveChannelLinesHBox(
-            @Nullable LiveChannel lastPlayingLiveChannel, LiveChannel liveChannel, LiveChannel.Line liveChannelLine
+            @Nullable LiveChannel lastPlayingLiveChannel, LiveChannel liveChannel
     ) {
-        ObservableList<Node> liveChannelLinesHBoxChildren = liveChannelLinesHBox.getChildren();
-        List<LiveChannel.Line> liveChannelLines = liveChannel.getLines();
-        boolean showLiveChannelLinesHBox = liveChannelLines.size() > 1;
-        Label liveChannelLineLabel;
-        LiveChannel.Line playingiveChannelLine;
-        List<String> lineLabelStyleClasses;
-
-        if (lastPlayingLiveChannel == liveChannel) {
-            playingiveChannelLine = liveChannelLine;
-        } else {
-            liveChannelLinesHBoxChildren.clear();
-            if (showLiveChannelLinesHBox) {
-                for (LiveChannel.Line line : liveChannelLines) {
-                    liveChannelLineLabel = new Label(line.getTitle());
-                    liveChannelLineLabel.getStyleClass().add("vlc-player-live-channel-line-label");
-                    liveChannelLineLabel.setUserData(line);
-                    liveChannelLineLabel.setOnMouseClicked(
-                            evt -> {
-                                LiveChannel.Line lastPlayingLiveChannelLine = playingLive.getLiveChannelLine();
-
-                                if (evt.getButton() != MouseButton.PRIMARY || line == lastPlayingLiveChannelLine) {
-
-                                    return;
-                                }
-                                play(playingLive.getLiveChannelGroup(), liveChannel, line);
-                            }
-                    );
-                    liveChannelLinesHBoxChildren.add(liveChannelLineLabel);
-                }
-            }
-            playingiveChannelLine = CollectionUtil.getFirst(liveChannelLines);
-        }
-        if (playingiveChannelLine == null || !showLiveChannelLinesHBox) {
-
-            return;
-        }
-        for (Node lineLabel : liveChannelLinesHBoxChildren) {
-            lineLabelStyleClasses = lineLabel.getStyleClass();
-            if (lineLabel.getUserData() == playingiveChannelLine) {
-                // 为正在播放的线路标签添加样式
-                lineLabelStyleClasses.remove("vlc-player-live-channel-line-label");
-                if (!lineLabelStyleClasses.contains("vlc-player-live-channel-line-label-focus")) {
-                    lineLabelStyleClasses.add("vlc-player-live-channel-line-label-focused");
-                }
-            } else {
-                // 移除其他线路标签的样式
-                lineLabelStyleClasses.remove("vlc-player-live-channel-line-label-focused");
-                if (!lineLabelStyleClasses.contains("vlc-player-live-channel-line-label")) {
-                    lineLabelStyleClasses.add("vlc-player-live-channel-line-label");
+        if (lastPlayingLiveChannel != liveChannel) {
+            liveChannelLinesWithPaginator.clear();
+            if (liveChannel.getLines().size() > 1) {
+                for (LiveChannel.Line line : liveChannel.getLines()) {
+                    liveChannelLinesWithPaginator.addLine(line);
                 }
             }
         }

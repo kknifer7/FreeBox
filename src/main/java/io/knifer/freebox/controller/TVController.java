@@ -1,7 +1,6 @@
 package io.knifer.freebox.controller;
 
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
-import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
 import io.knifer.freebox.component.node.MovieInfoListPopOver;
 import io.knifer.freebox.component.node.MovieSortFilterPopOver;
 import io.knifer.freebox.component.node.SourceBeanBlockPopOver;
@@ -27,7 +26,6 @@ import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.service.MovieSearchService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
-import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
@@ -36,7 +34,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
-import javafx.event.EventTarget;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -169,28 +166,40 @@ public class TVController {
                 updateSourceBeanData(sourceBeans);
             });
             // 历史记录弹出框
-            movieHistoryPopOver = new MovieInfoListPopOver(I18nKeys.TV_HISTORY, vodInfoDeleting -> {
-                movieHistoryPopOver.clearVodInfoList();
-                template.deletePlayHistory(
-                        DeletePlayHistoryDTO.of(vodInfoDeleting), this::reloadMovieHistoryPopOver
-                );
-            });
-            movieHistoryPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
+            movieHistoryPopOver = new MovieInfoListPopOver(
+                    I18nKeys.TV_HISTORY,
+                    this::onVodAction,
+                    vodInfoDeleting -> {
+                        movieHistoryPopOver.clearVodInfoList();
+                        template.deletePlayHistory(
+                                DeletePlayHistoryDTO.of(vodInfoDeleting), this::reloadMovieHistoryPopOver
+                        );
+                    }
+            );
             // 收藏弹出框
-            movieCollectionPopOver = new MovieInfoListPopOver(I18nKeys.TV_COLLECTION, vodInfoDeleting -> {
-                movieCollectionPopOver.clearVodInfoList();
-                template.deleteMovieCollection(
-                        DeleteMovieCollectionDTO.of(vodInfoDeleting), this::reloadMovieCollectionPopOver
-                );
-            });
-            movieCollectionPopOver.setOnVodInfoGridViewClicked(this::onVideosGridViewMouseClicked);
+            movieCollectionPopOver = new MovieInfoListPopOver(
+                    I18nKeys.TV_COLLECTION,
+                    this::onVodAction,
+                    vodInfoDeleting -> {
+                        movieCollectionPopOver.clearVodInfoList();
+                        template.deleteMovieCollection(
+                                DeleteMovieCollectionDTO.of(vodInfoDeleting), this::reloadMovieCollectionPopOver
+                        );
+                    }
+            );
             // 影片过滤条件弹出框
             movieSortFilterPopOver = new MovieSortFilterPopOver(sortData -> {
                 // 影片过滤条件更新，应用最新过滤条件，重新加载影片列表
                 MOVIE_CACHE.remove(sortData.getId());
                 loadMovieBySortData(sortData);
             });
+            // 影片列表单元格工厂
+            videosGridView.setCellFactory(new VideoGridCellFactory(
+                    video -> openVideo(video.getSourceKey(), video.getId(), video.getName()),
+                    this::loadMoreMovie
+            ));
 
+            // 状态联动绑定
             sourceBeanBlockButton.disableProperty().bind(
                     sourceBeanBlockPopOver.showingProperty().or(sortsLoadingProperty)
             );
@@ -251,55 +260,35 @@ public class TVController {
     }
 
     /**
-     * 影片视频列表项点击事件
-     * @param evt 视频列表项点击事件
+     * 影片列表项点击事件（播放历史、收藏）
+     * @param vod 影片对象
      */
     @FXML
-    private void onVideosGridViewMouseClicked(MouseEvent evt) {
-        EventTarget target = evt.getTarget();
-        Movie.Video video;
-        VodInfo vod;
+    private void onVodAction(VodInfo vod) {
         String sourceKey;
         String videoId;
 
-        if (target instanceof VideoGridCellFactory.VideoGridCell cell) {
-            // TV界面影片
-            video = cell.getItem();
-            videoId = video.getId();
-            if (videoId == null) {
+        sourceKey = vod.getSourceKey();
+        videoId = vod.getId();
+        if (videoId == null) {
 
-                return;
-            }
-            if (videoId.equals(BaseValues.LOAD_MORE_ITEM_ID)) {
-                loadMoreMovie(cell);
-            } else if (evt.getClickCount() > 1) {
-                openVideo(video.getSourceKey(), videoId, video.getName());
-            }
-        } else if (target instanceof VodInfoGridCellFactory.VodInfoGridCell cell && evt.getClickCount() > 1) {
-            // 播放历史/收藏夹界面影片
-            vod = cell.getItem();
-            sourceKey = vod.getSourceKey();
-            videoId = vod.getId();
-            if (videoId == null) {
-
-                return;
-            }
-            if (vod.getPlayFlag() == null) {
-                // 如果playFlag为空，则可能是收藏夹中的影片，尝试获取一下历史记录信息
-                movieCollectionPopOver.hide();
-                template.getOnePlayHistory(
-                        GetOnePlayHistoryDTO.of(sourceKey, videoId),
-                        vodInfo -> openVideo(
-                                sourceKey,
-                                videoId,
-                                vod.getName(),
-                                vodInfo == null ? null : VideoPlayInfoBO.of(vodInfo)
-                        )
-                );
-            } else {
-                movieHistoryPopOver.hide();
-                openVideo(sourceKey, videoId, vod.getName(), VideoPlayInfoBO.of(vod));
-            }
+            return;
+        }
+        if (vod.getPlayFlag() == null) {
+            // 收藏夹中的影片，是不带播放历史记录的，所以先尝试获取一下历史记录信息，携带历史信息打开
+            movieCollectionPopOver.hide();
+            template.getOnePlayHistory(
+                    GetOnePlayHistoryDTO.of(sourceKey, videoId),
+                    vodInfo -> openVideo(
+                            sourceKey,
+                            videoId,
+                            vod.getName(),
+                            vodInfo == null ? null : VideoPlayInfoBO.of(vodInfo)
+                    )
+            );
+        } else {
+            movieHistoryPopOver.hide();
+            openVideo(sourceKey, videoId, vod.getName(), VideoPlayInfoBO.of(vod));
         }
     }
 
@@ -585,12 +574,7 @@ public class TVController {
         movieLoadingProperty.set(true);
         items = videosGridView.getItems();
         if (!items.isEmpty()) {
-            /*
-             * 列表中原本有影片数据，在清空的同时，也要清空异步任务队列
-             * 防止列表中旧有影片封面的异步加载任务占用异步线程
-             */
             items.clear();
-            AsyncUtil.cancelAllTask();
         }
         setVideoGridShowSourceName(false);
         movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
@@ -699,6 +683,8 @@ public class TVController {
         if (videosGridView.getCellFactory() instanceof VideoGridCellFactory factory) {
             factory.destroy();
         }
+        movieHistoryPopOver.destroy();
+        movieCollectionPopOver.destroy();
         clientManager.clearCurrentClient();
     }
 
@@ -706,7 +692,6 @@ public class TVController {
         videosGridView.getItems().clear();
         MOVIE_CACHE.clear();
         resetMovieSearchService();
-        AsyncUtil.cancelAllTask();
     }
 
     @FXML

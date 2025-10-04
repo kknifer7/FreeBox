@@ -452,6 +452,10 @@ public class VideoController extends BaseController {
     private void onCollectBtnAction() {
         VodInfo vodInfo;
 
+        if (playingVideo == null) {
+
+            return;
+        }
         operationLoading.set(true);
         vodInfo = VodInfo.from(playingVideo);
         if (collectBtn.getGraphic() == COLLECTED_FONT_ICON) {

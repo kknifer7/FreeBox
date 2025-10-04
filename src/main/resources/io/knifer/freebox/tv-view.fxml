@@ -2,7 +2,6 @@
 
 <?import io.knifer.freebox.component.converter.SourceBean2StringConverter?>
 <?import io.knifer.freebox.component.factory.ClassListCellFactory?>
-<?import io.knifer.freebox.component.factory.VideoGridCellFactory?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -12,7 +11,6 @@
    <fx:define>
       <SourceBean2StringConverter fx:id="sourceBean2StringConverter" />
       <ClassListCellFactory fx:id="classListCellFactory" />
-      <VideoGridCellFactory fx:id="videosGridCellFactory" />
    </fx:define>
 
    <left>
@@ -63,7 +61,7 @@
                <center>
                   <StackPane prefHeight="150.0" prefWidth="200.0">
                      <children>
-                        <GridView fx:id="videosGridView" cellFactory="$videosGridCellFactory" horizontalCellSpacing="47" onMouseClicked="#onVideosGridViewMouseClicked" verticalCellSpacing="75" />
+                        <GridView fx:id="videosGridView" horizontalCellSpacing="47" verticalCellSpacing="75" />
                         <ProgressIndicator fx:id="movieLoadingProgressIndicator" visible="false" />
                      </children>
                   </StackPane>

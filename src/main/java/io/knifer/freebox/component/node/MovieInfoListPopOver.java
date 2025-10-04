@@ -8,8 +8,6 @@ import io.knifer.freebox.util.CollectionUtil;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.PopOver;
@@ -26,14 +24,20 @@ import java.util.function.Consumer;
 public class MovieInfoListPopOver extends PopOver {
 
     private final GridView<VodInfo> vodInfoGridView;
+    private final VodInfoGridCellFactory vodInfoGridViewCellFactory;
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(false);
 
-    public MovieInfoListPopOver(String titleI18n, Consumer<VodInfo> onItemDelete) {
+    public MovieInfoListPopOver(
+            String titleI18n,
+            Consumer<VodInfo> onItemAction,
+            Consumer<VodInfo> onItemDelete
+    ) {
         super();
         setOnShowing(evt -> setDetached(true));
         setTitle(I18nHelper.get(titleI18n));
         vodInfoGridView = new GridView<>();
-        vodInfoGridView.setCellFactory(new VodInfoGridCellFactory(onItemDelete));
+        vodInfoGridViewCellFactory = new VodInfoGridCellFactory(onItemAction, onItemDelete);
+        vodInfoGridView.setCellFactory(vodInfoGridViewCellFactory);
         vodInfoGridView.setHorizontalCellSpacing(50);
         vodInfoGridView.setVerticalCellSpacing(75);
         vodInfoGridView.disableProperty().bind(loadingProperty);
@@ -64,11 +68,11 @@ public class MovieInfoListPopOver extends PopOver {
         vodInfoGridView.getItems().clear();
     }
 
-    public void setOnVodInfoGridViewClicked(EventHandler<? super MouseEvent> eventHandler) {
-        vodInfoGridView.setOnMouseClicked(eventHandler);
-    }
-
     public BooleanProperty loadingPropertyProperty() {
         return loadingProperty;
+    }
+
+    public void destroy() {
+        vodInfoGridViewCellFactory.destroy();
     }
 }

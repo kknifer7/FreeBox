@@ -1,5 +1,6 @@
 package io.knifer.freebox.model.domain;
 
+import io.knifer.freebox.model.c2s.FreeBoxLive;
 import lombok.Data;
 
 import java.util.List;

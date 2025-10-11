@@ -9,7 +9,7 @@ import com.google.common.net.HttpHeaders;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.model.domain.FreeBoxLive;
+import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
 import io.knifer.freebox.util.HttpUtil;

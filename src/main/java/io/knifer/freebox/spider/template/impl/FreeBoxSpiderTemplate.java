@@ -11,6 +11,7 @@ import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.common.catvod.Class;
 import io.knifer.freebox.model.common.catvod.Result;
 import io.knifer.freebox.model.common.catvod.Vod;
@@ -606,7 +607,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
     }
 
     @Override
-    public List<FreeBoxLive> getLives() {
-        return ObjectUtils.defaultIfNull(apiConfig.getLives(), List.of());
+    public void getLives(Consumer<List<FreeBoxLive>> callback) {
+        callback.accept(ObjectUtils.defaultIfNull(apiConfig.getLives(), List.of()));
     }
 }

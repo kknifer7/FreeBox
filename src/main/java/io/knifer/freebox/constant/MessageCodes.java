@@ -122,4 +122,12 @@ public class MessageCodes {
      * 获取影视是否收藏结果
      */
     public static final int GET_MOVIE_COLLECTED_STATUS_RESULT = 228;
+    /**
+     * 获取直播源
+     */
+    public static final int GET_LIVES = 229;
+    /**
+     * 获取直播源结果
+     */
+    public static final int GET_LIVES_RESULT = 230;
 }

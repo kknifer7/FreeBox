@@ -1,4 +1,4 @@
-package io.knifer.freebox.model.domain;
+package io.knifer.freebox.model.c2s;
 
 import lombok.Data;
 

@@ -7,7 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.ClientInfo;
-import io.knifer.freebox.model.domain.FreeBoxLive;
+import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
@@ -230,6 +230,16 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         );
     }
 
+    @Override
+    public void getLives(Consumer<List<FreeBoxLive>> callback) {
+        execute(
+                MessageCodes.GET_LIVES,
+                null,
+                new TypeToken<List<FreeBoxLive>>(){},
+                msg -> callback.accept(CastUtil.cast(msg))
+        );
+    }
+
     private <T, R> void execute(
             int messageCode,
             T data,
@@ -310,10 +320,5 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
             processService.start();
         });
         service.start();
-    }
-
-    @Override
-    public List<FreeBoxLive> getLives() {
-        return List.of();
     }
 }

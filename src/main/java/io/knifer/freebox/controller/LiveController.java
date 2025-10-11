@@ -10,12 +10,13 @@ import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.domain.ClientInfo;
-import io.knifer.freebox.model.domain.FreeBoxLive;
+import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
 import io.knifer.freebox.service.LoadLiveChannelGroupService;
 import io.knifer.freebox.service.VLCPlayerDestroyService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.AsyncUtil;
+import io.knifer.freebox.util.CollectionUtil;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
@@ -105,40 +106,41 @@ public class LiveController extends BaseController {
         SpiderTemplate template = Context.INSTANCE.getSpiderTemplate();
 
         template.init(callback -> {
-            List<FreeBoxLive> lives;
-
             if (!callback) {
 
                 return;
             }
-            lives = template.getLives();
-            if (lives.isEmpty()) {
-                ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_LIVE_NOT_FOUND);
-                loadingProperty.set(false);
+            template.getLives(lives -> {
+                if (CollectionUtil.isEmpty(lives)) {
+                    Platform.runLater(() -> {
+                        ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_LIVE_NOT_FOUND);
+                        loadingProperty.set(false);
+                    });
 
-                return;
-            }
-            Platform.runLater(() -> {
-                ObservableList<MenuItem> switchLiveSourceMenuItems;
-                ToggleGroup switchLiveSourceToggleGroup = new ToggleGroup();
-
-                setupPlayer(rootHeightProp, playerHBoxHeightProp);
-                switchLiveSourceMenuItems = switchLiveSourceMenu.getItems();
-                lives.forEach(live -> {
-                    RadioMenuItem menuItem = new RadioMenuItem(live.getName());
-
-                    menuItem.setToggleGroup(switchLiveSourceToggleGroup);
-                    menuItem.setUserData(live);
-                    switchLiveSourceMenuItems.add(menuItem);
-                });
-                switchLiveSourceToggleGroup.selectedToggleProperty()
-                        .addListener((ob, oldVal, newVal) ->
-                                switchLiveSource(((FreeBoxLive) newVal.getUserData()))
-                        );
-                if (!switchLiveSourceMenuItems.isEmpty()) {
-                    switchLiveSourceToggleGroup.selectToggle((Toggle) switchLiveSourceMenuItems.get(0));
+                    return;
                 }
-                loadingProperty.set(false);
+                Platform.runLater(() -> {
+                    ObservableList<MenuItem> switchLiveSourceMenuItems;
+                    ToggleGroup switchLiveSourceToggleGroup = new ToggleGroup();
+
+                    setupPlayer(rootHeightProp, playerHBoxHeightProp);
+                    switchLiveSourceMenuItems = switchLiveSourceMenu.getItems();
+                    lives.forEach(live -> {
+                        RadioMenuItem menuItem = new RadioMenuItem(live.getName());
+
+                        menuItem.setToggleGroup(switchLiveSourceToggleGroup);
+                        menuItem.setUserData(live);
+                        switchLiveSourceMenuItems.add(menuItem);
+                    });
+                    switchLiveSourceToggleGroup.selectedToggleProperty()
+                            .addListener((ob, oldVal, newVal) ->
+                                    switchLiveSource(((FreeBoxLive) newVal.getUserData()))
+                            );
+                    if (!switchLiveSourceMenuItems.isEmpty()) {
+                        switchLiveSourceToggleGroup.selectToggle((Toggle) switchLiveSourceMenuItems.get(0));
+                    }
+                    loadingProperty.set(false);
+                });
             });
         });
     }

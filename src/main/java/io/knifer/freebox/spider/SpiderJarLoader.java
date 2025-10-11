@@ -214,7 +214,7 @@ public class SpiderJarLoader {
             result = CastUtil.cast(proxyMethod.invoke(null, params));
         } catch (IllegalAccessException | InvocationTargetException e) {
             result = ArrayUtils.EMPTY_OBJECT_ARRAY;
-            Platform.runLater(() -> ToastHelper.showException(e));
+            log.warn("proxyInvoke error, proxyMethod={}", proxyMethod, e);
         }
 
         return result;

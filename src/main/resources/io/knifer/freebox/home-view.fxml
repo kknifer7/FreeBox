@@ -85,7 +85,7 @@
                                             </Tooltip>
                                         </tooltip>
                                     </Label>
-                                    <Button mnemonicParsing="false" onAction="#onImportSourceBtnAction" text="%home.import-api">
+                                    <Button mnemonicParsing="false" onAction="#onImportApiBtnAction" text="%home.import-api">
                                         <graphic>
                                             <FontIcon iconLiteral="fa-link:16:gray"/>
                                         </graphic>
@@ -94,7 +94,7 @@
                               </HBox>
                               <HBox alignment="CENTER_RIGHT" layoutX="0.8067226409912109" spacing="10.0" AnchorPane.rightAnchor="0.0">
                                  <children>
-                                    <Button mnemonicParsing="false" onAction="#onClientListChooseBtnAction" text="%home.client-list-choose">
+                                    <Button mnemonicParsing="false" onAction="#onVodBtnAction" text="%home.client-list-choose">
                                         <graphic>
                                             <FontIcon iconLiteral="fa-arrow-right:16:green" />
                                         </graphic>

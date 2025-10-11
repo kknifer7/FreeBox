@@ -17,6 +17,16 @@ public class I18nKeys {
     public static final String HOME_MESSAGE_VLC_NOT_FOUND = "home.message.vlc-not-found";
     public static final String HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED =
             "home.message.remove-spider-config-succeed";
+    public static final String HOME_IMPORT_API_SELECT_TYPE_TITLE = "home.import-api.select-type.title";
+    public static final String HOME_IMPORT_API_SELECT_TYPE_CONTENT = "home.import-api.select-type.content";
+    public static final String HOME_IMPORT_API_SELECT_TYPE_CAT_VOD_TYPE_TITLE =
+            "home.import-api.select-type.cat-vod-type.title";
+    public static final String HOME_IMPORT_API_SELECT_TYPE_CAT_VOD_TYPE_CONTENT =
+            "home.import-api.select-type.cat-vod-type.content";
+    public static final String HOME_IMPORT_API_SELECT_TYPE_SINGLE_LIVE_TYPE_TITLE =
+            "home.import-api.select-type.single-live-type.title";
+    public static final String HOME_IMPORT_API_SELECT_TYPE_SINGLE_LIVE_TYPE_CONTENT =
+            "home.import-api.select-type.single-live-type.content";
     public static final String HOME_IMPORT_API = "home.import-api";
     public static final String HOME_IMPORT_API_INPUT_PLACEHOLDER = "home.import-api.input-placeholder";
     public static final String HOME_IMPORT_API_INPUT_PLACEHOLDER_WARNING = "home.import-api.input-placeholder-warning";
@@ -99,6 +109,7 @@ public class I18nKeys {
 
     public static final String COMMON_DELETE = "common.delete";
     public static final String COMMON_OK = "common.ok";
+    public static final String COMMON_CANCEL = "common.cancel";
     public static final String COMMON_CANCEL_AND_BACK_TO_HOME = "common.cancel-and-back-to-home";
     public static final String COMMON_RESET = "common.reset";
     public static final String COMMON_MESSAGE_SUCCESS = "common.message.success";

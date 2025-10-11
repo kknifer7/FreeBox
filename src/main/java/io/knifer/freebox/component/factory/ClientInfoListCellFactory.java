@@ -20,6 +20,8 @@ public class ClientInfoListCellFactory implements Callback<ListView<ClientInfo>,
         return new ListCell<>() {
             @Override
             protected void updateItem(ClientInfo item, boolean empty) {
+                ClientType clientType;
+
                 super.updateItem(item, empty);
                 if (empty) {
                     setText(null);
@@ -28,10 +30,17 @@ public class ClientInfoListCellFactory implements Callback<ListView<ClientInfo>,
                     return;
                 }
                 setText(item.getName());
-                if (item.getClientType() == ClientType.TVBOX_K) {
-                    setGraphic(new FontIcon("fa-tv:20"));
-                } else {
-                    setGraphic(new FontIcon("fa-optin-monster:20"));
+                clientType = item.getClientType();
+                switch (clientType) {
+                    case TVBOX_K:
+                        setGraphic(new FontIcon("fa-tablet:20"));
+                        break;
+                    case CATVOD_SPIDER:
+                        setGraphic(new FontIcon("fa-optin-monster:20"));
+                        break;
+                    case SINGLE_LIVE:
+                        setGraphic(new FontIcon("fa-tv:20"));
+                        break;
                 }
             }
         };

@@ -44,8 +44,7 @@ public class SpiderJarLoader {
     private final static String SPIDER_PACKAGE_NAME = "com.github.catvod.spider";
     private final static String SPIDER_PROXY_CLASS_NAME = SPIDER_PACKAGE_NAME + ".Proxy";
     private final static String SPIDER_INIT_CLASS_NAME = SPIDER_PACKAGE_NAME + ".Init";
-    private final static Path SPIDER_CACHE_PATH = StorageHelper.getLocalStoragePath()
-            .resolve(Path.of("data", "spider_cache"));
+    private final static Path SPIDER_CACHE_PATH = StorageHelper.getSpiderCachePath();
     private final static SpiderJarLoader INSTANCE = new SpiderJarLoader();
 
     static {

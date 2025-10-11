@@ -19,4 +19,12 @@ public class FreeBoxLive {
     private String epg;
 
     private String logo;
+
+    public static FreeBoxLive from(String url) {
+        FreeBoxLive result = new FreeBoxLive();
+
+        result.setUrl(url);
+
+        return result;
+    }
 }

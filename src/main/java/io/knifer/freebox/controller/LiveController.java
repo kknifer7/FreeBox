@@ -2,11 +2,13 @@ package io.knifer.freebox.controller;
 
 import cn.hutool.core.io.FileUtil;
 import io.knifer.freebox.component.node.VLCPlayer;
+import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.LoadingHelper;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.FreeBoxLive;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
 import io.knifer.freebox.service.LoadLiveChannelGroupService;
@@ -37,7 +39,7 @@ import java.util.List;
  * @author Knifer
  */
 @Slf4j
-public class LiveController {
+public class LiveController extends BaseController {
 
     @FXML
     private VBox root;
@@ -56,13 +58,11 @@ public class LiveController {
 
     private Service<List<LiveChannelGroup>> loadLiveChannelGroupService;
 
-    private final static Path LIVE_CONFIG_CACHE_PATH = StorageHelper.getLocalStoragePath()
-            .resolve(Path.of("data", "live_cache"));
+    private final static Path LIVE_CONFIG_CACHE_PATH = StorageHelper.getLiveConfigCachePath();
 
     @FXML
     private void initialize() {
         log.info("LiveController initialize");
-        SpiderTemplate template = Context.INSTANCE.getSpiderTemplate();
         ReadOnlyDoubleProperty rootWidthProp = root.widthProperty();
         ReadOnlyDoubleProperty rootHeightProp = root.heightProperty();
         DoubleBinding playerHBoxHeightProp = rootHeightProp.subtract(menuBar.heightProperty());
@@ -74,7 +74,35 @@ public class LiveController {
         loadingLabel.visibleProperty().bind(loadingProperty);
         playerHBox.visibleProperty().bind(loadingProperty.not());
         switchLiveSourceMenu.disableProperty().bind(loadingProperty);
-        Platform.runLater(() -> WindowHelper.getStage(playerHBox).setOnCloseRequest(event -> destroy()));
+        Platform.runLater(() -> {
+            ClientInfo clientInfo = getData();
+            ClientType clientType = clientInfo.getClientType();
+
+            WindowHelper.getStage(playerHBox).setOnCloseRequest(event -> destroy());
+            if (clientType == ClientType.SINGLE_LIVE) {
+                singleLiveClientTypeInitialize(clientInfo, rootHeightProp, playerHBoxHeightProp);
+            } else {
+                catVodOrTVBoxKClientTypeInitialize(rootHeightProp, playerHBoxHeightProp);
+            }
+        });
+    }
+
+    private void singleLiveClientTypeInitialize(
+            ClientInfo clientInfo, ReadOnlyDoubleProperty rootHeightProp, DoubleBinding playerHBoxHeightProp
+    ) {
+        FreeBoxLive live = FreeBoxLive.from(clientInfo.getConfigUrl());
+
+        switchLiveSourceMenu.setVisible(false);
+        setupPlayer(rootHeightProp, playerHBoxHeightProp);
+        switchLiveSource(live);
+        loadingProperty.set(false);
+    }
+
+    private void catVodOrTVBoxKClientTypeInitialize(
+            ReadOnlyDoubleProperty rootHeightProp, DoubleBinding playerHBoxHeightProp
+    ) {
+        SpiderTemplate template = Context.INSTANCE.getSpiderTemplate();
+
         template.init(callback -> {
             List<FreeBoxLive> lives;
 
@@ -87,20 +115,7 @@ public class LiveController {
                 ObservableList<MenuItem> switchLiveSourceMenuItems;
                 ToggleGroup switchLiveSourceToggleGroup = new ToggleGroup();
 
-                player = new VLCPlayer(
-                        playerHBox,
-                        VLCPlayer.Config.builder()
-                                .liveMode(true)
-                                .build()
-                );
-                player.setOnFullScreen(() -> {
-                    menuBar.setManaged(false);
-                    bindPlayerHeight(rootHeightProp);
-                });
-                player.setOnFullScreenExit(() -> {
-                    menuBar.setManaged(true);
-                    bindPlayerHeight(playerHBoxHeightProp);
-                });
+                setupPlayer(rootHeightProp, playerHBoxHeightProp);
                 switchLiveSourceMenuItems = switchLiveSourceMenu.getItems();
                 lives.forEach(live -> {
                     RadioMenuItem menuItem = new RadioMenuItem(live.getName());
@@ -111,13 +126,30 @@ public class LiveController {
                 });
                 switchLiveSourceToggleGroup.selectedToggleProperty()
                         .addListener((ob, oldVal, newVal) ->
-                            switchLiveSource(((FreeBoxLive) newVal.getUserData()))
+                                switchLiveSource(((FreeBoxLive) newVal.getUserData()))
                         );
                 if (!switchLiveSourceMenuItems.isEmpty()) {
                     switchLiveSourceToggleGroup.selectToggle((Toggle) switchLiveSourceMenuItems.get(0));
                 }
                 loadingProperty.set(false);
             });
+        });
+    }
+
+    private void setupPlayer(ReadOnlyDoubleProperty rootHeightProp, DoubleBinding playerHBoxHeightProp) {
+        player = new VLCPlayer(
+                playerHBox,
+                VLCPlayer.Config.builder()
+                        .liveMode(true)
+                        .build()
+        );
+        player.setOnFullScreen(() -> {
+            menuBar.setManaged(false);
+            bindPlayerHeight(rootHeightProp);
+        });
+        player.setOnFullScreenExit(() -> {
+            menuBar.setManaged(true);
+            bindPlayerHeight(playerHBoxHeightProp);
         });
     }
 
@@ -155,7 +187,7 @@ public class LiveController {
             List<LiveChannelGroup> liveChannelGroups = loadLiveChannelGroupService.getValue();
             String epgServiceUrl;
 
-            log.info("switch live source, liveChannelGroup count: {}", liveChannelGroups.size());
+            log.info("switch live source, live: {}, liveChannelGroup count: {}", live, liveChannelGroups.size());
             if (!liveChannelGroups.isEmpty()) {
                 player.setLiveChannelGroups(liveChannelGroups);
                 epgServiceUrl = live.getEpg();

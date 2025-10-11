@@ -1,6 +1,8 @@
 package io.knifer.freebox.controller;
 
-import io.knifer.freebox.component.node.ImportApiDialog;
+import io.knifer.freebox.component.node.ImportCatVodApiDialog;
+import io.knifer.freebox.component.node.ImportSingleLiveApiDialog;
+import io.knifer.freebox.component.node.ImportUrlApiDialog;
 import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.dialog.LicenseDialogController;
@@ -35,9 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.controlsfx.dialog.CommandLinksDialog;
 
 import java.net.NetworkInterface;
 import java.util.Collection;
+import java.util.function.Consumer;
 
 @Slf4j
 public class HomeController {
@@ -92,7 +96,11 @@ public class HomeController {
             StorageHelper.findAll(ClientInfo.class)
                     .values()
                     .stream()
-                    .filter(c -> c.getClientType() == ClientType.CATVOD_SPIDER)
+                    .filter(c -> {
+                        ClientType clientType = c.getClientType();
+
+                        return clientType == ClientType.CATVOD_SPIDER || clientType == ClientType.SINGLE_LIVE;
+                    })
                     .forEach(clientInfo -> {
                         clientManager.register(clientInfo);
                         clientItems.add(clientInfo);
@@ -259,7 +267,7 @@ public class HomeController {
     }
 
     @FXML
-    private void onClientListChooseBtnAction() {
+    private void onVodBtnAction() {
         ClientInfo clientInfo;
 
         if (!VLC_PLAYER_CHECK_HANDLER.handle()) {
@@ -276,10 +284,10 @@ public class HomeController {
             return;
         }
         log.info("open client [{}]", clientInfo.getName());
-        openClient(clientInfo);
+        openVodClient(clientInfo);
     }
 
-    private void openClient(ClientInfo clientInfo) {
+    private void openVodClient(ClientInfo clientInfo) {
         Stage homeStage = WindowHelper.getStage(root);
         Stage tvStage;
         Pair<Stage, TVController> stageAndController;
@@ -312,6 +320,12 @@ public class HomeController {
                     clientInfo.getName()
             );
 
+        } else if (clientInfo.getClientType() == ClientType.SINGLE_LIVE) {
+            StorageHelper.delete(clientInfo);
+            ToastHelper.showInfoI18n(
+                    I18nKeys.HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED,
+                    clientInfo.getName()
+            );
         } else {
             ToastHelper.showInfoI18n(
                     I18nKeys.MESSAGE_CLIENT_UNREGISTERED,
@@ -349,18 +363,38 @@ public class HomeController {
     }
 
     @FXML
-    private void onImportSourceBtnAction() {
-        new ImportApiDialog(clientInfo -> {
+    private void onImportApiBtnAction() {
+        CommandLinksDialog importApiSelectTypeDialog = new CommandLinksDialog(
+                ButtonTypes.CAT_VOD_COMMAND_LINKS_BUTTON_TYPE,
+                ButtonTypes.SINGLE_LIVE_COMMAND_LINKS_BUTTON_TYPE,
+                ButtonTypes.CANCEL_COMMAND_LINKS_BUTTON_TYPE
+        );
+        Consumer<ClientInfo> clientInfoConsumer = clientInfo -> {
             StorageHelper.save(clientInfo);
             if (!clientManager.isRegistered(clientInfo)) {
                 clientManager.register(clientInfo);
                 Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
             }
-            ToastHelper.showSuccessI18n(
-                    I18nKeys.HOME_IMPORT_API_MESSAGE_SAVE_CONFIG_SUCCEED,
-                    clientInfo.getClientName()
-            );
-        }).show();
+        };
+        ButtonType result;
+        ImportUrlApiDialog importDialog;
+
+        importApiSelectTypeDialog.setTitle(I18nHelper.get(I18nKeys.HOME_IMPORT_API_SELECT_TYPE_TITLE));
+        importApiSelectTypeDialog.setContentText(I18nHelper.get(I18nKeys.HOME_IMPORT_API_SELECT_TYPE_CONTENT));
+        importApiSelectTypeDialog.showAndWait();
+        result = importApiSelectTypeDialog.getResult();
+        if (result == ButtonTypes.CAT_VOD_COMMAND_LINKS_BUTTON_TYPE.getButtonType()) {
+            importDialog = new ImportCatVodApiDialog(clientInfoConsumer);
+        } else if (result == ButtonTypes.SINGLE_LIVE_COMMAND_LINKS_BUTTON_TYPE.getButtonType()) {
+            importDialog = new ImportSingleLiveApiDialog(clientInfoConsumer);
+        } else {
+
+            return;
+        }
+        importDialog.showAndWait();
+        if (BaseValues.SUCCESS_STR.equals(importDialog.getResult())) {
+            ToastHelper.showSuccessI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_SAVE_CONFIG_SUCCEED);
+        }
     }
 
     @FXML
@@ -379,6 +413,7 @@ public class HomeController {
         homeStage = WindowHelper.getStage(root);
         liveStage = stageAndController.getLeft();
         liveStage.setTitle(I18nHelper.getFormatted(I18nKeys.LIVE_WINDOW_TITLE, clientInfo.getName()));
+        stageAndController.getRight().setData(clientInfo);
         WindowHelper.route(homeStage, liveStage);
     }
 }

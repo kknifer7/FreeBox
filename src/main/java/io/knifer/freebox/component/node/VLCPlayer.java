@@ -27,10 +27,7 @@ import io.knifer.freebox.util.FXMLUtil;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.DoubleExpression;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventType;
@@ -53,7 +50,6 @@ import javafx.util.Callback;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -153,13 +149,13 @@ public class VLCPlayer {
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
     private final BooleanProperty isError = new SimpleBooleanProperty(false);
+    private final SimpleStringProperty epgServiceUrlProperty = new SimpleStringProperty();
+
     private volatile boolean destroyFlag = false;
 
     private List<LiveChannelGroup> liveChannelGroups = null;
     private LiveInfoBO selectedLive = null;
     private LiveInfoBO playingLive = null;
-    @Setter
-    private String epgServiceUrl = null;
 
     private Stage epgStage;
 
@@ -712,10 +708,13 @@ public class VLCPlayer {
                 Pair<Stage, EPGOverviewController> stageAndController = FXMLUtil.load(Views.EPG_OVERVIEW);
 
                 stageAndController.getRight()
-                        .setData(EPGOverviewBO.of(liveChannelGroups, playingLive.getLiveChannel(), epgServiceUrl));
+                        .setData(EPGOverviewBO.of(
+                                liveChannelGroups, playingLive.getLiveChannel(), epgServiceUrlProperty.get()
+                        ));
                 epgStage = stageAndController.getLeft();
                 epgStage.show();
             });
+            epgOpenLabel.disableProperty().bind(epgServiceUrlProperty.isEmpty());
             controlTopHBox.getChildren().add(epgOpenLabel);
             liveChannelBanner = new LiveChannelBanner();
             StackPane.setMargin(liveChannelBanner, new Insets(0, 0, 50, 0));
@@ -1047,6 +1046,10 @@ public class VLCPlayer {
         this.liveChannelDrawer.setLiveChannelGroups(liveChannelGroups);
     }
 
+    public void setEpgServiceUrl(String epgServiceUrl) {
+        epgServiceUrlProperty.set(epgServiceUrl);
+    }
+
     public void play(int liveChannelGroupIdx, int liveChannelIdx, int liveChannelLineIdx) {
         LiveChannelGroup liveChannelGroup = liveChannelGroups.get(liveChannelGroupIdx);
         LiveChannel liveChannel = liveChannelGroup.getChannels().get(liveChannelIdx);
@@ -1090,7 +1093,7 @@ public class VLCPlayer {
         liveChannelBanner.setChannelInfo(channelTitle, liveChannelLine.getLogoUrl());
         liveChannelBanner.setCurrentProgram(null, null, null);
         liveChannelBanner.setNextProgram(null, null);
-        if (epgServiceUrl != null) {
+        if (epgServiceUrlProperty.get() != null) {
             fetchAndApplyEpgAsync(channelTitle);
         }
         liveChannelBanner.show();
@@ -1110,7 +1113,7 @@ public class VLCPlayer {
             EPG.Data epgData;
 
             try {
-                epg = epgFetchingHandler.handle(epgServiceUrl, channelTitle, now.toLocalDate())
+                epg = epgFetchingHandler.handle(epgServiceUrlProperty.get(), channelTitle, now.toLocalDate())
                         .get(4, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Platform.runLater(() -> ToastHelper.showException(e));
@@ -1118,7 +1121,7 @@ public class VLCPlayer {
                 log.warn(
                         "Exception while fetching epg, channelTitle={}, epgServiceUrl={}",
                         channelTitle,
-                        epgServiceUrl,
+                        epgServiceUrlProperty.get(),
                         e
                 );
             }
@@ -1143,7 +1146,7 @@ public class VLCPlayer {
                 } catch (DateTimeParseException e) {
                     log.warn(
                             "Invalid epg time format, channelTitle={}, epgServiceUrl={}, epgData={}",
-                            channelTitle, epgServiceUrl, epgData
+                            channelTitle, epgServiceUrlProperty.get(), epgData
                     );
                     break;
                 }

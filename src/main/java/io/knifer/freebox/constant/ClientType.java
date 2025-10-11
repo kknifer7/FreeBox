@@ -8,5 +8,6 @@ package io.knifer.freebox.constant;
 public enum ClientType {
 
     TVBOX_K,
-    CATVOD_SPIDER
+    CATVOD_SPIDER,
+    SINGLE_LIVE
 }

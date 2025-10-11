@@ -66,12 +66,12 @@ public class ClientInfo implements Savable {
         return clientInfo;
     }
 
-    public static ClientInfo of(String configUrl) {
+    public static ClientInfo of(String configUrl, ClientType clientType) {
         ClientInfo clientInfo = new ClientInfo();
 
         clientInfo.id = DigestUtil.md5Hex(configUrl);
         clientInfo.clientName = configUrl;
-        clientInfo.clientType = ClientType.CATVOD_SPIDER;
+        clientInfo.clientType = clientType;
         clientInfo.configUrl = configUrl;
 
         return clientInfo;

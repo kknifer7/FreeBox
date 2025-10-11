@@ -56,6 +56,7 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                 String liveMd5;
                 Path livePath;
                 String ua;
+                String filePath;
                 String liveConfigContent;
                 List<LiveChannelGroup> liveChannelGroups;
 
@@ -75,22 +76,27 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                     liveConfigContent = FileUtil.readString(livePath.toFile(), Charsets.UTF_8);
                 } else {
                     ua = live.getUa();
-                    try {
-                        liveConfigContent = StringUtils.isBlank(ua) ?
-                                HttpUtil.getAsync(url).get(10, TimeUnit.SECONDS) :
-                                HttpUtil.getAsync(url, HttpHeaders.USER_AGENT, ua).get(10, TimeUnit.SECONDS);
-                    } catch (TimeoutException | ExecutionException e) {
-                        if (!isCancelled()) {
-                            Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_INVALID_LIVE));
-                        }
+                    if (url.startsWith("file:///")) {
+                        filePath = url.substring(7);
+                        liveConfigContent = FileUtil.readString(filePath, Charsets.UTF_8);
+                    } else {
+                        try {
+                            liveConfigContent = StringUtils.isBlank(ua) ?
+                                    HttpUtil.getAsync(url).get(10, TimeUnit.SECONDS) :
+                                    HttpUtil.getAsync(url, HttpHeaders.USER_AGENT, ua).get(10, TimeUnit.SECONDS);
+                        } catch (TimeoutException | ExecutionException e) {
+                            if (!isCancelled()) {
+                                Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_INVALID_LIVE));
+                            }
 
-                        return List.of();
-                    } catch (InterruptedException e) {
-                        if (!isCancelled()) {
-                            Platform.runLater(() -> ToastHelper.showException(e));
-                        }
+                            return List.of();
+                        } catch (InterruptedException e) {
+                            if (!isCancelled()) {
+                                Platform.runLater(() -> ToastHelper.showException(e));
+                            }
 
-                        return List.of();
+                            return List.of();
+                        }
                     }
                     if (isCancelled()) {
 

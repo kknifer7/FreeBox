@@ -95,7 +95,7 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
                     String url;
                     ClientInfo clientInfo;
 
-                    if (msg.has("nameValuePairs")) {
+                    if (msg != null && msg.has("nameValuePairs")) {
                         jsonElem = msg.getAsJsonObject("nameValuePairs");
                         if (jsonElem.isJsonObject()) {
                             jsonObject = jsonElem.getAsJsonObject();

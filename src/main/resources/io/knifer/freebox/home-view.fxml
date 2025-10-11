@@ -94,17 +94,17 @@
                               </HBox>
                               <HBox alignment="CENTER_RIGHT" layoutX="0.8067226409912109" spacing="10.0" AnchorPane.rightAnchor="0.0">
                                  <children>
-                                    <Button mnemonicParsing="false" onAction="#onVodBtnAction" text="%home.client-list-choose">
+                                    <Button fx:id="vodButton" mnemonicParsing="false" onAction="#onVodBtnAction" text="%home.client-list-choose">
                                         <graphic>
                                             <FontIcon iconLiteral="fa-arrow-right:16:green" />
                                         </graphic>
                                     </Button>
-                                    <Button mnemonicParsing="false" onAction="#onLiveBtnAction" text="%home.live">
+                                    <Button fx:id="liveButton" mnemonicParsing="false" onAction="#onLiveBtnAction" text="%home.live">
                                         <graphic>
                                             <FontIcon iconLiteral="fa-play:16:green" />
                                         </graphic>
                                     </Button>
-                                    <Button mnemonicParsing="false" onAction="#onSourceAuditBtnAction" text="%home.source-audit">
+                                    <Button fx:id="sourceAuditButton" mnemonicParsing="false" onAction="#onSourceAuditBtnAction" text="%home.source-audit">
                                         <graphic>
                                             <FontIcon iconLiteral="fa-code:16:blue" />
                                         </graphic>

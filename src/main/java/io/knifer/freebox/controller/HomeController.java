@@ -60,6 +60,12 @@ public class HomeController {
     private Label versionInfoLabel;
     @FXML
     private ListView<ClientInfo> clientListView;
+    @FXML
+    private Button vodButton;
+    @FXML
+    private Button liveButton;
+    @FXML
+    private Button sourceAuditButton;
 
     private ClientManager clientManager;
 
@@ -90,6 +96,33 @@ public class HomeController {
 
         vlcHBox.setVisible(vlcNotInstalled);
         vlcHBox.setManaged(vlcNotInstalled);
+        clientListView.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((ob, oldVal, newVal) -> {
+                    // 选择不同的源时，根据源类型的不同，确定各功能按钮的可用性
+                    ClientType clientType;
+
+                    if (newVal == null || (clientType = newVal.getClientType()) == null) {
+                        vodButton.setDisable(true);
+                        liveButton.setDisable(true);
+                        sourceAuditButton.setDisable(true);
+
+                        return;
+                    }
+                    switch (clientType) {
+                        case CATVOD_SPIDER:
+                        case TVBOX_K:
+                            vodButton.setDisable(false);
+                            liveButton.setDisable(false);
+                            sourceAuditButton.setDisable(false);
+                            break;
+                        case SINGLE_LIVE:
+                            vodButton.setDisable(true);
+                            liveButton.setDisable(false);
+                            sourceAuditButton.setDisable(true);
+                            break;
+                    }
+                });
         Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
             clientManager = Context.INSTANCE.getClientManager();
             refreshServiceStatusInfo();

@@ -164,4 +164,5 @@ public class I18nKeys {
     public static final String LIVE_EPG_MESSAGE_LIVE_CHANNEL_ALREADY_ADDED = "live.epg.message.live-channel-already-added";
     public static final String LIVE_MESSAGE_INVALID_LIVE_URL = "live.message.invalid-live-url";
     public static final String LIVE_MESSAGE_INVALID_LIVE = "live.message.invalid-live";
+    public static final String LIVE_MESSAGE_LIVE_NOT_FOUND = "live.message.live-not-found";
 }

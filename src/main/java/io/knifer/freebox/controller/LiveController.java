@@ -7,6 +7,7 @@ import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.LoadingHelper;
 import io.knifer.freebox.helper.StorageHelper;
+import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.FreeBoxLive;
@@ -111,6 +112,12 @@ public class LiveController extends BaseController {
                 return;
             }
             lives = template.getLives();
+            if (lives.isEmpty()) {
+                ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_LIVE_NOT_FOUND);
+                loadingProperty.set(false);
+
+                return;
+            }
             Platform.runLater(() -> {
                 ObservableList<MenuItem> switchLiveSourceMenuItems;
                 ToggleGroup switchLiveSourceToggleGroup = new ToggleGroup();
@@ -188,12 +195,16 @@ public class LiveController extends BaseController {
             String epgServiceUrl;
 
             log.info("switch live source, live: {}, liveChannelGroup count: {}", live, liveChannelGroups.size());
-            if (!liveChannelGroups.isEmpty()) {
-                player.setLiveChannelGroups(liveChannelGroups);
-                epgServiceUrl = live.getEpg();
-                player.setEpgServiceUrl(validEpgServiceUrl(epgServiceUrl) ? epgServiceUrl : null);
-                player.play(0, 0, 0);
+            if (liveChannelGroups.isEmpty()) {
+                ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_LIVE_NOT_FOUND);
+                loadingProperty.set(false);
+
+                return;
             }
+            player.setLiveChannelGroups(liveChannelGroups);
+            epgServiceUrl = live.getEpg();
+            player.setEpgServiceUrl(validEpgServiceUrl(epgServiceUrl) ? epgServiceUrl : null);
+            player.play(0, 0, 0);
             loadingProperty.set(false);
         });
         loadLiveChannelGroupService.start();

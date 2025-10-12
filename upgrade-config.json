@@ -1,33 +1,33 @@
 {
-	"version": "v1.1.0",
-	"versionCode": 4,
-	"changelog": "新功能：\n1. 新增对MacOS、Linux平台的支持（x86_64），由于jpackage构建工具限制，Linux目前只提供deb和rpm两种格式的安装包，后续视大家反馈情况考虑提供AppImage格式\n\n修复问题：\n1. 部分Windows用户闪退、无法打开软件的问题\n2. 搜索状态下进行源屏蔽的报错\n3. 源审计初始化时的FX线程报错\n4. 端口占用检测无效，导致服务启动时的报错",
-	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.1.0/",
-	"releaseDate": "2025-07-22",
+	"version": "v1.2.0",
+	"versionCode": 5,
+	"changelog": "本次为重大更新。\n\n新功能：\n1. 对于直播源的完整支持，可导入单独的直播源，也可以使用猫影视规则（安卓端和电脑端的源均支持），支持m3u和genre两种格式，支持节目分组、多线路、epg；\n2. 关于epg电子节目单，目前会自动应用猫影视规则中配置的epg地址，并且支持按天、按频道进行节目单的自主搜索查询；\n3. 本次更新时，TVBox-K也同步发布了更新，如果希望通过TVBox-K配对的方式观看直播，那么需要在仓库主页里下载安装TVBox-K的最新版本（但似乎并无此必要，因为直播不同于点播，对于直播来说，安卓端的接口也可以直接导入本软件来观看，因此单纯观看安卓端源的直播可以不使用TVBox-K）。\n\n优化和修复：\n1. 大幅优化影视海报加载的效率和性能；\n2. 对于影片列表中名称被缩略显示的影片，现在鼠标悬停时可以自动展示完整名称；\n3. 播放器交互优化，增强播放器暂停、加载、加载失败情况下的用户体验；\n4. 优化导入源时的引导；\n5. 修复播放器切换剧集时，软件可能卡死未响应的问题；\n6. 修复导入源时中文域名导致的报错问题；\n7. 修复导入本地源文件时的报错问题；\n8. 用户反馈的bug和其他小问题的修复。",
+	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.2.0/",
+	"releaseDate": "2025-10-12",
 	"releaseFiles": [
 		{
 			"platform": "windows",
-			"fileSize": "51116397",
-			"fileName": "FreeBox-1.1.0.msi",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.msi"
+			"fileSize": "51464557",
+			"fileName": "FreeBox-1.2.0.msi",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.0/FreeBox-1.2.0.msi"
 		},
 		{
 			"platform": "mac",
-			"fileSize": "53397017",
-			"fileName": "FreeBox-1.1.0.dmg",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.dmg"
+			"fileSize": "53694328",
+			"fileName": "FreeBox-1.2.0.dmg",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.0/FreeBox-1.2.0.dmg"
 		},
 		{
 			"platform": "deb_linux",
-			"fileSize": "53809256",
-			"fileName": "FreeBox-1.1.0.deb",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.deb"
+			"fileSize": "54164520",
+			"fileName": "FreeBox-1.2.0.deb",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.0/FreeBox-1.2.0.deb"
 		},
 		{
 			"platform": "rpm_linux",
-			"fileSize": "55428852",
-			"fileName": "FreeBox-1.1.0.rpm",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.1.0/FreeBox-1.1.0.rpm"
+			"fileSize": "55777524",
+			"fileName": "FreeBox-1.2.0.rpm",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.0/FreeBox-1.2.0.rpm"
 		}
 	]
 }

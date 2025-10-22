@@ -93,6 +93,11 @@ public class VideoController extends BaseController {
         Platform.runLater(() -> {
             VideoDetailsBO bo = getData();
 
+            if (bo == null) {
+                ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+
+                return;
+            }
             videoDetail = bo.getVideoDetail().getMovie();
             playInfo = bo.getPlayInfo();
             source = bo.getSource();

@@ -174,6 +174,7 @@ jlink {
         requires 'java.logging'
         requires 'jdk.httpserver'
         requires 'jdk.crypto.ec'
+        requires 'org.slf4j'
         uses 'cn.hutool.core.convert.Converter'
     }
     jpackage.doFirst {

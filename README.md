@@ -7,7 +7,9 @@
 ---
 
 <p align="center">
-    <a href="https://github.com/kknifer7/FreeBox?tab=readme-ov-file#%E4%BA%8C%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">快速开始</a>
+    <a href="https://github.com/kknifer7/FreeBox?tab=readme-ov-file#%E4%BA%8C%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">快速开始</a> |
+    <a href="https://github.com/kknifer7/FreeBox/wiki/%E5%A6%82%E4%BD%95%E5%9C%A8%E6%9C%AC%E5%9C%B0%E6%89%93%E5%8C%85%E9%A1%B9%E7%9B%AE%E6%BA%90%E7%A0%81">源码打包</a> |
+    <a href="https://github.com/kknifer7/CatVodSpider-PC/wiki/Spider%E7%BC%96%E5%86%99%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97">Spider编写</a>
 </p>
 
 <p align="center">

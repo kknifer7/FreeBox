@@ -64,6 +64,31 @@ public class I18nKeys {
     public static final String VIDEO_MOVIE_DETAILS_LINK = "video.movie-details.link";
     public static final String VIDEO_MOVIE_DETAILS_INTRO = "video.movie-details.intro";
     public static final String VIDEO_REVERSE = "video.reverse";
+    public static final String VIDEO_ERROR_NO_DATA = "video.error.no-data";
+    public static final String VIDEO_ERROR_NO_RESOURCE = "video.error.no-resource";
+    public static final String VIDEO_ERROR_SOURCE_NOT_SUPPORTED = "video.error.source-not-supported";
+    public static final String VIDEO_ERROR_SAVE_HISTORY_FAILED = "video.error.save-history-failed";
+    public static final String VIDEO_INFO_NO_MORE_EP = "video.info.no-more-ep";
+    public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
+    public static final String VIDEO_SETTINGS_FILL_WINDOW = "video.settings.fill-window";
+    public static final String VIDEO_SETTINGS_RELOAD = "video.settings.reload";
+    public static final String VIDEO_SETTINGS_EXTERNAL = "video.settings.external";
+    public static final String VIDEO_SETTINGS_SUBTITLE = "video.settings.subtitle";
+    public static final String VIDEO_SETTINGS_SUBTITLE_DELAY = "video.settings.subtitle.delay";
+    public static final String VIDEO_SETTINGS_SUBTITLE_LOCAL_SELECT = "video.settings.subtitle.local-select";
+    public static final String VIDEO_SETTINGS_SUBTITLE_LOCAL_SELECT_EXTENSION_NAME =
+            "video.settings.subtitle.local-select-extension-name";
+    public static final String VIDEO_SETTINGS_SUBTITLE_ONLINE_SEARCH = "video.settings.subtitle.online-search";
+    public static final String VIDEO_SETTINGS_SUBTITLE_ONLINE_SEARCH_PROMPT =
+            "video.settings.subtitle.online-search-prompt";
+    public static final String VIDEO_SETTINGS_SUBTITLE_ONLY_SHOW_HIGH_QUALITY_SUBTITLE =
+            "video.settings.subtitle.only-show-high-quality";
+    public static final String VIDEO_SETTINGS_SUBTITLE_ARCHIVE_PROMPT = "video.settings.subtitle.archive-prompt";
+    public static final String VIDEO_SETTINGS_SUBTITLE_MESSAGE_DOWNLOAD_FAILED =
+            "video.settings.subtitle.message.download-failed";
+    public static final String VIDEO_SETTINGS_SUBTITLE_MESSAGE_SUCCEED = "video.settings.subtitle.message.succeed";
+    public static final String VIDEO_SETTINGS_SUBTITLE_MESSAGE_UPDATE_DELAY_VALUE =
+            "video.settings.subtitle.message.update-delay-value";
 
     public static final String LICENSE_AGREE = "license.agree";
     public static final String LICENSE_CLOSE = "license.close";
@@ -89,15 +114,6 @@ public class I18nKeys {
     public static final String SETTINGS_APPLICATION_DATA = "settings.application-data";
     public static final String SETTINGS_DELETE_APPLICATION_DATA_ALERT = "settings.delete-application-data-alert";
     public static final String SETTINGS_APPLICATION_VERSION = "settings.application-version";
-
-    public static final String VIDEO_ERROR_NO_DATA = "video.error.no-data";
-    public static final String VIDEO_ERROR_NO_RESOURCE = "video.error.no-resource";
-    public static final String VIDEO_ERROR_SOURCE_NOT_SUPPORTED = "video.error.source-not-supported";
-    public static final String VIDEO_ERROR_SAVE_HISTORY_FAILED = "video.error.save-history-failed";
-    public static final String VIDEO_INFO_NO_MORE_EP = "video.info.no-more-ep";
-    public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
-    public static final String VIDEO_SETTINGS_FILL_WINDOW = "video.settings.fill-window";
-    public static final String VIDEO_SETTINGS_RELOAD = "video.settings.reload";
 
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";

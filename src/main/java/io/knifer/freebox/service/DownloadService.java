@@ -40,7 +40,9 @@ public class DownloadService extends Service<Void> {
                                 if (isCancelled()) {
                                     return;
                                 }
-                                onStart.run();
+                                if (onStart != null) {
+                                    onStart.run();
+                                }
                             }
 
                             @Override
@@ -51,7 +53,9 @@ public class DownloadService extends Service<Void> {
                                     return;
                                 }
                                 lastProgressSize = progressSize;
-                                onProgress.accept(new Pair<>(total, progressSize));
+                                if (onProgress != null) {
+                                    onProgress.accept(new Pair<>(total, progressSize));
+                                }
                             }
 
                             @Override
@@ -59,7 +63,9 @@ public class DownloadService extends Service<Void> {
                                 if (isCancelled()) {
                                     return;
                                 }
-                                onFinish.run();
+                                if (onFinish != null) {
+                                    onFinish.run();
+                                }
                             }
                         }
                 );

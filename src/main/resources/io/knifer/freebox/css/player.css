@@ -20,6 +20,19 @@
     -fx-underline: true;
 }
 
+.vlc-player-toast-label {
+    -fx-alignment: center-left;
+    -fx-text-fill: #FFF9C4;
+    -fx-font-size: 20px;
+    -fx-graphic-text-gap: 30px;
+}
+
+.vlc-player-toast-pane {
+    -fx-min-height: 40px;
+    -fx-padding: 8 12 8 12;
+    -fx-alignment: center-left;
+}
+
 .vlc-player-anchor-pane {
     -fx-pref-height: 46px;
     -fx-min-height: 46px;

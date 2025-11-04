@@ -30,6 +30,7 @@ module io.knifer.freebox {
     requires net.bjoernpetersen.m3u;
 
     requires static lombok;
+    requires org.jsoup;
 
     exports io.knifer.freebox;
     exports io.knifer.freebox.constant;

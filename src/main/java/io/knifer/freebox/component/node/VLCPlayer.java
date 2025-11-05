@@ -120,6 +120,7 @@ public class VLCPlayer {
     private final ToggleSwitch fillWindowToggleSwitch;
     private final Button reloadButton;
     private final Button subtitleButton;
+    private final Button danMaKuButton;
     private final VLCPlayerSubtitleSettingPopOver subtitleSettingPopOver;
     private final Label settingsLabel;
     private final VLCPLayerLiveChannelLinesWithPaginator liveChannelLinesWithPaginator;
@@ -157,7 +158,7 @@ public class VLCPlayer {
     private List<LiveChannelGroup> liveChannelGroups = null;
     private LiveInfoBO selectedLive = null;
     private LiveInfoBO playingLive = null;
-    private Config config;
+    private final Config config;
 
     private Stage epgStage;
 
@@ -186,6 +187,7 @@ public class VLCPlayer {
         Label reloadSettingTitleLabel;
         HBox reloadSettingsHBox;
         Label subtitleAndDanMaKuLabel;
+        HBox subtitleAndDanMaKuButtonHBox;
         HBox subtitleAndDanMaKuHBox;
         VBox settingsPopOverInnerVBox;
         PopOver settingsPopOver;
@@ -443,6 +445,7 @@ public class VLCPlayer {
                 stepForwardRunnable.run();
             });
             subtitleButton = null;
+            danMaKuButton = null;
             subtitleSettingPopOver = null;
             subtitleAndDanMaKuHBox = null;
         } else {
@@ -450,6 +453,7 @@ public class VLCPlayer {
             stepBackwardLabel.setOnMouseClicked(evt -> stepBackwardRunnable.run());
             stepForwardLabel.setOnMouseClicked(evt -> stepForwardRunnable.run());
             subtitleButton = new Button();
+            danMaKuButton = new Button();
             mediaPlayerSubpictureApi = mediaPlayer.subpictures();
             subtitleSettingPopOver = new VLCPlayerSubtitleSettingPopOver();
             subtitleSettingPopOver.setOnSubtitleDelayChanged(delay -> {
@@ -474,7 +478,13 @@ public class VLCPlayer {
             subtitleButton.setText(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE));
             subtitleButton.setFocusTraversable(false);
             subtitleButton.setOnAction(evt -> subtitleSettingPopOver.show(stage));
-            subtitleAndDanMaKuHBox = new HBox(subtitleAndDanMaKuLabel, subtitleButton);
+            danMaKuButton.setText(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_DANMAKU));
+            danMaKuButton.setFocusTraversable(false);
+            danMaKuButton.setOnAction(evt -> subtitleSettingPopOver.show(stage));
+            subtitleAndDanMaKuButtonHBox = new HBox(subtitleButton, danMaKuButton);
+            subtitleAndDanMaKuButtonHBox.setSpacing(5);
+            subtitleAndDanMaKuButtonHBox.setAlignment(Pos.CENTER_LEFT);
+            subtitleAndDanMaKuHBox = new HBox(subtitleAndDanMaKuLabel, subtitleAndDanMaKuButtonHBox);
             subtitleAndDanMaKuHBox.setSpacing(15);
             subtitleAndDanMaKuHBox.setAlignment(Pos.CENTER_LEFT);
         }

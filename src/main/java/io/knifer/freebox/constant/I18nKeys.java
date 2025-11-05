@@ -74,6 +74,7 @@ public class I18nKeys {
     public static final String VIDEO_SETTINGS_RELOAD = "video.settings.reload";
     public static final String VIDEO_SETTINGS_EXTERNAL = "video.settings.external";
     public static final String VIDEO_SETTINGS_SUBTITLE = "video.settings.subtitle";
+    public static final String VIDEO_SETTINGS_DANMAKU = "video.settings.danmaku";
     public static final String VIDEO_SETTINGS_SUBTITLE_DELAY = "video.settings.subtitle.delay";
     public static final String VIDEO_SETTINGS_SUBTITLE_LOCAL_SELECT = "video.settings.subtitle.local-select";
     public static final String VIDEO_SETTINGS_SUBTITLE_LOCAL_SELECT_EXTENSION_NAME =

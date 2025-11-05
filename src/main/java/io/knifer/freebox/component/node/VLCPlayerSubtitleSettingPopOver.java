@@ -299,7 +299,7 @@ public class VLCPlayerSubtitleSettingPopOver extends PopOver {
         buttonHBoxAndApplyButtonBorderPane.setRight(operationButtonHBox);
         contentVBox.setSpacing(5);
         contentVBox.setPadding(new Insets(10));
-        contentVBox.setMinWidth(400);
+        contentVBox.setMinWidth(450);
         setContentNode(contentVBox);
         setDetachable(false);
         setOnShowing(evt -> {

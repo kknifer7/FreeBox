@@ -31,7 +31,7 @@ public class EPGChannelHBox extends HBox {
 
     private final ProgressIndicator loadingProgressIndicator = new ProgressIndicator();
     private final FontIcon errorIcon = FontIcon.of(FontAwesome.WARNING, 16, Color.ORANGE);
-    private final ObjectProperty<List<EPG.Data>> epgDataProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<List<EPG.Data>> epgDataProperty = new SimpleObjectProperty<>(List.of());
     @Getter
     private final LiveChannel liveChannel;
 

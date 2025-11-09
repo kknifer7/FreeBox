@@ -52,20 +52,22 @@
                <center>
                   <VBox alignment="CENTER" BorderPane.alignment="CENTER">
                      <children>
-                        <VBox alignment="TOP_CENTER">
+                        <VBox alignment="TOP_CENTER" spacing="10.0" styleClass="fs-large">
                            <children>
                               <TextFlow lineSpacing="5.0" textAlignment="CENTER">
                                  <children>
-                                    <Text fx:id="settingsInfoText" fill="gray" strokeType="OUTSIDE" strokeWidth="0.0">
-                                       <font>
-                                          <Font size="16.0" />
-                                       </font>
-                                    </Text>
+                                    <Text fx:id="settingsInfoText" fill="gray" strokeType="OUTSIDE" strokeWidth="0.0"/>
                                  </children>
                               </TextFlow>
+                               <HBox fx:id="showIpPromptHBox" alignment="CENTER" spacing="5.0">
+                                   <children>
+                                       <Label text="%home.show-ip-invalid-help-prompt" />
+                                       <Hyperlink text="%home.show-all-ip" onAction="#onShowAllIpHyperlinkAction" />
+                                   </children>
+                               </HBox>
                            </children>
                            <VBox.margin>
-                              <Insets bottom="40.0" />
+                              <Insets bottom="10.0" />
                            </VBox.margin>
                         </VBox>
                         <ListView fx:id="clientListView" cellFactory="$clientInfoListCellFactory" prefHeight="200.0" prefWidth="200.0" />

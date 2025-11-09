@@ -1,5 +1,6 @@
 package io.knifer.freebox.controller;
 
+import io.knifer.freebox.component.node.IPInfoPopOver;
 import io.knifer.freebox.component.node.ImportCatVodApiDialog;
 import io.knifer.freebox.component.node.ImportSingleLiveApiDialog;
 import io.knifer.freebox.component.node.ImportUrlApiDialog;
@@ -37,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.controlsfx.control.PopOver;
 import org.controlsfx.dialog.CommandLinksDialog;
 
 import java.net.NetworkInterface;
@@ -55,6 +57,8 @@ public class HomeController {
     @FXML
     private Text settingsInfoText;
     @FXML
+    private HBox showIpPromptHBox;
+    @FXML
     private HBox vlcHBox;
     @FXML
     private Label versionInfoLabel;
@@ -66,6 +70,8 @@ public class HomeController {
     private Button liveButton;
     @FXML
     private Button sourceAuditButton;
+
+    private PopOver ipInfoPopOver;
 
     private ClientManager clientManager;
 
@@ -123,6 +129,9 @@ public class HomeController {
                             break;
                     }
                 });
+        showIpPromptHBox.visibleProperty().bind(settingsInfoText.textProperty().isNotEmpty());
+        showIpPromptHBox.managedProperty().bind(showIpPromptHBox.visibleProperty());
+        ipInfoPopOver = new IPInfoPopOver();
         Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
             clientManager = Context.INSTANCE.getClientManager();
             refreshServiceStatusInfo();
@@ -448,5 +457,14 @@ public class HomeController {
         liveStage.setTitle(I18nHelper.getFormatted(I18nKeys.LIVE_WINDOW_TITLE, clientInfo.getName()));
         stageAndController.getRight().setData(clientInfo);
         WindowHelper.route(homeStage, liveStage);
+    }
+
+    @FXML
+    private void onShowAllIpHyperlinkAction(ActionEvent event) {
+        Hyperlink hyperlink = (Hyperlink) event.getSource();
+
+        hyperlink.setVisited(false);
+        ipInfoPopOver.show(hyperlink);
+
     }
 }

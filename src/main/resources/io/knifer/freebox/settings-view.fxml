@@ -199,14 +199,14 @@
                           </rowConstraints>
                            <children>
 
-                              <Label fx:id="applicationDataLabel" styleClass="large, bold" text="%settings.application-data" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                              <Label fx:id="applicationDataLabel" styleClass="fs-large, bold" text="%settings.application-data" GridPane.rowIndex="0" GridPane.columnIndex="0" />
                               <Button focusTraversable="false" onAction="#onDeleteApplicationDataButtonAction" text="%settings.delete-application-data" GridPane.rowIndex="0" GridPane.columnIndex="1">
                                  <graphic>
                                     <FontIcon iconLiteral="fa-trash:12:red" />
                                  </graphic>
                               </Button>
 
-                              <Label fx:id="applicationVersionLabel" styleClass="large, bold" text="%settings.application-version" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                              <Label fx:id="applicationVersionLabel" styleClass="fs-large, bold" text="%settings.application-version" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                               <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.rowIndex="1" GridPane.columnIndex="1">
                                  <Button fx:id="checkUpgradeButton" focusTraversable="false" onAction="#onCheckUpgradeButtonAction" text="%settings.check-upgrade">
                                     <graphic>
@@ -220,10 +220,10 @@
                                  </Label>
                               </HBox>
 
-                              <Label styleClass="large, bold" text="%settings.auto-check-upgrade" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                              <Label styleClass="fs-large, bold" text="%settings.auto-check-upgrade" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
                               <CheckBox fx:id="autoCheckUpgradeCheckBox" text="%settings.auto-check-upgrade-enable" onAction="#onAutoCheckUpgradeCheckBoxAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-                              <Label styleClass="large, bold" text="%settings.license" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                              <Label styleClass="fs-large, bold" text="%settings.license" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                               <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
                            </children>
                         </GridPane>

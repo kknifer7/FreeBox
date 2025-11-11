@@ -868,7 +868,7 @@ public class VLCPlayer {
     }
 
     private void setControlsVisible(boolean flag) {
-        Cursor cursor = scene.getCursor();
+        Cursor cursor = playerPane.getCursor();
 
         if (controlPane.isVisible() != flag) {
             controlPane.setVisible(flag);
@@ -879,11 +879,11 @@ public class VLCPlayer {
         if (flag) {
             controlPaneHideTimer.restart();
             if (cursor == Cursor.NONE) {
-                scene.setCursor(Cursor.DEFAULT);
+                playerPane.setCursor(Cursor.DEFAULT);
             }
         } else {
             if (cursor != Cursor.NONE) {
-                scene.setCursor(Cursor.NONE);
+                playerPane.setCursor(Cursor.NONE);
             }
         }
     }

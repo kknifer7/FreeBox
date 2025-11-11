@@ -47,7 +47,7 @@ public class IPInfoPopOver extends PopOver {
             ipLabel.setText(info);
         });
         loadingProgressIndicator.setVisible(false);
-        ipLabel.getStyleClass().add("fs-large");
+        ipLabel.getStyleClass().add("fs-big");
         contentStackPane.setPadding(new Insets(10));
         setOnShowing(evt -> {
             loadingProgressIndicator.setVisible(true);

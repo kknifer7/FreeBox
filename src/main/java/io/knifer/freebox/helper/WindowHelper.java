@@ -4,8 +4,11 @@ import io.knifer.freebox.context.Context;
 import io.knifer.freebox.util.CastUtil;
 import javafx.event.Event;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 窗口
@@ -45,6 +48,19 @@ public class WindowHelper {
 
     public Stage getStage(Node node) {
         return CastUtil.cast(node.getScene().getWindow());
+    }
+
+    public void setFontFamily(Stage stage, String fontFamily) {
+        Scene scene = stage.getScene();
+        Parent parent = scene.getRoot();
+        String style = parent.getStyle();
+        String oldFontFamily = StringUtils.substringBetween(style, "-fx-font-family:", ";");
+
+        if (style.isEmpty() || oldFontFamily == null) {
+            parent.setStyle(style + "-fx-font-family:" + fontFamily + ";");
+        } else if (!oldFontFamily.equals(fontFamily)) {
+            parent.setStyle(style.replace(oldFontFamily, fontFamily));
+        }
     }
 
     public void route(Stage currentStage, Stage nextStage) {

@@ -11,10 +11,7 @@
          <children>
             <HBox alignment="TOP_CENTER" spacing="10.0" HBox.hgrow="ALWAYS">
                <children>
-                  <Label fx:id="movieTitleLabel" wrapText="true">
-                     <font>
-                        <Font size="20.0" />
-                     </font>
+                  <Label fx:id="movieTitleLabel" wrapText="true" styleClass="fs-large">
                      <padding>
                         <Insets top="10.0" />
                      </padding>

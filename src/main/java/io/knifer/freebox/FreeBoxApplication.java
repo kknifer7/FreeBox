@@ -18,14 +18,16 @@ public class FreeBoxApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         try {
-            FXMLUtil.load(Views.HOME, stage);
-            stage.setTitle("FreeBox");
-            stage.show();
             // 初始化上下文
             Context.INSTANCE.init(
                     this,
                     stage,
-                    () -> Context.INSTANCE.postEvent(AppEvents.APP_INITIALIZED)
+                    () -> {
+                        FXMLUtil.load(Views.HOME, stage);
+                        stage.setTitle("FreeBox");
+                        stage.show();
+                        Context.INSTANCE.postEvent(AppEvents.APP_INITIALIZED);
+                    }
             );
         } catch (Throwable e) {
             log.error("app start failed", e);

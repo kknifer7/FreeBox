@@ -28,15 +28,8 @@
                            <image>
                               <Image url="@image/welcome.png" />
                            </image></ImageView>
-                        <Label text="%home.welcome">
-                           <font>
-                              <Font size="20.0" />
-                           </font></Label>
-                         <Label text="%home.description" textFill="gray" wrapText="true">
-                             <font>
-                                 <Font size="15.0" />
-                             </font>
-                         </Label>
+                        <Label text="%home.welcome" styleClass="fs-large" />
+                         <Label text="%home.description" styleClass="gray, fs-big" wrapText="true" />
                          <Label fx:id="versionInfoLabel" textFill="blue" />
                         <HBox fx:id="vlcHBox" alignment="CENTER">
                            <children>
@@ -52,7 +45,7 @@
                <center>
                   <VBox alignment="CENTER" BorderPane.alignment="CENTER">
                      <children>
-                        <VBox alignment="TOP_CENTER" spacing="10.0" styleClass="fs-large">
+                        <VBox alignment="TOP_CENTER" spacing="10.0" styleClass="fs-big">
                            <children>
                               <TextFlow lineSpacing="5.0" textAlignment="CENTER">
                                  <children>
@@ -75,18 +68,6 @@
                            <children>
                               <HBox alignment="CENTER" spacing="10.0" AnchorPane.leftAnchor="0.0">
                                  <children>
-                                    <Label>
-                                        <graphic>
-                                            <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
-                                        </graphic>
-                                        <tooltip>
-                                            <Tooltip showDelay="200ms" showDuration="1m" text="%home.client-list-help">
-                                                <font>
-                                                    <Font size="14" />
-                                                </font>
-                                            </Tooltip>
-                                        </tooltip>
-                                    </Label>
                                     <Button mnemonicParsing="false" onAction="#onImportApiBtnAction" text="%home.import-api">
                                         <graphic>
                                             <FontIcon iconLiteral="fa-link:16:gray"/>

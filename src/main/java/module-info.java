@@ -28,8 +28,10 @@ module io.knifer.freebox {
     requires cn.hutool;
     requires java.sql;
     requires net.bjoernpetersen.m3u;
+    requires kotlinx.coroutines.core;
 
     requires static lombok;
+    requires javafx.graphics;
 
     exports io.knifer.freebox;
     exports io.knifer.freebox.constant;

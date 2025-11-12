@@ -6,6 +6,7 @@ plugins {
     id 'org.beryx.jlink' version '2.25.0'
     id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.23'
     id 'org.gradlex.extra-java-module-info' version '1.12'
+    id "org.jetbrains.kotlin.jvm" version "2.1.0"
 }
 
 // 读取配置文件
@@ -24,6 +25,9 @@ version buildVersion
 
 repositories {
     mavenCentral()
+}
+kotlin {
+    jvmToolchain(17) // 设置为 JDK 17
 }
 
 sourceCompatibility = '17'
@@ -44,28 +48,26 @@ javafx {
 }
 
 ext {
-    dv = [
-            controlsFX: '11.1.2',
-            ikonli: '12.3.1',
-            gson: '2.11.0',
-            guava: '33.2.1-jre',
-            lang3: '3.16.0',
-            javaWebSocket: '1.5.7',
-            slf4jSimple: '2.1.0-alpha1',
-            blockingMap: '0.91',
-            vlcjJavaFX: '1.2.0',
-            vlcj: '4.8.3',
-            filelize: '0.9.5',
-            m3uParser: '1.4.0',
-            okhttp: '5.0.0-alpha.14',
-            hutoolAll: '5.8.27',
-            jsoup: '1.15.3',
-            jsoupXpath: '2.5.1',
-            json: '20250517',
-            zxingCore: '3.5.3',
-            lombok: '1.18.34',
-            junit: '5.9.2'
-    ]
+    dv = [controlsFX   : '11.1.2',
+          ikonli       : '12.3.1',
+          gson         : '2.11.0',
+          guava        : '33.2.1-jre',
+          lang3        : '3.16.0',
+          javaWebSocket: '1.5.7',
+          slf4jSimple  : '2.1.0-alpha1',
+          blockingMap  : '0.91',
+          vlcjJavaFX   : '1.2.0',
+          vlcj         : '4.8.3',
+          filelize     : '0.9.5',
+          m3uParser    : '1.4.0',
+          okhttp       : '5.0.0-alpha.14',
+          hutoolAll    : '5.8.27',
+          jsoup        : '1.15.3',
+          jsoupXpath   : '2.5.1',
+          json         : '20250517',
+          zxingCore    : '3.5.3',
+          lombok       : '1.18.34',
+          junit        : '5.9.2']
 }
 
 dependencies {
@@ -89,6 +91,8 @@ dependencies {
     implementation "org.json:json:${dv.json}"
     implementation "com.google.zxing:core:${dv.zxingCore}"
 
+
+
     compileOnly "org.projectlombok:lombok:${dv.lombok}"
     annotationProcessor "org.projectlombok:lombok:${dv.lombok}"
 
@@ -96,6 +100,14 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${dv.junit}"
     testCompileOnly "org.projectlombok:lombok:${dv.lombok}"
     testAnnotationProcessor "org.projectlombok:lombok:${dv.lombok}"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.0"
+
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0" ) {
+        exclude group: 'org.jetbrains', module: 'annotations'
+    }
+
+
 }
 
 extraJavaModuleInfo {
@@ -126,6 +138,16 @@ extraJavaModuleInfo {
     automaticModule('org.jetbrains:annotations', 'annotations')
     // JsoupXpath
     automaticModule('cn.wanghaomiao:JsoupXpath', 'jsoupXpath')
+
+    // Kotlin 相关模块配置
+    module('org.jetbrains.kotlin:kotlin-stdlib', 'kotlin.stdlib') {
+        patchRealModule()
+        exportAllPackages()
+    }
+
+    // Coroutines 模块配置
+    automaticModule('org.jetbrains.kotlinx:kotlinx-coroutines-core', 'kotlinx.coroutines')
+
 }
 
 test {
@@ -146,9 +168,7 @@ clean {
 
 jar {
     manifest {
-        attributes = [
-                'Main-Class': application.mainClass
-        ]
+        attributes = ['Main-Class': application.mainClass]
     }
 }
 
@@ -165,9 +185,7 @@ jlink {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
         name = 'FreeBox'
-        jvmArgs = [
-                "--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls"
-        ]
+        jvmArgs = ["--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls"]
     }
     mergedModule {
         requires 'java.sql'
@@ -187,41 +205,33 @@ jlink {
         installerType = 'msi'
         appVersion = project.version
         vendor = 'knifer'
-        installerOptions = [
-                '--verbose',
-                '--temp', 'jpackage_temp',
-        ]
+        installerOptions = ['--verbose',
+                            '--temp', 'jpackage_temp',]
         if (org.gradle.internal.os.OperatingSystem.current().windows) {
             icon = "${projectDir}/resources/logo/FreeBox.ico"
-            installerOptions += [
-                    '--win-dir-chooser',
-                    '--win-menu',
-                    '--win-shortcut',
-                    '--win-shortcut-prompt',
-                    '--win-upgrade-uuid', '8EA2474F-D1AB-A3A7-CD9A-ED7895F4CAA4',
-                    '--resource-dir', "${projectDir}/resources/wix"
-            ]
+            installerOptions += ['--win-dir-chooser',
+                                 '--win-menu',
+                                 '--win-shortcut',
+                                 '--win-shortcut-prompt',
+                                 '--win-upgrade-uuid', '8EA2474F-D1AB-A3A7-CD9A-ED7895F4CAA4',
+                                 '--resource-dir', "${projectDir}/resources/wix"]
             if ('true' == xProps.get('debug')) {
                 imageOptions = ['--win-console']
             }
         } else if (org.gradle.internal.os.OperatingSystem.current().linux) {
             icon = "${projectDir}/resources/logo/FreeBox.png"
-            installerOptions += [
-                    '--linux-package-name', 'freebox',
-                    '--linux-shortcut',
-                    '--linux-deb-maintainer', 'knifer@duck.com',
-                    '--linux-menu-group', 'AudioVideo;Audio;Video;',
-                    '--linux-app-category', 'video;',
-                    '--linux-rpm-license-type', 'GPL-3.0-only',
-                    '--resource-dir', "${projectDir}/resources/logo"
-            ]
+            installerOptions += ['--linux-package-name', 'freebox',
+                                 '--linux-shortcut',
+                                 '--linux-deb-maintainer', 'knifer@duck.com',
+                                 '--linux-menu-group', 'AudioVideo;Audio;Video;',
+                                 '--linux-app-category', 'video;',
+                                 '--linux-rpm-license-type', 'GPL-3.0-only',
+                                 '--resource-dir', "${projectDir}/resources/logo"]
         } else if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
             icon = "${projectDir}/resources/logo/FreeBox.icns"
-            installerOptions += [
-                    '--mac-sign',
-                    '--mac-signing-key-user-name', 'knifer',
-                    '--mac-app-category', 'public.app-category.video'
-            ]
+            installerOptions += ['--mac-sign',
+                                 '--mac-signing-key-user-name', 'knifer',
+                                 '--mac-app-category', 'public.app-category.video']
         }
     }
 }

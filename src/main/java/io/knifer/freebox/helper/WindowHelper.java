@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
@@ -54,8 +55,8 @@ public class WindowHelper {
         setFontFamily(getStage(node), fontFamily);
     }
 
-    public void setFontFamily(Stage stage, String fontFamily) {
-        Scene scene = stage.getScene();
+    public void setFontFamily(Window window, String fontFamily) {
+        Scene scene = window.getScene();
         Parent parent = scene.getRoot();
         String style = parent.getStyle();
         String oldFontFamily = StringUtils.substringBetween(style, "-fx-font-family:", ";");

@@ -30,8 +30,6 @@ public class ConfigHelper {
 
     private volatile static Config config;
 
-    private static Config configBackup;
-
     private static final AtomicBoolean updateFlag = new AtomicBoolean(false);
 
     public synchronized void setServiceIPv4(String serviceIPv4) {
@@ -159,16 +157,12 @@ public class ConfigHelper {
         String configJson;
         String versionCodeStr;
 
-        if (Files.exists(CONFIG_PATH)) {
-            try {
+        try {
+            if (Files.exists(CONFIG_PATH)) {
                 configJson = Files.readString(CONFIG_PATH);
                 configLoaded = GsonUtil.fromJson(configJson, Config.class);
                 fixConfigIfNeeded(configLoaded);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            try {
+            } else {
                 configLoaded = new Config();
                 configLoaded.setUuid(UUID.randomUUID().toString());
                 configLoaded.setAppVersion(BaseResources.X_PROPERTIES.getProperty(
@@ -188,11 +182,11 @@ public class ConfigHelper {
                 configLoaded.setUsageFontFamily(Font.getDefault().getFamily());
                 Files.createDirectories(CONFIG_PATH.getParent());
                 Files.writeString(CONFIG_PATH, GsonUtil.toJson(configLoaded));
-            } catch (IOException e) {
-                Platform.runLater(() -> ToastHelper.showException(e));
-
-                return null;
             }
+        } catch (IOException e) {
+            Platform.runLater(() -> ToastHelper.showException(e));
+
+            return null;
         }
 
         return configLoaded;

@@ -153,7 +153,10 @@ jar {
 }
 
 run {
-    jvmArgs = ['--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls']
+    jvmArgs = [
+            '--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls',
+            '--add-opens=org.controlsfx.controls/org.controlsfx.control=io.knifer.freebox',
+    ]
 }
 
 gluonfx {
@@ -165,9 +168,7 @@ jlink {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
         name = 'FreeBox'
-        jvmArgs = [
-                "--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls"
-        ]
+        jvmArgs = run.jvmArgs
     }
     mergedModule {
         requires 'java.sql'

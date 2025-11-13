@@ -450,6 +450,15 @@ public class HomeController {
         if (clientInfo == null) {
             return;
         }
+        if (!VLC_PLAYER_CHECK_HANDLER.handle()) {
+            ToastHelper.showErrorAlert(
+                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND_TITLE,
+                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND,
+                    evt -> {}
+            );
+
+            return;
+        }
         clientManager.shutdownConnectingExecutor();
         clientManager.updateCurrentClient(clientInfo);
         stageAndController = FXMLUtil.load(Views.LIVE);

@@ -533,11 +533,13 @@ public class SettingsController {
     @FXML
     private void onDeleteApplicationDataButtonAction() {
         Alert alert = new Alert(Alert.AlertType.WARNING);
+        DialogPane dialogPane = alert.getDialogPane();
         Button okBtn;
 
         alert.setContentText(I18nHelper.get(I18nKeys.SETTINGS_DELETE_APPLICATION_DATA_ALERT));
         alert.getButtonTypes().add(ButtonType.CLOSE);
-        okBtn = CastUtil.cast(alert.getDialogPane().lookupButton(ButtonType.OK));
+        WindowHelper.setFontFamily(dialogPane, ConfigHelper.getUsageFontFamily());
+        okBtn = CastUtil.cast(dialogPane.lookupButton(ButtonType.OK));
         okBtn.setOnAction(evt -> {
             LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);
             StorageHelper.clearData();

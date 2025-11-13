@@ -323,7 +323,7 @@ public class SettingsController {
             usageFontFamily = usageFontFamilyComboBox.getValue();
             if (!StringUtils.equals(oldUsageFontFamily, usageFontFamily)) {
                 windows = Window.getWindows();
-                windows.forEach(window -> WindowHelper.setFontFamily(CastUtil.cast(window), usageFontFamily));
+                windows.forEach(window -> WindowHelper.setFontFamily((Stage) window, usageFontFamily));
                 Context.INSTANCE.postEvent(new AppEvents.UsageFontChangedEvent(usageFontFamily));
             }
         }

@@ -423,6 +423,7 @@ public class HomeController {
 
         importApiSelectTypeDialog.setTitle(I18nHelper.get(I18nKeys.HOME_IMPORT_API_SELECT_TYPE_TITLE));
         importApiSelectTypeDialog.setContentText(I18nHelper.get(I18nKeys.HOME_IMPORT_API_SELECT_TYPE_CONTENT));
+        WindowHelper.setFontFamily(importApiSelectTypeDialog.getDialogPane(), ConfigHelper.getUsageFontFamily());
         importApiSelectTypeDialog.showAndWait();
         result = importApiSelectTypeDialog.getResult();
         if (result == ButtonTypes.CAT_VOD_COMMAND_LINKS_BUTTON_TYPE.getButtonType()) {

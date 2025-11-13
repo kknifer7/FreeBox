@@ -50,6 +50,10 @@ public class WindowHelper {
         return CastUtil.cast(node.getScene().getWindow());
     }
 
+    public void setFontFamily(Node node, String fontFamily) {
+        setFontFamily(getStage(node), fontFamily);
+    }
+
     public void setFontFamily(Stage stage, String fontFamily) {
         Scene scene = stage.getScene();
         Parent parent = scene.getRoot();

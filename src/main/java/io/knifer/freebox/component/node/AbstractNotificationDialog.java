@@ -1,5 +1,7 @@
 package io.knifer.freebox.component.node;
 
+import io.knifer.freebox.helper.ConfigHelper;
+import io.knifer.freebox.helper.WindowHelper;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -22,5 +24,6 @@ public abstract class AbstractNotificationDialog<T> extends Dialog<T> {
         hiddenBtn = dialogPane.lookupButton(ButtonType.CLOSE);
         hiddenBtn.setVisible(false);
         hiddenBtn.setManaged(false);
+        WindowHelper.setFontFamily(dialogPane, ConfigHelper.getUsageFontFamily());
     }
 }

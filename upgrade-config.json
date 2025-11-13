@@ -1,33 +1,33 @@
 {
-	"version": "v1.2.1",
-	"versionCode": 6,
-	"changelog": "修复问题：\n1. 加载m3u格式直播源无限转圈；\n2. 一处空指针报错（#43）。",
-	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.2.1/",
-	"releaseDate": "2025-10-22",
+	"version": "v1.3.0",
+	"versionCode": 7,
+	"changelog": "新功能：\n1. 播放器新增字幕、弹幕功能，支持在线搜索字幕；\n2. 新增设置界面字体功能，如果遇到乱码、字体显示为方框的问题，可以尝试切换字体；\n3. 主界面支持查看本机所有IP（#49）；\n4. 新增进入无效源（如PC端直接使用安卓源）时的弹窗提示，避免直接抛出异常误导用户；\n5. 其他的小调整。\n\n修复问题：\n1. 播放器界面的光标在错误的位置自动隐藏；\n2. 一处NPE（#75）以及导致该NPE的界面逻辑问题；\n3. 其他发现的bug。",
+	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.3.0/",
+	"releaseDate": "2025-11-13",
 	"releaseFiles": [
 		{
 			"platform": "windows",
-			"fileSize": "51464557",
-			"fileName": "FreeBox-1.2.1.msi",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.1/FreeBox-1.2.1.msi"
+			"fileSize": "51493229",
+			"fileName": "FreeBox-1.3.0.msi",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.msi"
 		},
 		{
 			"platform": "mac",
-			"fileSize": "53694573",
-			"fileName": "FreeBox-1.2.1.dmg",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.1/FreeBox-1.2.1.dmg"
+			"fileSize": "53687789",
+			"fileName": "FreeBox-1.3.0.dmg",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.dmg"
 		},
 		{
 			"platform": "deb_linux",
-			"fileSize": "54150788",
-			"fileName": "FreeBox-1.2.1.deb",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.1/FreeBox-1.2.1.deb"
+			"fileSize": "54181092",
+			"fileName": "FreeBox-1.3.0.deb",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.deb"
 		},
 		{
 			"platform": "rpm_linux",
-			"fileSize": "55777588",
-			"fileName": "FreeBox-1.2.1.rpm",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.2.0/FreeBox-1.2.1.rpm"
+			"fileSize": "55804580",
+			"fileName": "FreeBox-1.3.0.rpm",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.rpm"
 		}
 	]
 }

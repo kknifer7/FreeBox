@@ -63,7 +63,10 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.javafx.fullscreen.JavaFXFullScreenStrategy;
 import uk.co.caprica.vlcj.javafx.videosurface.ImageViewVideoSurface;
-import uk.co.caprica.vlcj.player.base.*;
+import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.base.State;
+import uk.co.caprica.vlcj.player.base.SubpictureApi;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 import javax.annotation.Nullable;
@@ -155,6 +158,7 @@ public class VLCPlayer {
 
     private volatile boolean destroyFlag = false;
 
+    private int trackId = -1;
     private List<LiveChannelGroup> liveChannelGroups = null;
     private LiveInfoBO selectedLive = null;
     private LiveInfoBO playingLive = null;
@@ -187,7 +191,8 @@ public class VLCPlayer {
         Label reloadSettingTitleLabel;
         HBox reloadSettingsHBox;
         Label subtitleAndDanMaKuLabel;
-        HBox subtitleAndDanMaKuButtonHBox;
+        ToggleSwitch subtitleAndDanMaKuToggleSwitch = new ToggleSwitch();
+        HBox subtitleAndDanMaKuControlHBox;
         HBox subtitleAndDanMaKuHBox;
         VBox settingsPopOverInnerVBox;
         PopOver settingsPopOver;
@@ -472,6 +477,7 @@ public class VLCPlayer {
                             subtitleFile.getName()
                     ));
                     mediaPlayerSubpictureApi.setSubTitleFile(subtitleFile);
+                    subtitleAndDanMaKuToggleSwitch.setDisable(false);
                 }
             });
             subtitleAndDanMaKuLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_EXTERNAL));
@@ -481,10 +487,41 @@ public class VLCPlayer {
             danMaKuButton.setText(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_DANMAKU));
             danMaKuButton.setFocusTraversable(false);
             danMaKuButton.setOnAction(evt -> subtitleSettingPopOver.show(stage));
-            subtitleAndDanMaKuButtonHBox = new HBox(subtitleButton, danMaKuButton);
-            subtitleAndDanMaKuButtonHBox.setSpacing(5);
-            subtitleAndDanMaKuButtonHBox.setAlignment(Pos.CENTER_LEFT);
-            subtitleAndDanMaKuHBox = new HBox(subtitleAndDanMaKuLabel, subtitleAndDanMaKuButtonHBox);
+            subtitleAndDanMaKuToggleSwitch.setDisable(true);
+            subtitleAndDanMaKuToggleSwitch.setSelected(true);
+            subtitleAndDanMaKuToggleSwitch.selectedProperty()
+                    .addListener((ob, oldVal, newVal) -> {
+                        if (newVal) {
+                            if (mediaPlayerSubpictureApi.track() == -1) {
+                                if (trackId != -1) {
+                                    mediaPlayerSubpictureApi.setTrack(trackId);
+                                } else {
+                                    mediaPlayerSubpictureApi.trackDescriptions()
+                                            .stream()
+                                            .filter(td -> td.id() != -1)
+                                            .findFirst()
+                                            .ifPresent(td -> {
+                                                trackId = td.id();
+                                                mediaPlayerSubpictureApi.setTrack(trackId);
+                                            });
+                                }
+                            }
+                        } else if ((trackId = mediaPlayerSubpictureApi.track()) != -1) {
+                            mediaPlayerSubpictureApi.setTrack(-1);
+                        }
+                        toastPane.showMessage(
+                                I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE) +
+                                        " " +
+                                        (newVal ?
+                                                I18nHelper.get(I18nKeys.COMMON_ON) :
+                                                I18nHelper.get(I18nKeys.COMMON_OFF)
+                                        )
+                        );
+                    });
+            subtitleAndDanMaKuControlHBox = new HBox(subtitleButton, danMaKuButton, subtitleAndDanMaKuToggleSwitch);
+            subtitleAndDanMaKuControlHBox.setSpacing(5);
+            subtitleAndDanMaKuControlHBox.setAlignment(Pos.CENTER_LEFT);
+            subtitleAndDanMaKuHBox = new HBox(subtitleAndDanMaKuLabel, subtitleAndDanMaKuControlHBox);
             subtitleAndDanMaKuHBox.setSpacing(15);
             subtitleAndDanMaKuHBox.setAlignment(Pos.CENTER_LEFT);
         }

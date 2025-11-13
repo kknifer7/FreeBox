@@ -133,6 +133,8 @@ public class I18nKeys {
     public static final String COMMON_MESSAGE_TIMOUT_FAILED = "common.message.timeout-failed";
     public static final String COMMON_MESSAGE_COPY_SUCCEED = "common.message.copy-succeed";
     public static final String COMMON_VIDEO_LOADING_ERROR = "common.video-loading-error";
+    public static final String COMMON_ON = "common.on";
+    public static final String COMMON_OFF = "common.off";
 
     public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
     public static final String SOURCE_AUDIT_NOW = "source-audit.now";

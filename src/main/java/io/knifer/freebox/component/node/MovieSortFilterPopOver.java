@@ -79,6 +79,11 @@ public class MovieSortFilterPopOver extends PopOver {
             Map<String, String> checkedFilterKeyAndValueMap;
             Map<String, String> filterSelect;
 
+            if (sortData == null) {
+                this.hide();
+
+                return;
+            }
             if (checkedItems.isEmpty()) {
                 checkedFilterKeyAndValueMap = Map.of();
             } else {

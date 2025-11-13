@@ -97,7 +97,7 @@ public class TVController {
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty searchLoadingProperty = new SimpleBooleanProperty(false);
-    private final BooleanProperty classFilterButtonDisableProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty classFilterButtonDisableProperty = new SimpleBooleanProperty(true);
     private SpiderTemplate template;
     private ClientManager clientManager;
     private Movie.Video fetchMoreItem;

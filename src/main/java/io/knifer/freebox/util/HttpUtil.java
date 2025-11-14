@@ -27,25 +27,6 @@ public class HttpUtil {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    public String get(String url) throws IOException {
-        try {
-            return client.send(
-                    HttpRequest.newBuilder()
-                            .GET()
-                            .uri(parseUrl(url))
-                            .build(),
-                    HttpResponse.BodyHandlers.ofString()
-            ).body();
-        } catch (IOException e) {
-            if (e instanceof HttpTimeoutException) {
-                throw e;
-            }
-            throw new FBException("Error while sending request to " + url, e);
-        } catch (InterruptedException e) {
-            return null;
-        }
-    }
-
     public byte[] getFile(String url) throws IOException {
         try {
             return client.send(
@@ -84,46 +65,6 @@ public class HttpUtil {
                         .build(),
                 HttpResponse.BodyHandlers.ofString()
         ).thenApply(HttpResponse::body);
-    }
-
-    public String get(String url, String... headers) throws IOException {
-        try {
-            return client.send(
-                    HttpRequest.newBuilder()
-                            .GET()
-                            .uri(parseUrl(url))
-                            .headers(headers)
-                            .build(),
-                    HttpResponse.BodyHandlers.ofString()
-            ).body();
-        } catch (IOException e) {
-            if (e instanceof HttpTimeoutException) {
-                throw e;
-            }
-            throw new FBException("Error while sending request to " + url, e);
-        } catch (InterruptedException ignored) {
-            return null;
-        }
-    }
-
-    public String post(String url, String body) throws IOException {
-        try {
-            return client.send(
-                    HttpRequest.newBuilder()
-                            .POST(HttpRequest.BodyPublishers.ofString(body))
-                            .uri(parseUrl(url))
-                            .build(),
-                    HttpResponse.BodyHandlers.ofString()
-            ).body();
-        } catch (IOException e) {
-            if (e instanceof HttpTimeoutException) {
-                throw e;
-            }
-            throw new FBException("Error while sending request to " + url, e);
-        } catch (InterruptedException e) {
-
-           return null;
-        }
     }
 
     private URI parseUrl(String url) {

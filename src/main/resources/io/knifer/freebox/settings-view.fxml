@@ -6,6 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 <?import org.kordamp.ikonli.javafx.*?>
+<?import org.controlsfx.control.SearchableComboBox?>
 <BorderPane fx:id="root" stylesheets="@css/view/settings-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
    <fx:define>
       <NetworkInterfaceAndIP2StringConverter fx:id="ipChoiceBoxConverter" />
@@ -31,34 +32,21 @@
                                     <children>
                                        <HBox alignment="CENTER" spacing="5">
                                           <children>
-                                             <Label text="%settings.http">
-                                                <font>
-                                                   <Font size="20.0" />
-                                                </font>
-                                             </Label>
-                                             <Label>
+                                             <Label text="%settings.http" styleClass="fs-large" />
+                                             <Label styleClass="fs-large">
                                                 <graphic>
                                                    <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
                                                 </graphic>
-                                                <font>
-                                                   <Font size="20.0" />
-                                                </font>
                                                 <tooltip>
-                                                   <Tooltip showDelay="200ms" showDuration="1m" text="%settings.http.tooltip">
-                                                      <font>
-                                                         <Font size="14" />
-                                                      </font>
-                                                   </Tooltip>
+                                                   <Tooltip showDelay="200ms" showDuration="1m"
+                                                            text="%settings.http.tooltip" styleClass="fs-big"/>
                                                 </tooltip>
                                              </Label>
                                           </children>
                                        </HBox>
                                        <HBox alignment="CENTER" prefHeight="30.0" prefWidth="200.0">
                                           <children>
-                                             <Label fx:id="httpServiceStatusLabel">
-                                                <font>
-                                                   <Font size="18" />
-                                                </font>
+                                             <Label fx:id="httpServiceStatusLabel" style="-fx-font-size: 18;">
                                                 <graphic>
                                                    <FontIcon fx:id="httpServiceStatusFontIcon" iconLiteral="fa-circle" />
                                                 </graphic>
@@ -121,33 +109,20 @@
                                     <children>
                                        <HBox alignment="CENTER" spacing="5.0">
                                           <children>
-                                             <Label text="%settings.ws">
-                                                <font>
-                                                   <Font size="20.0" />
-                                                </font></Label>
-                                             <Label>
-                                                <font>
-                                                   <Font size="20.0" />
-                                                </font>
+                                             <Label text="%settings.ws" styleClass="fs-large" />
+                                             <Label styleClass="fs-large">
                                                 <graphic>
                                                    <FontIcon iconLiteral="fa-question-circle:20:#1E90FF" />
                                                 </graphic>
                                                 <tooltip>
-                                                   <Tooltip showDelay="200ms" showDuration="1m" text="%settings.ws.tooltip">
-                                                      <font>
-                                                         <Font size="14" />
-                                                      </font>
-                                                   </Tooltip>
+                                                   <Tooltip showDelay="200ms" showDuration="1m" text="%settings.ws.tooltip" styleClass="fs-big" />
                                                 </tooltip>
                                              </Label>
                                           </children>
                                        </HBox>
                                        <HBox alignment="CENTER" prefHeight="30.0" prefWidth="200.0">
                                           <children>
-                                             <Label fx:id="wsServiceStatusLabel">
-                                                <font>
-                                                   <Font size="18" />
-                                                </font>
+                                             <Label fx:id="wsServiceStatusLabel" style="-fx-font-size: 18;">
                                                 <graphic>
                                                    <FontIcon fx:id="wsServiceStatusFontIcon" iconLiteral="fa-circle" />
                                                 </graphic>
@@ -199,15 +174,17 @@
                           </rowConstraints>
                            <children>
 
-                              <Label fx:id="applicationDataLabel" styleClass="large, bold" text="%settings.application-data" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                              <Button focusTraversable="false" onAction="#onDeleteApplicationDataButtonAction" text="%settings.delete-application-data" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                              <Label text="%settings.application-setting" styleClass="setting-title-label" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+
+                              <Label fx:id="applicationDataLabel" styleClass="fs-big, bold" text="%settings.application-data" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                              <Button focusTraversable="false" onAction="#onDeleteApplicationDataButtonAction" text="%settings.delete-application-data" GridPane.rowIndex="1" GridPane.columnIndex="1">
                                  <graphic>
                                     <FontIcon iconLiteral="fa-trash:12:red" />
                                  </graphic>
                               </Button>
 
-                              <Label fx:id="applicationVersionLabel" styleClass="large, bold" text="%settings.application-version" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                              <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                              <Label fx:id="applicationVersionLabel" styleClass="fs-big, bold" text="%settings.application-version" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                              <HBox alignment="CENTER_LEFT" spacing="10.0" GridPane.rowIndex="2" GridPane.columnIndex="1">
                                  <Button fx:id="checkUpgradeButton" focusTraversable="false" onAction="#onCheckUpgradeButtonAction" text="%settings.check-upgrade">
                                     <graphic>
                                        <FontIcon iconLiteral="fa-cloud-download:12:#1E90FF" />
@@ -220,11 +197,21 @@
                                  </Label>
                               </HBox>
 
-                              <Label styleClass="large, bold" text="%settings.auto-check-upgrade" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                              <CheckBox fx:id="autoCheckUpgradeCheckBox" text="%settings.auto-check-upgrade-enable" onAction="#onAutoCheckUpgradeCheckBoxAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                              <Label styleClass="fs-big, bold" text="%settings.auto-check-upgrade" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                              <CheckBox fx:id="autoCheckUpgradeCheckBox" text="%settings.auto-check-upgrade-enable" onAction="#onAutoCheckUpgradeCheckBoxAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-                              <Label styleClass="large, bold" text="%settings.license" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                              <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                              <Label text="%settings.usage" styleClass="setting-title-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+
+                              <Label styleClass="fs-big, bold" text="%settings.font-family" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                              <HBox spacing="5.0" alignment="CENTER_LEFT" GridPane.rowIndex="6" GridPane.columnIndex="1">
+                                 <SearchableComboBox fx:id="usageFontFamilyComboBox" onAction="#onUsageFontFamilyComboBoxAction" />
+                                 <Label fx:id="usageFontFamilyExampleLabel" text="%settings.font-family-example" />
+                              </HBox>
+
+                              <Label text="%settings.other" styleClass="setting-title-label" GridPane.rowIndex="7" GridPane.columnIndex="0" />
+
+                              <Label styleClass="fs-big, bold" text="%settings.license" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                              <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
                            </children>
                         </GridPane>
                      </VBox>

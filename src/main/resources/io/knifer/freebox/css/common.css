@@ -1,7 +1,11 @@
 @import "base/color.css";
 
-.large {
+.fs-big {
     -fx-font-size: 16px;
+}
+
+.fs-large {
+    -fx-font-size: 20px;
 }
 
 .bold {

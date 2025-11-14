@@ -59,4 +59,9 @@ public class Config {
      * 自动启动WebSocket服务
      */
     private Boolean autoStartWs;
+
+    /**
+     * 字体
+     */
+    private String usageFontFamily;
 }

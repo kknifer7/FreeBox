@@ -2,6 +2,8 @@ package io.knifer.freebox.spider;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import com.github.catvod.spider.Spider;
+import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.FreeBoxApiConfig;
@@ -22,9 +24,12 @@ import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * 爬虫Jar Loader
@@ -65,16 +70,19 @@ public class SpiderJarLoader {
         try {
             String jaKey = DigestUtil.md5Hex(jar);
             String spKey = jaKey + key;
+
             if (spiders.containsKey(spKey)) {
                 return spiders.get(spKey);
             }
             if (loaders.get(jaKey) == null) {
-                loadJar(jaKey, jar);
+                if (!loadJar(jaKey, jar)) {
+                    return new Spider();
+                }
             }
             recent = jaKey;
             URLClassLoader loader = loaders.get(jaKey);
             if (loader == null) {
-                return new Object();
+                return new Spider();
             }
             String classPath = SPIDER_PACKAGE_NAME + api.replace("csp_", ".");
             Object spider = loader.loadClass(classPath).getDeclaredConstructor().newInstance();
@@ -85,18 +93,19 @@ public class SpiderJarLoader {
         } catch (Exception e){
             Platform.runLater(() -> ToastHelper.showException(e));
 
-            return new Object();
+            return new Spider();
         }
     }
 
-    public void loadJar(String key, String spider) {
+    public boolean loadJar(String key, String spider) {
         String[] texts;
         String md5;
         String jar;
         Path jarPath;
 
         if (StringUtils.isBlank(spider)) {
-            return;
+
+            return false;
         }
         texts = spider.split(";md5;");
         md5 = texts.length > 1 ? texts[1].trim() : StringUtils.EMPTY;
@@ -104,17 +113,22 @@ public class SpiderJarLoader {
 
         // 可以避免重复下载
         if(!md5.isEmpty() && Objects.equals(parseJarUrl(jar), md5)){
-            load(key, Paths.get(parseJarUrl(jar)));
+
+            return load(key, Paths.get(parseJarUrl(jar)));
         }else if (jar.startsWith("file")) {
-            load(key, Paths.get(jar.replace("file:///", StringUtils.EMPTY)));
+
+            return load(key, Paths.get(jar.replace("file:///", StringUtils.EMPTY)));
         } else if (jar.startsWith("http")) {
             jarPath = download(jar);
             if (jarPath == null) {
-                return;
+
+                return false;
             }
-            load(key, jarPath);
+
+            return load(key, jarPath);
         } else {
-            loadJar(key, convertUrl(apiConfig.getUrl(), jar));
+
+            return loadJar(key, convertUrl(apiConfig.getUrl(), jar));
         }
     }
 
@@ -142,17 +156,54 @@ public class SpiderJarLoader {
         }
     }
 
-    private void load(String key, Path jar) {
+    private boolean load(String key, Path jar) {
         log.info("load jar {}", jar);
+        if (!isJarAvailable(jar)) {
+            log.info("invalid jar: {}", jar);
+            Platform.runLater(() -> ToastHelper.showErrorAlert(
+                    I18nKeys.ERROR,
+                    I18nKeys.TV_ERROR_INVALID_SPIDER_JAR,
+                    null
+            ));
+
+            return false;
+        }
         try {
             loaders.put(key, new URLClassLoader(new URL[]{jar.toUri().toURL()}, this.getClass().getClassLoader()));
         } catch (MalformedURLException e) {
             Platform.runLater(() -> ToastHelper.showException(e));
 
-            return;
+            return false;
         }
         putProxy(key);
         invokeInit(key);
+
+        return true;
+    }
+
+    private boolean isJarAvailable(Path jarPath) {
+        Enumeration<JarEntry> entries;
+        JarEntry entry;
+        String name;
+
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
+            entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                entry = entries.nextElement();
+                name = entry.getName();
+                if (name.endsWith(".dex") || name.contains("classes.dex")) {
+                    log.warn("{} is not available", name);
+
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            log.error("check jar file error", e);
+
+            return false;
+        }
+
+        return true;
     }
 
     private void putProxy(String key) {

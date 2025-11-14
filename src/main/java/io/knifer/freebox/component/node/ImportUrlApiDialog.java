@@ -2,9 +2,7 @@ package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.component.validator.URLValidator;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.helper.ValidationHelper;
+import io.knifer.freebox.helper.*;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
@@ -68,5 +66,6 @@ public abstract class ImportUrlApiDialog extends TextInputDialog {
             }
             evt.consume();
         });
+        WindowHelper.setFontFamily(dialogPane, ConfigHelper.getUsageFontFamily());
     }
 }

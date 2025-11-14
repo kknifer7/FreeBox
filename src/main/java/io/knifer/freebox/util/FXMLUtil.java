@@ -3,6 +3,8 @@ package io.knifer.freebox.util;
 import io.knifer.freebox.FreeBoxApplication;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.helper.ConfigHelper;
+import io.knifer.freebox.helper.WindowHelper;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -55,6 +57,7 @@ public class FXMLUtil {
         stage = new Stage();
         stage.getIcons().add(BaseResources.LOGO_IMG);
         stage.setScene(scene);
+        postProcess(stage);
 
         return Pair.of(stage, loader.getController());
     }
@@ -77,5 +80,11 @@ public class FXMLUtil {
         }
         stage.getIcons().add(BaseResources.LOGO_IMG);
         stage.setScene(scene);
+        postProcess(stage);
+    }
+
+    private void postProcess(Stage stage) {
+        // 字体处理
+        WindowHelper.setFontFamily(stage, ConfigHelper.getUsageFontFamily());
     }
 }

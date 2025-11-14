@@ -5,8 +5,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.util.Callback;
 
 /**
@@ -16,12 +14,6 @@ import javafx.util.Callback;
  */
 public class SourceAuditItemFirstTableColumnCellFactory implements
         Callback<TableColumn<SourceAuditItem, String>, TableCell<SourceAuditItem, String>> {
-
-    private final static Font FONT = Font.font(
-            Font.getDefault().getFamily(),
-            FontWeight.BOLD,
-            Font.getDefault().getSize()
-    );
 
     @Override
     public TableCell<SourceAuditItem, String> call(TableColumn<SourceAuditItem, String> param) {
@@ -39,7 +31,7 @@ public class SourceAuditItemFirstTableColumnCellFactory implements
                     return;
                 }
                 label = new Label(item);
-                label.setFont(FONT);
+                label.getStyleClass().add("bold");
                 this.setAlignment(Pos.CENTER);
                 setGraphic(label);
             }

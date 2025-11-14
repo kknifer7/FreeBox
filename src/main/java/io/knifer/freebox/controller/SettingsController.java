@@ -1,7 +1,9 @@
 package io.knifer.freebox.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import io.knifer.freebox.component.validator.PortValidator;
+import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
@@ -32,16 +34,20 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.validation.ValidationSupport;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.NetworkInterface;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -101,6 +107,12 @@ public class SettingsController {
     private Label alreadyLatestVersionLabel;
     @FXML
     private CheckBox autoCheckUpgradeCheckBox;
+    @FXML
+    private SearchableComboBox<String> usageFontFamilyComboBox;
+    @FXML
+    private Label usageFontFamilyExampleLabel;
+
+    private String oldUsageFontFamily;
 
     private final ObjectProperty<Pair<NetworkInterface, String>> ipValueProp = new SimpleObjectProperty<>();
     private final BooleanProperty ipChoiceBoxDisableProp = new SimpleBooleanProperty();
@@ -114,8 +126,22 @@ public class SettingsController {
     @FXML
     private void initialize() {
         LoadNetworkInterfaceDataService loadNetworkInterfaceService = new LoadNetworkInterfaceDataService();
+        List<String> fontFamilies = Font.getFamilies();
 
-        loadConfigService.setOnSucceeded(evt -> loadNetworkInterfaceService.restart());
+        usageFontFamilyComboBox.getItems().addAll(fontFamilies);
+        loadConfigService.setOnSucceeded(evt -> {
+            String usageFontFamily = ConfigHelper.getUsageFontFamily();
+            SingleSelectionModel<String> selectionModel = usageFontFamilyComboBox.getSelectionModel();
+
+            loadNetworkInterfaceService.restart();
+            // 字体
+            oldUsageFontFamily = usageFontFamily;
+            if (CollUtil.contains(fontFamilies, usageFontFamily)) {
+                selectionModel.select(usageFontFamily);
+            } else {
+                selectionModel.selectFirst();
+            }
+        });
         loadNetworkInterfaceService.setOnSucceeded(evt -> {
             // 网卡信息获取完成，填充数据
             putDataInForm(loadNetworkInterfaceService.getValue());
@@ -288,9 +314,18 @@ public class SettingsController {
 
     @FXML
     private void onSaveBtnAction() {
+        String usageFontFamily;
+        List<Window> windows;
+
         if (ValidationHelper.validate(validationSupport)) {
             WindowHelper.close(root);
             ConfigHelper.checkAndSave();
+            usageFontFamily = usageFontFamilyComboBox.getValue();
+            if (!StringUtils.equals(oldUsageFontFamily, usageFontFamily)) {
+                windows = Window.getWindows();
+                windows.forEach(window -> WindowHelper.setFontFamily(window, usageFontFamily));
+                Context.INSTANCE.postEvent(new AppEvents.UsageFontChangedEvent(usageFontFamily));
+            }
         }
     }
 
@@ -498,11 +533,13 @@ public class SettingsController {
     @FXML
     private void onDeleteApplicationDataButtonAction() {
         Alert alert = new Alert(Alert.AlertType.WARNING);
+        DialogPane dialogPane = alert.getDialogPane();
         Button okBtn;
 
         alert.setContentText(I18nHelper.get(I18nKeys.SETTINGS_DELETE_APPLICATION_DATA_ALERT));
         alert.getButtonTypes().add(ButtonType.CLOSE);
-        okBtn = CastUtil.cast(alert.getDialogPane().lookupButton(ButtonType.OK));
+        WindowHelper.setFontFamily(dialogPane, ConfigHelper.getUsageFontFamily());
+        okBtn = CastUtil.cast(dialogPane.lookupButton(ButtonType.OK));
         okBtn.setOnAction(evt -> {
             LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);
             StorageHelper.clearData();
@@ -548,5 +585,14 @@ public class SettingsController {
         Pair<Stage, LicenseDialogController> stageAndController = FXMLUtil.loadDialog(Views.LICENSE_DIALOG);
 
         stageAndController.getLeft().showAndWait();
+    }
+
+    @FXML
+    private void onUsageFontFamilyComboBoxAction() {
+        Label fontFamily = usageFontFamilyExampleLabel;
+
+        fontFamily.setStyle("-fx-font-family:" + usageFontFamilyComboBox.getValue() + ";-fx-text-fill: blue;");
+        ConfigHelper.setUsageFontFamily(usageFontFamilyComboBox.getValue());
+        ConfigHelper.markToUpdate();
     }
 }

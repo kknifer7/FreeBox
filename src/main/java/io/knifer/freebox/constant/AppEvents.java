@@ -30,4 +30,6 @@ public class AppEvents {
     public record ClientRegisteredEvent(ClientInfo clientInfo) implements Event {}
 
     public record ClientUnregisteredEvent(ClientInfo clientInfo) implements Event {}
+
+    public record UsageFontChangedEvent(String fontFamily) implements Event {}
 }

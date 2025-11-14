@@ -66,6 +66,7 @@ import uk.co.caprica.vlcj.javafx.videosurface.ImageViewVideoSurface;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.base.State;
+import uk.co.caprica.vlcj.player.base.SubpictureApi;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 import javax.annotation.Nullable;
@@ -95,6 +96,7 @@ public class VLCPlayer {
 
     private final Stage stage;
     private final Scene scene;
+    private final AnchorPane toastAnchorPane;
     private final AnchorPane controlPane;
     private final Timer controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
     private final Timer volumePopOverHideTimer;
@@ -120,6 +122,9 @@ public class VLCPlayer {
     private final RadioButton rate2SettingRadioButton;
     private final ToggleSwitch fillWindowToggleSwitch;
     private final Button reloadButton;
+    private final Button subtitleButton;
+    private final Button danMaKuButton;
+    private final VLCPlayerSubtitleSettingPopOver subtitleSettingPopOver;
     private final Label settingsLabel;
     private final VLCPLayerLiveChannelLinesWithPaginator liveChannelLinesWithPaginator;
     private final ProgressBar videoProgressBar;
@@ -153,9 +158,11 @@ public class VLCPlayer {
 
     private volatile boolean destroyFlag = false;
 
+    private int trackId = -1;
     private List<LiveChannelGroup> liveChannelGroups = null;
     private LiveInfoBO selectedLive = null;
     private LiveInfoBO playingLive = null;
+    private final Config config;
 
     private Stage epgStage;
 
@@ -165,12 +172,11 @@ public class VLCPlayer {
     private Runnable fullScreenExitRunnable = BaseValues.EMPTY_RUNNABLE;
 
     public VLCPlayer(HBox parent) {
-        this(parent, null);
+        this(parent, Config.builder().liveMode(false).build());
     }
 
-    public VLCPlayer(HBox parent, @Nullable Config config) {
-        boolean hasConfig = config != null;
-        boolean liveMode = hasConfig && BooleanUtils.toBoolean(config.getLiveMode());
+    public VLCPlayer(HBox parent, Config config) {
+        boolean liveMode = BooleanUtils.toBoolean(config.getLiveMode());
         ObservableList<Node> parentChildren = parent.getChildren();
         ReadOnlyDoubleProperty parentWidthProp = parent.widthProperty();
         DoubleBinding paneWidthProp = liveMode ? parentWidthProp.multiply(1) : parentWidthProp.multiply(0.8);
@@ -184,6 +190,10 @@ public class VLCPlayer {
         HBox rateSettingHBox;
         Label reloadSettingTitleLabel;
         HBox reloadSettingsHBox;
+        Label subtitleAndDanMaKuLabel;
+        ToggleSwitch subtitleAndDanMaKuToggleSwitch = new ToggleSwitch();
+        HBox subtitleAndDanMaKuControlHBox;
+        HBox subtitleAndDanMaKuHBox;
         VBox settingsPopOverInnerVBox;
         PopOver settingsPopOver;
         HBox progressLabelHBox;
@@ -192,8 +202,12 @@ public class VLCPlayer {
         AnchorPane controlBottomAnchorPane;
         StackPane progressMiddleStackPane;
         AnchorPane controlTopAnchorPane;
+        VLCPlayerToastPane toastPane;
         MediaPlayerFactory mediaPlayerFactory;
 
+        SubpictureApi mediaPlayerSubpictureApi;
+
+        this.config = config;
         stage = WindowHelper.getStage(parent);
         scene = stage.getScene();
         stylesheetUrl = FreeBoxApplication.class.getResource("css/player.css");
@@ -235,6 +249,7 @@ public class VLCPlayer {
                 });
             }
         });
+        toastPane = new VLCPlayerToastPane();
         mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
             @Override
             public void mediaPlayerReady(MediaPlayer mediaPlayer) {
@@ -333,6 +348,9 @@ public class VLCPlayer {
         videoImageView.fitWidthProperty().bind(playerPane.widthProperty());
         videoImageView.fitHeightProperty().bind(playerPane.heightProperty());
         mediaPlayer.videoSurface().set(new ImageViewVideoSurface(videoImageView));
+        toastAnchorPane = new AnchorPane(toastPane);
+        AnchorPane.setBottomAnchor(toastPane, 50.0);
+        AnchorPane.setLeftAnchor(toastPane, 10.0);
         loadingProgressIndicator = new ProgressIndicator();
         loadingProgressIndicator.visibleProperty().bind(isLoading.and(isError.not()));
         loadingProgressLabel = new Label();
@@ -431,10 +449,81 @@ public class VLCPlayer {
                 }
                 stepForwardRunnable.run();
             });
+            subtitleButton = null;
+            danMaKuButton = null;
+            subtitleSettingPopOver = null;
+            subtitleAndDanMaKuHBox = null;
         } else {
             epgFetchingHandler = null;
             stepBackwardLabel.setOnMouseClicked(evt -> stepBackwardRunnable.run());
             stepForwardLabel.setOnMouseClicked(evt -> stepForwardRunnable.run());
+            subtitleButton = new Button();
+            danMaKuButton = new Button();
+            mediaPlayerSubpictureApi = mediaPlayer.subpictures();
+            subtitleSettingPopOver = new VLCPlayerSubtitleSettingPopOver();
+            subtitleSettingPopOver.setOnSubtitleDelayChanged(delay -> {
+                log.info("subtitle delay: {}", delay);
+                toastPane.showMessage(String.format(
+                        I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE_MESSAGE_UPDATE_DELAY_VALUE),
+                        delay
+                ), 2);
+                mediaPlayer.subpictures().setDelay(delay * 1000);
+            });
+            subtitleSettingPopOver.setOnSubtitleFileChosen(subtitleFile -> {
+                if (mediaPlayer.status().isPlayable()) {
+                    log.info("using subtitle file: {}", subtitleFile);
+                    toastPane.showMessage(String.format(
+                            I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE_MESSAGE_SUCCEED),
+                            subtitleFile.getName()
+                    ));
+                    mediaPlayerSubpictureApi.setSubTitleFile(subtitleFile);
+                    subtitleAndDanMaKuToggleSwitch.setDisable(false);
+                }
+            });
+            subtitleAndDanMaKuLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_EXTERNAL));
+            subtitleButton.setText(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE));
+            subtitleButton.setFocusTraversable(false);
+            subtitleButton.setOnAction(evt -> subtitleSettingPopOver.show(stage));
+            danMaKuButton.setText(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_DANMAKU));
+            danMaKuButton.setFocusTraversable(false);
+            danMaKuButton.setOnAction(evt -> subtitleSettingPopOver.show(stage));
+            subtitleAndDanMaKuToggleSwitch.setDisable(true);
+            subtitleAndDanMaKuToggleSwitch.setSelected(true);
+            subtitleAndDanMaKuToggleSwitch.selectedProperty()
+                    .addListener((ob, oldVal, newVal) -> {
+                        if (newVal) {
+                            if (mediaPlayerSubpictureApi.track() == -1) {
+                                if (trackId != -1) {
+                                    mediaPlayerSubpictureApi.setTrack(trackId);
+                                } else {
+                                    mediaPlayerSubpictureApi.trackDescriptions()
+                                            .stream()
+                                            .filter(td -> td.id() != -1)
+                                            .findFirst()
+                                            .ifPresent(td -> {
+                                                trackId = td.id();
+                                                mediaPlayerSubpictureApi.setTrack(trackId);
+                                            });
+                                }
+                            }
+                        } else if ((trackId = mediaPlayerSubpictureApi.track()) != -1) {
+                            mediaPlayerSubpictureApi.setTrack(-1);
+                        }
+                        toastPane.showMessage(
+                                I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE) +
+                                        " " +
+                                        (newVal ?
+                                                I18nHelper.get(I18nKeys.COMMON_ON) :
+                                                I18nHelper.get(I18nKeys.COMMON_OFF)
+                                        )
+                        );
+                    });
+            subtitleAndDanMaKuControlHBox = new HBox(subtitleButton, danMaKuButton, subtitleAndDanMaKuToggleSwitch);
+            subtitleAndDanMaKuControlHBox.setSpacing(5);
+            subtitleAndDanMaKuControlHBox.setAlignment(Pos.CENTER_LEFT);
+            subtitleAndDanMaKuHBox = new HBox(subtitleAndDanMaKuLabel, subtitleAndDanMaKuControlHBox);
+            subtitleAndDanMaKuHBox.setSpacing(15);
+            subtitleAndDanMaKuHBox.setAlignment(Pos.CENTER_LEFT);
         }
         // 音量设置
         volumeLabel = new Label();
@@ -542,7 +631,9 @@ public class VLCPlayer {
         settingsPopOver.getStyleClass().add("vlc-player-pop-over");
         settingsPopOver.setDetachable(false);
         settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());
-        settingsPopOverInnerVBox = new VBox(reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox);
+        settingsPopOverInnerVBox = liveMode ?
+                new VBox(reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox) :
+                new VBox(subtitleAndDanMaKuHBox, reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox);
         settingsPopOverInnerVBox.setSpacing(10.0);
         settingsPopOverInnerVBox.addEventFilter(MouseEvent.ANY, evt -> {
             EventType<? extends MouseEvent> eventType = evt.getEventType();
@@ -683,7 +774,6 @@ public class VLCPlayer {
         AnchorPane.setRightAnchor(controlTopHBox, 10.0);
         AnchorPane.setTopAnchor(controlTopHBox, 10.0);
         AnchorPane.setBottomAnchor(controlTopHBox, 10.0);
-        // 摆放布局组件
         controlPane = new AnchorPane(controlBottomAnchorPane, controlTopAnchorPane);
         AnchorPane.setLeftAnchor(controlBottomAnchorPane, 0.0);
         AnchorPane.setRightAnchor(controlBottomAnchorPane, 0.0);
@@ -700,6 +790,7 @@ public class VLCPlayer {
         paneChildren = playerPane.getChildren();
         paneChildren.add(videoImageView);
         paneChildren.add(progressMiddleStackPane);
+        paneChildren.add(toastAnchorPane);
         paneChildren.add(controlPane);
         if (liveMode) {
             epgOpenLabel = new Label(I18nHelper.get(I18nKeys.LIVE_PLAYER_EPG));
@@ -814,7 +905,7 @@ public class VLCPlayer {
     }
 
     private void setControlsVisible(boolean flag) {
-        Cursor cursor = scene.getCursor();
+        Cursor cursor = playerPane.getCursor();
 
         if (controlPane.isVisible() != flag) {
             controlPane.setVisible(flag);
@@ -825,11 +916,11 @@ public class VLCPlayer {
         if (flag) {
             controlPaneHideTimer.restart();
             if (cursor == Cursor.NONE) {
-                scene.setCursor(Cursor.DEFAULT);
+                playerPane.setCursor(Cursor.DEFAULT);
             }
         } else {
             if (cursor != Cursor.NONE) {
-                scene.setCursor(Cursor.NONE);
+                playerPane.setCursor(Cursor.NONE);
             }
         }
     }
@@ -900,6 +991,10 @@ public class VLCPlayer {
             initProgress.set(Math.max(progress, -1));
         }
         setVideoTitle(videoTitle);
+        if (!BooleanUtils.toBoolean(config.liveMode)) {
+            subtitleSettingPopOver.setSubtitleDelay(mediaPlayer.subpictures().delay() / 1000);
+            subtitleSettingPopOver.setMovieName(StringUtils.substringBetween(videoTitle, "《", "》"));
+        }
         options = parsePlayOptionsFromHeaders(headers);
         log.info("play url={}, options={}", url, options);
         AsyncUtil.execute(() -> {
@@ -923,7 +1018,9 @@ public class VLCPlayer {
         short size;
 
         if (headers.isEmpty()) {
-            return new String[] {":http-range-length=1048576"};
+            return new String[] {
+                    "--subsdec-encoding=UTF-8"
+            };
         }
         userAgent = null;
         referer = null;
@@ -931,10 +1028,10 @@ public class VLCPlayer {
         for (Map.Entry<String, String> keyValue : headers.entrySet()) {
             if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "User-Agent")) {
                 size++;
-                userAgent = ":http-user-agent=" + keyValue.getValue();
+                userAgent = "--http-user-agent=" + keyValue.getValue();
             } else if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "Referer")) {
                 size++;
-                referer = ":http-referer=" + keyValue.getValue();
+                referer = "--http-referer=" + keyValue.getValue();
             }
         }
         switch (size) {
@@ -942,12 +1039,12 @@ public class VLCPlayer {
                 return null;
             case 1:
                 if (userAgent != null) {
-                    return new String[]{userAgent};
+                    return new String[]{"--subsdec-encoding=UTF-8", userAgent};
                 } else {
-                    return new String[]{referer};
+                    return new String[]{"--subsdec-encoding=UTF-8", referer};
                 }
             default:
-                return new String[]{userAgent, referer};
+                return new String[]{"--subsdec-encoding=UTF-8", userAgent, referer};
         }
     }
 

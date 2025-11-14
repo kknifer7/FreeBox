@@ -1,5 +1,6 @@
 package io.knifer.freebox.helper;
 
+import cn.hutool.core.collection.CollUtil;
 import io.knifer.freebox.constant.AppVersions;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
@@ -7,6 +8,7 @@ import io.knifer.freebox.model.domain.Config;
 import io.knifer.freebox.service.SaveConfigService;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
+import javafx.scene.text.Font;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -129,6 +131,17 @@ public class ConfigHelper {
         config.setShowLicense(showLicense);
     }
 
+    public String getUsageFontFamily() {
+        assertIfConfigLoaded();
+
+        return config.getUsageFontFamily();
+    }
+
+    public synchronized void setUsageFontFamily(String usageFontFamily) {
+        assertIfConfigLoaded();
+        config.setUsageFontFamily(usageFontFamily);
+    }
+
     private void assertIfConfigLoaded() {
         if (config == null) {
             throw new IllegalStateException("config is not loaded");
@@ -144,15 +157,12 @@ public class ConfigHelper {
         String configJson;
         String versionCodeStr;
 
-        if (Files.exists(CONFIG_PATH)) {
-            try {
+        try {
+            if (Files.exists(CONFIG_PATH)) {
                 configJson = Files.readString(CONFIG_PATH);
                 configLoaded = GsonUtil.fromJson(configJson, Config.class);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            try {
+                fixConfigIfNeeded(configLoaded);
+            } else {
                 configLoaded = new Config();
                 configLoaded.setUuid(UUID.randomUUID().toString());
                 configLoaded.setAppVersion(BaseResources.X_PROPERTIES.getProperty(
@@ -169,16 +179,34 @@ public class ConfigHelper {
                 configLoaded.setWsPort(BaseValues.DEFAULT_WS_PORT);
                 configLoaded.setAutoStartHttp(true);
                 configLoaded.setAutoStartWs(true);
+                configLoaded.setUsageFontFamily(Font.getDefault().getFamily());
                 Files.createDirectories(CONFIG_PATH.getParent());
                 Files.writeString(CONFIG_PATH, GsonUtil.toJson(configLoaded));
-            } catch (IOException e) {
-                Platform.runLater(() -> ToastHelper.showException(e));
-
-                return null;
             }
+        } catch (IOException e) {
+            Platform.runLater(() -> ToastHelper.showException(e));
+
+            return null;
         }
 
         return configLoaded;
+    }
+
+    private void fixConfigIfNeeded(Config config) {
+        String usageFontFamily = config.getUsageFontFamily();
+        boolean needSave = false;
+
+        if (usageFontFamily == null || !CollUtil.contains(Font.getFamilies(), usageFontFamily)) {
+            config.setUsageFontFamily(Font.getDefault().getFamily());
+            needSave = true;
+        }
+        if (needSave) {
+            try {
+                Files.writeString(CONFIG_PATH, GsonUtil.toJson(config));
+            } catch (IOException e) {
+                Platform.runLater(() -> ToastHelper.showException(e));
+            }
+        }
     }
 
     public void markToUpdate() {

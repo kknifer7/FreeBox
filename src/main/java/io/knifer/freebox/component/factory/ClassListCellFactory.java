@@ -6,7 +6,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.Font;
 import javafx.util.Callback;
 
 /**
@@ -31,7 +30,7 @@ public class ClassListCellFactory implements Callback<ListView<MovieSort.SortDat
                     return;
                 }
                 nameLabel = new Label(item.getName());
-                nameLabel.setFont(Font.font(nameLabel.getFont().getFamily(), 16));
+                nameLabel.getStyleClass().add("fs-big");
                 containerHBox = new HBox();
                 containerHBox.setAlignment(Pos.CENTER);
                 containerHBox.getChildren().add(nameLabel);

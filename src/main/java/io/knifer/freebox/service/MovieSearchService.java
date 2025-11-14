@@ -12,8 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -57,39 +59,44 @@ public class MovieSearchService extends Service<Void> {
             }
 
             private void search(String keyword) {
-                String sourceKey;
+                List<String> sourceKeys = new ArrayList<>();
+                sourceKeyIterator.forEachRemaining(sourceKeys::add);
 
-                if (isCancelled()) {
-
-                    return;
-                }
-                if (!sourceKeyIterator.hasNext()) {
+                if (sourceKeys.isEmpty()) {
                     endCallback.run();
-
                     return;
                 }
-                sourceKey = sourceKeyIterator.next();
-                Context.INSTANCE.getSpiderTemplate().getSearchContent(
-                        GetSearchContentDTO.of(sourceKey, keyword),
-                        searchContent -> {
-                            List<Movie.Video> videos;
 
-                            if (isCancelled()) {
+                AtomicInteger completedCount = new AtomicInteger(0);
+                int totalSources = sourceKeys.size();
 
-                                return;
-                            }
-                            if (searchContent == null) {
-                                search(keyword);
+                // 并行执行所有搜索请求
+                sourceKeys.parallelStream().forEach(sourceKey -> {
+                    if (isCancelled()) {
+                        return;
+                    }
 
-                                return;
+                    Context.INSTANCE.getSpiderTemplate().getSearchContent(
+                            GetSearchContentDTO.of(sourceKey, keyword),
+                            searchContent -> {
+                                if (isCancelled()) {
+                                    return;
+                                }
+
+                                if (searchContent != null) {
+                                    List<Movie.Video> videos = searchContent.getMovie().getVideoList();
+                                    if (CollectionUtil.isNotEmpty(videos)) {
+                                        callback.accept(Pair.of(keyword, searchContent));
+                                    }
+                                }
+
+                                // 当所有请求完成时调用结束回调
+                                if (completedCount.incrementAndGet() == totalSources) {
+                                    endCallback.run();
+                                }
                             }
-                            videos = searchContent.getMovie().getVideoList();
-                            if (CollectionUtil.isNotEmpty(videos)) {
-                                callback.accept(Pair.of(keyword, searchContent));
-                            }
-                            search(keyword);
-                        }
-                );
+                    );
+                });
             }
         };
     }

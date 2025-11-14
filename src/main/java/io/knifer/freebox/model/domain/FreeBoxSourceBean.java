@@ -1,5 +1,6 @@
 package io.knifer.freebox.model.domain;
 
+import cn.hutool.json.JSONUtil;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import lombok.Data;
 
@@ -31,7 +32,7 @@ public class FreeBoxSourceBean {
         sourceBean.setQuickSearch(this.quickSearch);
         sourceBean.setFilterable(this.filterable);
         if (this.ext != null) {
-            sourceBean.setExt(this.ext.toString());
+            sourceBean.setExt(JSONUtil.toJsonStr(this.ext));
         }
 
         return sourceBean;

@@ -6,10 +6,7 @@ import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.net.http.handler.HttpHandler;
-import io.knifer.freebox.net.http.handler.ProxyCkHandler;
-import io.knifer.freebox.net.http.handler.ProxyHandler;
-import io.knifer.freebox.net.http.handler.TVBoxPairingInfoHandler;
+import io.knifer.freebox.net.http.handler.*;
 import io.knifer.freebox.service.ShutdownHttpServerService;
 import javafx.concurrent.Service;
 
@@ -27,7 +24,8 @@ public class FreeBoxHttpServerHolder {
     private static final List<HttpHandler> HANDLERS = List.of(
             new TVBoxPairingInfoHandler(),
             new ProxyCkHandler(),
-            new ProxyHandler()
+            new ProxyHandler(),
+            new MsgHandler()
     );
 
     public synchronized void start(String hostname, int port) {

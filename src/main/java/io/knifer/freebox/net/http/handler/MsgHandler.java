@@ -6,6 +6,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.helper.ToastHelper;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 代理服务检测处理
@@ -29,10 +30,13 @@ public class MsgHandler implements HttpHandler {
         try (httpExchange) {
             httpExchange.sendResponseHeaders(HttpStatus.HTTP_OK, respData.length);
             httpExchange.getResponseBody().write(respData);
-        } catch (Exception ignored) {
-        }finally {
-            Platform.runLater(()->{
-                ToastHelper.showInfo(query.replace("msg=", ""));
+        } catch (Exception e) {
+            log.error("handle /postMsg failed", e);
+        } finally {
+            Platform.runLater(()-> {
+                if (StringUtils.contains(query, "msg=")) {
+                    ToastHelper.showInfo(query.replace("msg=", ""));
+                }
             });
 
         }

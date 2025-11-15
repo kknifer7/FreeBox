@@ -2,12 +2,14 @@ package io.knifer.freebox.component.factory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.net.HttpHeaders;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.ValidationUtil;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
@@ -23,11 +25,17 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -48,9 +56,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
 
     private static final Map<String, String> SOURCE_KEY_AND_NAME_MAP = new HashMap<>();
 
-    private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(150)
-            .build();
+    private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder().maximumSize(150).build();
 
     private static final Set<String> LOADED_PICTURES = new HashSet<>();
 
@@ -71,11 +77,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             return;
         }
         SOURCE_KEY_AND_NAME_MAP.clear();
-        SOURCE_KEY_AND_NAME_MAP.putAll(
-                sourceBeans.stream().collect(Collectors.toUnmodifiableMap(
-                        SourceBean::getKey, SourceBean::getName, (v1, v2) -> v2
-                ))
-        );
+        SOURCE_KEY_AND_NAME_MAP.putAll(sourceBeans.stream().collect(Collectors.toUnmodifiableMap(SourceBean::getKey, SourceBean::getName, (v1, v2) -> v2)));
     }
 
     public void setShowSourceName(boolean flag) {
@@ -160,14 +162,21 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                         moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
                         picUrl = item.getPic();
                         if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {
-                            LOADED_PICTURES.add(picUrl);
-                            newMoviePicImage = new Image(picUrl, true);
+
+                            /*newMoviePicImage = new Image(picUrl, true);
                             newMoviePicImage.progressProperty().addListener(observable -> {
                                 if (newMoviePicImage.getProgress() >= 1.0 && !newMoviePicImage.isError()) {
                                     moviePicImageView.setImage(newMoviePicImage);
                                     PICTURE_CACHE.put(itemId, newMoviePicImage);
+                                    LOADED_PICTURES.add(picUrl);
+                                } else if (newMoviePicImage.getProgress() >= 1.0 && newMoviePicImage.isError()) {
+
                                 }
-                            });
+
+                            });*/
+                            moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                            loadCustomImage(picUrl, moviePicImageView, itemId);
+
                         }
                     } else {
                         moviePicImageView.setImage(moviePicImage);
@@ -215,6 +224,47 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             addEventFilter(MouseEvent.MOUSE_CLICKED, eventFilter);
             setId(itemId);
         }
+    }
+
+    // 使用 HttpClient 替代 Image 直接加载
+    private static void loadCustomImage(String picUrl, ImageView imageView, String itemId) {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(picUrl).addHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36").build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+                Platform.runLater(() -> {
+                    imageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                });
+                log.error("Error download image: {}", picUrl, e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    byte[] imageData = response.body().bytes();
+                    Image image = new Image(new ByteArrayInputStream(imageData));
+                    if (image.getProgress() >= 1.0 && !image.isError()) {
+                        Platform.runLater(() -> {
+                            imageView.setImage(image);
+                            PICTURE_CACHE.put(itemId, image);
+                            LOADED_PICTURES.add(picUrl);
+                        });
+                    } else if (image.isError()) {
+
+                        //使用代理，增加兼容性
+                        loadCustomImage("https://cdn.cdnjson.com/pic.html?url=" + picUrl, imageView, itemId);
+                    } else {
+                        log.error(" 加载 image error : {} ", picUrl + image.getException().getMessage());
+                    }
+                }
+            }
+        });
+
     }
 
     public void destroy() {

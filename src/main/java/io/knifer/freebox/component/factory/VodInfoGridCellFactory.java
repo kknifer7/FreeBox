@@ -1,12 +1,10 @@
 package io.knifer.freebox.component.factory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.net.HttpHeaders;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.common.tvbox.VodInfo;
 import io.knifer.freebox.util.ValidationUtil;
@@ -18,7 +16,6 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -26,17 +23,11 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -50,10 +41,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridCell<VodInfo>> {
 
-    private final static Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .build();
-    private final static Set<String> LOADED_PICTURES = new HashSet<>();
     private final static Map<String, StackPane> ITEM_ID_AND_CONTAINER = new HashMap<>();
 
     private final static double CELL_WIDTH = 150;
@@ -97,8 +84,6 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             List<Node> containerChildren;
             InfoOverlay movieInfoOverlay;
             Label movieNoteLabel;
-            Image moviePicImage;
-            Image newMoviePicImage;
             ImageView moviePicImageView;
             String note;
             String picUrl;
@@ -132,29 +117,17 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                     moviePicImageView.setImage(BaseResources.LOAD_MORE_IMG);
                 } else {
-                    if (itemId == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                    } else if ((moviePicImage = PICTURE_CACHE.getIfPresent(itemId)) == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    if (itemId != null) {
                         picUrl = item.getPic();
-                        if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {
-                            /*LOADED_PICTURES.add(picUrl);
-                            newMoviePicImage = new Image(picUrl, true);
-                            newMoviePicImage.progressProperty().addListener(observable -> {
-                                if (newMoviePicImage.getProgress() >= 1.0 && !newMoviePicImage.isError()) {
-                                    moviePicImageView.setImage(newMoviePicImage);
-                                    PICTURE_CACHE.put(itemId, newMoviePicImage);
-                                }
-                                else if (newMoviePicImage.getProgress() >= 1.0 && newMoviePicImage.isError()) {
-                                    moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                                    loadCustomImage(picUrl, moviePicImageView, itemId);
-                                }
-                            });*/
-                            moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                            loadCustomImage(picUrl, moviePicImageView, itemId);
+                        if (ValidationUtil.isURL(picUrl)) {
+                            ImageHelper.loadAsync(picUrl)
+                                    .thenAccept(result -> {
+                                        if (result.isSuccess()) {
+                                            Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
+                                        }
+                                    });
                         }
-                    } else {
-                        moviePicImageView.setImage(moviePicImage);
                     }
                 }
                 moviePicImageView.setFitWidth(CELL_WIDTH);
@@ -222,50 +195,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
         }
     }
 
-    // 使用 HttpClient 替代 Image 直接加载
-    public static void loadCustomImage(String picUrl, ImageView imageView, String itemId) {
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder().url(picUrl).addHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36").build();
-
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-
-
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-                Platform.runLater(() -> {
-                    imageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                });
-                log.error("Error download image: {}", picUrl, e);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    byte[] imageData = response.body().bytes();
-                    Image image = new Image(new ByteArrayInputStream(imageData));
-                    if (image.getProgress() >= 1.0 && !image.isError()) {
-                        Platform.runLater(() -> {
-                            imageView.setImage(image);
-                            PICTURE_CACHE.put(itemId, image);
-                            LOADED_PICTURES.add(picUrl);
-                        });
-                    } else if (image.isError()) {
-
-                        //使用代理，增加兼容性
-                        loadCustomImage("https://cdn.cdnjson.com/pic.html?url=" + picUrl, imageView, itemId);
-                    } else {
-                        log.error(" 加载 image error : {} ", picUrl + image.getException().getMessage());
-                    }
-                }
-            }
-        });
-
-    }
-
     public void destroy() {
-        PICTURE_CACHE.invalidateAll();
-        LOADED_PICTURES.clear();
         ITEM_ID_AND_CONTAINER.clear();
     }
 }

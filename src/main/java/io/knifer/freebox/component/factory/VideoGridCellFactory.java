@@ -1,10 +1,8 @@
 package io.knifer.freebox.component.factory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.net.HttpHeaders;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.util.CollectionUtil;
@@ -25,18 +23,15 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -55,10 +50,6 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
     private final BooleanProperty showSourceName = new SimpleBooleanProperty(false);
 
     private static final Map<String, String> SOURCE_KEY_AND_NAME_MAP = new HashMap<>();
-
-    private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder().maximumSize(150).build();
-
-    private static final Set<String> LOADED_PICTURES = new HashSet<>();
 
     private static final Map<String, StackPane> ITEM_ID_AND_CONTAINER_MAP = new HashMap<>();
 
@@ -156,30 +147,17 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                     moviePicImageView.setImage(BaseResources.LOAD_MORE_IMG);
                 } else {
-                    if (itemId == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                    } else if ((moviePicImage = PICTURE_CACHE.getIfPresent(itemId)) == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    if (itemId != null) {
                         picUrl = item.getPic();
-                        if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {
-
-                            /*newMoviePicImage = new Image(picUrl, true);
-                            newMoviePicImage.progressProperty().addListener(observable -> {
-                                if (newMoviePicImage.getProgress() >= 1.0 && !newMoviePicImage.isError()) {
-                                    moviePicImageView.setImage(newMoviePicImage);
-                                    PICTURE_CACHE.put(itemId, newMoviePicImage);
-                                    LOADED_PICTURES.add(picUrl);
-                                } else if (newMoviePicImage.getProgress() >= 1.0 && newMoviePicImage.isError()) {
-
-                                }
-
-                            });*/
-                            moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                            loadCustomImage(picUrl, moviePicImageView, itemId);
-
+                        if (ValidationUtil.isURL(picUrl)) {
+                            ImageHelper.loadAsync(picUrl)
+                                    .thenAccept(result -> {
+                                        if (result.isSuccess()) {
+                                            Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
+                                        }
+                                    });
                         }
-                    } else {
-                        moviePicImageView.setImage(moviePicImage);
                     }
                 }
                 moviePicImageView.setFitWidth(CELL_WIDTH);
@@ -226,51 +204,8 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
         }
     }
 
-    // 使用 HttpClient 替代 Image 直接加载
-    private static void loadCustomImage(String picUrl, ImageView imageView, String itemId) {
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder().url(picUrl).addHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36").build();
-
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-
-
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-                Platform.runLater(() -> {
-                    imageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                });
-                log.error("Error download image: {}", picUrl, e);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    byte[] imageData = response.body().bytes();
-                    Image image = new Image(new ByteArrayInputStream(imageData));
-                    if (image.getProgress() >= 1.0 && !image.isError()) {
-                        Platform.runLater(() -> {
-                            imageView.setImage(image);
-                            PICTURE_CACHE.put(itemId, image);
-                            LOADED_PICTURES.add(picUrl);
-                        });
-                    } else if (image.isError()) {
-
-                        //使用代理，增加兼容性
-                        loadCustomImage("https://cdn.cdnjson.com/pic.html?url=" + picUrl, imageView, itemId);
-                    } else {
-                        log.error(" 加载 image error : {} ", picUrl + image.getException().getMessage());
-                    }
-                }
-            }
-        });
-
-    }
-
     public void destroy() {
-        PICTURE_CACHE.invalidateAll();
         SOURCE_KEY_AND_NAME_MAP.clear();
-        LOADED_PICTURES.clear();
         ITEM_ID_AND_CONTAINER_MAP.clear();
     }
 }

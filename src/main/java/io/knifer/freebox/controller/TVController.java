@@ -13,10 +13,7 @@ import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
 import io.knifer.freebox.handler.impl.SoupianMovieSuggestionHandler;
-import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.helper.LoadingHelper;
-import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.tvbox.*;
@@ -685,6 +682,7 @@ public class TVController {
         }
         movieHistoryPopOver.destroy();
         movieCollectionPopOver.destroy();
+        ImageHelper.clearCache();
         clientManager.clearCurrentClient();
     }
 

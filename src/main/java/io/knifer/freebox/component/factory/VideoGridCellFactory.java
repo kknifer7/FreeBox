@@ -1,13 +1,13 @@
 package io.knifer.freebox.component.factory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.ValidationUtil;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
@@ -28,7 +28,10 @@ import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -48,12 +51,6 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
 
     private static final Map<String, String> SOURCE_KEY_AND_NAME_MAP = new HashMap<>();
 
-    private static final Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(150)
-            .build();
-
-    private static final Set<String> LOADED_PICTURES = new HashSet<>();
-
     private static final Map<String, StackPane> ITEM_ID_AND_CONTAINER_MAP = new HashMap<>();
 
     private static final double CELL_WIDTH = 150;
@@ -71,11 +68,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             return;
         }
         SOURCE_KEY_AND_NAME_MAP.clear();
-        SOURCE_KEY_AND_NAME_MAP.putAll(
-                sourceBeans.stream().collect(Collectors.toUnmodifiableMap(
-                        SourceBean::getKey, SourceBean::getName, (v1, v2) -> v2
-                ))
-        );
+        SOURCE_KEY_AND_NAME_MAP.putAll(sourceBeans.stream().collect(Collectors.toUnmodifiableMap(SourceBean::getKey, SourceBean::getName, (v1, v2) -> v2)));
     }
 
     public void setShowSourceName(boolean flag) {
@@ -154,23 +147,17 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                     moviePicImageView.setImage(BaseResources.LOAD_MORE_IMG);
                 } else {
-                    if (itemId == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                    } else if ((moviePicImage = PICTURE_CACHE.getIfPresent(itemId)) == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    if (itemId != null) {
                         picUrl = item.getPic();
-                        if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {
-                            LOADED_PICTURES.add(picUrl);
-                            newMoviePicImage = new Image(picUrl, true);
-                            newMoviePicImage.progressProperty().addListener(observable -> {
-                                if (newMoviePicImage.getProgress() >= 1.0 && !newMoviePicImage.isError()) {
-                                    moviePicImageView.setImage(newMoviePicImage);
-                                    PICTURE_CACHE.put(itemId, newMoviePicImage);
-                                }
-                            });
+                        if (ValidationUtil.isURL(picUrl)) {
+                            ImageHelper.loadAsync(picUrl)
+                                    .thenAccept(result -> {
+                                        if (result.isSuccess()) {
+                                            Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
+                                        }
+                                    });
                         }
-                    } else {
-                        moviePicImageView.setImage(moviePicImage);
                     }
                 }
                 moviePicImageView.setFitWidth(CELL_WIDTH);
@@ -218,9 +205,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
     }
 
     public void destroy() {
-        PICTURE_CACHE.invalidateAll();
         SOURCE_KEY_AND_NAME_MAP.clear();
-        LOADED_PICTURES.clear();
         ITEM_ID_AND_CONTAINER_MAP.clear();
     }
 }

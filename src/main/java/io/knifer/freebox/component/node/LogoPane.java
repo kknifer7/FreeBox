@@ -1,9 +1,9 @@
 package io.knifer.freebox.component.node;
 
+import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.util.ValidationUtil;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -15,9 +15,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 带默认占位、自动加载图片链接的LOGO展示布局
@@ -42,11 +40,6 @@ public class LogoPane extends StackPane {
             Pair.of(Color.rgb(210, 105, 30), Color.WHITE),
             Pair.of(Color.rgb(0, 139, 139), Color.WHITE)
     );
-    /**
-     * LOGO 图片缓存
-     * key=logoUrl，value=Image
-     */
-    private static final Map<String, Image> IMAGE_CACHE_MAP = new HashMap<>();
 
     public LogoPane(double size, double placeHolderFontSize) {
         this(size, size, placeHolderFontSize);
@@ -90,28 +83,18 @@ public class LogoPane extends StackPane {
     }
 
     private void setLogoUrl(String logoUrl) {
-        Image logoImageCached;
-        Image logoImage;
+        showPlaceholder(true);
+        if (!ValidationUtil.isURL(logoUrl)) {
 
-        if (ValidationUtil.isURL(logoUrl)) {
-            logoImageCached = IMAGE_CACHE_MAP.get(logoUrl);
-            if (logoImageCached != null) {
-                logoImageView.setImage(logoImageCached);
-            } else {
-                showPlaceholder(true);
-                logoImage = new Image(logoUrl, true);
-                logoImage.progressProperty()
-                        .addListener((ob, oldVal, newVal) -> {
-                            if (newVal.doubleValue() >= 1.0 && !logoImage.isError()) {
-                                IMAGE_CACHE_MAP.put(logoUrl, logoImage);
-                                logoImageView.setImage(logoImage);
-                                showPlaceholder(false);
-                            }
-                        });
-            }
-        } else {
-            showPlaceholder(true);
+            return;
         }
+        ImageHelper.loadAsync(logoUrl)
+                .thenAccept(result -> {
+                    if (result.isSuccess()) {
+                        logoImageView.setImage(result.getImage());
+                        showPlaceholder(false);
+                    }
+                });
     }
 
     private void showPlaceholder(boolean show) {

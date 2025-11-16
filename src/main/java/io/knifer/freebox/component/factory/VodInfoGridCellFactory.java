@@ -1,14 +1,14 @@
 package io.knifer.freebox.component.factory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.common.tvbox.VodInfo;
 import io.knifer.freebox.util.ValidationUtil;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -16,13 +16,13 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
@@ -37,13 +37,10 @@ import java.util.stream.Collectors;
  *
  * @author Knifer
  */
+@Slf4j
 @RequiredArgsConstructor
 public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridCell<VodInfo>> {
 
-    private final static Cache<String, Image> PICTURE_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(100)
-            .build();
-    private final static Set<String> LOADED_PICTURES = new HashSet<>();
     private final static Map<String, StackPane> ITEM_ID_AND_CONTAINER = new HashMap<>();
 
     private final static double CELL_WIDTH = 150;
@@ -87,8 +84,6 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             List<Node> containerChildren;
             InfoOverlay movieInfoOverlay;
             Label movieNoteLabel;
-            Image moviePicImage;
-            Image newMoviePicImage;
             ImageView moviePicImageView;
             String note;
             String picUrl;
@@ -122,23 +117,17 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
                     moviePicImageView.setImage(BaseResources.LOAD_MORE_IMG);
                 } else {
-                    if (itemId == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                    } else if ((moviePicImage = PICTURE_CACHE.getIfPresent(itemId)) == null) {
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                    if (itemId != null) {
                         picUrl = item.getPic();
-                        if (!LOADED_PICTURES.contains(picUrl) && ValidationUtil.isURL(picUrl)) {
-                            LOADED_PICTURES.add(picUrl);
-                            newMoviePicImage = new Image(picUrl, true);
-                            newMoviePicImage.progressProperty().addListener(observable -> {
-                                if (newMoviePicImage.getProgress() >= 1.0 && !newMoviePicImage.isError()) {
-                                    moviePicImageView.setImage(newMoviePicImage);
-                                    PICTURE_CACHE.put(itemId, newMoviePicImage);
-                                }
-                            });
+                        if (ValidationUtil.isURL(picUrl)) {
+                            ImageHelper.loadAsync(picUrl)
+                                    .thenAccept(result -> {
+                                        if (result.isSuccess()) {
+                                            Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
+                                        }
+                                    });
                         }
-                    } else {
-                        moviePicImageView.setImage(moviePicImage);
                     }
                 }
                 moviePicImageView.setFitWidth(CELL_WIDTH);
@@ -207,8 +196,6 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
     }
 
     public void destroy() {
-        PICTURE_CACHE.invalidateAll();
-        LOADED_PICTURES.clear();
         ITEM_ID_AND_CONTAINER.clear();
     }
 }

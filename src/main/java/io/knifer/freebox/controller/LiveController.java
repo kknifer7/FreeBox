@@ -5,10 +5,7 @@ import io.knifer.freebox.component.node.VLCPlayer;
 import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
-import io.knifer.freebox.helper.LoadingHelper;
-import io.knifer.freebox.helper.StorageHelper;
-import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
@@ -186,6 +183,7 @@ public class LiveController extends BaseController {
             });
             destroyVLCPlayerService.start();
         }
+        ImageHelper.clearCache();
         Context.INSTANCE.popAndShowLastStage();
     }
 

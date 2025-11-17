@@ -9,8 +9,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -58,7 +56,7 @@ public class LogoPane extends StackPane {
         this.setMaxSize(paneSize, paneSize);
         placeholderLabel = new Label();
         placeholderLabel.setAlignment(Pos.CENTER);
-        placeholderLabel.setFont(Font.font(null, FontWeight.BOLD, placeHolderFontSize));
+        placeholderLabel.setStyle("-fx-font-weight: bold; -fx-font-size: " + placeHolderFontSize + ";");
         placeholderLabel.setTextFill(colorPair.getRight());
         placeholderBackground.setFill(colorPair.getLeft());
         placeholderBackground.setArcWidth(20);

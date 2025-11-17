@@ -63,6 +63,7 @@ ext {
             jsoupXpath: '2.5.1',
             json: '20250517',
             zxingCore: '3.5.3',
+            twelvemonkeys: '3.12.0',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]
@@ -88,6 +89,8 @@ dependencies {
     implementation "cn.wanghaomiao:JsoupXpath:${dv.jsoupXpath}"
     implementation "org.json:json:${dv.json}"
     implementation "com.google.zxing:core:${dv.zxingCore}"
+    implementation "com.twelvemonkeys.imageio:imageio-webp:${dv.twelvemonkeys}"
+    implementation "com.twelvemonkeys.imageio:imageio-jpeg:${dv.twelvemonkeys}"
 
     compileOnly "org.projectlombok:lombok:${dv.lombok}"
     annotationProcessor "org.projectlombok:lombok:${dv.lombok}"

@@ -9,17 +9,20 @@ import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.domain.ImageLoadingResult;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelBuffer;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.WritableImage;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.apache.commons.lang3.StringUtils;
+import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.IntBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @UtilityClass
 public class ImageHelper {
 
-    private static final String PROXY_CDN_URL = "https://i0.wp.com/";
+    private static final String PROXY_CDN_URL = "https://wsrv.nl/?output=png&url=";
     private static final ImageLoadingResult DEFAULT_RESULT =
             ImageLoadingResult.of(BaseResources.PICTURE_PLACEHOLDER_IMG, false);
     private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
@@ -68,10 +71,11 @@ public class ImageHelper {
                 .build();
 
         CLIENT.newCall(request)
-                .enqueue(new okhttp3.Callback() {
+                .enqueue(new Callback() {
                     @Override
                     public void onResponse(@NotNull Call call, @NotNull Response response) {
                         Image image;
+                        ByteArrayInputStream imageInputStream;
 
                         try (response) {
                             if (!response.isSuccessful()) {
@@ -84,7 +88,8 @@ public class ImageHelper {
 
                                 return;
                             }
-                            image = new Image(new ByteArrayInputStream(response.body().bytes()));
+                            imageInputStream = new ByteArrayInputStream(response.body().bytes());
+                            image = createImage(imageInputStream);
                         } catch (IOException ex) {
                             log.warn("read image failed: {}", imageUrl, ex);
                             if (isRetrying) {
@@ -102,8 +107,6 @@ public class ImageHelper {
                             } else {
                                 loadImage(future, buildProxyCdnUrl(imageUrl), true);
                             }
-
-                            return;
                         }
                         future.complete(ImageLoadingResult.of(image, true));
                     }
@@ -120,10 +123,31 @@ public class ImageHelper {
                 });
     }
 
-    private String buildProxyCdnUrl(String imageUrl) {
-        imageUrl = StringUtils.removeStart(imageUrl, "https://");
-        imageUrl = StringUtils.removeStart(imageUrl, "http://");
+    private Image createImage(ByteArrayInputStream imageInputStream) throws IOException {
+        BufferedImage bufferedImage = ImageIO.read(imageInputStream);
+        BufferedImage betterImg;
+        int[] bytes;
+        IntBuffer buffer;
+        PixelFormat<IntBuffer> pixelFormat;
+        PixelBuffer<IntBuffer> pixelBuffer;
 
+        if (bufferedImage == null) {
+            throw new IOException("no image data");
+        }
+        betterImg = new BufferedImage(
+                bufferedImage.getWidth(), bufferedImage.getHeight(), BufferedImage.TYPE_INT_ARGB_PRE
+        );
+        betterImg.createGraphics()
+                .drawImage(bufferedImage, 0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), null);
+        bytes = ((DataBufferInt) betterImg.getRaster().getDataBuffer()).getData();
+        buffer = IntBuffer.wrap(bytes);
+        pixelFormat = PixelFormat.getIntArgbPreInstance();
+        pixelBuffer = new PixelBuffer<>(betterImg.getWidth(), betterImg.getHeight(), buffer, pixelFormat);
+
+        return new WritableImage(pixelBuffer);
+    }
+
+    private String buildProxyCdnUrl(String imageUrl) {
         return PROXY_CDN_URL + URLEncodeUtil.encode(imageUrl);
     }
 

@@ -111,6 +111,10 @@ public class SettingsController {
     private SearchableComboBox<String> usageFontFamilyComboBox;
     @FXML
     private Label usageFontFamilyExampleLabel;
+    @FXML
+    private CheckBox adFilterCheckBox;
+    @FXML
+    private ToggleGroup adFilterDynamicThresholdFactorToggleGroup;
 
     private String oldUsageFontFamily;
 
@@ -128,6 +132,7 @@ public class SettingsController {
         LoadNetworkInterfaceDataService loadNetworkInterfaceService = new LoadNetworkInterfaceDataService();
         List<String> fontFamilies = Font.getFamilies();
 
+        setupComponent();
         usageFontFamilyComboBox.getItems().addAll(fontFamilies);
         loadConfigService.setOnSucceeded(evt -> {
             String usageFontFamily = ConfigHelper.getUsageFontFamily();
@@ -144,20 +149,12 @@ public class SettingsController {
         });
         loadNetworkInterfaceService.setOnSucceeded(evt -> {
             // 网卡信息获取完成，填充数据
-            putDataInForm(loadNetworkInterfaceService.getValue());
-            setupComponent();
+            putDataInIpChoiceBox(loadNetworkInterfaceService.getValue());
             loadingProgressIndicator.setVisible(false);
             networkAndServiceHBox.setVisible(true);
             saveBtn.setDisable(false);
         });
         loadConfigService.start();
-    }
-
-    private void putDataInForm(
-            Collection<Pair<NetworkInterface, String>> networkInterfaceAndIps
-    ) {
-        putDataInIpChoiceBox(networkInterfaceAndIps);
-        putDataInOtherComponent();
     }
 
     private void putDataInIpChoiceBox(
@@ -195,23 +192,11 @@ public class SettingsController {
         }
     }
 
-    private void putDataInOtherComponent() {
-        Integer configPort = ConfigHelper.getHttpPort();
-
-        if (configPort != null) {
-            httpPortTextField.setText(configPort.toString());
-        }
-        configPort = ConfigHelper.getWsPort();
-        if (configPort != null) {
-            wsPortTextField.setText(configPort.toString());
-        }
-        httpAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartHttp()));
-        wsAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartWs()));
-        autoCheckUpgradeCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoCheckUpgrade()));
-    }
-
     private void setupComponent() {
         String applicationDataSize;
+        Integer configPort = ConfigHelper.getHttpPort();
+        List<Toggle> adFilterDTFToggles;
+        Double adFilterDTFFactor;
 
         // 注册表单验证器
         validationSupport.registerValidator(httpPortTextField, PortValidator.getInstance());
@@ -225,6 +210,15 @@ public class SettingsController {
         httpIpChoiceBox.disableProperty().bind(ipChoiceBoxDisableProp);
         wsIpChoiceBox.disableProperty().bind(ipChoiceBoxDisableProp);
 
+        if (configPort != null) {
+            httpPortTextField.setText(configPort.toString());
+        }
+        configPort = ConfigHelper.getWsPort();
+        if (configPort != null) {
+            wsPortTextField.setText(configPort.toString());
+        }
+        httpAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartHttp()));
+        wsAutoStartCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoStartWs()));
         // 服务状态显示
         if (httpServer.isRunning()) {
             showServiceStatus(
@@ -265,6 +259,19 @@ public class SettingsController {
         applicationVersionLabel.setText(
                 I18nHelper.getFormatted(I18nKeys.SETTINGS_APPLICATION_VERSION, ConfigHelper.getAppVersion())
         );
+        autoCheckUpgradeCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoCheckUpgrade()));
+        adFilterCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAdFilter()));
+        adFilterDTFToggles = adFilterDynamicThresholdFactorToggleGroup.getToggles();
+        adFilterDTFFactor = ConfigHelper.getAdFilterDynamicThresholdFactor();
+        for (Toggle toggle : adFilterDTFToggles) {
+            RadioButton radioButton;
+
+            if (Objects.equals(toggle.getProperties().get("value"), adFilterDTFFactor)) {
+                adFilterDynamicThresholdFactorToggleGroup.selectToggle(toggle);
+            }
+            radioButton = (RadioButton) toggle;
+            radioButton.disableProperty().bind(adFilterCheckBox.selectedProperty().not());
+        }
     }
 
     private void disableHttpServiceForm() {
@@ -576,7 +583,12 @@ public class SettingsController {
 
     @FXML
     private void onAutoCheckUpgradeCheckBoxAction() {
-        ConfigHelper.setAutoCheckUpgrade(autoCheckUpgradeCheckBox.isSelected());
+        boolean autoCheckUpgrade = autoCheckUpgradeCheckBox.isSelected();
+
+        if (Objects.equals(ConfigHelper.getAutoCheckUpgrade(), autoCheckUpgrade)) {
+            return;
+        }
+        ConfigHelper.setAutoCheckUpgrade(autoCheckUpgrade);
         ConfigHelper.markToUpdate();
     }
 
@@ -593,6 +605,29 @@ public class SettingsController {
 
         fontFamily.setStyle("-fx-font-family:" + usageFontFamilyComboBox.getValue() + ";-fx-text-fill: blue;");
         ConfigHelper.setUsageFontFamily(usageFontFamilyComboBox.getValue());
+        ConfigHelper.markToUpdate();
+    }
+
+    @FXML
+    private void onAdFilterCheckBoxAction() {
+        boolean adFilter = adFilterCheckBox.isSelected();
+
+        if (Objects.equals(ConfigHelper.getAdFilter(), adFilter)) {
+            return;
+        }
+        ConfigHelper.setAdFilter(adFilter);
+        ConfigHelper.markToUpdate();
+    }
+
+    @FXML
+    private void onAdFilterDynamicThresholdFactorRadioButtonAction(ActionEvent event) {
+        RadioButton radioButton = (RadioButton) event.getSource();
+        Double value = (Double) radioButton.getProperties().get("value");
+
+        if (Objects.equals(ConfigHelper.getAdFilterDynamicThresholdFactor(), value)) {
+            return;
+        }
+        ConfigHelper.setAdFilterDynamicThresholdFactor(value);
         ConfigHelper.markToUpdate();
     }
 }

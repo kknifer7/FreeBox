@@ -70,6 +70,7 @@ public class I18nKeys {
     public static final String VIDEO_ERROR_SOURCE_NOT_SUPPORTED = "video.error.source-not-supported";
     public static final String VIDEO_ERROR_SAVE_HISTORY_FAILED = "video.error.save-history-failed";
     public static final String VIDEO_INFO_NO_MORE_EP = "video.info.no-more-ep";
+    public static final String VIDEO_INFO_AD_FILTERED = "video.info.ad-filtered";
     public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
     public static final String VIDEO_SETTINGS_FILL_WINDOW = "video.settings.fill-window";
     public static final String VIDEO_SETTINGS_RELOAD = "video.settings.reload";
@@ -93,7 +94,6 @@ public class I18nKeys {
             "video.settings.subtitle.message.update-delay-value";
 
     public static final String LICENSE_AGREE = "license.agree";
-    public static final String LICENSE_CLOSE = "license.close";
 
     public static final String MESSAGE_CLIENT_REGISTERED = "message.client-registered";
     public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";
@@ -136,6 +136,7 @@ public class I18nKeys {
     public static final String COMMON_VIDEO_LOADING_ERROR = "common.video-loading-error";
     public static final String COMMON_ON = "common.on";
     public static final String COMMON_OFF = "common.off";
+    public static final String COMMON_CLOSE = "common.close";
 
     public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
     public static final String SOURCE_AUDIT_NOW = "source-audit.now";

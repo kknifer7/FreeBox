@@ -44,7 +44,7 @@ public class LicenseDialogController {
             disagreeButton.setManaged(false);
             agreeCheckBox.setSelected(true);
             agreementLabel.setDisable(true);
-            agreeButton.setText(I18nHelper.get(I18nKeys.LICENSE_CLOSE));
+            agreeButton.setText(I18nHelper.get(I18nKeys.COMMON_CLOSE));
         } else {
             agreeButton.setText(I18nHelper.get(I18nKeys.LICENSE_AGREE));
             agreeButton.disableProperty().bind(agreeCheckBox.selectedProperty().not());

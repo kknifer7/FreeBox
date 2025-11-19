@@ -64,4 +64,16 @@ public class Config {
      * 字体
      */
     private String usageFontFamily;
+
+    /**
+     * 启用广告过滤
+     */
+    private Boolean adFilter;
+
+    /**
+     * 正态分布强制广告过滤 - 动态阈值因子
+     * 越低越会采取激进的策略识别广告
+     * -1时禁用强制过滤
+     */
+    private Double adFilterDynamicThresholdFactor;
 }

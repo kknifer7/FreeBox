@@ -25,7 +25,8 @@ public class FreeBoxHttpServerHolder {
             new TVBoxPairingInfoHandler(),
             new ProxyCkHandler(),
             new ProxyHandler(),
-            new MsgHandler()
+            new MsgHandler(),
+            new ProxyCacheHandler()
     );
 
     public synchronized void start(String hostname, int port) {

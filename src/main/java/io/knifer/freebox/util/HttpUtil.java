@@ -2,6 +2,7 @@ package io.knifer.freebox.util;
 
 import cn.hutool.core.net.URLEncodeUtil;
 import io.knifer.freebox.exception.FBException;
+import lombok.Getter;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 @UtilityClass
 public class HttpUtil {
 
+    @Getter
     private final static HttpClient client = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .connectTimeout(Duration.ofSeconds(10))
@@ -67,7 +69,7 @@ public class HttpUtil {
         ).thenApply(HttpResponse::body);
     }
 
-    private URI parseUrl(String url) {
+    public URI parseUrl(String url) {
         String[] protocolAndPath = url.split("://", 2);
         String protocol = protocolAndPath[0];
         String[] hostAndPath = protocolAndPath[1].split("/", 2);

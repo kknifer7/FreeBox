@@ -142,6 +142,28 @@ public class ConfigHelper {
         config.setUsageFontFamily(usageFontFamily);
     }
 
+    public Boolean getAdFilter() {
+        assertIfConfigLoaded();
+
+        return config.getAdFilter();
+    }
+
+    public synchronized void setAdFilter(Boolean adFilter) {
+        assertIfConfigLoaded();
+        config.setAdFilter(adFilter);
+    }
+
+    public Double getAdFilterDynamicThresholdFactor() {
+        assertIfConfigLoaded();
+
+        return config.getAdFilterDynamicThresholdFactor();
+    }
+
+    public synchronized void setAdFilterDynamicThresholdFactor(Double adFilterDynamicThresholdFactor) {
+        assertIfConfigLoaded();
+        config.setAdFilterDynamicThresholdFactor(adFilterDynamicThresholdFactor);
+    }
+
     private void assertIfConfigLoaded() {
         if (config == null) {
             throw new IllegalStateException("config is not loaded");
@@ -180,6 +202,8 @@ public class ConfigHelper {
                 configLoaded.setAutoStartHttp(true);
                 configLoaded.setAutoStartWs(true);
                 configLoaded.setUsageFontFamily(Font.getDefault().getFamily());
+                configLoaded.setAdFilter(true);
+                configLoaded.setAdFilterDynamicThresholdFactor(-1D);
                 Files.createDirectories(CONFIG_PATH.getParent());
                 Files.writeString(CONFIG_PATH, GsonUtil.toJson(configLoaded));
             }
@@ -194,10 +218,20 @@ public class ConfigHelper {
 
     private void fixConfigIfNeeded(Config config) {
         String usageFontFamily = config.getUsageFontFamily();
+        Boolean adFilter = config.getAdFilter();
+        Double adFilterDynamicThresholdFactor = config.getAdFilterDynamicThresholdFactor();
         boolean needSave = false;
 
         if (usageFontFamily == null || !CollUtil.contains(Font.getFamilies(), usageFontFamily)) {
             config.setUsageFontFamily(Font.getDefault().getFamily());
+            needSave = true;
+        }
+        if (adFilter == null) {
+            config.setAdFilter(true);
+            needSave = true;
+        }
+        if (adFilterDynamicThresholdFactor == null) {
+            config.setAdFilterDynamicThresholdFactor(-1D);
             needSave = true;
         }
         if (needSave) {

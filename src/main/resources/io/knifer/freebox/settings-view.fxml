@@ -4,9 +4,9 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<?import org.kordamp.ikonli.javafx.*?>
 <?import org.controlsfx.control.SearchableComboBox?>
+<?import org.kordamp.ikonli.javafx.*?>
+<?import java.lang.Double?>
 <BorderPane fx:id="root" stylesheets="@css/view/settings-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
    <fx:define>
       <NetworkInterfaceAndIP2StringConverter fx:id="ipChoiceBoxConverter" />
@@ -200,18 +200,74 @@
                               <Label styleClass="fs-big, bold" text="%settings.auto-check-upgrade" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                               <CheckBox fx:id="autoCheckUpgradeCheckBox" text="%settings.auto-check-upgrade-enable" onAction="#onAutoCheckUpgradeCheckBoxAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 
-                              <Label text="%settings.usage" styleClass="setting-title-label" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                              <Label text="%settings.play" styleClass="setting-title-label" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
 
-                              <Label styleClass="fs-big, bold" text="%settings.font-family" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
-                              <HBox spacing="5.0" alignment="CENTER_LEFT" GridPane.rowIndex="6" GridPane.columnIndex="1">
+                              <HBox spacing="5.0" alignment="CENTER_LEFT" GridPane.rowIndex="5" GridPane.columnIndex="0">
+                                 <Label styleClass="fs-big, bold" text="%settings.ad-filter"/>
+                                 <Label styleClass="fs-big">
+                                    <graphic>
+                                       <FontIcon iconLiteral="fa-question-circle:16:#1E90FF" />
+                                    </graphic>
+                                    <tooltip>
+                                       <Tooltip showDelay="200ms" showDuration="1m"
+                                                text="%settings.ad-filter.tooltip" styleClass="fs-big"/>
+                                    </tooltip>
+                                 </Label>
+                              </HBox>
+                              <HBox spacing="160.0" alignment="CENTER_LEFT" GridPane.rowIndex="5" GridPane.columnIndex="1">
+                                 <fx:define>
+                                    <ToggleGroup fx:id="adFilterDynamicThresholdFactorToggleGroup"/>
+                                 </fx:define>
+                                 <CheckBox fx:id="adFilterCheckBox" text="%settings.ad-filter-enable" onAction="#onAdFilterCheckBoxAction" mnemonicParsing="false" focusTraversable="false"/>
+                                 <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <HBox spacing="5.0" alignment="CENTER_LEFT">
+                                       <Label styleClass="fs-big, bold" text="%settings.ad-filter-dynamic-threshold-factor"/>
+                                       <Label styleClass="fs-big">
+                                          <graphic>
+                                             <FontIcon iconLiteral="fa-question-circle:16:#1E90FF" />
+                                          </graphic>
+                                          <tooltip>
+                                             <Tooltip showDelay="200ms" showDuration="1m"
+                                                      text="%settings.ad-filter-dynamic-threshold-factor.tooltip" styleClass="fs-big"/>
+                                          </tooltip>
+                                       </Label>
+                                    </HBox>
+                                    <RadioButton text="%common.close" toggleGroup="$adFilterDynamicThresholdFactorToggleGroup" onAction="#onAdFilterDynamicThresholdFactorRadioButtonAction" mnemonicParsing="false" focusTraversable="false">
+                                       <properties>
+                                          <value>
+                                             <Double fx:value="-1"/>
+                                          </value>
+                                       </properties>
+                                    </RadioButton>
+                                    <RadioButton text="%settings.ad-filter-dynamic-threshold-factor.conservative" toggleGroup="$adFilterDynamicThresholdFactorToggleGroup" onAction="#onAdFilterDynamicThresholdFactorRadioButtonAction" mnemonicParsing="false" focusTraversable="false">
+                                       <properties>
+                                          <value>
+                                             <Double fx:value="0.3"/>
+                                          </value>
+                                       </properties>
+                                    </RadioButton>
+                                    <RadioButton text="%settings.ad-filter-dynamic-threshold-factor.aggressive" toggleGroup="$adFilterDynamicThresholdFactorToggleGroup" onAction="#onAdFilterDynamicThresholdFactorRadioButtonAction" mnemonicParsing="false" focusTraversable="false">
+                                       <properties>
+                                          <value>
+                                             <Double fx:value="0.1"/>
+                                          </value>
+                                       </properties>
+                                    </RadioButton>
+                                 </HBox>
+                              </HBox>
+
+                              <Label text="%settings.usage" styleClass="setting-title-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+
+                              <Label styleClass="fs-big, bold" text="%settings.font-family" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+                              <HBox spacing="5.0" alignment="CENTER_LEFT" GridPane.rowIndex="7" GridPane.columnIndex="1">
                                  <SearchableComboBox fx:id="usageFontFamilyComboBox" onAction="#onUsageFontFamilyComboBoxAction" />
                                  <Label fx:id="usageFontFamilyExampleLabel" text="%settings.font-family-example" />
                               </HBox>
 
-                              <Label text="%settings.other" styleClass="setting-title-label" GridPane.rowIndex="7" GridPane.columnIndex="0" />
+                              <Label text="%settings.other" styleClass="setting-title-label" GridPane.rowIndex="8" GridPane.columnIndex="0" />
 
-                              <Label styleClass="fs-big, bold" text="%settings.license" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
-                              <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+                              <Label styleClass="fs-big, bold" text="%settings.license" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
+                              <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
                            </children>
                         </GridPane>
                      </VBox>

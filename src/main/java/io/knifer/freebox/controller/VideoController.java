@@ -5,21 +5,28 @@ import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.knifer.freebox.component.node.VLCPlayer;
+import io.knifer.freebox.constant.CacheKeys;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.handler.M3u8AdFilterHandler;
+import io.knifer.freebox.handler.impl.SmartM3u8AdFilterHandler;
 import io.knifer.freebox.helper.*;
+import io.knifer.freebox.model.bo.TVPlayBO;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.common.tvbox.VodInfo;
+import io.knifer.freebox.model.domain.M3u8AdFilterResult;
 import io.knifer.freebox.model.s2c.DeleteMovieCollectionDTO;
 import io.knifer.freebox.model.s2c.GetMovieCollectedStatusDTO;
 import io.knifer.freebox.model.s2c.GetPlayerContentDTO;
 import io.knifer.freebox.model.s2c.SaveMovieCollectionDTO;
 import io.knifer.freebox.service.VLCPlayerDestroyService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
+import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CollectionUtil;
+import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -40,15 +47,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import javax.annotation.Nullable;
 import java.net.URLDecoder;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -82,6 +93,8 @@ public class VideoController extends BaseController {
     private SpiderTemplate template;
     private Consumer<VideoPlayInfoBO> onClose;
 
+    private M3u8AdFilterHandler m3u8AdFilterHandler;
+
     private Button selectedEpBtn = null;
     private Movie.Video playingVideo;
     private Movie.Video.UrlBean.UrlInfo playingUrlInfo;
@@ -90,6 +103,7 @@ public class VideoController extends BaseController {
 
     @FXML
     private void initialize() {
+        m3u8AdFilterHandler = new SmartM3u8AdFilterHandler();
         Platform.runLater(() -> {
             VideoDetailsBO bo = getData();
 
@@ -156,7 +170,9 @@ public class VideoController extends BaseController {
                     // 播放下一集，同时更新播放信息
                     playVideo(playingVideo, playingUrlInfo, beanIter.next(), null);
                 } else {
-                    Platform.runLater(() -> ToastHelper.showInfoI18n(I18nKeys.VIDEO_INFO_NO_MORE_EP));
+                    Platform.runLater(() ->
+                            player.showToast(I18nHelper.get(I18nKeys.VIDEO_INFO_NO_MORE_EP))
+                    );
                 }
                 break;
             }
@@ -401,14 +417,32 @@ public class VideoController extends BaseController {
                         }
                         videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
                         if (parse == 0) {
-                            player.play(playUrl, headers, videoTitle, progress);
+                            if (ConfigHelper.getAdFilter() && playUrl.contains(".m3u8")) {
+                                // 处理m3u8广告过滤
+                                filterAdAndProxy(playUrl, headers, isAdFilteredAndProxyUrl -> {
+                                    Boolean isAdFiltered = isAdFilteredAndProxyUrl.getLeft();
+                                    String proxyUrl = isAdFilteredAndProxyUrl.getRight();
+                                    TVPlayBO tvPlayBO = TVPlayBO.of(
+                                            proxyUrl,
+                                            headers,
+                                            videoTitle,
+                                            progress,
+                                            isAdFiltered
+                                    );
+
+                                    Platform.runLater(() -> player.play(tvPlayBO));
+                                });
+                            } else {
+                                player.play(TVPlayBO.of(
+                                        playUrl, headers, videoTitle, progress, false
+                                ));
+                            }
                         } else {
                             if (jx != 0) {
                                 ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SOURCE_NOT_SUPPORTED);
                                 return;
                             }
-                            videoTitle += " （此为解析源，请在弹出的浏览器程序中观看）";
-                            player.setVideoTitle(videoTitle);
+                            player.setVideoTitle(videoTitle + " （此为解析源，请在弹出的浏览器程序中观看）");
                             HostServiceHelper.showDocument(playUrl);
                         }
                         playingVideo = video;
@@ -417,6 +451,80 @@ public class VideoController extends BaseController {
                     });
                 }
         );
+    }
+
+    /**
+     * 过滤广告并创建本地代理链接
+     * @param playUrl 播放链接
+     * @param headers 请求源m3u8需要携带的请求头
+     * @param callback 回调。包含过滤广告成功标志和代理链接
+     */
+    private void filterAdAndProxy(
+            String playUrl, Map<String, String> headers, Consumer<Pair<Boolean, String>> callback
+    ) {
+        AsyncUtil.execute(() -> {
+            HttpRequest.Builder requestBuilder;
+            M3u8AdFilterResult result;
+            String content;
+            HttpResponse<String> resp;
+            Map<String, List<String>> proxyHeaders;
+
+            requestBuilder = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(HttpUtil.parseUrl(playUrl));
+            if (!headers.isEmpty()) {
+                headers.forEach(requestBuilder::header);
+            }
+            try {
+                resp = HttpUtil.getClient()
+                        .sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofString())
+                        .get(6, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                callback.accept(Pair.of(false, playUrl));
+
+                return;
+            }
+            try {
+                result = m3u8AdFilterHandler.handle(
+                        playUrl,
+                        resp.body(),
+                        Map.of(SmartM3u8AdFilterHandler.EXTRA_KEY_DTF, ConfigHelper.getAdFilterDynamicThresholdFactor())
+                );
+            } catch (Exception e) {
+                log.warn("filter ad exception", e);
+                callback.accept(Pair.of(false, playUrl));
+
+                return;
+            }
+            if (result.getAdLineCount() == 0) {
+                callback.accept(Pair.of(false, playUrl));
+
+                return;
+            }
+            content = result.getContent();
+            proxyHeaders = resp.headers().map();
+            if (proxyHeaders.containsKey("content-length")) {
+                proxyHeaders = Maps.filterKeys(proxyHeaders, key -> !key.equals("content-length"));
+            }
+            callback.accept(Pair.of(
+                    true, createAdFilteredM3u8Url(content, proxyHeaders)
+            ));
+        });
+    }
+
+    private String createAdFilteredM3u8Url(String m3u8Content, Map<String, List<String>> proxyHeaders) {
+        String proxyUrl = "http://127.0.0.1:" +
+                ConfigHelper.getHttpPort() +
+                "/proxy-cache/" +
+                CacheKeys.AD_FILTERED_M3U8;
+
+        CacheHelper.put(CacheKeys.AD_FILTERED_M3U8, m3u8Content);
+        CacheHelper.put(
+                CacheKeys.PROXY_CACHE_HTTP_HEADERS + CacheKeys.AD_FILTERED_M3U8,
+                proxyHeaders
+        );
+
+        return proxyUrl;
     }
 
     private void close() {

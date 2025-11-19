@@ -17,6 +17,7 @@ import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.bo.EPGOverviewBO;
+import io.knifer.freebox.model.bo.TVPlayBO;
 import io.knifer.freebox.model.common.diyp.EPG;
 import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
@@ -97,6 +98,7 @@ public class VLCPlayer {
     private final Stage stage;
     private final Scene scene;
     private final AnchorPane toastAnchorPane;
+    private final VLCPlayerToastPane toastPane;
     private final AnchorPane controlPane;
     private final Timer controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
     private final Timer volumePopOverHideTimer;
@@ -202,7 +204,6 @@ public class VLCPlayer {
         AnchorPane controlBottomAnchorPane;
         StackPane progressMiddleStackPane;
         AnchorPane controlTopAnchorPane;
-        VLCPlayerToastPane toastPane;
         MediaPlayerFactory mediaPlayerFactory;
 
         SubpictureApi mediaPlayerSubpictureApi;
@@ -975,32 +976,44 @@ public class VLCPlayer {
         minWidthProperty.bind(widthProp);
     }
 
-    public void play(
-            String url,
-            Map<String, String> headers,
-            String videoTitle,
-            @Nullable Long progress
-    ) {
+    public void play(TVPlayBO tvPlayBO) {
+        String url = tvPlayBO.getUrl();
+        Map<String, String> headers = tvPlayBO.getHeaders();
+        String videoTitle = tvPlayBO.getVideoTitle();
+        Long progress = tvPlayBO.getProgress();
+
+
+        subtitleSettingPopOver.setSubtitleDelay(mediaPlayer.subpictures().delay() / 1000);
+        subtitleSettingPopOver.setMovieName(StringUtils.substringBetween(videoTitle, "《", "》"));
+        if (tvPlayBO.isAdFiltered()) {
+            toastPane.showMessage(I18nHelper.get(I18nKeys.VIDEO_INFO_AD_FILTERED));
+        }
+        doPlay(url, headers, videoTitle, progress);
+    }
+
+    /**
+     * 进行播放
+     * @return 是否成功播放
+     */
+    private boolean doPlay(String url, Map<String, String> headers, String videoTitle, @Nullable Long progress) {
         String[] options;
 
         if (destroyFlag) {
-            return;
+            return false;
         }
         setLoading(true);
         if (progress != null) {
             initProgress.set(Math.max(progress, -1));
         }
         setVideoTitle(videoTitle);
-        if (!BooleanUtils.toBoolean(config.liveMode)) {
-            subtitleSettingPopOver.setSubtitleDelay(mediaPlayer.subpictures().delay() / 1000);
-            subtitleSettingPopOver.setMovieName(StringUtils.substringBetween(videoTitle, "《", "》"));
-        }
         options = parsePlayOptionsFromHeaders(headers);
         log.info("play url={}, options={}", url, options);
         AsyncUtil.execute(() -> {
             playMedia(url, options);
             mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
         });
+
+        return true;
     }
 
     private synchronized void playMedia(String url, String[] options) {
@@ -1163,7 +1176,7 @@ public class VLCPlayer {
         playingLive.setLiveChannelLine(liveChannelLine);
         liveChannelDrawer.select(liveChannelGroup, liveChannel);
 
-        play(liveChannelLine.getUrl(), Map.of(), liveChannel.getTitle(), null);
+        doPlay(liveChannelLine.getUrl(), Map.of(), liveChannel.getTitle(), null);
         if (lastPlayingLiveChannel != liveChannel) {
             // 切换频道时，显示banner（同一个频道切换线路时不显示）
             showLiveChannelBanner(liveChannel, liveChannelLine);
@@ -1271,6 +1284,10 @@ public class VLCPlayer {
                 }
             }
         });
+    }
+
+    public void showToast(String message) {
+        toastPane.showMessage(message);
     }
 
     /**

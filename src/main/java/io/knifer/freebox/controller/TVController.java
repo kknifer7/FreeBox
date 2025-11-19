@@ -223,7 +223,19 @@ public class TVController {
                 if (!success) {
                     return;
                 }
-                Platform.runLater(() -> template.getSourceBeanList(this::initSourceBeanData));
+                Platform.runLater(() -> template.getSourceBeanList(sourceBeans -> {
+                    if (sourceBeans == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SOURCE_BEAN_LIST_FAILED);
+
+                        return;
+                    }
+                    if (sourceBeans.isEmpty()) {
+                        ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_SOURCE_BEAN_LIST_EMPTY);
+
+                        return;
+                    }
+                    initSourceBeanData(sourceBeans);
+                }));
             });
         });
     }

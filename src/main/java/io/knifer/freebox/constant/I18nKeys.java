@@ -49,6 +49,8 @@ public class I18nKeys {
     public static final String TV_HISTORY = "tv.history";
     public static final String TV_COLLECTION = "tv.collection";
     public static final String TV_CLASS_FILTER = "tv.class-filter";
+    public static final String TV_ERROR_LOAD_SOURCE_BEAN_LIST_FAILED = "tv.error.load-source-bean-list-failed";
+    public static final String TV_ERROR_SOURCE_BEAN_LIST_EMPTY = "tv.error.source-bean-list-empty";
     public static final String TV_ERROR_LOAD_SOURCE_FAILED = "tv.error.load-source-failed";
     public static final String TV_ERROR_LOAD_MOVIE_DETAIL_FAILED = "tv.error.load-movie-detail-failed";
     public static final String TV_ERROR_LOAD_SPIDER_CONFIG_FAILED = "tv.error.load-spider-config-failed";

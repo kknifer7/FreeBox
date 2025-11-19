@@ -6,7 +6,6 @@ import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.util.CollectionUtil;
-import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -15,7 +14,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -103,8 +101,6 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             InfoOverlay movieInfoOverlay;
             Label movieNoteLabel;
             ImageView moviePicImageView;
-            Image moviePicImage;
-            Image newMoviePicImage;
             String note;
             String picUrl;
             String sourceName;
@@ -150,14 +146,12 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                     moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
                     if (itemId != null) {
                         picUrl = item.getPic();
-                        if (ValidationUtil.isURL(picUrl)) {
-                            ImageHelper.loadAsync(picUrl)
-                                    .thenAccept(result -> {
-                                        if (result.isSuccess()) {
-                                            Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
-                                        }
-                                    });
-                        }
+                        ImageHelper.loadAsync(picUrl)
+                                .thenAccept(result -> {
+                                    if (result.isSuccess()) {
+                                        Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
+                                    }
+                                });
                     }
                 }
                 moviePicImageView.setFitWidth(CELL_WIDTH);

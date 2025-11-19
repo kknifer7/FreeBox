@@ -7,7 +7,6 @@ import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.common.tvbox.VodInfo;
-import io.knifer.freebox.util.ValidationUtil;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -120,14 +119,12 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                     moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
                     if (itemId != null) {
                         picUrl = item.getPic();
-                        if (ValidationUtil.isURL(picUrl)) {
-                            ImageHelper.loadAsync(picUrl)
-                                    .thenAccept(result -> {
-                                        if (result.isSuccess()) {
-                                            Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
-                                        }
-                                    });
-                        }
+                        ImageHelper.loadAsync(picUrl)
+                                .thenAccept(result -> {
+                                    if (result.isSuccess()) {
+                                        Platform.runLater(() -> moviePicImageView.setImage(result.getImage()));
+                                    }
+                                });
                     }
                 }
                 moviePicImageView.setFitWidth(CELL_WIDTH);

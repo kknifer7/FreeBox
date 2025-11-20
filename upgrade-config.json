@@ -1,33 +1,33 @@
 {
-	"version": "v1.3.0",
-	"versionCode": 7,
-	"changelog": "新功能：\n1. 播放器新增字幕、弹幕功能，支持在线搜索字幕；\n2. 新增设置界面字体功能，如果遇到乱码、字体显示为方框的问题，可以尝试切换字体；\n3. 主界面支持查看本机所有IP（#49）；\n4. 新增进入无效源（如PC端直接使用安卓源）时的弹窗提示，避免直接抛出异常误导用户；\n5. 其他的小调整。\n\n修复问题：\n1. 播放器界面的光标在错误的位置自动隐藏；\n2. 一处NPE（#75）以及导致该NPE的界面逻辑问题；\n3. 其他发现的bug。",
-	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.3.0/",
-	"releaseDate": "2025-11-13",
+	"version": "v1.4.0",
+	"versionCode": 8,
+	"changelog": "新功能：\n1. m3u8切片广告过滤，采用原创算法；\n    常规过滤：默认开启。尝试通过ts文件的数字序号递增、命名长度两种特征进行识别和过滤；\n    强力过滤：在设置界面开启后，常规过滤失败时，会利用正态分布算法暴力过滤疑似广告片段，可能误删正片，有“谨慎”和“激进”两个档位可选；\n    如果过滤后影视播放异常，请尝试关闭广告过滤功能，必要的话可以反馈给我。\n2. TVBox-K同步发布了v1.1.1更新，解决了一个闪退问题，详情请到发布页查看。\n\n修复问题和优化：\n1. 大幅优化影片海报加载速度，支持更多的图片格式，改善许多图片加载失败的问题（#79）；\n2. 优化主界面交互逻辑：服务未启动时进行文字提示，操作按钮置灰；\n3. 增加了应用单例保证，检测并阻止应用多开；\n4. 更正对PC端爬虫ext字段的处理，并提升影视搜索速度（#77）；\n5. 修复了一个PC端爬虫初始化出错问题（#78）；\n6. 修复了一个异常抛出问题（#83）；\n7. 其他较小的调整和修复。\n\n感谢 @lushunming 提供的思路和帮助。",
+	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.4.0/",
+	"releaseDate": "2025-11-20",
 	"releaseFiles": [
 		{
 			"platform": "windows",
-			"fileSize": "51493229",
-			"fileName": "FreeBox-1.3.0.msi",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.msi"
+			"fileSize": "52021613",
+			"fileName": "FreeBox-1.4.0.msi",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.0/FreeBox-1.4.0.msi"
 		},
 		{
 			"platform": "mac",
-			"fileSize": "53687789",
-			"fileName": "FreeBox-1.3.0.dmg",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.dmg"
+			"fileSize": "54229808",
+			"fileName": "FreeBox-1.4.0.dmg",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.0/FreeBox-1.4.0.dmg"
 		},
 		{
 			"platform": "deb_linux",
-			"fileSize": "54181092",
-			"fileName": "FreeBox-1.3.0.deb",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.deb"
+			"fileSize": "54698420",
+			"fileName": "FreeBox-1.4.0.deb",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.0/FreeBox-1.4.0.deb"
 		},
 		{
 			"platform": "rpm_linux",
-			"fileSize": "55804580",
-			"fileName": "FreeBox-1.3.0.rpm",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.3.0/FreeBox-1.3.0.rpm"
+			"fileSize": "56337128",
+			"fileName": "FreeBox-1.4.0.rpm",
+			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.0/FreeBox-1.4.0.rpm"
 		}
 	]
 }

@@ -177,6 +177,7 @@ jlink {
     mergedModule {
         requires 'java.sql'
         requires 'java.logging'
+        requires 'java.desktop'
         requires 'jdk.httpserver'
         requires 'jdk.crypto.ec'
         requires 'org.slf4j'

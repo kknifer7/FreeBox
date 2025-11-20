@@ -1,7 +1,6 @@
 package io.knifer.freebox.util;
 
 import cn.hutool.core.net.URLEncodeUtil;
-import io.knifer.freebox.exception.FBException;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 
@@ -11,7 +10,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,14 +36,9 @@ public class HttpUtil {
                             .build(),
                     HttpResponse.BodyHandlers.ofByteArray()
             ).body();
-        } catch (IOException e) {
-            if (e instanceof HttpTimeoutException) {
-                throw e;
-            }
-            throw new FBException("Error while sending request to " + url, e);
-        } catch (InterruptedException e) {
-            return null;
-        }
+        } catch (InterruptedException ignored) {}
+
+        return new byte[0];
     }
 
     public CompletableFuture<String> getAsync(String url) {

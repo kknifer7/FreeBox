@@ -55,6 +55,7 @@ public class I18nKeys {
     public static final String TV_ERROR_LOAD_MOVIE_DETAIL_FAILED = "tv.error.load-movie-detail-failed";
     public static final String TV_ERROR_LOAD_SPIDER_CONFIG_FAILED = "tv.error.load-spider-config-failed";
     public static final String TV_ERROR_INVALID_SPIDER_JAR = "tv.error.invalid-spider-jar";
+    public static final String TV_ERROR_LOAD_SPIDER_JAR_FAILED = "tv.error.load-spider-jar-failed";
 
     public static final String VIDEO_COLLECT = "video.collect";
     public static final String VIDEO_UN_COLLECT = "video.un-collect";

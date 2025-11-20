@@ -251,7 +251,8 @@ public class SpiderJarLoader {
         try {
             return Files.write(SPIDER_CACHE_PATH.resolve(DigestUtil.md5Hex(jar)), HttpUtil.getFile(jar));
         } catch (IOException e) {
-            Platform.runLater(() -> ToastHelper.showException(e));
+            log.error("download jar error", e);
+            Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_JAR_FAILED));
 
             return null;
         }

@@ -48,3 +48,4 @@ bin/
 jpackage_temp/
 ### app data ###
 TV/
+.lock

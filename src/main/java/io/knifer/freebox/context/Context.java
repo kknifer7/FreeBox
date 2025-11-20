@@ -6,6 +6,7 @@ import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ClientType;
+import io.knifer.freebox.handler.impl.SingleInstanceApplicationHandler;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
@@ -17,10 +18,12 @@ import io.knifer.freebox.net.websocket.core.KebSocketRunner;
 import io.knifer.freebox.net.websocket.core.KebSocketTopicKeeper;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadConfigService;
+import io.knifer.freebox.service.SingleInstanceApplicationService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.spider.template.impl.FreeBoxSpiderTemplate;
 import io.knifer.freebox.spider.template.impl.KebSocketSpiderTemplate;
 import io.knifer.freebox.util.AsyncUtil;
+import io.knifer.freebox.util.CollectionUtil;
 import javafx.application.Application;
 import javafx.concurrent.Service;
 import javafx.stage.Stage;
@@ -106,27 +109,36 @@ public enum Context {
         });
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {
-            Integer appVersionCode = ConfigHelper.getAppVersionCode();
-            String newestAppVersionCodeStr = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
-            int newestAppVersionCode;
-            String newestAppVersion;
+            Service<Void> singleInstanceAppService = new SingleInstanceApplicationService();
 
-            newestAppVersionCode = NumberUtils.isCreatable(newestAppVersionCodeStr) ?
-                    Integer.parseInt(newestAppVersionCodeStr) : 0;
-            if (appVersionCode < newestAppVersionCode) {
-                // config版本与x.properties中的版本不一致，说明用户刚刚安装了新版本，可对比新旧版本号，做一些更新后置操作
-                // ...
-                // 后置操作完成，保存最新版本号到config
-                newestAppVersion = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION);
-                ConfigHelper.setAppVersion(newestAppVersion);
-                ConfigHelper.setAppVersionCode(newestAppVersionCode);
-                ConfigHelper.saveAnyWay(() -> {
-                    log.info("application upgraded to {}", newestAppVersion);
+            // 确保应用单例
+            singleInstanceAppService.setOnSucceeded(ignored -> {
+                Integer appVersionCode;
+                String latestAppVersionCodeStr;
+                int latestAppVersionCode;
+                String latestAppVersion;
+
+                // 处理版本升级相关
+                appVersionCode = ConfigHelper.getAppVersionCode();
+                latestAppVersionCodeStr = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
+                latestAppVersionCode = NumberUtils.isCreatable(latestAppVersionCodeStr) ?
+                        Integer.parseInt(latestAppVersionCodeStr) : 0;
+                if (appVersionCode < latestAppVersionCode) {
+                    // config版本与x.properties中的版本不一致，说明用户刚刚安装了新版本，可对比新旧版本号，做一些更新后置操作
+                    // ...
+                    // 后置操作完成，保存最新版本号到config
+                    latestAppVersion = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION);
+                    ConfigHelper.setAppVersion(latestAppVersion);
+                    ConfigHelper.setAppVersionCode(latestAppVersionCode);
+                    ConfigHelper.saveAnyWay(() -> {
+                        log.info("application upgraded to {}", latestAppVersion);
+                        doInit(callback);
+                    });
+                } else {
                     doInit(callback);
-                });
-            } else {
-                doInit(callback);
-            }
+                }
+            });
+            singleInstanceAppService.start();
         });
         loadConfigService.start();
     }
@@ -172,8 +184,11 @@ public enum Context {
         KebSocketTopicKeeper.getInstance().destroy();
         if (initFlag) {
             Context.INSTANCE.getPrimaryStage().close();
-            spiderTemplateMap.values().forEach(SpiderTemplate::destroy);
+            if (CollectionUtil.isNotEmpty(spiderTemplateMap)) {
+                spiderTemplateMap.values().forEach(SpiderTemplate::destroy);
+            }
         }
+        SingleInstanceApplicationHandler.release();
         System.exit(0);
     }
 

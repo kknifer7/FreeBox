@@ -49,7 +49,8 @@
                            <children>
                               <TextFlow lineSpacing="5.0" textAlignment="CENTER">
                                  <children>
-                                    <Text fx:id="settingsInfoText" fill="gray" strokeType="OUTSIDE" strokeWidth="0.0"/>
+                                     <Text fx:id="settingsInfoText" fill="gray" strokeType="OUTSIDE" strokeWidth="0.0"/>
+                                     <Text fx:id="serviceNotStartWarningText" text="%home.service-not-start-warning" fill="red" strokeType="OUTSIDE" strokeWidth="0.0" visible="false" managed="false"/>
                                  </children>
                               </TextFlow>
                                <HBox fx:id="showIpPromptHBox" alignment="CENTER" spacing="5.0">

@@ -28,7 +28,7 @@ public class CheckPortUsingService extends Service<Boolean> {
         return new Task<>() {
             @Override
             protected Boolean call() {
-                return NetworkUtil.isPortUsing(hostname, port);
+                return NetworkUtil.isPortUsing(hostname, port, 500);
             }
         };
     }

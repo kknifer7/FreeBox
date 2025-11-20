@@ -24,6 +24,8 @@ import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import io.knifer.freebox.service.UpgradeCheckService;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
@@ -57,6 +59,8 @@ public class HomeController {
     @FXML
     private Text settingsInfoText;
     @FXML
+    public Text serviceNotStartWarningText;
+    @FXML
     private HBox showIpPromptHBox;
     @FXML
     private HBox vlcHBox;
@@ -74,6 +78,10 @@ public class HomeController {
     private PopOver ipInfoPopOver;
 
     private ClientManager clientManager;
+
+    private final BooleanProperty allowVodOpProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty allowLiveOpProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty allowSourceAuditOpProperty = new SimpleBooleanProperty(false);
 
     private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER;
 
@@ -102,6 +110,9 @@ public class HomeController {
 
         vlcHBox.setVisible(vlcNotInstalled);
         vlcHBox.setManaged(vlcNotInstalled);
+        vodButton.disableProperty().bind(allowVodOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
+        liveButton.disableProperty().bind(allowLiveOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
+        sourceAuditButton.disableProperty().bind(allowSourceAuditOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
         clientListView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((ob, oldVal, newVal) -> {
@@ -109,23 +120,23 @@ public class HomeController {
                     ClientType clientType;
 
                     if (newVal == null || (clientType = newVal.getClientType()) == null) {
-                        vodButton.setDisable(true);
-                        liveButton.setDisable(true);
-                        sourceAuditButton.setDisable(true);
+                        allowVodOpProperty.set(false);
+                        allowLiveOpProperty.set(false);
+                        allowSourceAuditOpProperty.set(false);
 
                         return;
                     }
                     switch (clientType) {
                         case CATVOD_SPIDER:
                         case TVBOX_K:
-                            vodButton.setDisable(false);
-                            liveButton.setDisable(false);
-                            sourceAuditButton.setDisable(false);
+                            allowVodOpProperty.set(true);
+                            allowLiveOpProperty.set(true);
+                            allowSourceAuditOpProperty.set(true);
                             break;
                         case SINGLE_LIVE:
-                            vodButton.setDisable(true);
-                            liveButton.setDisable(false);
-                            sourceAuditButton.setDisable(true);
+                            allowVodOpProperty.set(false);
+                            allowLiveOpProperty.set(true);
+                            allowSourceAuditOpProperty.set(false);
                             break;
                     }
                 });
@@ -249,6 +260,7 @@ public class HomeController {
         String wsPort;
         String ip;
         LoadNetworkInterfaceDataService service;
+        boolean hasServiceNotStarted;
 
         if (isHttpServiceRunning) {
             httpServiceRunningStatus = I18nHelper.get(I18nKeys.SETTINGS_SERVICE_UP);
@@ -290,7 +302,9 @@ public class HomeController {
                     wsPort
             ));
         }
-
+        hasServiceNotStarted = !isHttpServiceRunning || !isWsServiceRunning;
+        serviceNotStartWarningText.setVisible(hasServiceNotStarted);
+        serviceNotStartWarningText.setManaged(hasServiceNotStarted);
     }
 
     @FXML

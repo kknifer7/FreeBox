@@ -26,7 +26,8 @@ public class FreeBoxHttpServerHolder {
             new ProxyCkHandler(),
             new ProxyHandler(),
             new MsgHandler(),
-            new ProxyCacheHandler()
+            new ProxyCacheHandler(),
+            new WakeupHandler()
     );
 
     public synchronized void start(String hostname, int port) {
@@ -36,13 +37,13 @@ public class FreeBoxHttpServerHolder {
             } else {
                 server = new SimpleServer(hostname, port);
             }
-            server.addHandler("/", exchange -> {
+            server.addHandler("/", exchange ->
                 HANDLERS.forEach(handler -> {
                     if (handler.support(exchange)) {
                         handler.handle(exchange);
                     }
-                });
-            });
+                })
+            );
             server.start();
         } catch (Exception e) {
             ToastHelper.showException(e);

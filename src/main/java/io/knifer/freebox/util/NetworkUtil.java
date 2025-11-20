@@ -101,7 +101,7 @@ public class NetworkUtil {
         return joiner.toString().toUpperCase();
     }
 
-    public boolean isPortUsing(String hostname, int port) {
+    public boolean isPortUsing(String hostname, int port, int timeout) {
         boolean flag = false;
         InetSocketAddress address = null;
 
@@ -109,7 +109,7 @@ public class NetworkUtil {
             address = new InetSocketAddress(hostname, port);
         } catch (IllegalArgumentException ignored) {}
         try (Socket socket = new Socket()) {
-            socket.connect(address, 500);
+            socket.connect(address, timeout);
             flag = true;
         } catch (IOException ignored) {}
 

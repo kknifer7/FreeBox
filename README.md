@@ -40,6 +40,8 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 
 - Linux：提供deb和rpm两种格式的安装包，视大家反馈情况考虑提供AppImage格式
 
+[查看软件功能列表](https://github.com/kknifer7/FreeBox/tree/main?tab=readme-ov-file#%E5%9B%9B%E5%8A%9F%E8%83%BD%E5%88%97%E8%A1%A8--%E5%BC%80%E5%8F%91%E8%AE%A1%E5%88%92)
+
 **本软件完全免费、开源，如果您下载或使用了本软件，视为您已阅读并同意本软件的[许可协议](https://sourceforge.net/p/freeboxk/main/ci/main/tree/src/main/resources/io/knifer/freebox/doc/license.txt?format=raw)，该许可协议也会在软件第一次打开时弹出**
 
 软件基于猫影视规则，致力于TVBox生态的跨平台扩展。个人项目难免多有疏漏，欢迎讨论和PR，欢迎大家来玩~

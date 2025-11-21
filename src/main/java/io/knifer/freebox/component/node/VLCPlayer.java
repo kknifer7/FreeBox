@@ -297,7 +297,7 @@ public class VLCPlayer {
 
                 initProgress.getAndUpdate(val -> {
                     if (val != -1) {
-                        Platform.runLater(() -> mediaPlayer.controls().setTime(val));
+                        mediaPlayer.controls().setTime(val);
                     }
 
                     return -1;
@@ -982,9 +982,15 @@ public class VLCPlayer {
         String videoTitle = tvPlayBO.getVideoTitle();
         Long progress = tvPlayBO.getProgress();
 
-
-        subtitleSettingPopOver.setSubtitleDelay(mediaPlayer.subpictures().delay() / 1000);
+        if (subtitleSettingPopOver.isShowing()) {
+            subtitleSettingPopOver.hide();
+        }
         subtitleSettingPopOver.setMovieName(StringUtils.substringBetween(videoTitle, "《", "》"));
+        AsyncUtil.execute(() -> {
+            long playerDelay = mediaPlayer.subpictures().delay();
+
+            Platform.runLater(() -> subtitleSettingPopOver.setSubtitleDelay(playerDelay / 1000));
+        });
         if (tvPlayBO.isAdFiltered()) {
             toastPane.showMessage(I18nHelper.get(I18nKeys.VIDEO_INFO_AD_FILTERED));
         }
@@ -1072,7 +1078,7 @@ public class VLCPlayer {
         }
         // 调用暂停API时可能出现短暂延迟，为用户体验考虑，显示一下loading告知用户等待
         setLoading(true);
-        mediaPlayer.controls().pause();
+        AsyncUtil.execute(() -> mediaPlayer.controls().pause());
     }
 
     private boolean isLoading() {

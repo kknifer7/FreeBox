@@ -59,7 +59,7 @@ jobs:
           cp build/jpackage/*.rpm distribution/ 2>/dev/null || echo "No RPM files found"
           
           echo "generated packages:"
-          ls -la build/distributions/
+          ls -la build/distribution/
 
       - name: Upload Linux packages
         uses: actions/upload-artifact@v4

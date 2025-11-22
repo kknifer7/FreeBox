@@ -183,8 +183,10 @@ jlink {
         requires 'org.slf4j'
         uses 'cn.hutool.core.convert.Converter'
     }
-    jpackage.doFirst {
-        delete "${projectDir}/jpackage_temp"
+    tasks.named('jpackage') {
+        doFirst {
+            delete "${projectDir}/jpackage_temp"
+        }
     }
     jpackage {
         mainClassName = application.mainClass

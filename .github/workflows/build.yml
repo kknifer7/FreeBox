@@ -64,7 +64,6 @@ jobs:
           ls -la build/distributions/
 
       - name: Upload Linux packages
-        run: ls -la build/distributions/
         uses: actions/upload-artifact@v4
         with:
           name: FreeBox-linux-${{ matrix.arch }}-${{ github.sha }}

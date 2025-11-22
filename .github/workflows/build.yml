@@ -1,0 +1,146 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+    workflow_dispatch:
+
+env:
+  JAVA_VERSION: 17
+  GRADLE_VERSION: 'wrapper'
+
+jobs:
+  build-linux-packages:
+    name: Build Linux Packages - ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            package-types: '["deb", "rpm"]'
+          - arch: arm64
+            runner: ubuntu-latest
+            package-types: '["deb", "rpm"]'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          architecture: ${{ matrix.arch }}
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Install Linux packaging dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot rpm
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
+
+      - name: Build packages
+        if: contains(matrix.package-types, 'deb')
+        run: |
+          mkdir -p distribution
+          
+          ./gradlew jpackage -Pjpackage.installerType=deb
+          cp build/jpackage/*.deb distribution/ 2>/dev/null || echo "No DEB files found"
+          
+          ./gradlew jpackage -Pjpackage.installerType=rpm
+          cp build/jpackage/*.rpm distribution/ 2>/dev/null || echo "No RPM files found"
+          
+          echo "generated packages:"
+          ls -la build/distributions/
+
+      - name: Upload Linux packages
+        run: ls -la build/distributions/
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeBox-linux-${{ matrix.arch }}-${{ github.sha }}
+          path: |
+            build/distributions/*.deb
+            build/distributions/*.rpm
+          retention-days: 30
+
+  build-windows-package:
+    name: Build Windows Package
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [amd64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          architecture: ${{ matrix.arch }}
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Build packages
+        run: ./gradlew jpackage -Pjpackage.installerType=msi
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeBox-windows-${{ matrix.arch }}-${{ github.sha }}
+          path: build/jpackage/*.msi
+          retention-days: 30
+
+  build-macos-packages:
+    name: Build macOS Package - ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: macos-latest
+          - arch: arm64
+            runner: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          architecture: ${{ matrix.arch }}
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Build packages
+        run: ./gradlew jpackage -Pjpackage.installerType=dmg
+
+      - name: Upload MacOS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeBox-macos-${{ matrix.arch }}-${{ github.sha }}
+          path: build/jpackage/*.dmg
+          retention-days: 30

@@ -190,7 +190,9 @@ jlink {
         mainClassName = application.mainClass
         applicationName = launcherName
         installerName = launcherName
-        installerType = 'msi'
+        installerType = project.hasProperty('jpackage.installerType') ?
+                project.getProperties().get('jpackage.installerType') :
+                'msi'
         appVersion = project.version
         vendor = 'knifer'
         installerOptions = [
@@ -221,11 +223,12 @@ jlink {
                     '--linux-rpm-license-type', 'GPL-3.0-only',
                     '--resource-dir', "${projectDir}/resources/logo"
             ]
+            if (System.getProperty('os.arch') == 'aarch64') {
+                installerOptions += ['--linux-app-release', 'arm64']
+            }
         } else if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
             icon = "${projectDir}/resources/logo/FreeBox.icns"
             installerOptions += [
-                    '--mac-sign',
-                    '--mac-signing-key-user-name', 'knifer',
                     '--mac-app-category', 'public.app-category.video'
             ]
         }

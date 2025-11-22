@@ -18,10 +18,10 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             package-types: '["deb", "rpm"]'
           - arch: arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
             package-types: '["deb", "rpm"]'
 
     steps:
@@ -37,7 +37,9 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Prepare to build
         run: |

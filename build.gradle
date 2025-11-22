@@ -167,11 +167,12 @@ gluonfx {
     graalvmHome = 'E:\\StudyTools\\graalvm-ce-java17-22.3.2'
 }
 
+def appDisplayName = 'FreeBox'
 jlink {
     imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
-        name = 'FreeBox'
+        name = appDisplayName
         jvmArgs = run.jvmArgs
     }
     mergedModule {
@@ -190,8 +191,7 @@ jlink {
     }
     jpackage {
         mainClassName = application.mainClass
-        applicationName = launcherName
-        installerName = applicationName + "-" + project.version + "-" + getCurrentArch()
+        installerName = appDisplayName + "-" + project.version + "-" + getCurrentArch()
         installerType = project.hasProperty('jpackage.installerType') ?
                 project.getProperties().get('jpackage.installerType') :
                 'msi'

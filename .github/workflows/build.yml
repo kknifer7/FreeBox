@@ -41,15 +41,17 @@ jobs:
         with:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
+      - name: Prepare to build
+        run: |
+          mkdir -p distribution
+          chmod +x ./gradlew
+
       - name: Build with Gradle
         run: ./gradlew clean build
 
       - name: Build packages
         if: contains(matrix.package-types, 'deb')
         run: |
-          mkdir -p distribution
-          chmod +x ./gradlew
-          
           ./gradlew jpackage "-Pjpackage.installerType=deb"
           cp build/jpackage/*.deb distribution/ 2>/dev/null || echo "No DEB files found"
           

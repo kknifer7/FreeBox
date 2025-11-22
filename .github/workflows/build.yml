@@ -54,10 +54,10 @@ jobs:
         run: |
           mkdir -p distribution
           
-          ./gradlew jpackage -Pjpackage.installerType=deb
+          ./gradlew jpackage -Dorg.gradle.project.jpackage.installerType=deb
           cp build/jpackage/*.deb distribution/ 2>/dev/null || echo "No DEB files found"
           
-          ./gradlew jpackage -Pjpackage.installerType=rpm
+          ./gradlew jpackage -Dorg.gradle.project.jpackage.installerType=rpm
           cp build/jpackage/*.rpm distribution/ 2>/dev/null || echo "No RPM files found"
           
           echo "generated packages:"
@@ -97,7 +97,7 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build packages
-        run: ./gradlew jpackage -Pjpackage.installerType=msi
+        run: ./gradlew jpackage -Dorg.gradle.project.jpackage.installerType=msi
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
@@ -135,7 +135,7 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build packages
-        run: ./gradlew jpackage -Pjpackage.installerType=dmg
+        run: ./gradlew jpackage -Dorg.gradle.project.jpackage.installerType=dmg
 
       - name: Upload MacOS package
         uses: actions/upload-artifact@v4

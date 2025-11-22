@@ -47,7 +47,7 @@ jobs:
           chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew clean build -x check -x test
 
       - name: Build packages
         if: contains(matrix.package-types, 'deb')

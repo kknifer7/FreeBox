@@ -37,14 +37,9 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
         with:
           gradle-version: ${{ env.GRADLE_VERSION }}
-
-      - name: Install Linux packaging dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fakeroot rpm
 
       - name: Build with Gradle
         run: ./gradlew clean build
@@ -135,7 +130,9 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build packages
-        run: ./gradlew jpackage "-Pjpackage.installerType=dmg"
+        run: |
+          chmod +x ./gradlew
+          ./gradlew jpackage "-Pjpackage.installerType=dmg"
 
       - name: Upload MacOS package
         uses: actions/upload-artifact@v4

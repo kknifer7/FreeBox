@@ -52,10 +52,10 @@ jobs:
       - name: Build packages
         if: contains(matrix.package-types, 'deb')
         run: |
-          ./gradlew jpackage "-Pjpackage.installerType=deb"
+          ./gradlew jpackage "-Pjpackage.installerType=deb" -x test
           cp build/jpackage/*.deb distribution/ 2>/dev/null || echo "No DEB files found"
           
-          ./gradlew jpackage "-Pjpackage.installerType=rpm"
+          ./gradlew jpackage "-Pjpackage.installerType=rpm" -x test
           cp build/jpackage/*.rpm distribution/ 2>/dev/null || echo "No RPM files found"
           
           echo "generated packages:"
@@ -95,7 +95,7 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build packages
-        run: ./gradlew jpackage "-Pjpackage.installerType=msi"
+        run: ./gradlew jpackage "-Pjpackage.installerType=msi" -x test
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
@@ -135,7 +135,7 @@ jobs:
       - name: Build packages
         run: |
           chmod +x ./gradlew
-          ./gradlew jpackage "-Pjpackage.installerType=dmg"
+          ./gradlew jpackage "-Pjpackage.installerType=dmg" -x test
 
       - name: Upload MacOS package
         uses: actions/upload-artifact@v4

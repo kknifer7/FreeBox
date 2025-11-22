@@ -66,8 +66,8 @@ jobs:
         with:
           name: FreeBox-linux-${{ matrix.arch }}-${{ github.sha }}
           path: |
-            build/distributions/*.deb
-            build/distributions/*.rpm
+            build/distribution/*.deb
+            build/distribution/*.rpm
           retention-days: 30
 
   build-windows-package:

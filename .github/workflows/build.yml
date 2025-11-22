@@ -48,6 +48,7 @@ jobs:
         if: contains(matrix.package-types, 'deb')
         run: |
           mkdir -p distribution
+          chmod +x ./gradlew
           
           ./gradlew jpackage "-Pjpackage.installerType=deb"
           cp build/jpackage/*.deb distribution/ 2>/dev/null || echo "No DEB files found"
@@ -102,7 +103,7 @@ jobs:
           retention-days: 30
 
   build-macos-packages:
-    name: Build macOS Package - ${{ matrix.arch }}
+    name: Build MacOS Packages - ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:

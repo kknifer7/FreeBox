@@ -191,7 +191,7 @@ jlink {
     jpackage {
         mainClassName = application.mainClass
         applicationName = launcherName
-        installerName = launcherName
+        installerName = applicationName + "-" + project.version + "-" + getCurrentArch()
         installerType = project.hasProperty('jpackage.installerType') ?
                 project.getProperties().get('jpackage.installerType') :
                 'msi'
@@ -225,11 +225,10 @@ jlink {
                     '--linux-rpm-license-type', 'GPL-3.0-only',
                     '--resource-dir', "${projectDir}/resources/logo"
             ]
-            if (System.getProperty('os.arch') == 'aarch64') {
-                installerOptions += ['--linux-app-release', 'arm64']
-            }
+            installerOptions += ['--linux-app-release', getCurrentArch()]
         } else if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
             icon = "${projectDir}/resources/logo/FreeBox.icns"
+            // 修改输出的安装包名称
             installerOptions += [
                     '--mac-app-category', 'public.app-category.video'
             ]
@@ -239,4 +238,17 @@ jlink {
 
 jlinkZip {
     group = 'distribution'
+}
+
+static def getCurrentArch() {
+    String arch = System.getProperty("os.arch")
+
+    switch (arch) {
+        case "x86_64":
+            return "amd64"
+        case "aarch64":
+            return "arm64"
+        default:
+            return arch
+    }
 }

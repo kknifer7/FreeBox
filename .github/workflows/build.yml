@@ -71,17 +71,16 @@ jobs:
           ARCH=${{ matrix.arch }}
           VERSION=${{ needs.load_version.outputs.VERSION }}
           if [ "$ARCH" = "amd64" ]; then
-            OLD_DEB="freebox_${VERSION}_amd64.deb"
-            OLD_RPM="freebox-${VERSION}.x86_64.rpm"
+            OLD_DEB="freebox_${VERSION}-amd64_amd64.deb"
+            OLD_RPM="freebox-${VERSION}-amd64.x86_64.rpm"
           else
-            OLD_DEB="freebox_${VERSION}_arm64.deb"
-            OLD_RPM="freebox-${VERSION}.aarch64.rpm"
+            OLD_DEB="freebox_${VERSION}-arm64_arm64.deb"
+            OLD_RPM="freebox-${VERSION}-arm64.aarch64.rpm"
           fi
           NEW_DEB="FreeBox_${VERSION}_${ARCH}.deb"
           NEW_RPM="FreeBox_${VERSION}_${ARCH}.rpm"
           
           ./gradlew jpackage "-Pjpackage.installerType=deb" -x check -x test
-          ls build/jpackage/
           if [ -f "build/jpackage/$OLD_DEB" ]; then
             mv "build/jpackage/$OLD_DEB" "distribution/$NEW_DEB"
           else
@@ -89,7 +88,6 @@ jobs:
           fi
           
           ./gradlew jpackage "-Pjpackage.installerType=rpm" -x check -x test
-          ls build/jpackage/
           if [ -f "build/jpackage/$OLD_RPM" ]; then
             mv "build/jpackage/$OLD_RPM" "distribution/$NEW_RPM"
           else

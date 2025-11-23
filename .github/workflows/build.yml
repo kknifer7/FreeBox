@@ -156,7 +156,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FreeBox-windows-${{ matrix.arch }}-${{ github.sha }}
-          path: distribution/*.msi
+          path: |
+            distribution/*.msi
+            distribution/*.zip
           retention-days: 30
 
   build-macos-packages:

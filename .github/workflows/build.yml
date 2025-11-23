@@ -81,7 +81,7 @@ jobs:
           NEW_RPM="FreeBox_${VERSION}_${ARCH}.rpm"
           
           ./gradlew jpackage "-Pjpackage.installerType=deb" -x check -x test
-          ls
+          ls build/jpackage/
           if [ -f "build/jpackage/$OLD_DEB" ]; then
             mv "build/jpackage/$OLD_DEB" "distribution/$NEW_DEB"
           else
@@ -89,7 +89,7 @@ jobs:
           fi
           
           ./gradlew jpackage "-Pjpackage.installerType=rpm" -x check -x test
-          ls
+          ls build/jpackage/
           if [ -f "build/jpackage/$OLD_RPM" ]; then
             mv "build/jpackage/$OLD_RPM" "distribution/$NEW_RPM"
           else

@@ -191,7 +191,7 @@ jlink {
     }
     jpackage {
         mainClassName = application.mainClass
-        installerName = appDisplayName + "-" + getCurrentArch()
+        installerName = launcherName
         installerType = project.hasProperty('jpackage.installerType') ?
                 project.getProperties().get('jpackage.installerType') :
                 'msi'

@@ -11,7 +11,24 @@ env:
   GRADLE_VERSION: 'wrapper'
 
 jobs:
+  load_version:
+    name: Load Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load Version
+        id: get_version
+        run: |
+          VERSION=$(awk -F= '/^app-version=/ {print $2; exit}' src/main/resources/x.properties)
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "VERSION: $VERSION"
+
   build-linux-packages:
+    needs: load_version
     name: Build Linux Packages - ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -50,13 +67,38 @@ jobs:
         run: ./gradlew clean build -x check -x test
 
       - name: Build packages
-        if: contains(matrix.package-types, 'deb')
         run: |
+          ARCH=${{ matrix.arch }}
+          VERSION=${{ needs.load_version.outputs.VERSION }}
+          if [ "$ARCH" = "amd64" ]; then
+            OLD_DEB="freebox_${VERSION}_amd64.deb"
+            OLD_RPM="freebox-${VERSION}.x86_64.rpm"
+          else
+            OLD_DEB="freebox_${VERSION}_arm64.deb"
+            OLD_RPM="freebox-${VERSION}.aarch64.rpm"
+          fi
+          NEW_DEB="FreeBox_${VERSION}_${ARCH}.deb"
+          NEW_RPM="FreeBox_${VERSION}_${ARCH}.rpm"
+          
           ./gradlew jpackage "-Pjpackage.installerType=deb" -x check -x test
-          cp build/jpackage/*.deb distribution/ 2>/dev/null || echo "No DEB files found"
+          cd build/jpackage/
+          if [ -f "$OLD_DEB" ]; then
+            mv "$OLD_DEB" "../../distribution/$NEW_DEB"
+          else
+            echo "No DEB files found"
+          fi
+          cd ../../
           
           ./gradlew jpackage "-Pjpackage.installerType=rpm" -x check -x test
-          cp build/jpackage/*.rpm distribution/ 2>/dev/null || echo "No RPM files found"
+          cd build/jpackage/
+          if [ -f "$OLD_RPM" ]; then
+            mv "$OLD_RPM" "../../distribution/$NEW_RPM"
+          else
+            echo "No RPM files found"
+          fi
+          cd ../../
+          
+          tar -czvf "distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" "build/jpackage/FreeBox/"
           
           echo "generated packages:"
           ls -la distribution/
@@ -68,9 +110,11 @@ jobs:
           path: |
             distribution/*.deb
             distribution/*.rpm
+            distribution/*.tar.gz
           retention-days: 30
 
   build-windows-package:
+    needs: load_version
     name: Build Windows Package
     runs-on: windows-latest
     strategy:
@@ -95,16 +139,28 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build packages
-        run: ./gradlew jpackage "-Pjpackage.installerType=msi" -x check -x test
+        run: |
+          $VERSION = ${{ needs.load_version.outputs.VERSION }}
+          
+          New-Item -ItemType Directory -Path "distribution" -Force
+          
+          .\gradlew jpackage "-Pjpackage.installerType=msi" -x check -x test
+          Move-Item "build\jpackage\FreeBox-${VERSION}.msi" "distribution\FreeBox_${VERSION}.msi"
+          
+          7z a -tzip "distribution/FreeBox_${VERSION}_win.zip" "build/jpackage/FreeBox/"
+          
+          echo "generated packages:"
+          ls -la distribution/
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
           name: FreeBox-windows-${{ matrix.arch }}-${{ github.sha }}
-          path: build/jpackage/*.msi
+          path: distribution/*.msi
           retention-days: 30
 
   build-macos-packages:
+    needs: load_version
     name: Build MacOS Packages - ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -134,12 +190,30 @@ jobs:
 
       - name: Build packages
         run: |
+          VERSION = ${{ needs.load_version.outputs.VERSION }}
+          ARCH = ${{ matrix.arch }}
+          OLD_DMG = "FreeBox-${VERSION}.dmg"
+          NEW_DMG = "FreeBox_${VERSION}_${ARCH}.dmg"
+          
+          mkdir -p distribution
+          
           chmod +x ./gradlew
+          
           ./gradlew jpackage "-Pjpackage.installerType=dmg" -x check -x test
+          cd build/jpackage/
+          if [ -f "$OLD_DMG" ]; then
+            mv "$OLD_DMG" "../../distribution/$NEW_DMG"
+          else
+            echo "No DMG files found"
+          fi
+          cd ../../
+          
+          echo "generated packages:"
+          ls -la distribution/
 
       - name: Upload MacOS package
         uses: actions/upload-artifact@v4
         with:
           name: FreeBox-macos-${{ matrix.arch }}-${{ github.sha }}
-          path: build/jpackage/*.dmg
+          path: distribution/*.dmg
           retention-days: 30

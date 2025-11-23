@@ -81,6 +81,7 @@ jobs:
           NEW_RPM="FreeBox_${VERSION}_${ARCH}.rpm"
           
           ./gradlew jpackage "-Pjpackage.installerType=deb" -x check -x test
+          ls
           if [ -f "build/jpackage/$OLD_DEB" ]; then
             mv "build/jpackage/$OLD_DEB" "distribution/$NEW_DEB"
           else
@@ -88,6 +89,7 @@ jobs:
           fi
           
           ./gradlew jpackage "-Pjpackage.installerType=rpm" -x check -x test
+          ls
           if [ -f "build/jpackage/$OLD_RPM" ]; then
             mv "build/jpackage/$OLD_RPM" "distribution/$NEW_RPM"
           else
@@ -141,18 +143,17 @@ jobs:
           .\gradlew jpackage "-Pjpackage.installerType=msi" -x check -x test
           Move-Item "build\jpackage\FreeBox-${{ needs.load_version.outputs.VERSION }}.msi" "distribution\FreeBox_${{ needs.load_version.outputs.VERSION }}.msi"
           
-          7z a -tzip "distribution/FreeBox_${{ needs.load_version.outputs.VERSION }}_win.zip" "build/jpackage/FreeBox/"
+          Compress-Archive -Path "build/jpackage/FreeBox/*" -DestinationPath "distribution/FreeBox_${{ needs.load_version.outputs.VERSION }}_win.zip" -Force
           
-          echo "generated packages:"
-          ls -la distribution/
+          Write-Host "Generated packages:"
+          Get-ChildItem distribution/
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
           name: FreeBox-windows-${{ matrix.arch }}-${{ github.sha }}
           path: |
-            distribution/*.msi
-            distribution/*.zip
+            distribution/*
           retention-days: 30
 
   build-macos-packages:

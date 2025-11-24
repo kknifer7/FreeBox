@@ -297,7 +297,7 @@ public class VLCPlayer {
 
                 initProgress.getAndUpdate(val -> {
                     if (val != -1) {
-                        mediaPlayer.controls().setTime(val);
+                        Platform.runLater(() -> mediaPlayer.controls().setTime(val));
                     }
 
                     return -1;

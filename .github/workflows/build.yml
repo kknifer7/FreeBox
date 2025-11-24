@@ -112,9 +112,10 @@ jobs:
             name: FreeBox
             version: ${VERSION}
             AppImageNameTemplate: "FreeBox-{version}-{arch}"
-          package:
-            url: file://$GITHUB_WORKSPACE/distribution/FreeBox_${VERSION}_${ARCH}.tar.gz
           script:
+            - echo $GITHUB_WORKSPACE
+            - ls $GITHUB_WORKSPACE/distribution/
+            - cp "$GITHUB_WORKSPACE/distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" .
             - tar -xzf ./FreeBox_${VERSION}_${ARCH}.tar.gz -C "\$APPDIR/" --strip-components=1
             - mkdir -p "\$APPDIR"/usr/bin
             - mkdir -p "\$APPDIR"/usr/lib

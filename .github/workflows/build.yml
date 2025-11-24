@@ -115,7 +115,9 @@ jobs:
           package:
             url: ./distribution/FreeBox_${VERSION}_${ARCH}.tar.gz
           script:
-            - tar -xzf *.tar.gz -C "\$APPDIR/" --strip-components=1
+            - pwd
+            - ls -la
+            - tar -xzf ../FreeBox_${VERSION}_${ARCH}.tar.gz -C "\$APPDIR/" --strip-components=1
             - mkdir -p "\$APPDIR"/usr/bin
             - mkdir -p "\$APPDIR"/usr/lib
             - mkdir -p "\$APPDIR"/usr/share/applications

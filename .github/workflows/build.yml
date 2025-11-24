@@ -112,6 +112,8 @@ jobs:
             name: FreeBox
             version: ${VERSION}
             AppImageNameTemplate: "FreeBox-{version}-{arch}"
+          sources:
+            - skip: true
           script:
             - cp "$GITHUB_WORKSPACE/distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" .
             - tar -xzf ./FreeBox_${VERSION}_${ARCH}.tar.gz --strip-components=1
@@ -153,7 +155,7 @@ jobs:
             - rm -rf jpackage_temp 2>/dev/null || true
           EOF
           
-          ./pkg2appimage FreeBox-AppImage.yml
+          ./pkg2appimage --skip-script FreeBox-AppImage.yml
           if [ -f "out/FreeBox-${VERSION}-${ARCH}.AppImage" ]; then
             mv "out/FreeBox-${VERSION}-${ARCH}.AppImage" "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"
           else

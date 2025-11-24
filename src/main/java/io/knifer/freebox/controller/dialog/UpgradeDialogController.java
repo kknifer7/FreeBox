@@ -2,6 +2,8 @@ package io.knifer.freebox.controller.dialog;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RuntimeUtil;
+import io.knifer.freebox.constant.BaseResources;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ButtonTypes;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
@@ -45,20 +47,27 @@ public class UpgradeDialogController extends BaseController {
     @FXML
     private Label progressLabel;
     @FXML
+    private Label currentVersionTooLowLabel;
+    @FXML
     private ProgressBar downloadProgressBar;
     @FXML
     private Button upgradeButton;
 
     private final BooleanProperty upgradingProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty currentVersionTooLowProperty = new SimpleBooleanProperty(false);
     private File storagePath;
     private DownloadService downloadService;
 
     @FXML
     private void initialize() {
+        currentVersionTooLowLabel.visibleProperty().bind(currentVersionTooLowProperty);
+        currentVersionTooLowLabel.managedProperty().bind(currentVersionTooLowProperty);
+        upgradeButton.disableProperty().bind(currentVersionTooLowProperty.or(upgradingProperty));
         Platform.runLater(() -> {
             UpgradeCheckResultBO upgradeCheckResult = getData();
             UpgradeConfig upgradeConfig = upgradeCheckResult.getUpgradeConfig();
             UpgradeConfig.ReleaseFileInfo releaseFileInfo = upgradeCheckResult.getAvailableReleaseFileInfo();
+            int currentVersionCode;
 
             storagePath = StorageHelper.getTempStoragePath()
                     .resolve(releaseFileInfo.getFileName())
@@ -67,7 +76,12 @@ public class UpgradeDialogController extends BaseController {
             sizeLabel.setText(FormattingUtil.sizeFormat(releaseFileInfo.getFileSize()));
             changelogTextFlow.getChildren().add(new Text(upgradeConfig.getChangelog()));
 
-            upgradeButton.disableProperty().bind(upgradingProperty);
+            currentVersionCode = Integer.parseInt(
+                    BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE)
+            );
+            if (currentVersionCode < upgradeConfig.getMinRequiredVersionCode()) {
+                currentVersionTooLowProperty.set(true);
+            }
         });
     }
 
@@ -153,14 +167,15 @@ public class UpgradeDialogController extends BaseController {
         Alert alert = new Alert(
                 Alert.AlertType.INFORMATION,
                 I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_CONTENT),
-                ButtonTypes.OPEN_DIRECTLY,
-                ButtonTypes.OPEN_PATH
+                ButtonTypes.OPEN_PATH,
+                ButtonTypes.OPEN_DIRECTLY
         );
         DialogPane dialogPane;
 
         alert.setTitle(I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_TITLE));
         alert.setHeaderText(I18nHelper.get(I18nKeys.UPGRADE_INSTALL_DIALOG_TITLE));
         dialogPane = alert.getDialogPane();
+        WindowHelper.setFontFamily(dialogPane, ConfigHelper.getUsageFontFamily());
         dialogPane.lookupButton(ButtonTypes.OPEN_DIRECTLY)
                         .addEventFilter(
                                 ActionEvent.ACTION,
@@ -178,6 +193,7 @@ public class UpgradeDialogController extends BaseController {
                                 }
                         );
         alert.show();
+        WindowHelper.getStage(dialogPane).setWidth(500);
     }
 
     private void startInstallOnMac() {

@@ -1,5 +1,6 @@
 package io.knifer.freebox.model.domain;
 
+import io.knifer.freebox.constant.Architecture;
 import io.knifer.freebox.constant.Platform;
 import lombok.Data;
 
@@ -13,6 +14,8 @@ import java.util.List;
  */
 @Data
 public class UpgradeConfig {
+
+    private Integer minRequiredVersionCode;
 
     private String version;
 
@@ -30,6 +33,8 @@ public class UpgradeConfig {
     public static class ReleaseFileInfo {
 
         private Platform platform;
+
+        private Architecture architecture;
 
         private Long fileSize;
 

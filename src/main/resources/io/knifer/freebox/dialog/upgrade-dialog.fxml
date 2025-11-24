@@ -27,15 +27,7 @@
    <Label styleClass="bold" text="%settings.upgrade.changelog" />
 
    <!-- 更新日志内容 (可滚动) -->
-   <ScrollPane
-           fitToWidth="true"
-           hbarPolicy="NEVER"
-           prefHeight="150"
-           minHeight="100"
-           maxHeight="200"
-           VBox.vgrow="ALWAYS"
-           styleClass="changelog-scroll-pane"
-   >
+   <ScrollPane fitToWidth="true" hbarPolicy="NEVER" maxHeight="200" minHeight="100" prefHeight="150" styleClass="changelog-scroll-pane" VBox.vgrow="ALWAYS">
       <TextFlow fx:id="changelogTextFlow" styleClass="changelog-text-flow">
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -44,12 +36,13 @@
    </ScrollPane>
 
    <!-- 下载进度区域 -->
-   <VBox spacing="8" prefHeight="80" prefWidth="60">
+   <VBox prefHeight="80" prefWidth="60" spacing="8">
       <HBox alignment="CENTER_LEFT" spacing="5">
          <Label styleClass="bold" text="%settings.upgrade.download-progress" />
          <Label fx:id="progressLabel" styleClass="light-blue" text="-- / --" />
       </HBox>
       <ProgressBar fx:id="downloadProgressBar" prefHeight="15.0" prefWidth="460.0" progress="0.0" styleClass="light-blue" />
+      <Label fx:id="currentVersionTooLowLabel" styleClass="bold, fs-big" text="%settings.upgrade.current-version-too-low" textFill="red" />
    </VBox>
 
    <!-- 按钮区域 -->

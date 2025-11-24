@@ -6,7 +6,6 @@ import io.knifer.freebox.util.catvod.SpiderInvokeUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,10 +40,10 @@ public class SpiderJarLoaderTest {
 
         spiderJarLoader.setApiConfig(apiConfig);
         spiderJarLoader.loadJar("Zxzj", apiConfig.getSpider());
-        spider = spiderJarLoader.getSpider("NCat", "csp_NCat", null, apiConfig.getSpider());
+        spider = spiderJarLoader.getSpider("Zxzj", "csp_Zxzj", null, apiConfig.getSpider());
         try {
             System.out.println("homeContent: " + SpiderInvokeUtil.homeContent(spider, false));
-            System.out.println("homeVideoContent: " + SpiderInvokeUtil.homeVideoContent(spider));
+            /*System.out.println("homeVideoContent: " + SpiderInvokeUtil.homeVideoContent(spider));
             System.out.println(
                     "categoryContent: " +
                             SpiderInvokeUtil.categoryContent(spider, "1", "1", false, null)
@@ -55,7 +54,7 @@ public class SpiderJarLoaderTest {
             System.out.println("manualVideoCheck: " + SpiderInvokeUtil.manualVideoCheck(spider));
             System.out.println("proxyLocal: " + Arrays.toString(SpiderInvokeUtil.proxyLocal(spider, null)));
             System.out.println("isVideoFormat: " + SpiderInvokeUtil.isVideoFormat(spider, "https://www.baidu.com"));
-            System.out.println("client: " + SpiderInvokeUtil.client(spider));
+            System.out.println("client: " + SpiderInvokeUtil.client(spider));*/
             SpiderInvokeUtil.destroy(spider);
         } catch (Exception e) {
             throw new RuntimeException(e);

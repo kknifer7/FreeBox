@@ -3,11 +3,14 @@ package io.knifer.freebox.helper;
 import cn.hutool.core.util.RuntimeUtil;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
+import io.knifer.freebox.constant.Architecture;
 import io.knifer.freebox.constant.Platform;
 import io.knifer.freebox.exception.FBException;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.ArchUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.arch.Processor;
 
 import javax.swing.*;
 
@@ -23,9 +26,11 @@ public class SystemHelper {
             new Timer(60000, ignored -> sendThreadExecutionState());
 
     private final static io.knifer.freebox.constant.Platform CURRENT_PLATFORM;
+    private final static Architecture CURRENT_ARCHITECTURE;
 
     static {
         String exeResult;
+        Processor processor;
 
         // 确定运行平台
         if (SystemUtils.IS_OS_WINDOWS) {
@@ -48,6 +53,16 @@ public class SystemHelper {
             }
         } else {
             throw new FBException("unsupported platform");
+        }
+        // 确定运行架构
+        processor = ArchUtils.getProcessor();
+        if (!processor.is64Bit()) {
+            throw new FBException("unsupported architecture");
+        }
+        switch (processor.getType()) {
+            case X86 -> CURRENT_ARCHITECTURE = Architecture.AMD64;
+            case AARCH_64 -> CURRENT_ARCHITECTURE = Architecture.ARM64;
+            default -> throw new FBException("unsupported architecture");
         }
     }
 
@@ -80,5 +95,9 @@ public class SystemHelper {
 
     public io.knifer.freebox.constant.Platform getPlatform() {
         return CURRENT_PLATFORM;
+    }
+
+    public Architecture getArchitecture() {
+        return CURRENT_ARCHITECTURE;
     }
 }

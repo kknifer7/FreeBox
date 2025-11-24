@@ -95,7 +95,73 @@ jobs:
           fi
           
           tar -czvf "distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" -C build/jpackage/ FreeBox/
+
+      - name: Build AppImage
+        run: |
+          VERSION=${{ needs.load_version.outputs.VERSION }}
+          ARCH=${{ matrix.arch }}
           
+          sudo apt-get update
+          sudo apt-get install -y file desktop-file-utils
+          
+          wget -O pkg2appimage https://github.com/AppImage/pkg2appimage/raw/master/pkg2appimage
+          chmod +x pkg2appimage
+          
+          cat > FreeBox-AppImage.yml << EOF
+          app:
+            name: FreeBox
+            version: ${VERSION}
+            AppImageNameTemplate: "FreeBox-{version}-{arch}"
+          package:
+            url: ./distribution/FreeBox_${VERSION}_${ARCH}.tar.gz
+          script:
+            - tar -xzf *.tar.gz -C "\$APPDIR/" --strip-components=1
+            - mkdir -p "\$APPDIR"/usr/bin
+            - mkdir -p "\$APPDIR"/usr/lib
+            - mkdir -p "\$APPDIR"/usr/share/applications
+            - mkdir -p "\$APPDIR"/usr/share/pixmaps
+            - mkdir -p "\$APPDIR"/usr/share/icons/hicolor/48x48/apps
+            - mv "\$APPDIR"/bin "\$APPDIR"/usr/
+            - mv "\$APPDIR"/lib "\$APPDIR"/usr/
+            - chmod +x "\$APPDIR"/usr/bin/FreeBox
+            - chmod +x "\$APPDIR"/usr/lib/runtime/bin/java
+            - cp "\$APPDIR"/usr/lib/FreeBox.png "\$APPDIR"/usr/share/pixmaps/FreeBox.png
+            - cp "\$APPDIR"/usr/lib/FreeBox.png "\$APPDIR"/usr/share/icons/hicolor/48x48/apps/FreeBox.png
+            - cat > "\$APPDIR"/usr/share/applications/FreeBox.desktop << 'EOF2'
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=FreeBox
+          GenericName=FreeBox Application
+          Comment=FreeBox Application for video playback and management
+          Exec=FreeBox
+          Icon=FreeBox
+          Categories=AudioVideo;Audio;Video;
+          Keywords=video;audio;media;player;
+          Terminal=false
+          StartupWMClass=FreeBox
+          X-AppImage-Version=${VERSION}
+          EOF2
+            - cat > "$APPDIR"/AppRun << 'EOF2'
+          #!/bin/bash
+          export JAVA_HOME="\$(dirname "\$(readlink -f "\$0")")/usr/lib/runtime"
+          export PATH="\${JAVA_HOME}/bin:\${PATH}"
+          cd "\$(dirname "\$(readlink -f "\$0")")"
+          exec ./usr/bin/FreeBox "\$@"
+          EOF2
+            - chmod +x "$APPDIR"/AppRun
+            - ln -sf ../bin/FreeBox "$APPDIR"/usr/bin/FreeBox
+            - rm -rf "$APPDIR"/jpackage_temp 2>/dev/null || true
+          EOF
+          
+          ./pkg2appimage FreeBox-AppImage.yml
+          if [ -f "out/FreeBox-${VERSION}-${ARCH}.AppImage" ]; then
+            mv "out/FreeBox-${VERSION}-${ARCH}.AppImage" "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"
+          else
+            echo "No AppImage file found"
+
+      - name: Print artifacts
+        run: |
           echo "generated packages:"
           ls -la distribution/
 
@@ -107,6 +173,7 @@ jobs:
             distribution/*.deb
             distribution/*.rpm
             distribution/*.tar.gz
+            distribution/*.AppImage
           retention-days: 30
 
   build-windows-package:

@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'org.javamodularity.moduleplugin' version '1.8.12'
-    id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'org.beryx.jlink' version '2.25.0'
     id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.23'
     id 'org.gradlex.extra-java-module-info' version '1.12'
@@ -39,7 +39,7 @@ application {
 }
 
 javafx {
-    version = '17.0.6'
+    version = '21.0.9'
     modules = ['javafx.controls', 'javafx.fxml']
 }
 

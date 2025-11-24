@@ -155,7 +155,7 @@ jobs:
             - rm -rf jpackage_temp 2>/dev/null || true
           EOF
           
-          ./pkg2appimage --skip-script FreeBox-AppImage.yml
+          ./pkg2appimage FreeBox-AppImage.yml
           if [ -f "out/FreeBox-${VERSION}-${ARCH}.AppImage" ]; then
             mv "out/FreeBox-${VERSION}-${ARCH}.AppImage" "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"
           else

@@ -106,6 +106,9 @@ jobs:
             APPIMAGETOOL_ARCH="aarch64"
           fi
           
+          sudo apt-get update
+          sudo apt-get install -y desktop-file-utils
+          
           wget -O appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGETOOL_ARCH}.AppImage"
           chmod +x appimagetool
           
@@ -135,6 +138,18 @@ jobs:
           
           chmod +x AppRun
           ln -sf ../bin/FreeBox usr/bin/FreeBox
+          
+          echo "=== 开始调试信息 ==="
+          echo "1. 当前目录:"
+          pwd
+          echo "2. 查看AppDir完整结构:"
+          find . -type f | sort
+          echo "3. 特别检查.desktop文件:"
+          ls -la usr/share/applications/ || echo "usr/share/applications/ 目录不存在!"
+          echo "4. 检查.desktop文件内容:"
+          cat usr/share/applications/FreeBox.desktop || echo "无法读取.desktop文件"
+          echo "5. 检查图标文件:"
+          find . -name "FreeBox.png" -type f || echo "未找到FreeBox.png图标文件"
           
           cd ..
           

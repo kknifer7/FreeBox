@@ -113,22 +113,20 @@ jobs:
             version: ${VERSION}
             AppImageNameTemplate: "FreeBox-{version}-{arch}"
           script:
-            - echo $GITHUB_WORKSPACE
-            - ls $GITHUB_WORKSPACE/distribution/
             - cp "$GITHUB_WORKSPACE/distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" .
-            - tar -xzf ./FreeBox_${VERSION}_${ARCH}.tar.gz -C "\$APPDIR/" --strip-components=1
-            - mkdir -p "\$APPDIR"/usr/bin
-            - mkdir -p "\$APPDIR"/usr/lib
-            - mkdir -p "\$APPDIR"/usr/share/applications
-            - mkdir -p "\$APPDIR"/usr/share/pixmaps
-            - mkdir -p "\$APPDIR"/usr/share/icons/hicolor/48x48/apps
-            - mv "\$APPDIR"/bin "\$APPDIR"/usr/
-            - mv "\$APPDIR"/lib "\$APPDIR"/usr/
-            - chmod +x "\$APPDIR"/usr/bin/FreeBox
-            - chmod +x "\$APPDIR"/usr/lib/runtime/bin/java
-            - cp "\$APPDIR"/usr/lib/FreeBox.png "\$APPDIR"/usr/share/pixmaps/FreeBox.png
-            - cp "\$APPDIR"/usr/lib/FreeBox.png "\$APPDIR"/usr/share/icons/hicolor/48x48/apps/FreeBox.png
-            - cat > "\$APPDIR"/usr/share/applications/FreeBox.desktop << 'EOF2'
+            - tar -xzf ./FreeBox_${VERSION}_${ARCH}.tar.gz --strip-components=1
+            - mkdir -p usr/bin
+            - mkdir -p usr/lib
+            - mkdir -p usr/share/applications
+            - mkdir -p usr/share/pixmaps
+            - mkdir -p usr/share/icons/hicolor/48x48/apps
+            - mv bin usr/
+            - mv lib usr/
+            - chmod +x usr/bin/FreeBox
+            - chmod +x usr/lib/runtime/bin/java
+            - cp usr/lib/FreeBox.png usr/share/pixmaps/FreeBox.png
+            - cp usr/lib/FreeBox.png usr/share/icons/hicolor/48x48/apps/FreeBox.png
+            - cat > usr/share/applications/FreeBox.desktop << 'EOF2'
           [Desktop Entry]
           Version=1.0
           Type=Application
@@ -143,16 +141,16 @@ jobs:
           StartupWMClass=FreeBox
           X-AppImage-Version=${VERSION}
           EOF2
-            - cat > "$APPDIR"/AppRun << 'EOF2'
+            - cat > AppRun << 'EOF2'
           #!/bin/bash
           export JAVA_HOME="\$(dirname "\$(readlink -f "\$0")")/usr/lib/runtime"
           export PATH="\${JAVA_HOME}/bin:\${PATH}"
           cd "\$(dirname "\$(readlink -f "\$0")")"
           exec ./usr/bin/FreeBox "\$@"
           EOF2
-            - chmod +x "$APPDIR"/AppRun
-            - ln -sf ../bin/FreeBox "$APPDIR"/usr/bin/FreeBox
-            - rm -rf "$APPDIR"/jpackage_temp 2>/dev/null || true
+            - chmod +x AppRun
+            - ln -sf ../bin/FreeBox usr/bin/FreeBox
+            - rm -rf jpackage_temp 2>/dev/null || true
           EOF
           
           ./pkg2appimage FreeBox-AppImage.yml

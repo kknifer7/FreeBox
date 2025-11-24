@@ -114,6 +114,9 @@ jobs:
           tar -xzf "../distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" --strip-components=1
           mkdir -p usr/bin
           mkdir -p usr/lib
+          mkdir -p usr/share/applications
+          mkdir -p usr/share/pixmaps
+          mkdir -p usr/share/icons/hicolor/48x48/apps
           mv bin usr/
           mv lib usr/
           chmod +x usr/bin/FreeBox
@@ -135,7 +138,8 @@ jobs:
           X-AppImage-Version=${VERSION}
           EOF
           cp usr/lib/FreeBox.png .
-          cp usr/lib/FreeBox.png usr/share/pixmaps/ || true
+          cp usr/lib/FreeBox.png usr/share/pixmaps/
+          cp usr/lib/FreeBox.png usr/share/icons/hicolor/48x48/apps/
           cat > AppRun << 'EOF'
           #!/bin/bash
           HERE="$(dirname "$(readlink -f "$0")")"
@@ -145,6 +149,7 @@ jobs:
           exec ./usr/bin/FreeBox "$@"
           EOF
           chmod +x AppRun
+          ln -sf ../bin/FreeBox usr/bin/FreeBox
           cd ..
           ./appimagetool FreeBox.AppDir "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"
 

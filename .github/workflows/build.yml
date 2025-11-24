@@ -111,7 +111,9 @@ jobs:
           
           mkdir -p FreeBox.AppDir
           cd FreeBox.AppDir
+          
           tar -xzf "../distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" --strip-components=1
+          
           mkdir -p usr/bin
           mkdir -p usr/lib
           mkdir -p usr/share/applications
@@ -119,38 +121,23 @@ jobs:
           mkdir -p usr/share/icons/hicolor/48x48/apps
           mv bin usr/
           mv lib usr/
+          
           chmod +x usr/bin/FreeBox
           chmod +x usr/lib/runtime/bin/java
-          mkdir -p usr/share/applications
-          cat > usr/share/applications/FreeBox.desktop << 'EOF'
-          [Desktop Entry]
-          Version=1.0
-          Type=Application
-          Name=FreeBox
-          GenericName=FreeBox Application
-          Comment=FreeBox Application for video playback and management
-          Exec=FreeBox
-          Icon=FreeBox
-          Categories=AudioVideo;Audio;Video;
-          Keywords=video;audio;media;player;
-          Terminal=false
-          StartupWMClass=FreeBox
-          X-AppImage-Version=${VERSION}
-          EOF
+          
           cp usr/lib/FreeBox.png .
           cp usr/lib/FreeBox.png usr/share/pixmaps/
           cp usr/lib/FreeBox.png usr/share/icons/hicolor/48x48/apps/
-          cat > AppRun << 'EOF'
-          #!/bin/bash
-          HERE="$(dirname "$(readlink -f "$0")")"
-          export JAVA_HOME="$HERE/usr/lib/runtime"
-          export PATH="$JAVA_HOME/bin:$PATH"
-          cd "$HERE"
-          exec ./usr/bin/FreeBox "$@"
-          EOF
+          
+          cp ../resources/appimagetool/AppRun .
+          cp ../resources/appimagetool/FreeBox.desktop usr/share/applications/
+          sed -i "s/PLACEHOLDER_VERSION/${VERSION}/g" usr/share/applications/FreeBox.desktop
+          
           chmod +x AppRun
           ln -sf ../bin/FreeBox usr/bin/FreeBox
+          
           cd ..
+          
           ./appimagetool FreeBox.AppDir "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"
 
       - name: Print artifacts

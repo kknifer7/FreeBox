@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=FreeBox
+GenericName=FreeBox Application
+Comment=FreeBox Application for video playback and management
+Exec=FreeBox
+Icon=FreeBox
+Categories=AudioVideo;Audio;Video;
+Keywords=video;audio;media;player;
+Terminal=false
+StartupWMClass=FreeBox
+X-AppImage-Version=PLACEHOLDER_VERSION

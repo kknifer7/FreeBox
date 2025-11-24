@@ -129,27 +129,17 @@ jobs:
           chmod +x usr/lib/runtime/bin/java
           
           cp usr/lib/FreeBox.png .
+          cp usr/lib/FreeBox.png .DirIcon
           cp usr/lib/FreeBox.png usr/share/pixmaps/
           cp usr/lib/FreeBox.png usr/share/icons/hicolor/48x48/apps/
           
-          cp ../resources/appimagetool/AppRun .
-          cp ../resources/appimagetool/FreeBox.desktop usr/share/applications/
-          sed -i "s/PLACEHOLDER_VERSION/${VERSION}/g" usr/share/applications/FreeBox.desktop
+          cp ../resources/appimagetool/FreeBox.desktop .
+          sed -i "s/PLACEHOLDER_VERSION/${VERSION}/g" FreeBox.desktop
           
+          cp ../resources/appimagetool/AppRun .          
           chmod +x AppRun
-          ln -sf ../bin/FreeBox usr/bin/FreeBox
           
-          echo "=== 开始调试信息 ==="
-          echo "1. 当前目录:"
-          pwd
-          echo "2. 查看AppDir完整结构:"
-          find . -type f | sort
-          echo "3. 特别检查.desktop文件:"
-          ls -la usr/share/applications/ || echo "usr/share/applications/ 目录不存在!"
-          echo "4. 检查.desktop文件内容:"
-          cat usr/share/applications/FreeBox.desktop || echo "无法读取.desktop文件"
-          echo "5. 检查图标文件:"
-          find . -name "FreeBox.png" -type f || echo "未找到FreeBox.png图标文件"
+          ln -sf ../bin/FreeBox usr/bin/FreeBox
           
           cd ..
           

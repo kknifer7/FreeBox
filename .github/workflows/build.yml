@@ -102,7 +102,7 @@ jobs:
           ARCH=${{ matrix.arch }}
           
           sudo apt-get update
-          sudo apt-get install -y file desktop-file-utils convert
+          sudo apt-get install -y file desktop-file-utils imagemagick
           
           wget -O pkg2appimage https://github.com/AppImage/pkg2appimage/raw/master/pkg2appimage
           chmod +x pkg2appimage

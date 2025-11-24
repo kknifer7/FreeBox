@@ -138,9 +138,7 @@ jobs:
           
           cp ../resources/appimagetool/AppRun .          
           chmod +x AppRun
-          
-          ln -sf ../bin/FreeBox usr/bin/FreeBox
-          
+                    
           cd ..
           
           ./appimagetool FreeBox.AppDir "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"

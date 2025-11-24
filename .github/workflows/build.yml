@@ -133,9 +133,6 @@ jobs:
           cp usr/lib/FreeBox.png usr/share/pixmaps/
           cp usr/lib/FreeBox.png usr/share/icons/hicolor/48x48/apps/
           
-          mkdir -p usr/share/metainfo
-          cp ../resources/appimagetool/FreeBox.appdata.xml usr/share/metainfo/
-          
           cp ../resources/appimagetool/FreeBox.desktop .
           sed -i "s/PLACEHOLDER_VERSION/${VERSION}/g" FreeBox.desktop
           

@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.bjoernpetersen.m3u.M3uParser;
 import net.bjoernpetersen.m3u.model.M3uEntry;
 import net.bjoernpetersen.m3u.model.M3uMetadata;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Files;
@@ -116,7 +117,7 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                     liveChannelGroups = parseGenreLive(liveConfigContent);
                 }
 
-                return liveChannelGroups;
+                return ObjectUtils.defaultIfNull(liveChannelGroups, List.of());
             }
 
             private List<LiveChannelGroup> parseM3uLive(String liveConfigContent) {

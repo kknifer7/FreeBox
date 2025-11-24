@@ -100,35 +100,26 @@ jobs:
         run: |
           VERSION=${{ needs.load_version.outputs.VERSION }}
           ARCH=${{ matrix.arch }}
+          if [ "$ARCH" = "amd64" ]; then
+            APPIMAGETOOL_ARCH="x86_64"
+          else
+            APPIMAGETOOL_ARCH="aarch64"
+          fi
           
-          sudo apt-get update
-          sudo apt-get install -y file desktop-file-utils imagemagick
+          wget -O appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGETOOL_ARCH}.AppImage"
+          chmod +x appimagetool
           
-          wget -O pkg2appimage https://github.com/AppImage/pkg2appimage/raw/master/pkg2appimage
-          chmod +x pkg2appimage
-          
-          cat > FreeBox-AppImage.yml << EOF
-          app:
-            name: FreeBox
-            version: ${VERSION}
-            AppImageNameTemplate: "FreeBox-{version}-{arch}"
-          sources:
-            - skip: true
-          script:
-            - cp "$GITHUB_WORKSPACE/distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" .
-            - tar -xzf ./FreeBox_${VERSION}_${ARCH}.tar.gz --strip-components=1
-            - mkdir -p usr/bin
-            - mkdir -p usr/lib
-            - mkdir -p usr/share/applications
-            - mkdir -p usr/share/pixmaps
-            - mkdir -p usr/share/icons/hicolor/48x48/apps
-            - mv bin usr/
-            - mv lib usr/
-            - chmod +x usr/bin/FreeBox
-            - chmod +x usr/lib/runtime/bin/java
-            - cp usr/lib/FreeBox.png usr/share/pixmaps/FreeBox.png
-            - cp usr/lib/FreeBox.png usr/share/icons/hicolor/48x48/apps/FreeBox.png
-            - cat > usr/share/applications/FreeBox.desktop << 'EOF2'
+          mkdir -p FreeBox.AppDir
+          cd FreeBox.AppDir
+          tar -xzf "../distribution/FreeBox_${VERSION}_${ARCH}.tar.gz" --strip-components=1
+          mkdir -p usr/bin
+          mkdir -p usr/lib
+          mv bin usr/
+          mv lib usr/
+          chmod +x usr/bin/FreeBox
+          chmod +x usr/lib/runtime/bin/java
+          mkdir -p usr/share/applications
+          cat > usr/share/applications/FreeBox.desktop << 'EOF'
           [Desktop Entry]
           Version=1.0
           Type=Application
@@ -142,24 +133,20 @@ jobs:
           Terminal=false
           StartupWMClass=FreeBox
           X-AppImage-Version=${VERSION}
-          EOF2
-            - cat > AppRun << 'EOF2'
-          #!/bin/bash
-          export JAVA_HOME="\$(dirname "\$(readlink -f "\$0")")/usr/lib/runtime"
-          export PATH="\${JAVA_HOME}/bin:\${PATH}"
-          cd "\$(dirname "\$(readlink -f "\$0")")"
-          exec ./usr/bin/FreeBox "\$@"
-          EOF2
-            - chmod +x AppRun
-            - ln -sf ../bin/FreeBox usr/bin/FreeBox
-            - rm -rf jpackage_temp 2>/dev/null || true
           EOF
-          
-          ./pkg2appimage FreeBox-AppImage.yml
-          if [ -f "out/FreeBox-${VERSION}-${ARCH}.AppImage" ]; then
-            mv "out/FreeBox-${VERSION}-${ARCH}.AppImage" "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"
-          else
-            echo "No AppImage file found"
+          cp usr/lib/FreeBox.png .
+          cp usr/lib/FreeBox.png usr/share/pixmaps/ || true
+          cat > AppRun << 'EOF'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "$0")")"
+          export JAVA_HOME="$HERE/usr/lib/runtime"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          cd "$HERE"
+          exec ./usr/bin/FreeBox "$@"
+          EOF
+          chmod +x AppRun
+          cd ..
+          ./appimagetool FreeBox.AppDir "distribution/FreeBox_${VERSION}_${ARCH}.AppImage"
 
       - name: Print artifacts
         run: |

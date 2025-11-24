@@ -3,6 +3,7 @@ package io.knifer.freebox.handler.impl;
 import cn.hutool.core.text.StrPool;
 import io.knifer.freebox.handler.NoParameterHandler;
 import io.knifer.freebox.helper.ConfigHelper;
+import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.NetworkUtil;
 import io.knifer.freebox.util.ValidationUtil;
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class SingleInstanceApplicationHandler implements NoParameterHandler {
 
     private final static String WAKEUP = "wakeup";
-    private final static Path LOCKFILE_PATH = Path.of(".lock");
+    private final static Path LOCKFILE_PATH = StorageHelper.getLocalStoragePath().resolve(".lock");
 
     @Override
     public void handle() {

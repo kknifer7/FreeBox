@@ -113,11 +113,9 @@ jobs:
             version: ${VERSION}
             AppImageNameTemplate: "FreeBox-{version}-{arch}"
           package:
-            url: ./distribution/FreeBox_${VERSION}_${ARCH}.tar.gz
+            url: file://$GITHUB_WORKSPACE/distribution/FreeBox_${VERSION}_${ARCH}.tar.gz
           script:
-            - pwd
-            - ls -la
-            - tar -xzf ../FreeBox_${VERSION}_${ARCH}.tar.gz -C "\$APPDIR/" --strip-components=1
+            - tar -xzf ./FreeBox_${VERSION}_${ARCH}.tar.gz -C "\$APPDIR/" --strip-components=1
             - mkdir -p "\$APPDIR"/usr/bin
             - mkdir -p "\$APPDIR"/usr/lib
             - mkdir -p "\$APPDIR"/usr/share/applications

@@ -68,7 +68,7 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
-public class VideoController extends BaseController {
+public class VideoController extends BaseController implements Destroyable {
 
     @FXML
     private HBox root;
@@ -130,7 +130,7 @@ public class VideoController extends BaseController {
             );
             // 绑定播放下一集事件
             player.setOnStepForward(this::onPlayerStepForward);
-            WindowHelper.getStage(root).setOnCloseRequest(evt -> close());
+            WindowHelper.getStage(root).setOnCloseRequest(evt -> destroy());
             videoDetailSplitPane.minHeightProperty().bind(root.heightProperty());
             putMovieDataInView();
             startPlayVideo();
@@ -370,7 +370,7 @@ public class VideoController extends BaseController {
         Platform.runLater(() -> player.stop());
         template.getPlayerContent(
                 GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
-                playerContentJson -> {
+                playerContentJson ->
                     Platform.runLater(() -> {
                         JsonElement propsElm;
                         JsonObject propsObj;
@@ -448,8 +448,7 @@ public class VideoController extends BaseController {
                         playingVideo = video;
                         playingUrlInfo = urlInfo;
                         playingInfoBean = urlInfoBean;
-                    });
-                }
+                    })
         );
     }
 
@@ -527,7 +526,8 @@ public class VideoController extends BaseController {
         return proxyUrl;
     }
 
-    private void close() {
+    @Override
+    public void destroy() {
         VLCPlayerDestroyService destroyVLCPlayerService = new VLCPlayerDestroyService(player);
 
         LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);

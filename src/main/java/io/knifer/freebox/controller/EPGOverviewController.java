@@ -64,7 +64,7 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
-public class EPGOverviewController extends BaseController {
+public class EPGOverviewController extends BaseController implements Destroyable {
 
     @FXML
     private VBox root;
@@ -268,7 +268,8 @@ public class EPGOverviewController extends BaseController {
         }
     }
 
-    private void destroy() {
+    @Override
+    public void destroy() {
         datetimeUpdateTimer.stop();
         epgDataTable.clear();
         addedChannels.clear();

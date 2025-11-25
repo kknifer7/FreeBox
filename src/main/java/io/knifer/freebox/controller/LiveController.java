@@ -38,7 +38,7 @@ import java.util.List;
  * @author Knifer
  */
 @Slf4j
-public class LiveController extends BaseController {
+public class LiveController extends BaseController implements Destroyable {
 
     @FXML
     private VBox root;
@@ -168,7 +168,8 @@ public class LiveController extends BaseController {
         playerHBox.maxHeightProperty().bind(heightProp);
     }
 
-    private void destroy() {
+    @Override
+    public void destroy() {
         Service<Void> destroyVLCPlayerService;
 
         if (loadLiveChannelGroupService != null && loadLiveChannelGroupService.isRunning()) {

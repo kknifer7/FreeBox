@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  * @author Knifer
  */
 @Slf4j
-public class SourceAuditController {
+public class SourceAuditController implements Destroyable {
 
     @FXML
     private BorderPane root;
@@ -160,13 +160,13 @@ public class SourceAuditController {
                 if (!success) {
                     return;
                 }
-                template.getSourceBeanList(sourceBeans -> {
+                template.getSourceBeanList(sourceBeans ->
                     Platform.runLater(() -> {
                         fillSourceBeanData(sourceBeans);
                         interruptAuditFlag.set(false);
                         setLoading(false);
-                    });
-                });
+                    })
+                );
             });
         });
     }
@@ -201,7 +201,8 @@ public class SourceAuditController {
         responseRawDataTextArea.clear();
     }
 
-    private void destroy() {
+    @Override
+    public void destroy() {
         onStopAuditingSourceBeanBtnAction();
         clientManager.clearCurrentClient();
     }
@@ -217,7 +218,7 @@ public class SourceAuditController {
         items.addAll(sourceBeans);
         sourceBeans.stream()
                 .map(SourceBean::getKey)
-                .forEach(sourceKey -> {
+                .forEach(sourceKey ->
                     sourceKeyAndAuditItemsMap.put(sourceKey, FXCollections.observableArrayList(
                             SourceAuditItem.newInitializedItem(
                                     sourceKey,
@@ -244,8 +245,8 @@ public class SourceAuditController {
                                     SourceAuditType.MOVIE_PLAY,
                                     I18nHelper.get(I18nKeys.SOURCE_AUDIT_AUDIT_TABLE_ITEM_MOVIE_PLAY)
                             )
-                    ));
-                });
+                    ))
+                );
     }
 
     @FXML

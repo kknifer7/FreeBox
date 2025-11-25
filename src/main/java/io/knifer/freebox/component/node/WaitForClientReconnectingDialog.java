@@ -3,6 +3,7 @@ package io.knifer.freebox.component.node;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
+import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.DialogPane;
@@ -11,6 +12,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.WindowEvent;
+
+import java.util.List;
 
 /**
  * 等待客户端重连窗口
@@ -28,22 +32,24 @@ public class WaitForClientReconnectingDialog extends AbstractNotificationDialog<
 
         cancelBtn.setOnAction(evt -> {
             Stage stage = Context.INSTANCE.getCurrentStage();
+            List<Stage> stages = Context.INSTANCE.popAllStage();
 
             if (stage != null) {
-                stage.hide();
+                closeStage(stage);
             }
-            while ((stage = Context.INSTANCE.popStage()) != null) {
-                if (stage == Context.INSTANCE.getPrimaryStage()) {
-                    if (!stage.isShowing()) {
-                        stage.show();
+            for (Stage s : stages) {
+                if (s == Context.INSTANCE.getPrimaryStage()) {
+                    if (!s.isShowing()) {
+                        s.show();
                     }
+                    Context.INSTANCE.setCurrentStage(s);
                     break;
                 }
-                if (stage.isShowing()) {
-                    stage.hide();
-                }
+                closeStage(s);
             }
-            hide();
+            if (isShowing()) {
+                close();
+            }
             Context.INSTANCE.getClientManager().shutdownConnectingExecutor();
         });
         cancelBtn.setFocusTraversable(false);
@@ -54,5 +60,12 @@ public class WaitForClientReconnectingDialog extends AbstractNotificationDialog<
         dialogPane.contentProperty().set(root);
         setHeaderText(I18nHelper.get(I18nKeys.ERROR_RECONNECTING_CLIENT));
         initStyle(StageStyle.UNDECORATED);
+    }
+
+    private void closeStage(Stage stage) {
+        if (stage.isShowing()) {
+            stage.hide();
+            Event.fireEvent(stage, new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
+        }
     }
 }

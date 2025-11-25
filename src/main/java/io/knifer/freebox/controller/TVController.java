@@ -55,7 +55,7 @@ import java.util.*;
  * @author Knifer
  */
 @Slf4j
-public class TVController {
+public class TVController implements Destroyable {
 
     @FXML
     private BorderPane root;
@@ -679,7 +679,8 @@ public class TVController {
     /**
      * 销毁方法
      */
-    private void destroy() {
+    @Override
+    public void destroy() {
         ClientInfo clientInfo = clientManager.getCurrentClientImmediately();
 
         if (clientInfo != null) {

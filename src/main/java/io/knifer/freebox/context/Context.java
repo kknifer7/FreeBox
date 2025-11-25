@@ -33,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -226,5 +228,20 @@ public enum Context {
         }
 
         return stageStack.pop();
+    }
+
+    public List<Stage> popAllStage() {
+        List<Stage> stageList;
+
+        if (stageStack.isEmpty()) {
+
+            return List.of();
+        }
+        stageList = new ArrayList<>(stageStack.size());
+        while (!stageStack.isEmpty()) {
+            stageList.add(stageStack.pop());
+        }
+
+        return stageList;
     }
 }

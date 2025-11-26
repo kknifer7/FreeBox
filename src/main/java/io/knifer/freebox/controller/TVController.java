@@ -12,7 +12,7 @@ import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
-import io.knifer.freebox.handler.impl.SoupianMovieSuggestionHandler;
+import io.knifer.freebox.handler.impl.IQiYiMovieSuggestionHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
@@ -99,7 +99,7 @@ public class TVController implements Destroyable {
     private ClientManager clientManager;
     private Movie.Video fetchMoreItem;
 
-    private final MovieSuggestionHandler movieSuggestionHandler = new SoupianMovieSuggestionHandler();
+    private final MovieSuggestionHandler movieSuggestionHandler = new IQiYiMovieSuggestionHandler();
 
     private final String HOME_SORT_DATA_ID = "ztx*1RcW6%Ep";
 

@@ -8,14 +8,14 @@
 
 <p align="center">
     <a href="https://github.com/kknifer7/FreeBox?tab=readme-ov-file#%E4%BA%8C%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">快速开始</a> |
-    <a href="https://github.com/kknifer7/FreeBox/wiki/%E5%A6%82%E4%BD%95%E5%9C%A8%E6%9C%AC%E5%9C%B0%E6%89%93%E5%8C%85%E9%A1%B9%E7%9B%AE%E6%BA%90%E7%A0%81">源码打包</a> |
+    <a href="https://github.com/kknifer7/FreeBox/wiki/%E9%A6%96%E9%A1%B5">常见疑难</a> |
     <a href="https://github.com/kknifer7/CatVodSpider-PC/wiki/Spider%E7%BC%96%E5%86%99%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97">Spider编写</a>
 </p>
 
 <p align="center">
     <a href="https://github.com/kknifer7/FreeBox"><img src="https://img.shields.io/github/release/kknifer7/FreeBox" alt="Release version"></a>
     <a href="https://sourceforge.net/projects/freeboxk/files/latest/download"><img alt="Download FreeBox" src="https://img.shields.io/sourceforge/dm/freeboxk.svg" ></a>
-    <a href="https://gluonhq.com/products/javafx/"><img src="https://img.shields.io/badge/javafx-^17.0.6-blue" alt="JavaFX"></a>
+    <a href="https://gluonhq.com/products/javafx/"><img src="https://img.shields.io/badge/javafx-21.0.9-blue" alt="JavaFX"></a>
 </p>
 
 <p align="center">一个基于 JavaFX 开发的影视播放软件</p>
@@ -24,7 +24,7 @@
 
 FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端软件，具有如下特点：
 
-- 小巧：软件安装包<50M，后续应该也不会特别膨胀了
+- 小巧：软件安装包50M，后续应该也不会特别膨胀了
 
 - 易用：延续经典TVBox风味，配置简单直观
 
@@ -32,13 +32,7 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 
 - ~~开箱即用~~：前提是你安装一个[VLC播放器](https://www.videolan.org/vlc/)
 
-支持平台（目前仅支持 x86 64位，其他平台用户可[源码打包](https://github.com/kknifer7/FreeBox/wiki/%E5%A6%82%E4%BD%95%E5%9C%A8%E6%9C%AC%E5%9C%B0%E6%89%93%E5%8C%85%E9%A1%B9%E7%9B%AE%E6%BA%90%E7%A0%81)使用）：
-
-- Windows：推荐在Windows10或以上系统运行，Windows7理论可行，可以试试看
-
-- MacOS
-
-- Linux：提供deb和rpm两种格式的安装包，视大家反馈情况考虑提供AppImage格式
+- 主流三端+双架构支持，提供AppImage，可以照顾到多数Linux发行版
 
 [查看软件功能列表](https://github.com/kknifer7/FreeBox/tree/main?tab=readme-ov-file#%E5%9B%9B%E5%8A%9F%E8%83%BD%E5%88%97%E8%A1%A8--%E5%BC%80%E5%8F%91%E8%AE%A1%E5%88%92)
 
@@ -52,15 +46,19 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 
 前往B站查看介绍视频：[点击这里](https://www.bilibili.com/video/BV1AXgmzUENg/)
 
-如遇软件的安装、升级问题，请到 [这里](https://github.com/kknifer7/FreeBox/wiki/%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E3%80%81%E5%8D%87%E7%BA%A7) 阅读安装、升级步骤
-
 ### 1. 下载
 
-**推荐使用安装版（msi安装包），便于接收软件的自动更新**
+**推荐下载安装版而非zip、tar.gz这样的压缩包，安装版便于接收软件的自动更新**
 
-点击下载最新版👇
+**建议在安装前阅读[安装指南](https://github.com/kknifer7/FreeBox/wiki/%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E3%80%81%E5%8D%87%E7%BA%A7)**
 
-[![Download FreeBox](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/freeboxk/files/latest/download)
+前往 [Releases页面](https://github.com/kknifer7/FreeBox/releases) ，或者根据你的系统情况，参照下面的表格进行下载：
+
+| 操作系统    | 版本要求 | amd64                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | arm64                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|:-------:|:----:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Windows | >=10 | [MSI安装包](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1.msi) \| [ZIP](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_win.zip)                                                                                                                                                                                                                                                              | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| macOS   | >=11 | [DMG](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_amd64.dmg)                                                                                                                                                                                                                                                                                                                                                                             | [DMG](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_arm64.dmg)                                                                                                                                                                                                                                                                                                                                                                             |
+| Linux   | -    | [DEB](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_amd64.deb) \| [RPM](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_amd64.rpm) \| [AppImage](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_amd64.AppImage) \| [tar.gz](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_amd64.tar.gz) | [DEB](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_arm64.deb) \| [RPM](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_arm64.rpm) \| [AppImage](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_arm64.AppImage) \| [tar.gz](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.4.1_arm64.tar.gz) |
 
 ### 2. TVBox-K下载
 
@@ -72,7 +70,7 @@ TVBox-K项目地址👇
 
 TVBox-K下载👇
 
-[蓝奏云 - 密码：3adx](https://wwzj.lanzoul.com/b01398fv3c)
+[蓝奏云 - 密码：bwbi](https://wwzj.lanzoul.com/b0139bgbve)
 
 ### 3. 安装VLC播放器
 
@@ -115,17 +113,17 @@ TVBox-K下载👇
 使用方式：
 
 1. 在 TVBox-K App 中进入“设置”
-
+   
    ![tvbox_home](doc/tvbox_home.png)
 
 2. 进入“FreeBox配对”
-
+   
    ![tvbox_setting](doc/tvbox_setting.png)
 
 3. 在下方输入框中输入FreeBox主界面显示的的IP和端口
-
+   
    **请仔细查看，相同颜色的框中的内容要一一对应**
-
+   
    ![tvbox_typing](doc/tvbox_typing.png)
 
 4. 点击下面的“连接/重连”按钮，连接成功后TVBox-K中弹出提示，FreeBox也会收到通知
@@ -149,9 +147,9 @@ TVBox-K下载👇
 2. 点击列表下方的“播放源审计”，进入审计窗口
 
 3. 左侧列表中会列出源中的所有站点，可以进行审计操作
-
+   
    - 批量审计：在左侧列表中勾选你想审计的站点，然后点击下方的“启动审计”
-
+   
    - 单独审计：在左侧列表中单击你想审计的站点，然后点击中央窗口的“单独审计”
 
 这里其他的东西可以自行摸索：
@@ -201,7 +199,7 @@ TVBox-K下载👇
 | 部分特殊源支持                          | 中       | 若有源无法观看，请反馈                                                                | ➖    |
 | 字体切换                             | 中       | 支持一键切换界面字体                                                                 | ✅    |
 | 播放器空降                            | 中       | 支持自定义空降，跳过影视片头、片尾                                                          | ❌️   |
-| 更好的打包分发                          | 中       | 安装包需要支持arm架构                                                               | ❌️   |
+| 更好的打包分发                          | 中       | 支持主流三端、双架构                                                                 | ✅    |
 | 在线放映室                            | 中       | 提供功能扩展，让软件连接到后端服务，实现**线上放映室**的功能（用户可以创建房间，分享影片，与线上的其他人同步观看，进行弹幕聊天等）        | ❌️   |
 | 更多针对**影视源作者**和**Spider开发者**的功能支持 | 中       | 目前阶段，会优先完善“源审计”模块中的“自定义审计”功能                                               | ❌️   |
 | 界面样式优化                           | 低       | 低优先级，目前作者只着重功能上的开发，界面都是框架的默认样式。如果你擅长CSS，对本项目感兴趣，也非常欢迎你跟作者一起探讨界面美化方案和贡献代码😘 | ❌️   |
@@ -242,11 +240,11 @@ FreeBox软件许可协议：
 4. 本软件无法控制、筛选、审查或保证用户访问的任何第三方内容的合法性、版权状态、准确性、安全性或适宜性。用户对其播放的内容负全部责任。
 
 5. 关于用户责任与风险承担：
-
+   
    5.1 用户必须确保其通过本软件配置、访问或播放的所有内容均已获相关权利人合法授权，或属于法律允许的自由使用范畴。
-
+   
    5.2 用户理解并同意，使用本软件访问第三方资源可能涉及侵犯版权、传播非法信息、隐私泄露、网络安全等风险。因用户使用本软件访问、播放或传播内容产生的一切法律责任、纠纷、损失及后果（包括法律诉讼、行政处罚、民事赔偿等），均由用户自行承担，与本软件及其开发者无涉。
-
+   
    5.3 开发者不认可、不支持任何利用本软件规避技术保护措施（如DRM）的行为，此类行为导致的侵权责任由用户全权承担。
 
 6. 用户承诺并保证不利用本软件从事任何侵犯他人知识产权或其他合法权益的活动，或进行任何违反法律法规的行为。严禁使用本软件播放、传播盗版、色情、暴力、赌博、诈骗、危害国家安全、危害社会稳定等非法或侵权内容。

@@ -11,63 +11,63 @@
 			"architecture": "amd64",
 			"fileSize": "52140397",
 			"fileName": "FreeBox_1.4.1.msi",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1.msi"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1.msi"
 		},
 		{
 			"platform": "mac",
 			"architecture": "amd64",
 			"fileSize": "54508551",
 			"fileName": "FreeBox_1.4.1_amd64.dmg",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.dmg"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.dmg"
 		},
 		{
 			"platform": "deb_linux",
 			"architecture": "amd64",
 			"fileSize": "51882636",
 			"fileName": "FreeBox_1.4.1_amd64.deb",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.deb"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.deb"
 		},
 		{
 			"platform": "rpm_linux",
 			"architecture": "amd64",
 			"fileSize": "55393986",
 			"fileName": "FreeBox_1.4.1_amd64.rpm",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.rpm"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.rpm"
 		},
 		{
 			"platform": "other_linux",
 			"architecture": "amd64",
 			"fileSize": "54929912",
 			"fileName": "FreeBox_1.4.1_amd64.AppImage",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.AppImage"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_amd64.AppImage"
 		},
 		{
 			"platform": "mac",
 			"architecture": "arm64",
 			"fileSize": "53311518",
 			"fileName": "FreeBox_1.4.1_arm64.dmg",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.dmg"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.dmg"
 		},
 		{
 			"platform": "deb_linux",
 			"architecture": "arm64",
 			"fileSize": "51552410",
 			"fileName": "FreeBox_1.4.1_arm64.deb",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.deb"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.deb"
 		},
 		{
 			"platform": "rpm_linux",
 			"architecture": "arm64",
 			"fileSize": "55072169",
 			"fileName": "FreeBox_1.4.1_arm64.rpm",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.rpm"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.rpm"
 		},
 		{
 			"platform": "other_linux",
 			"architecture": "arm64",
 			"fileSize": "54536712",
 			"fileName": "FreeBox_1.4.1_arm64.AppImage",
-			"downloadLink": "https://ghfast.top/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.AppImage"
+			"downloadLink": "https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/download/v1.4.1/FreeBox_1.4.1_arm64.AppImage"
 		}
 	]
 }

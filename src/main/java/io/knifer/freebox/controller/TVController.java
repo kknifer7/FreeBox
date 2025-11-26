@@ -1,10 +1,7 @@
 package io.knifer.freebox.controller;
 
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
-import io.knifer.freebox.component.node.MovieInfoListPopOver;
-import io.knifer.freebox.component.node.MovieSortFilterPopOver;
-import io.knifer.freebox.component.node.SourceBeanBlockPopOver;
-import io.knifer.freebox.component.node.VLCPlayer;
+import io.knifer.freebox.component.node.*;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
@@ -13,6 +10,7 @@ import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
 import io.knifer.freebox.handler.impl.IQiYiMovieSuggestionHandler;
+import io.knifer.freebox.handler.impl.Kan360MovieFetchingHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.VideoDetailsBO;
 import io.knifer.freebox.model.bo.VideoPlayInfoBO;
@@ -35,6 +33,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -44,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.GridView;
+import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 
 import javax.annotation.Nullable;
@@ -90,6 +90,9 @@ public class TVController implements Destroyable {
     private MovieInfoListPopOver movieHistoryPopOver;
     private MovieInfoListPopOver movieCollectionPopOver;
     private MovieSortFilterPopOver movieSortFilterPopOver;
+    private MovieRankPopOver movieRankPopOver;
+
+    private AutoCompletionBinding<String> searchTextFieldAutoCompletionBinding;
 
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
@@ -190,12 +193,46 @@ public class TVController implements Destroyable {
                 MOVIE_CACHE.remove(sortData.getId());
                 loadMovieBySortData(sortData);
             });
+            // 影片搜索相关
+            searchTextFieldAutoCompletionBinding =
+                    TextFields.bindAutoCompletion(searchTextField, movieSuggestionHandler::handle);
+            movieRankPopOver = new MovieRankPopOver(
+                    new Kan360MovieFetchingHandler(),
+                    movieTitle -> {
+                        // 为了不让搜索自动提示干扰用户，先移除它的绑定
+                        searchTextFieldAutoCompletionBinding.dispose();
+                        searchTextField.setText(movieTitle);
+                        searchTextField.positionCaret(searchTextField.getLength());
+                        onSearchBtnAction();
+                        // 重新绑定搜索自动提示
+                        searchTextFieldAutoCompletionBinding = TextFields.bindAutoCompletion(
+                                searchTextField, movieSuggestionHandler::handle
+                        );
+                    }
+            );
             // 影片列表单元格工厂
             videosGridView.setCellFactory(new VideoGridCellFactory(
                     video -> openVideo(video.getSourceKey(), video.getId(), video.getName()),
                     this::loadMoreMovie
             ));
+            // 搜索框获取焦点时，显示热搜
+            searchTextField.setOnMouseClicked(evt -> {
+                if (evt.getButton() != MouseButton.PRIMARY) {
 
+                    return;
+                }
+                if (movieRankPopOver.isShowing()) {
+                    movieRankPopOver.hide();
+                } else if (
+                        !searchLoadingProperty.get() &&
+                        !sortsLoadingProperty.get() &&
+                        !movieLoadingProperty.get()
+                ) {
+                    movieRankPopOver.show(searchTextField);
+                }
+            });
+            movieRankPopOver.show(searchTextField);
+            movieRankPopOver.hide();
             // 状态联动绑定
             sourceBeanBlockButton.disableProperty().bind(
                     sourceBeanBlockPopOver.showingProperty().or(sortsLoadingProperty)
@@ -216,8 +253,6 @@ public class TVController implements Destroyable {
             sourceBeanComboBox.disableProperty().bind(sortsLoadingProperty);
             searchButton.disableProperty().bind(movieLoadingProperty);
             searchLoadingProgressIndicator.visibleProperty().bind(searchLoadingProperty);
-
-            TextFields.bindAutoCompletion(searchTextField, movieSuggestionHandler::handle);
 
             template.init(success -> {
                 if (!success) {

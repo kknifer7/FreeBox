@@ -49,6 +49,7 @@ public class I18nKeys {
     public static final String TV_HISTORY = "tv.history";
     public static final String TV_COLLECTION = "tv.collection";
     public static final String TV_CLASS_FILTER = "tv.class-filter";
+    public static final String TV_MOVIE_RANK = "tv.movie-rank";
     public static final String TV_ERROR_LOAD_SOURCE_BEAN_LIST_FAILED = "tv.error.load-source-bean-list-failed";
     public static final String TV_ERROR_SOURCE_BEAN_LIST_EMPTY = "tv.error.source-bean-list-empty";
     public static final String TV_ERROR_LOAD_SOURCE_FAILED = "tv.error.load-source-failed";

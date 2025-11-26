@@ -39,7 +39,12 @@ application {
 }
 
 javafx {
-    version = '21.0.9'
+    // 对于arm64架构的linux，JavaFX社区尚未提供21.0.1版本之后的发布
+    version = org.gradle.internal.os.OperatingSystem.current().linux &&
+            getCurrentArch() == 'arm64' ?
+            '21.0.1'
+            :
+            '21.0.9'
     modules = ['javafx.controls', 'javafx.fxml']
 }
 

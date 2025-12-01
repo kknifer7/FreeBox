@@ -4,13 +4,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import io.knifer.freebox.util.json.GsonUtil;
+import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+@Data
 public class Filter {
 
     @SerializedName("key")
@@ -45,7 +46,7 @@ public class Filter {
     private static Filter fromJson(JsonElement jsonElement) {
         return GsonUtil.fromJson(jsonElement, Filter.class);
     }
-
+    @Data
     public static class Value {
 
         @SerializedName("n")

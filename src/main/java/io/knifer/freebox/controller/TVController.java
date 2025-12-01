@@ -2,6 +2,7 @@ package io.knifer.freebox.controller;
 
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
 import io.knifer.freebox.component.node.*;
+import io.knifer.freebox.component.node.player.VLCPlayer;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;

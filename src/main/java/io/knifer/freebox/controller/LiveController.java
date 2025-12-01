@@ -1,16 +1,18 @@
 package io.knifer.freebox.controller;
 
 import cn.hutool.core.io.FileUtil;
-import io.knifer.freebox.component.node.VLCPlayer;
+import io.knifer.freebox.component.node.player.VLCPlayer;
 import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
-import io.knifer.freebox.helper.*;
-import io.knifer.freebox.model.domain.ClientInfo;
+import io.knifer.freebox.helper.ImageHelper;
+import io.knifer.freebox.helper.StorageHelper;
+import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.c2s.FreeBoxLive;
+import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
 import io.knifer.freebox.service.LoadLiveChannelGroupService;
-import io.knifer.freebox.service.VLCPlayerDestroyService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CollectionUtil;
@@ -170,19 +172,12 @@ public class LiveController extends BaseController implements Destroyable {
 
     @Override
     public void destroy() {
-        Service<Void> destroyVLCPlayerService;
-
         if (loadLiveChannelGroupService != null && loadLiveChannelGroupService.isRunning()) {
             loadLiveChannelGroupService.cancel();
         }
         if (player != null) {
-            LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);
-            destroyVLCPlayerService = new VLCPlayerDestroyService(player);
-            destroyVLCPlayerService.setOnSucceeded(evt -> {
-                AsyncUtil.execute(() -> FileUtil.clean(LIVE_CONFIG_CACHE_PATH.toFile()));
-                LoadingHelper.hideLoading();
-            });
-            destroyVLCPlayerService.start();
+            AsyncUtil.execute(() -> FileUtil.clean(LIVE_CONFIG_CACHE_PATH.toFile()));
+            player.destroy();
         }
         ImageHelper.clearCache();
         Context.INSTANCE.popAndShowLastStage();

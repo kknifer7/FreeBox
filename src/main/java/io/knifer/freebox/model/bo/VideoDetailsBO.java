@@ -1,6 +1,6 @@
 package io.knifer.freebox.model.bo;
 
-import io.knifer.freebox.component.node.VLCPlayer;
+import io.knifer.freebox.component.node.player.VLCPlayer;
 import io.knifer.freebox.model.common.tvbox.AbsXml;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.spider.template.SpiderTemplate;

@@ -1,4 +1,4 @@
-package io.knifer.freebox.component.node;
+package io.knifer.freebox.component.node.player;
 
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
@@ -39,8 +39,12 @@ import java.util.function.Consumer;
  *
  * @author Knifer
  */
-public class VLCPlayerSubtitleSettingPopOver extends PopOver {
+public class PlayerSubtitleSettingPopOver extends PopOver {
 
+    /**
+     * 字幕延迟变更回调
+     * 单位：毫秒 ms
+     */
     @Setter
     private Consumer<Long> onSubtitleDelayChanged;
     @Setter
@@ -56,7 +60,7 @@ public class VLCPlayerSubtitleSettingPopOver extends PopOver {
     private final SimpleBooleanProperty enableBackwardProperty = new SimpleBooleanProperty(false);
     private final SimpleBooleanProperty enablePaginatorProperty = new SimpleBooleanProperty(false);
 
-    public VLCPlayerSubtitleSettingPopOver() {
+    public PlayerSubtitleSettingPopOver() {
         super();
 
         Label delayLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE_DELAY));
@@ -339,7 +343,7 @@ public class VLCPlayerSubtitleSettingPopOver extends PopOver {
         this.movieNameProperty.set(movieName);
     }
 
-    public void setSubtitleDelay(long subtitleDelay) {
-        this.subtitleDelayProperty.set(subtitleDelay);
+    public void resetSubtitleDelay() {
+        this.subtitleDelayProperty.set(0);
     }
 }

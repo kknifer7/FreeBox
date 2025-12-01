@@ -1,4 +1,4 @@
-package io.knifer.freebox.component.node;
+package io.knifer.freebox.component.node.player;
 
 import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.util.CollectionUtil;
@@ -22,7 +22,7 @@ import java.util.function.Consumer;
  *
  * @author Knifer
  */
-public class VLCPLayerLiveChannelLinesWithPaginator extends HBox {
+public class PlayerLiveChannelLinesWithPaginator extends HBox {
 
     private LiveChannel.Line playingLiveChannelLine;
 
@@ -30,11 +30,11 @@ public class VLCPLayerLiveChannelLinesWithPaginator extends HBox {
     private final SimpleIntegerProperty totalPage = new SimpleIntegerProperty(-1);
     private final HBox linesHBox = new HBox(8);
     private final Consumer<LiveChannel.Line> onLiveChannelLineChanged;
-    private final List<VLCPlayerLiveChannelLineLabel> lineLabels;
+    private final List<PlayerLiveChannelLineLabel> lineLabels;
 
     private final static int PAGE_SIZE = 5;
 
-    public VLCPLayerLiveChannelLinesWithPaginator(Consumer<LiveChannel.Line> onLiveChannelLineChanged) {
+    public PlayerLiveChannelLinesWithPaginator(Consumer<LiveChannel.Line> onLiveChannelLineChanged) {
         super(8);
 
         Label previousLabel = new Label();
@@ -102,7 +102,7 @@ public class VLCPLayerLiveChannelLinesWithPaginator extends HBox {
     }
 
     public void addLine(LiveChannel.Line line) {
-        VLCPlayerLiveChannelLineLabel newLineLabel = new VLCPlayerLiveChannelLineLabel(line);
+        PlayerLiveChannelLineLabel newLineLabel = new PlayerLiveChannelLineLabel(line);
         ObservableList<Node> linesHBoxChildren = linesHBox.getChildren();
         Node firstLineLabel;
         List<String> firstLineLabelStyleClasses;
@@ -114,19 +114,19 @@ public class VLCPLayerLiveChannelLinesWithPaginator extends HBox {
 
                 return;
             }
-            for (VLCPlayerLiveChannelLineLabel lineLabel : lineLabels) {
+            for (PlayerLiveChannelLineLabel lineLabel : lineLabels) {
                 lineLabelStyleClasses = lineLabel.getStyleClass();
                 if (playingLiveChannelLine == null || lineLabel.getLiveChannelLine() == line) {
                     // 为正在播放的线路标签添加样式
-                    lineLabelStyleClasses.remove("vlc-player-live-channel-line-label");
-                    if (!lineLabelStyleClasses.contains("vlc-player-live-channel-line-label-focused")) {
-                        lineLabelStyleClasses.add("vlc-player-live-channel-line-label-focused");
+                    lineLabelStyleClasses.remove("player-live-channel-line-label");
+                    if (!lineLabelStyleClasses.contains("player-live-channel-line-label-focused")) {
+                        lineLabelStyleClasses.add("player-live-channel-line-label-focused");
                     }
                 } else {
                     // 移除其他线路标签的样式
-                    lineLabelStyleClasses.remove("vlc-player-live-channel-line-label-focused");
-                    if (!lineLabelStyleClasses.contains("vlc-player-live-channel-line-label")) {
-                        lineLabelStyleClasses.add("vlc-player-live-channel-line-label");
+                    lineLabelStyleClasses.remove("player-live-channel-line-label-focused");
+                    if (!lineLabelStyleClasses.contains("player-live-channel-line-label")) {
+                        lineLabelStyleClasses.add("player-live-channel-line-label");
                     }
                 }
             }
@@ -149,11 +149,11 @@ public class VLCPLayerLiveChannelLinesWithPaginator extends HBox {
         firstLineLabel = CollectionUtil.getFirst(linesHBoxChildren);
         if (firstLineLabel != null && playingLiveChannelLine == null) {
             firstLineLabelStyleClasses = firstLineLabel.getStyleClass();
-            firstLineLabelStyleClasses.remove("vlc-player-live-channel-line-label");
-            if (!firstLineLabelStyleClasses.contains("vlc-player-live-channel-line-label-focused")) {
-                firstLineLabelStyleClasses.add("vlc-player-live-channel-line-label-focused");
+            firstLineLabelStyleClasses.remove("player-live-channel-line-label");
+            if (!firstLineLabelStyleClasses.contains("player-live-channel-line-label-focused")) {
+                firstLineLabelStyleClasses.add("player-live-channel-line-label-focused");
             }
-            playingLiveChannelLine = ((VLCPlayerLiveChannelLineLabel) firstLineLabel).getLiveChannelLine();
+            playingLiveChannelLine = ((PlayerLiveChannelLineLabel) firstLineLabel).getLiveChannelLine();
         }
     }
 }

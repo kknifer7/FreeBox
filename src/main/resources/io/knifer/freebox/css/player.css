@@ -1,13 +1,13 @@
-.vlc-player {
+.player {
     -fx-background-color: black;
 }
 
-.vlc-player-title {
+.player-title {
     -fx-text-fill: white;
     -fx-font-size: 24px;
 }
 
-.vlc-player-live-epg-label {
+.player-live-epg-label {
     -fx-font-size: 18;
     -fx-text-fill: #3498DB;
     -fx-padding: 3;
@@ -16,50 +16,50 @@
     -fx-cursor: hand;
 }
 
-.vlc-player-live-epg-label:hover {
+.player-live-epg-label:hover {
     -fx-underline: true;
 }
 
-.vlc-player-toast-label {
+.player-toast-label {
     -fx-alignment: center-left;
     -fx-text-fill: #FFF9C4;
     -fx-font-size: 20px;
     -fx-graphic-text-gap: 30px;
 }
 
-.vlc-player-toast-pane {
+.player-toast-pane {
     -fx-min-height: 40px;
     -fx-padding: 8 12 8 12;
     -fx-alignment: center-left;
 }
 
-.vlc-player-anchor-pane {
+.player-anchor-pane {
     -fx-pref-height: 46px;
     -fx-min-height: 46px;
     -fx-max-height: 46px;
     -fx-background-color: rgba(0,0,0,0.5);
 }
 
-.vlc-player-control-label {
+.player-control-label {
     -fx-pref-width: 40px;
     -fx-pref-height: 40px;
 }
 
-.vlc-player-progress-label {
+.player-progress-label {
     -fx-text-fill: white;
     -fx-font-size: 24px;
 }
 
-.vlc-player-loading-error-label {
+.player-loading-error-label {
     -fx-text-fill: white;
     -fx-font-size: 18px;
 }
 
-.vlc-player-pop-over {
+.player-pop-over {
     -fx-padding: 10px;
 }
 
-.vlc-player-live-channel-banner {
+.player-live-channel-banner {
     -fx-max-width: 700px;
     -fx-max-height: 100px;
     -fx-min-width: 700px;
@@ -74,40 +74,40 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);
 }
 
-.vlc-player-live-channel-banner-channel-name-label {
+.player-live-channel-banner-channel-name-label {
     -fx-font-weight: bold;
     -fx-font-size: 20px;
     -fx-text-fill: white;
 }
 
-.vlc-player-live-channel-banner-program-label {
+.player-live-channel-banner-program-label {
     -fx-font-weight: bold;
     -fx-font-size: 16px;
     -fx-text-fill: white;
 }
 
-.vlc-player-live-channel-banner-program-time-label {
+.player-live-channel-banner-program-time-label {
     -fx-font-size: 14px;
     -fx-text-fill: lightgray;
 }
 
-.vlc-player-live-channel-list-view {
+.player-live-channel-list-view {
     -fx-background-color: rgba(0, 0, 0, 0.7);
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);
 }
 
-.vlc-player-live-channel-group-list-cell {
+.player-live-channel-group-list-cell {
     -fx-background-color: rgba(0, 0, 0, 0.2);
     -fx-padding: 10;
 }
 
-.vlc-player-live-channel-list-cell {
+.player-live-channel-list-cell {
     -fx-background-color: rgba(0, 0, 0, 0.2);
     -fx-padding: 5;
 }
 
 
-.vlc-player-live-channel-list-view-title-label {
+.player-live-channel-list-view-title-label {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-text-fill: white;
@@ -116,7 +116,7 @@
     -fx-padding: 5 5 5 5;
 }
 
-.vlc-player-live-channel-list-view-title-label-focused {
+.player-live-channel-list-view-title-label-focused {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-text-fill: #3498DB;
@@ -125,14 +125,14 @@
     -fx-padding: 5 5 5 5;
 }
 
-.vlc-player-live-channel-line-label {
+.player-live-channel-line-label {
     -fx-font-size: 18;
     -fx-text-fill: white;
     -fx-padding: 3;
     -fx-cursor: hand;
 }
 
-.vlc-player-live-channel-line-label-focused {
+.player-live-channel-line-label-focused {
     -fx-font-size: 18;
     -fx-text-fill: #3498DB;
     -fx-padding: 3;
@@ -143,57 +143,57 @@
 
 
 /* 垂直滚动条容器 */
-.vlc-player .list-view .scroll-bar:vertical {
+.player .list-view .scroll-bar:vertical {
     -fx-background-color: transparent;
     -fx-background-radius: 2em;
     -fx-padding: 5px;
 }
 /* 垂直滚动条轨道 */
-.vlc-player .list-view .scroll-bar:vertical .track {
+.player .list-view .scroll-bar:vertical .track {
     -fx-background-color: rgba(50, 50, 50, 0.3);
     -fx-background-radius: 2em;
     -fx-border-radius: 2em;
 }
 /* 垂直滚动条滑块 */
-.vlc-player .list-view .scroll-bar:vertical .thumb {
+.player .list-view .scroll-bar:vertical .thumb {
     -fx-background-color: rgba(100, 100, 100, 0.7);
     -fx-background-insets: 2, 0, 0;
     -fx-background-radius: 2em;
 }
-.vlc-player .list-view .scroll-bar:vertical .thumb:hover {
+.player .list-view .scroll-bar:vertical .thumb:hover {
     -fx-background-color: rgba(120, 120, 120, 0.9);
 }
-.vlc-player .list-view .scroll-bar:vertical .thumb:pressed {
+.player .list-view .scroll-bar:vertical .thumb:pressed {
     -fx-background-color: rgba(140, 140, 140, 0.9);
 }
 /* 垂直滚动条按钮 */
-.vlc-player .list-view .scroll-bar:vertical .increment-button,
-.vlc-player .list-view .scroll-bar:vertical .decrement-button {
+.player .list-view .scroll-bar:vertical .increment-button,
+.player .list-view .scroll-bar:vertical .decrement-button {
     -fx-background-color: transparent;
     -fx-background-radius: 0;
     -fx-padding: 5px;
 }
-.vlc-player .list-view .scroll-bar:vertical .increment-arrow,
-.vlc-player .list-view .scroll-bar:vertical .decrement-arrow {
+.player .list-view .scroll-bar:vertical .increment-arrow,
+.player .list-view .scroll-bar:vertical .decrement-arrow {
     -fx-shape: " ";
     -fx-padding: 0;
 }
-.vlc-player .list-view .scroll-bar:vertical .increment-button:hover,
-.vlc-player .list-view .scroll-bar:vertical .decrement-button:hover {
+.player .list-view .scroll-bar:vertical .increment-button:hover,
+.player .list-view .scroll-bar:vertical .decrement-button:hover {
     -fx-background-color: rgba(80, 80, 80, 0.4);
 }
 
 /* 隐藏水平滚动条 */
-.vlc-player .scroll-bar:horizontal {
+.player .scroll-bar:horizontal {
     -fx-opacity: 0;
     -fx-pref-height: 0;
     -fx-min-height: 0;
     -fx-max-height: 0;
 }
-.vlc-player .scroll-bar:horizontal .track,
-.vlc-player .scroll-bar:horizontal .thumb,
-.vlc-player .scroll-bar:horizontal .increment-button,
-.vlc-player .scroll-bar:horizontal .decrement-button {
+.player .scroll-bar:horizontal .track,
+.player .scroll-bar:horizontal .thumb,
+.player .scroll-bar:horizontal .increment-button,
+.player .scroll-bar:horizontal .decrement-button {
     -fx-opacity: 0;
     -fx-pref-height: 0;
     -fx-min-height: 0;
@@ -203,7 +203,7 @@
 
 /* 频道侧边栏按钮 */
 /* 展开/收起按钮基础样式 */
-.vlc-player-live-channel-list-toggle-button {
+.player-live-channel-list-toggle-button {
     -fx-background-color: rgba(50, 50, 50, 0.8);
     -fx-text-fill: #e0e0e0;
     -fx-border-color: rgba(100, 100, 100, 0.6);
@@ -216,18 +216,18 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 4, 0.2, 0, 1);
 }
 /* 按钮悬停效果 */
-.vlc-player-live-channel-list-toggle-button:hover {
+.player-live-channel-list-toggle-button:hover {
     -fx-background-color: rgba(70, 70, 70, 0.9);
     -fx-border-color: rgba(130, 130, 130, 0.7);
 }
 /* 按钮按下效果 */
-.vlc-player-live-channel-list-toggle-button:pressed {
+.player-live-channel-list-toggle-button:pressed {
     -fx-background-color: rgba(40, 40, 40, 0.9);
     -fx-border-color: rgba(90, 90, 90, 0.7);
     -fx-translate-y: 1px;
 }
 /* 按钮禁用状态 */
-.vlc-player-live-channel-list-toggle-button:disabled {
+.player-live-channel-list-toggle-button:disabled {
     -fx-opacity: 0.5;
     -fx-cursor: default;
 }

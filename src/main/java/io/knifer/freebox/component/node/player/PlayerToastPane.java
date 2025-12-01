@@ -1,4 +1,4 @@
-package io.knifer.freebox.component.node;
+package io.knifer.freebox.component.node.player;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -12,7 +12,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
-public class VLCPlayerToastPane extends StackPane {
+public class PlayerToastPane extends StackPane {
     private final Label messageLabel;
     private Timeline currentTimeline;
     private final DoubleProperty duration = new SimpleDoubleProperty(4.0);
@@ -24,11 +24,11 @@ public class VLCPlayerToastPane extends StackPane {
     private final BooleanProperty isShowing = new SimpleBooleanProperty(false);
     private final BooleanProperty isHiding = new SimpleBooleanProperty(false);
 
-    public VLCPlayerToastPane() {
-        getStyleClass().add("vlc-player-toast-pane");
+    public PlayerToastPane() {
+        getStyleClass().add("player-toast-pane");
 
         messageLabel = new Label();
-        messageLabel.getStyleClass().add("vlc-player-toast-label");
+        messageLabel.getStyleClass().add("player-toast-label");
 
         getChildren().add(messageLabel);
         updateStyle();
@@ -41,11 +41,11 @@ public class VLCPlayerToastPane extends StackPane {
     /**
      * 安全显示提示信息 - 修复动画冲突版本
      */
-    public void showMessage(String message) {
-        showMessage(message, duration.get());
+    public void showToast(String message) {
+        showToast(message, duration.get());
     }
 
-    public void showMessage(String message, double displayDuration) {
+    public void showToast(String message, double displayDuration) {
         // 停止当前运行的任何动画
         stopCurrentAnimationSafely();
 

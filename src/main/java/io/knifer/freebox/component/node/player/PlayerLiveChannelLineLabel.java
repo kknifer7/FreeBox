@@ -1,4 +1,4 @@
-package io.knifer.freebox.component.node;
+package io.knifer.freebox.component.node.player;
 
 import io.knifer.freebox.model.domain.LiveChannel;
 import javafx.scene.control.Label;
@@ -10,13 +10,13 @@ import lombok.Getter;
  * @author Knifer
  */
 @Getter
-public class VLCPlayerLiveChannelLineLabel extends Label {
+public class PlayerLiveChannelLineLabel extends Label {
 
     private final LiveChannel.Line liveChannelLine;
 
-    public VLCPlayerLiveChannelLineLabel(LiveChannel.Line liveChannelLine) {
+    public PlayerLiveChannelLineLabel(LiveChannel.Line liveChannelLine) {
         super(liveChannelLine.getTitle());
-        getStyleClass().add("vlc-player-live-channel-line-label");
+        getStyleClass().add("player-live-channel-line-label");
         this.liveChannelLine = liveChannelLine;
     }
 }

@@ -1,13 +1,13 @@
-package io.knifer.freebox.component.node;
+package io.knifer.freebox.component.node.player;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import io.knifer.freebox.FreeBoxApplication;
+import io.knifer.freebox.component.node.LogoPane;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.EPGOverviewController;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.EpgFetchingHandler;
@@ -61,17 +61,10 @@ import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
-import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
-import uk.co.caprica.vlcj.javafx.fullscreen.JavaFXFullScreenStrategy;
-import uk.co.caprica.vlcj.javafx.videosurface.ImageViewVideoSurface;
-import uk.co.caprica.vlcj.player.base.MediaPlayer;
-import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
-import uk.co.caprica.vlcj.player.base.State;
-import uk.co.caprica.vlcj.player.base.SubpictureApi;
-import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
+import java.io.File;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -87,24 +80,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * VLC播放器自定义组件
- * PS：我知道这里的代码很乱，没有注释，因为我没指望谁有心思动这个类。如果你有什么想法，直接告诉我。
+ * 播放器基类
+ * 若无注释说明，此基类中的方法均不允许阻塞
  *
  * @author Knifer
  */
 @Slf4j
-public class VLCPlayer {
+public abstract class BasePlayer<T extends Node> {
+
+    protected final T playerNode;
+    protected final StackPane playerPane;
+    protected final Pane parent;
+    protected final Config config;
 
     private final Stage stage;
     private final Scene scene;
     private final AnchorPane toastAnchorPane;
-    private final VLCPlayerToastPane toastPane;
+    private final PlayerToastPane toastPane;
     private final AnchorPane controlPane;
     private final Timer controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
     private final Timer volumePopOverHideTimer;
     private final Timer settingsPopOverHideTimer;
-    private final EmbeddedMediaPlayer mediaPlayer;
-    private final ImageView videoImageView;
     private final ProgressIndicator loadingProgressIndicator;
     private final Label loadingProgressLabel;
     private final ImageView pausedPlayButtonImageView;
@@ -126,9 +122,9 @@ public class VLCPlayer {
     private final Button reloadButton;
     private final Button subtitleButton;
     private final Button danMaKuButton;
-    private final VLCPlayerSubtitleSettingPopOver subtitleSettingPopOver;
+    private final PlayerSubtitleSettingPopOver subtitleSettingPopOver;
     private final Label settingsLabel;
-    private final VLCPLayerLiveChannelLinesWithPaginator liveChannelLinesWithPaginator;
+    private final PlayerLiveChannelLinesWithPaginator liveChannelLinesWithPaginator;
     private final ProgressBar videoProgressBar;
     private final Label videoProgressLabel;
     private final Label videoProgressSplitLabel;
@@ -137,7 +133,6 @@ public class VLCPlayer {
     private final Label videoTitleLabel;
     private final Label epgOpenLabel;
     private final HBox controlTopHBox;
-    private final StackPane playerPane;
     private final LiveChannelBanner liveChannelBanner;
     private final LiveDrawer liveChannelDrawer;
     private final EpgFetchingHandler epgFetchingHandler;
@@ -158,13 +153,13 @@ public class VLCPlayer {
     private final BooleanProperty isError = new SimpleBooleanProperty(false);
     private final SimpleStringProperty epgServiceUrlProperty = new SimpleStringProperty();
 
+    private final DoubleBinding paneWidthProp;
+
     private volatile boolean destroyFlag = false;
 
-    private int trackId = -1;
     private List<LiveChannelGroup> liveChannelGroups = null;
     private LiveInfoBO selectedLive = null;
     private LiveInfoBO playingLive = null;
-    private final Config config;
 
     private Stage epgStage;
 
@@ -173,15 +168,10 @@ public class VLCPlayer {
     private Runnable fullScreenRunnable = BaseValues.EMPTY_RUNNABLE;
     private Runnable fullScreenExitRunnable = BaseValues.EMPTY_RUNNABLE;
 
-    public VLCPlayer(HBox parent) {
-        this(parent, Config.builder().liveMode(false).build());
-    }
-
-    public VLCPlayer(HBox parent, Config config) {
+    public BasePlayer(Pane parent, Config config) {
         boolean liveMode = BooleanUtils.toBoolean(config.getLiveMode());
         ObservableList<Node> parentChildren = parent.getChildren();
         ReadOnlyDoubleProperty parentWidthProp = parent.widthProperty();
-        DoubleBinding paneWidthProp = liveMode ? parentWidthProp.multiply(1) : parentWidthProp.multiply(0.8);
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
         URL stylesheetUrl;
         List<Node> paneChildren;
@@ -204,10 +194,8 @@ public class VLCPlayer {
         AnchorPane controlBottomAnchorPane;
         StackPane progressMiddleStackPane;
         AnchorPane controlTopAnchorPane;
-        MediaPlayerFactory mediaPlayerFactory;
 
-        SubpictureApi mediaPlayerSubpictureApi;
-
+        this.parent = parent;
         this.config = config;
         stage = WindowHelper.getStage(parent);
         scene = stage.getScene();
@@ -219,136 +207,7 @@ public class VLCPlayer {
         playerPane = new StackPane();
         stage.setFullScreenExitHint(StringUtils.EMPTY);
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-        mediaPlayerFactory = Context.INSTANCE.isDebug() ?
-                new MediaPlayerFactory(List.of("-vvv")) : new MediaPlayerFactory();
-        mediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
-        mediaPlayer.fullScreen().strategy(new JavaFXFullScreenStrategy(stage){
-            @Override
-            public void onBeforeEnterFullScreen() {
-                // 隐藏除播放器外的所有控件
-                setOtherNodesVisible(false);
-                // 绑定播放器宽度与父窗口宽度一致
-                bindPlayerPaneWidth(parentWidthProp);
-                fullScreenRunnable.run();
-                parent.requestFocus();
-            }
-
-            @Override
-            public void onAfterExitFullScreen() {
-                // 显示所有控件
-                setOtherNodesVisible(true);
-                // 绑定非全屏下的播放器宽度
-                bindPlayerPaneWidth(paneWidthProp);
-                fullScreenExitRunnable.run();
-            }
-
-            private void setOtherNodesVisible(boolean visible) {
-                parentChildren.forEach(p -> {
-                    if (p != playerPane) {
-                        p.setVisible(visible);
-                    }
-                });
-            }
-        });
-        toastPane = new VLCPlayerToastPane();
-        mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
-            @Override
-            public void mediaPlayerReady(MediaPlayer mediaPlayer) {
-                setLoading(false);
-            }
-
-            @Override
-            public void buffering(MediaPlayer mediaPlayer, float newCache) {
-                Platform.runLater(() -> setLoading(newCache));
-            }
-
-            @Override
-            public void paused(MediaPlayer mediaPlayer) {
-                SystemHelper.allowSleep();
-                Platform.runLater(() -> {
-                    if (isLoading()) {
-                        setLoading(false);
-                    }
-                    pausedPlayButtonImageView.setVisible(true);
-                    pauseLabel.setGraphic(playIcon);
-                });
-            }
-
-            @Override
-            public void playing(MediaPlayer mediaPlayer) {
-                SystemHelper.preventSleep();
-                Platform.runLater(() -> {
-                    if (isLoading()) {
-                        setLoading(false);
-                    }
-                    if (pauseLabel.getGraphic() != pauseIcon) {
-                        pauseLabel.setGraphic(pauseIcon);
-                    }
-                    if (pausedPlayButtonImageView.isVisible()) {
-                        pausedPlayButtonImageView.setVisible(false);
-                    }
-                });
-            }
-
-            @Override
-            @SuppressWarnings("ConstantConditions")
-            public void lengthChanged(MediaPlayer mediaPlayer, long newLength) {
-                long length = mediaPlayer.status().length();
-
-                initProgress.getAndUpdate(val -> {
-                    if (val != -1) {
-                        Platform.runLater(() -> mediaPlayer.controls().setTime(val));
-                    }
-
-                    return -1;
-                });
-                if (liveMode) {
-
-                    return;
-                }
-                Platform.runLater(() -> {
-                    videoLength.set(length);
-                    videoProgressLengthLabel.setText(formatProgressText(length));
-                });
-            }
-
-            @Override
-            @SuppressWarnings("ConstantConditions")
-            public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
-                if (videoLength.get() > 0) {
-                    Platform.runLater(() -> {
-                        if (isLoading()) {
-                            setLoading(false);
-                        }
-                        if (liveMode) {
-
-                            return;
-                        }
-                        if (!isVideoProgressBarUsing.get()) {
-                            videoProgressLabel.setText(formatProgressText(newTime));
-                            videoProgressBar.setProgress(newTime / (double) videoLength.get());
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void finished(MediaPlayer mediaPlayer) {
-                stepForwardRunnable.run();
-            }
-
-            @Override
-            public void error(MediaPlayer mediaPlayer) {
-                SystemHelper.allowSleep();
-                setError(true);
-                setLoading(false);
-            }
-        });
-        videoImageView = new ImageView();
-        videoImageView.setPreserveRatio(true);
-        videoImageView.fitWidthProperty().bind(playerPane.widthProperty());
-        videoImageView.fitHeightProperty().bind(playerPane.heightProperty());
-        mediaPlayer.videoSurface().set(new ImageViewVideoSurface(videoImageView));
+        toastPane = new PlayerToastPane();
         toastAnchorPane = new AnchorPane(toastPane);
         AnchorPane.setBottomAnchor(toastPane, 50.0);
         AnchorPane.setLeftAnchor(toastPane, 10.0);
@@ -365,7 +224,7 @@ public class VLCPlayer {
         loadingErrorIconLabel = new Label();
         loadingErrorIconLabel.setGraphic(FontIcon.of(FontAwesome.WARNING, 32, Color.WHITE));
         loadingErrorLabel = new Label(I18nHelper.get(I18nKeys.COMMON_VIDEO_LOADING_ERROR));
-        loadingErrorLabel.getStyleClass().add("vlc-player-loading-error-label");
+        loadingErrorLabel.getStyleClass().add("player-loading-error-label");
         loadingErrorVBox = new VBox(loadingErrorIconLabel, loadingErrorLabel);
         loadingErrorVBox.setSpacing(3);
         loadingErrorVBox.setAlignment(Pos.CENTER);
@@ -373,15 +232,19 @@ public class VLCPlayer {
         // 暂停设置
         pauseLabel = new Label();
         pauseLabel.setGraphic(pauseIcon);
-        pauseLabel.getStyleClass().add("vlc-player-control-label");
-        pauseLabel.setOnMouseClicked(evt -> changePlayStatus());
+        pauseLabel.getStyleClass().add("player-control-label");
+        pauseLabel.setOnMouseClicked(evt -> {
+            if (evt.getButton() == MouseButton.PRIMARY) {
+                togglePause();
+            }
+        });
         // 上一集、下一集
         stepBackwardLabel = new Label();
         stepBackwardLabel.setGraphic(stepBackwardIcon);
-        stepBackwardLabel.getStyleClass().add("vlc-player-control-label");
+        stepBackwardLabel.getStyleClass().add("player-control-label");
         stepForwardLabel = new Label();
         stepForwardLabel.setGraphic(stepForwardIcon);
-        stepForwardLabel.getStyleClass().add("vlc-player-control-label");
+        stepForwardLabel.getStyleClass().add("player-control-label");
         if (liveMode) {
             epgFetchingHandler = ParameterizedEpgFetchingHandler.getInstance();
             selectedLive = new LiveInfoBO();
@@ -456,28 +319,34 @@ public class VLCPlayer {
             subtitleAndDanMaKuHBox = null;
         } else {
             epgFetchingHandler = null;
-            stepBackwardLabel.setOnMouseClicked(evt -> stepBackwardRunnable.run());
-            stepForwardLabel.setOnMouseClicked(evt -> stepForwardRunnable.run());
+            stepBackwardLabel.setOnMouseClicked(evt -> {
+                if (evt.getButton() == MouseButton.PRIMARY) {
+                    stepBackwardRunnable.run();
+                }
+            });
+            stepForwardLabel.setOnMouseClicked(evt -> {
+                if (evt.getButton() == MouseButton.PRIMARY) {
+                    stepForwardRunnable.run();
+                }
+            });
             subtitleButton = new Button();
             danMaKuButton = new Button();
-            mediaPlayerSubpictureApi = mediaPlayer.subpictures();
-            subtitleSettingPopOver = new VLCPlayerSubtitleSettingPopOver();
+            subtitleSettingPopOver = new PlayerSubtitleSettingPopOver();
             subtitleSettingPopOver.setOnSubtitleDelayChanged(delay -> {
                 log.info("subtitle delay: {}", delay);
-                toastPane.showMessage(String.format(
+                toastPane.showToast(String.format(
                         I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE_MESSAGE_UPDATE_DELAY_VALUE),
                         delay
                 ), 2);
-                mediaPlayer.subpictures().setDelay(delay * 1000);
+                setSubtitleDelay(delay);
             });
             subtitleSettingPopOver.setOnSubtitleFileChosen(subtitleFile -> {
-                if (mediaPlayer.status().isPlayable()) {
+                if (useSubtitle(subtitleFile)) {
                     log.info("using subtitle file: {}", subtitleFile);
-                    toastPane.showMessage(String.format(
+                    toastPane.showToast(String.format(
                             I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE_MESSAGE_SUCCEED),
                             subtitleFile.getName()
                     ));
-                    mediaPlayerSubpictureApi.setSubTitleFile(subtitleFile);
                     subtitleAndDanMaKuToggleSwitch.setDisable(false);
                 }
             });
@@ -492,25 +361,8 @@ public class VLCPlayer {
             subtitleAndDanMaKuToggleSwitch.setSelected(true);
             subtitleAndDanMaKuToggleSwitch.selectedProperty()
                     .addListener((ob, oldVal, newVal) -> {
-                        if (newVal) {
-                            if (mediaPlayerSubpictureApi.track() == -1) {
-                                if (trackId != -1) {
-                                    mediaPlayerSubpictureApi.setTrack(trackId);
-                                } else {
-                                    mediaPlayerSubpictureApi.trackDescriptions()
-                                            .stream()
-                                            .filter(td -> td.id() != -1)
-                                            .findFirst()
-                                            .ifPresent(td -> {
-                                                trackId = td.id();
-                                                mediaPlayerSubpictureApi.setTrack(trackId);
-                                            });
-                                }
-                            }
-                        } else if ((trackId = mediaPlayerSubpictureApi.track()) != -1) {
-                            mediaPlayerSubpictureApi.setTrack(-1);
-                        }
-                        toastPane.showMessage(
+                        setSubtitleVisible(newVal);
+                        toastPane.showToast(
                                 I18nHelper.get(I18nKeys.VIDEO_SETTINGS_SUBTITLE) +
                                         " " +
                                         (newVal ?
@@ -529,10 +381,10 @@ public class VLCPlayer {
         // 音量设置
         volumeLabel = new Label();
         volumeLabel.setGraphic(volumeOnIcon);
-        volumeLabel.getStyleClass().add("vlc-player-control-label");
+        volumeLabel.getStyleClass().add("player-control-label");
         volumeLabel.setOnMouseClicked(evt -> {
-            volumeLabel.setGraphic(mediaPlayer.audio().isMute() ? volumeOnIcon : volumeOffIcon);
-            mediaPlayer.audio().mute();
+            volumeLabel.setGraphic(isMute() ? volumeOnIcon : volumeOffIcon);
+            toggleMute();
         });
         volumeSlider = new Slider(0, 100, 100);
         volumeSlider.setOrientation(Orientation.VERTICAL);
@@ -540,7 +392,7 @@ public class VLCPlayer {
         volumePopOverInnerVBox.setAlignment(Pos.CENTER);
         volumePopOver = new PopOver(volumePopOverInnerVBox);
         volumePopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
-        volumePopOver.getStyleClass().add("vlc-player-pop-over");
+        volumePopOver.getStyleClass().add("player-pop-over");
         volumePopOver.setDetachable(false);
         volumePopOverHideTimer = new Timer(1000, evt -> volumePopOver.hide());
         volumePopOverInnerVBox.addEventFilter(MouseEvent.ANY, evt -> {
@@ -558,9 +410,12 @@ public class VLCPlayer {
             }
         });
         volumeSlider.valueProperty().addListener((ob, oldVal, newVal) -> {
-            mediaPlayer.audio().setVolume(newVal.intValue());
-            if (mediaPlayer.audio().isMute()) {
-                mediaPlayer.audio().mute();
+            int volume = newVal.intValue();
+
+            setVolume(volume);
+            if (isMute()) {
+                // 如果是静音状态，解除静音状态
+                toggleMute();
                 volumeLabel.setGraphic(volumeOnIcon);
             }
         });
@@ -571,7 +426,7 @@ public class VLCPlayer {
             }
         });
         settingsLabel = new Label();
-        settingsLabel.getStyleClass().add("vlc-player-control-label");
+        settingsLabel.getStyleClass().add("player-control-label");
         settingsLabel.setGraphic(settingsIcon);
         // 倍速设置
         rateSettingTitleLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_RATE));
@@ -595,7 +450,7 @@ public class VLCPlayer {
         // 默认选择1倍速
         rateSettingToggleGroup.selectToggle(rate1SettingRadioButton);
         rateSettingToggleGroup.selectedToggleProperty().addListener(((observable, oldValue, newValue) ->
-            mediaPlayer.controls().setRate((float) newValue.getUserData())
+                setRate((float) newValue.getUserData())
         ));
         rateSettingRadioButtonHBox = new HBox(
                 rate0_5SettingRadioButton,
@@ -612,7 +467,8 @@ public class VLCPlayer {
         // 铺满设置按钮
         fillWindowToggleSwitch = new ToggleSwitch(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_FILL_WINDOW));
         fillWindowToggleSwitch.setFocusTraversable(false);
-        videoImageView.preserveRatioProperty().bind(fillWindowToggleSwitch.selectedProperty().not());
+        fillWindowToggleSwitch.selectedProperty()
+                .addListener((ob, oldVal, newVal) -> setFillWindow(newVal));
         // 重新加载
         reloadSettingTitleLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_RELOAD));
         reloadButton = new Button();
@@ -620,8 +476,8 @@ public class VLCPlayer {
         reloadButton.setFocusTraversable(false);
         reloadButton.setOnAction(evt -> {
             initProgress.set(getCurrentProgress());
-            mediaPlayer.controls().stop();
-            mediaPlayer.controls().play();
+            stop();
+            play();
         });
         reloadSettingsHBox = new HBox(reloadSettingTitleLabel, reloadButton);
         reloadSettingsHBox.setSpacing(15);
@@ -629,7 +485,7 @@ public class VLCPlayer {
         // 设置弹出框
         settingsPopOver = new PopOver();
         settingsPopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
-        settingsPopOver.getStyleClass().add("vlc-player-pop-over");
+        settingsPopOver.getStyleClass().add("player-pop-over");
         settingsPopOver.setDetachable(false);
         settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());
         settingsPopOverInnerVBox = liveMode ?
@@ -659,9 +515,9 @@ public class VLCPlayer {
         });
         // 铺满、全屏组件
         fullScreenLabel = new Label();
-        fullScreenLabel.getStyleClass().add("vlc-player-control-label");
+        fullScreenLabel.getStyleClass().add("player-control-label");
         fullScreenLabel.setGraphic(fullScreenIcon);
-        fullScreenLabel.setOnMouseClicked(evt -> mediaPlayer.fullScreen().toggle());
+        fullScreenLabel.setOnMouseClicked(evt -> toggleFullScreen());
         rightToolBarHbox = new HBox(fullScreenLabel);
         rightToolBarHbox.setSpacing(20);
         if (liveMode) {
@@ -670,7 +526,7 @@ public class VLCPlayer {
             videoProgressLabel = null;
             videoProgressSplitLabel = null;
             videoProgressLengthLabel = null;
-            liveChannelLinesWithPaginator = new VLCPLayerLiveChannelLinesWithPaginator(
+            liveChannelLinesWithPaginator = new PlayerLiveChannelLinesWithPaginator(
                     line -> play(
                             playingLive.getLiveChannelGroup(),
                             playingLive.getLiveChannel(),
@@ -686,11 +542,11 @@ public class VLCPlayer {
             // 进度条组件
             videoProgressBar = new ProgressBar(0);
             videoProgressLabel = new Label("00:00:00");
-            videoProgressLabel.getStyleClass().add("vlc-player-progress-label");
+            videoProgressLabel.getStyleClass().add("player-progress-label");
             videoProgressBar.setOnMousePressed(evt -> {
                 double newProgress;
 
-                if (!mediaPlayer.status().isPlayable() || !mediaPlayer.status().isSeekable()) {
+                if (!isSeekable()) {
                     return;
                 }
                 isVideoProgressBarUsing.set(true);
@@ -708,7 +564,7 @@ public class VLCPlayer {
                 double width;
                 double newProgress;
 
-                if (!mediaPlayer.status().isPlayable() || !mediaPlayer.status().isSeekable()) {
+                if (!isSeekable()) {
                     return;
                 }
                 newX = evt.getX();
@@ -728,21 +584,21 @@ public class VLCPlayer {
                 }
             });
             videoProgressBar.setOnMouseReleased(evt -> {
-                if (!mediaPlayer.status().isPlayable() || !mediaPlayer.status().isSeekable()) {
+                if (!isSeekable()) {
                     return;
                 }
                 setLoading(true);
                 // 恢复播放器的控制面板自动隐藏逻辑
                 setControlsAutoHide(true);
                 // 处理进度拖动相关逻辑
-                mediaPlayer.controls().setPosition(((float) videoProgressBar.getProgress()));
+                setPositionPercent((float) videoProgressBar.getProgress());
                 isVideoProgressBarUsing.set(false);
             });
             videoProgressBar.disableProperty().bind(isLoading.and(isError.not()));
             videoProgressSplitLabel = new Label("/");
-            videoProgressSplitLabel.getStyleClass().add("vlc-player-progress-label");
+            videoProgressSplitLabel.getStyleClass().add("player-progress-label");
             videoProgressLengthLabel = new Label("-:-:-");
-            videoProgressLengthLabel.getStyleClass().add("vlc-player-progress-label");
+            videoProgressLengthLabel.getStyleClass().add("player-progress-label");
             progressLabelHBox = new HBox(videoProgressLabel, videoProgressSplitLabel, videoProgressLengthLabel);
             progressLabelHBox.setSpacing(5);
             progressLabelHBox.setAlignment(Pos.CENTER);
@@ -755,7 +611,7 @@ public class VLCPlayer {
         }
         leftToolBarHbox.setSpacing(20);
         leftToolBarHbox.setAlignment(Pos.CENTER);
-        controlBottomAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
+        controlBottomAnchorPane.getStyleClass().add("player-anchor-pane");
         controlBottomAnchorPane.setOnMouseClicked(Event::consume);
         AnchorPane.setLeftAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setTopAnchor(leftToolBarHbox, 10.0);
@@ -765,11 +621,11 @@ public class VLCPlayer {
         AnchorPane.setBottomAnchor(rightToolBarHbox, 10.0);
         // 顶端标题
         videoTitleLabel = new Label();
-        videoTitleLabel.getStyleClass().add("vlc-player-title");
+        videoTitleLabel.getStyleClass().add("player-title");
         controlTopHBox = new HBox(videoTitleLabel);
         controlTopHBox.setSpacing(10);
         controlTopAnchorPane = new AnchorPane(controlTopHBox);
-        controlTopAnchorPane.getStyleClass().add("vlc-player-anchor-pane");
+        controlTopAnchorPane.getStyleClass().add("player-anchor-pane");
         controlTopAnchorPane.setOnMouseClicked(Event::consume);
         AnchorPane.setLeftAnchor(controlTopHBox, 10.0);
         AnchorPane.setRightAnchor(controlTopHBox, 10.0);
@@ -789,13 +645,14 @@ public class VLCPlayer {
                 loadingErrorVBox
         );
         paneChildren = playerPane.getChildren();
-        paneChildren.add(videoImageView);
+        playerNode = createPlayerNode();
+        paneChildren.add(playerNode);
         paneChildren.add(progressMiddleStackPane);
         paneChildren.add(toastAnchorPane);
         paneChildren.add(controlPane);
         if (liveMode) {
             epgOpenLabel = new Label(I18nHelper.get(I18nKeys.LIVE_PLAYER_EPG));
-            epgOpenLabel.getStyleClass().add("vlc-player-live-epg-label");
+            epgOpenLabel.getStyleClass().add("player-live-epg-label");
             epgOpenLabel.setOnMouseClicked(evt -> {
                 Pair<Stage, EPGOverviewController> stageAndController = FXMLUtil.load(Views.EPG_OVERVIEW);
 
@@ -832,7 +689,8 @@ public class VLCPlayer {
             liveChannelBanner = null;
             liveChannelDrawer = null;
         }
-        playerPane.getStyleClass().add("vlc-player");
+        playerPane.getStyleClass().add("player");
+        paneWidthProp = liveMode ? parentWidthProp.multiply(1) : parentWidthProp.multiply(0.8);
         bindPlayerPaneWidth(paneWidthProp);
         playerPane.prefHeightProperty().bind(parentHeightProp);
         playerPane.minHeightProperty().bind(parentHeightProp);
@@ -842,22 +700,22 @@ public class VLCPlayer {
                 return;
             }
             if (evt.getClickCount() == 1) {
-                changePlayStatus();
+                togglePause();
             } else {
-                changePlayStatus();
-                mediaPlayer.fullScreen().toggle();
+                togglePause();
+                toggleFullScreen();
             }
         });
         // 键盘快捷键事件绑定
         parent.addEventFilter(KeyEvent.KEY_PRESSED, evt -> {
             switch (evt.getCode()) {
-                case SPACE -> changePlayStatus();
+                case SPACE -> togglePause();
                 case ESCAPE -> {
-                    if (mediaPlayer.fullScreen().isFullScreen()) {
-                        mediaPlayer.fullScreen().toggle();
+                    if (isFullScreen()) {
+                        toggleFullScreen();
                     }
                 }
-                case F -> mediaPlayer.fullScreen().toggle();
+                case F -> toggleFullScreen();
                 case Z -> fillWindowToggleSwitch.setSelected(!fillWindowToggleSwitch.isSelected());
                 case RIGHT -> movePosition(true);
                 case LEFT -> movePosition(false);
@@ -870,39 +728,6 @@ public class VLCPlayer {
         parentChildren.add(0, playerPane);
         parent.requestFocus();
         setLoading(true);
-    }
-
-    private void movePosition(boolean forward) {
-        long length = videoLength.get();
-        long oldTime;
-        long newTime;
-
-        if (!mediaPlayer.status().isPlayable() || length <= 0) {
-            return;
-        }
-        oldTime = mediaPlayer.status().time();
-        newTime = forward ? Math.min(oldTime + 5000, length) : Math.max(oldTime - 5000, 0);
-        mediaPlayer.controls().setTime(newTime);
-    }
-
-    private void moveVolume(boolean forward) {
-        double oldVolume = volumeSlider.getValue();
-        double newVolume = forward ? Math.min(oldVolume + 10, 100) : Math.max(oldVolume - 10, 0);
-
-        if (mediaPlayer.audio().isMute()) {
-            mediaPlayer.audio().mute();
-            volumeLabel.setGraphic(volumeOnIcon);
-        }
-        volumeSlider.setValue(newVolume);
-    }
-
-    private void setControlsAutoHide(boolean flag) {
-        if (flag) {
-            controlPaneHideTimer.restart();
-        } else {
-            setControlsVisible(true);
-            controlPaneHideTimer.stop();
-        }
     }
 
     private void setControlsVisible(boolean flag) {
@@ -926,7 +751,16 @@ public class VLCPlayer {
         }
     }
 
-    private void setLoading(float bufferCached) {
+    private void setControlsAutoHide(boolean flag) {
+        if (flag) {
+            controlPaneHideTimer.restart();
+        } else {
+            setControlsVisible(true);
+            controlPaneHideTimer.stop();
+        }
+    }
+
+    protected void setLoading(float bufferCached) {
         loadingProgressLabel.setText(String.format("%.1f%%", bufferCached));
         if (bufferCached >= 100) {
             setLoading(false);
@@ -939,7 +773,7 @@ public class VLCPlayer {
         }
     }
 
-    private void setLoading(boolean loading) {
+    protected void setLoading(boolean loading) {
         isLoading.set(loading);
         if (loading) {
             setError(false);
@@ -949,11 +783,11 @@ public class VLCPlayer {
         }
     }
 
-    private void setError(boolean flag) {
+    protected void setError(boolean flag) {
         isError.set(flag);
     }
 
-    private boolean isError() {
+    protected boolean isError() {
         return isError.get();
     }
 
@@ -976,113 +810,112 @@ public class VLCPlayer {
         minWidthProperty.bind(widthProp);
     }
 
-    public void play(TVPlayBO tvPlayBO) {
-        String url = tvPlayBO.getUrl();
-        Map<String, String> headers = tvPlayBO.getHeaders();
-        String videoTitle = tvPlayBO.getVideoTitle();
-        Long progress = tvPlayBO.getProgress();
+    protected void postEnterFullScreen() {
+        // 隐藏除播放器外的所有控件
+        setOtherNodesVisibleWhenFullScreen(false);
+        // 绑定播放器宽度与父窗口宽度一致
+        bindPlayerPaneWidth(parent.widthProperty());
+        fullScreenRunnable.run();
+        parent.requestFocus();
+    }
 
-        if (subtitleSettingPopOver.isShowing()) {
-            subtitleSettingPopOver.hide();
-        }
-        subtitleSettingPopOver.setMovieName(StringUtils.substringBetween(videoTitle, "《", "》"));
-        AsyncUtil.execute(() -> {
-            long playerDelay = mediaPlayer.subpictures().delay();
+    protected void postExitFullScreen() {
+        // 显示所有控件
+        setOtherNodesVisibleWhenFullScreen(true);
+        // 绑定非全屏下的播放器宽度
+        bindPlayerPaneWidth(paneWidthProp);
+        fullScreenExitRunnable.run();
+    }
 
-            Platform.runLater(() -> subtitleSettingPopOver.setSubtitleDelay(playerDelay / 1000));
+    private void setOtherNodesVisibleWhenFullScreen(boolean visible) {
+        parent.getChildren().forEach(p -> {
+            if (p != playerPane) {
+                log.info("{} - set {}", p, visible);
+                p.setVisible(visible);
+            }
         });
-        if (tvPlayBO.isAdFiltered()) {
-            toastPane.showMessage(I18nHelper.get(I18nKeys.VIDEO_INFO_AD_FILTERED));
-        }
-        doPlay(url, headers, videoTitle, progress);
     }
 
-    /**
-     * 进行播放
-     * @return 是否成功播放
-     */
-    private boolean doPlay(String url, Map<String, String> headers, String videoTitle, @Nullable Long progress) {
-        String[] options;
-
-        if (destroyFlag) {
-            return false;
-        }
-        setLoading(true);
-        if (progress != null) {
-            initProgress.set(Math.max(progress, -1));
-        }
-        setVideoTitle(videoTitle);
-        options = parsePlayOptionsFromHeaders(headers);
-        log.info("play url={}, options={}", url, options);
-        AsyncUtil.execute(() -> {
-            playMedia(url, options);
-            mediaPlayer.audio().setVolume((int) volumeSlider.getValue());
-        });
-
-        return true;
+    protected boolean isLoading() {
+        return isLoading.get();
     }
 
-    private synchronized void playMedia(String url, String[] options) {
-        if (destroyFlag) {
+    protected void postTimeChanged(long newTime) {
+        if (videoLength.get() > 0) {
+            if (isLoading()) {
+                setLoading(false);
+            }
+            if (config.getLiveMode()) {
 
-            return;
-        }
-        mediaPlayer.media().play(url, options);
-    }
-
-    @Nullable
-    private String[] parsePlayOptionsFromHeaders(Map<String, String> headers) {
-        String userAgent;
-        String referer;
-        short size;
-
-        if (headers.isEmpty()) {
-            return new String[] {
-                    "--subsdec-encoding=UTF-8"
-            };
-        }
-        userAgent = null;
-        referer = null;
-        size = 0;
-        for (Map.Entry<String, String> keyValue : headers.entrySet()) {
-            if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "User-Agent")) {
-                size++;
-                userAgent = "--http-user-agent=" + keyValue.getValue();
-            } else if (StringUtils.equalsIgnoreCase(keyValue.getKey(), "Referer")) {
-                size++;
-                referer = "--http-referer=" + keyValue.getValue();
+                return;
+            }
+            if (!isVideoProgressBarUsing.get()) {
+                videoProgressLabel.setText(formatProgressText(newTime));
+                videoProgressBar.setProgress(newTime / (double) videoLength.get());
             }
         }
-        switch (size) {
-            case 0:
-                return null;
-            case 1:
-                if (userAgent != null) {
-                    return new String[]{"--subsdec-encoding=UTF-8", userAgent};
-                } else {
-                    return new String[]{"--subsdec-encoding=UTF-8", referer};
-                }
-            default:
-                return new String[]{"--subsdec-encoding=UTF-8", userAgent, referer};
+    }
+
+    protected void postFinished() {
+        stepForwardRunnable.run();
+    }
+
+    protected void postError() {
+        SystemHelper.allowSleep();
+        setError(true);
+        setLoading(false);
+    }
+
+    protected void postBuffering(float newCache) {
+        setLoading(newCache);
+    }
+
+    protected void postPaused() {
+        SystemHelper.allowSleep();
+        if (isLoading()) {
+            setLoading(false);
+        }
+        pausedPlayButtonImageView.setVisible(true);
+        pauseLabel.setGraphic(playIcon);
+    }
+
+    protected void postPlaying() {
+        SystemHelper.preventSleep();
+        if (isLoading()) {
+            setLoading(false);
+        }
+        if (pauseLabel.getGraphic() != pauseIcon) {
+            pauseLabel.setGraphic(pauseIcon);
+        }
+        if (pausedPlayButtonImageView.isVisible()) {
+            pausedPlayButtonImageView.setVisible(false);
         }
     }
 
-    public void setVideoTitle(String videoTitle) {
-        videoTitleLabel.setText(videoTitle);
-    }
+    protected void postLengthChanged(long newLength) {
+        initProgress.getAndUpdate(val -> {
+            if (val != -1) {
+                setPlayTime(val);
+            }
 
-    public void changePlayStatus() {
-        if (!mediaPlayer.status().canPause() || isError() || isLoading()) {
+            return -1;
+        });
+        if (config.getLiveMode()) {
 
             return;
         }
-        // 调用暂停API时可能出现短暂延迟，为用户体验考虑，显示一下loading告知用户等待
-        setLoading(true);
-        AsyncUtil.execute(() -> mediaPlayer.controls().pause());
+        videoLength.set(newLength);
+        videoProgressLengthLabel.setText(formatProgressText(newLength));
     }
 
-    private boolean isLoading() {
-        return isLoading.get();
+    protected void postMovedPosition() {}
+
+    protected void postMovedVolume(double newVolume) {
+        volumeSlider.setValue(newVolume);
+    }
+
+    protected void postMuted() {
+        volumeLabel.setGraphic(volumeOnIcon);
     }
 
     private String formatProgressText(long totalMilliseconds) {
@@ -1098,72 +931,17 @@ public class VLCPlayer {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
-    public void stop() {
-        setLoading(false);
-        AsyncUtil.execute(() -> {
-            State playerState = mediaPlayer.status().state();
+    public void play(TVPlayBO tvPlayBO) {
+        String url = tvPlayBO.getUrl();
+        Map<String, String> headers = tvPlayBO.getHeaders();
+        String videoTitle = tvPlayBO.getVideoTitle();
+        Long progress = tvPlayBO.getProgress();
 
-            if (playerState != State.STOPPED && playerState != State.ENDED) {
-                mediaPlayer.controls().stop();
-            }
-        });
-    }
-
-    public void setOnStepBackward(Runnable runnable) {
-        this.stepBackwardRunnable = runnable;
-    }
-
-    public void setOnStepForward(Runnable runnable) {
-        this.stepForwardRunnable = runnable;
-    }
-
-    public void setOnFullScreen(Runnable runnable) {
-        this.fullScreenRunnable = runnable;
-    }
-
-    public void setOnFullScreenExit(Runnable runnable) {
-        this.fullScreenExitRunnable = runnable;
-    }
-
-    public long getCurrentProgress() {
-        long length = videoLength.get();
-        float position;
-
-        if (length < 1) {
-            return 0;
+        if (tvPlayBO.isAdFiltered()) {
+            showToast(I18nHelper.get(I18nKeys.VIDEO_INFO_AD_FILTERED));
         }
-        position = mediaPlayer.status().position();
-
-        return position == 0 ? 0 : ((long) (position * length));
-    }
-
-    public void destroy() {
-        destroyFlag = true;
-        controlPaneHideTimer.stop();
-        volumePopOverHideTimer.stop();
-        settingsPopOverHideTimer.stop();
-        Platform.runLater(() -> {
-            if (epgStage != null && epgStage.isShowing()) {
-                epgStage.hide();
-            }
-            if (liveChannelBanner != null) {
-                liveChannelBanner.destroy();
-            }
-        });
-        if (mediaPlayer.status().isPlaying()) {
-            SystemHelper.allowSleep();
-        }
-        mediaPlayer.release();
-        log.info("vlc media player released");
-    }
-
-    public void setLiveChannelGroups(List<LiveChannelGroup> liveChannelGroups) {
-        this.liveChannelGroups = liveChannelGroups;
-        this.liveChannelDrawer.setLiveChannelGroups(liveChannelGroups);
-    }
-
-    public void setEpgServiceUrl(String epgServiceUrl) {
-        epgServiceUrlProperty.set(epgServiceUrl);
+        doPlay(url, headers, videoTitle, progress);
+        setVolume((int) volumeSlider.getValue());
     }
 
     public void play(int liveChannelGroupIdx, int liveChannelIdx, int liveChannelLineIdx) {
@@ -1174,7 +952,9 @@ public class VLCPlayer {
         play(liveChannelGroup, liveChannel, liveChannelLine);
     }
 
-    private void play(LiveChannelGroup liveChannelGroup, LiveChannel liveChannel, LiveChannel.Line liveChannelLine) {
+    private void play(
+            LiveChannelGroup liveChannelGroup, LiveChannel liveChannel, LiveChannel.Line liveChannelLine
+    ) {
         LiveChannel lastPlayingLiveChannel = playingLive.getLiveChannel();
 
         playingLive.setLiveChannelGroup(liveChannelGroup);
@@ -1183,6 +963,7 @@ public class VLCPlayer {
         liveChannelDrawer.select(liveChannelGroup, liveChannel);
 
         doPlay(liveChannelLine.getUrl(), Map.of(), liveChannel.getTitle(), null);
+        setVolume((int) volumeSlider.getValue());
         if (lastPlayingLiveChannel != liveChannel) {
             // 切换频道时，显示banner（同一个频道切换线路时不显示）
             showLiveChannelBanner(liveChannel, liveChannelLine);
@@ -1292,8 +1073,198 @@ public class VLCPlayer {
         });
     }
 
+    /**
+     * 实际进行播放所调用的方法
+     * @return 是否成功播放
+     */
+    protected boolean doPlay(String url, Map<String, String> headers, String videoTitle, @Nullable Long progress) {
+        if (destroyFlag) {
+
+            return false;
+        }
+        setLoading(true);
+        if (progress != null) {
+            initProgress.set(Math.max(progress, -1));
+        }
+        setVideoTitle(videoTitle);
+        if (!config.getLiveMode()) {
+            if (subtitleSettingPopOver.isShowing()) {
+                subtitleSettingPopOver.hide();
+            }
+            subtitleSettingPopOver.setMovieName(StringUtils.substringBetween(videoTitle, "《", "》"));
+            subtitleSettingPopOver.resetSubtitleDelay();
+        }
+
+        return true;
+    }
+
+    /**
+     * 创建播放器节点
+     * 会在此基类中调用，子类无需调用
+     * @return 播放器节点
+     */
+    protected abstract T createPlayerNode();
+
+    /**
+     * 设置字幕偏移
+     *
+     * @param delay 偏移量
+     */
+    protected void setSubtitleDelay(long delay) {}
+
+    /**
+     * 设置字幕
+     * @param subtitleFile 字幕文件
+     * @return 是否成功
+     */
+    protected boolean useSubtitle(File subtitleFile) { return false; }
+
+    /**
+     * 设置字幕可见性
+     *
+     * @param visible 是否可见
+     */
+    protected void setSubtitleVisible(boolean visible) {}
+
+    /**
+     * 设置（跳转）播放进度
+     * @param time 播放进度
+     */
+    protected void setPlayTime(long time) {}
+
+    /**
+     * 移动播放进度一个单位
+     * @param forward 是否向前
+     */
+    protected void movePosition(boolean forward) {}
+
+    /**
+     * 移动音量一个单位
+     * @param forward 是否升高
+     */
+    protected void moveVolume(boolean forward) {}
+
+    /**
+     * 设置音量
+     * @param volume 音量
+     */
+    protected void setVolume(int volume) {}
+
+    /**
+     * 静音切换
+     */
+    protected void toggleMute() {}
+
+    /**
+     * 获取当前是否静音
+     */
+    protected boolean isMute() { return false; }
+
+    /**
+     * 暂停切换
+     */
+    protected void togglePause() {}
+
+    /**
+     * 设置播放速度
+     */
+    protected void setRate(float rate) {}
+
+    /**
+     * 设置播放区域是否铺满窗口
+     * @param fill 是否铺满
+     */
+    protected void setFillWindow(boolean fill) {}
+
+    /**
+     * stop后恢复播放
+     */
+    protected void play() {}
+
+    /**
+     * 切换全屏
+     */
+    protected void toggleFullScreen() {}
+
+    /**
+     * 获取当前是否全屏
+     * @return 是否全屏
+     */
+    protected boolean isFullScreen() { return false; }
+
+    /**
+     * 获取当前是否可拖动进度
+     * @return 是否可拖动进度
+     */
+    protected boolean isSeekable() { return false; }
+
+    /**
+     * 设置播放进度（按百分比）
+     * @param positionPercent 播放进度
+     */
+    protected void setPositionPercent(float positionPercent) {}
+
+    /**
+     * 获取当前播放进度（允许阻塞）
+     * @return 当前播放进度
+     */
+    public long getCurrentProgress() { return 0; }
+
+    /**
+     * 停止播放
+     */
+    public void stop() {}
+
+    /**
+     * 销毁播放器
+     * 此类中的方法不会阻塞，但子类（比如VLC播放器）中覆盖的方法可能会阻塞
+     */
+    public void destroy() {
+        destroyFlag = true;
+        controlPaneHideTimer.stop();
+        volumePopOverHideTimer.stop();
+        settingsPopOverHideTimer.stop();
+        Platform.runLater(() -> {
+            if (epgStage != null && epgStage.isShowing()) {
+                epgStage.hide();
+            }
+            if (liveChannelBanner != null) {
+                liveChannelBanner.destroy();
+            }
+        });
+    }
+
+    public void setOnStepBackward(Runnable runnable) {
+        this.stepBackwardRunnable = runnable;
+    }
+
+    public void setOnStepForward(Runnable runnable) {
+        this.stepForwardRunnable = runnable;
+    }
+
+    public void setOnFullScreen(Runnable runnable) {
+        this.fullScreenRunnable = runnable;
+    }
+
+    public void setOnFullScreenExit(Runnable runnable) {
+        this.fullScreenExitRunnable = runnable;
+    }
+
+    public void setVideoTitle(String videoTitle) {
+        videoTitleLabel.setText(videoTitle);
+    }
+
     public void showToast(String message) {
-        toastPane.showMessage(message);
+        toastPane.showToast(message);
+    }
+
+    public void setLiveChannelGroups(List<LiveChannelGroup> liveChannelGroups) {
+        this.liveChannelGroups = liveChannelGroups;
+        this.liveChannelDrawer.setLiveChannelGroups(liveChannelGroups);
+    }
+
+    public void setEpgServiceUrl(String epgServiceUrl) {
+        epgServiceUrlProperty.set(epgServiceUrl);
     }
 
     /**
@@ -1329,14 +1300,14 @@ public class VLCPlayer {
 
             // 基本样式设置
             setAlignment(Pos.CENTER);
-            getStyleClass().add("vlc-player-live-channel-banner");
+            getStyleClass().add("player-live-channel-banner");
 
             // 样式
-            channelNameLabel.getStyleClass().add("vlc-player-live-channel-banner-channel-name-label");
-            currentProgramLabel.getStyleClass().add("vlc-player-live-channel-banner-program-label");
-            programTimeLabel.getStyleClass().add("vlc-player-live-channel-banner-program-time-label");
-            nextProgramLabel.getStyleClass().add("vlc-player-live-channel-banner-program-label");
-            nextProgramTimeLabel.getStyleClass().add("vlc-player-live-channel-banner-program-time-label");
+            channelNameLabel.getStyleClass().add("player-live-channel-banner-channel-name-label");
+            currentProgramLabel.getStyleClass().add("player-live-channel-banner-program-label");
+            programTimeLabel.getStyleClass().add("player-live-channel-banner-program-time-label");
+            nextProgramLabel.getStyleClass().add("player-live-channel-banner-program-label");
+            nextProgramTimeLabel.getStyleClass().add("player-live-channel-banner-program-time-label");
 
             // 节目信息垂直布局
             currentProgramVBox = new VBox(2, currentProgramLabel, programTimeLabel);
@@ -1415,7 +1386,7 @@ public class VLCPlayer {
         private final ListView<LiveChannel> liveChannelListView;
         private final LiveChannelListViewCellFactory liveChannelListViewCellFactory;
 
-        public LiveDrawer(LiveInfoBO selectedLive, LiveInfoBO playingLive, StackPane playerPane, VLCPlayer player) {
+        public LiveDrawer(LiveInfoBO selectedLive, LiveInfoBO playingLive, StackPane playerPane, BasePlayer<?> player) {
             super();
             HBox listViewHBox = new HBox();
             Button actionBtn = new Button();
@@ -1434,7 +1405,7 @@ public class VLCPlayer {
             ObservableList<Node> listViewHBoxChildren = listViewHBox.getChildren();
 
             // 样式
-            actionBtnStyleClasses.add("vlc-player-live-channel-list-toggle-button");
+            actionBtnStyleClasses.add("player-live-channel-list-toggle-button");
             actionBtn.setGraphic(actionBtnRightIcon);
             minHeightProp.bind(playerPaneHeightProp.divide(1.2));
             maxHeightProp.bind(playerPaneHeightProp.divide(1.2));
@@ -1450,7 +1421,7 @@ public class VLCPlayer {
             liveChannelListView = new ListView<>();
             liveChannelListViewCellFactory = new LiveChannelListViewCellFactory(selectedLive, playingLive, player);
             liveChannelListView.setCellFactory(liveChannelListViewCellFactory);
-            liveChannelListView.getStyleClass().add("vlc-player-live-channel-list-view");
+            liveChannelListView.getStyleClass().add("player-live-channel-list-view");
             liveChannelListView.setFocusTraversable(false);
             HBox.setHgrow(liveChannelListView, Priority.ALWAYS);
             // 节目分组列表
@@ -1459,7 +1430,7 @@ public class VLCPlayer {
                     selectedLive, liveChannelListView, liveChannelListViewCellFactory.getLiveChannelAndTitleHBoxMap()
             );
             liveChannelGroupListView.setCellFactory(liveChannelGroupListViewCellFactory);
-            liveChannelGroupListView.getStyleClass().add("vlc-player-live-channel-list-view");
+            liveChannelGroupListView.getStyleClass().add("player-live-channel-list-view");
             liveChannelGroupListView.setFocusTraversable(false);
 
             listViewHBoxChildren.add(liveChannelGroupListView);
@@ -1535,8 +1506,8 @@ public class VLCPlayer {
 
                     super.updateItem(liveChannelGroup, empty);
                     styleClasses = getStyleClass();
-                    if (!styleClasses.contains("vlc-player-live-channel-group-list-cell")) {
-                        styleClasses.add("vlc-player-live-channel-group-list-cell");
+                    if (!styleClasses.contains("player-live-channel-group-list-cell")) {
+                        styleClasses.add("player-live-channel-group-list-cell");
                     }
                     setText(null);
                     if (empty) {
@@ -1560,10 +1531,10 @@ public class VLCPlayer {
                         liveChannelGroupAndTitleLabelMap.put(liveChannelGroup, titleLabel);
                         selectedLiveChannelGroup = selectedLive.getLiveChannelGroup();
                         if (selectedLiveChannelGroup != null && liveChannelGroup == selectedLiveChannelGroup) {
-                            titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label-focused");
+                            titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                             setLiveChannels(liveChannelGroup.getChannels(), false);
                         } else {
-                            titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label");
+                            titleLabelStyleClass.add("player-live-channel-list-view-title-label");
                         }
                     }
                     setGraphic(titleLabel);
@@ -1592,19 +1563,19 @@ public class VLCPlayer {
             }
             titleLabelStyleClass = titleLabel.getStyleClass();
             if (lastLiveChannelGroup == null) {
-                titleLabelStyleClass.remove("vlc-player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label-focused");
+                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
+                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                 setLiveChannels(liveChannelGroup.getChannels(), false);
             } else if (lastLiveChannelGroup != liveChannelGroup) {
-                titleLabelStyleClass.remove("vlc-player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label-focused");
+                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
+                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                 lastSelectedTitleLabel = liveChannelGroupAndTitleLabelMap.get(lastLiveChannelGroup);
                 lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
                 lastSelectedTitleLabelStyleClass.remove(
-                        "vlc-player-live-channel-list-view-title-label-focused"
+                        "player-live-channel-list-view-title-label-focused"
                 );
                 lastSelectedTitleLabelStyleClass.add(
-                        "vlc-player-live-channel-list-view-title-label"
+                        "player-live-channel-list-view-title-label"
                 );
                 setLiveChannels(liveChannelGroup.getChannels(), isPlaying);
             }
@@ -1644,8 +1615,8 @@ public class VLCPlayer {
                 return;
             }
             lastLiveChannelTitleLabelStyleClass = lastLiveChannelTitleLabel.getStyleClass();
-            lastLiveChannelTitleLabelStyleClass.remove("vlc-player-live-channel-list-view-title-label-focused");
-            lastLiveChannelTitleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label");
+            lastLiveChannelTitleLabelStyleClass.remove("player-live-channel-list-view-title-label-focused");
+            lastLiveChannelTitleLabelStyleClass.add("player-live-channel-list-view-title-label");
         }
     }
 
@@ -1654,7 +1625,7 @@ public class VLCPlayer {
     {
         private final LiveInfoBO selectedLive;
         private final LiveInfoBO playingLive;
-        private final VLCPlayer player;
+        private final BasePlayer<?> player;
         private final Map<LiveChannel, BorderPane> liveChannelAndGraphicBorderPaneMap;
         @Getter
         private final Map<LiveChannel, HBox> liveChannelAndTitleHBoxMap;
@@ -1671,7 +1642,7 @@ public class VLCPlayer {
             PLAYING_GIF_IMAGE_VIEW.setPreserveRatio(true);
         }
 
-        public LiveChannelListViewCellFactory(LiveInfoBO selectedLive, LiveInfoBO playingLive, VLCPlayer player) {
+        public LiveChannelListViewCellFactory(LiveInfoBO selectedLive, LiveInfoBO playingLive, BasePlayer<?> player) {
             super();
             this.selectedLive = selectedLive;
             this.playingLive = playingLive;
@@ -1698,8 +1669,8 @@ public class VLCPlayer {
 
                     super.updateItem(liveChannel, empty);
                     styleClasses = getStyleClass();
-                    if (!styleClasses.contains("vlc-player-live-channel-list-cell")) {
-                        styleClasses.add("vlc-player-live-channel-list-cell");
+                    if (!styleClasses.contains("player-live-channel-list-cell")) {
+                        styleClasses.add("player-live-channel-list-cell");
                     }
                     setText(null);
                     if (empty) {
@@ -1731,13 +1702,13 @@ public class VLCPlayer {
                         liveChannelAndTitleHBoxMap.put(liveChannel, titleHBox);
                         selectedLiveChannel = selectedLive.getLiveChannel();
                         if (selectedLiveChannel != null && liveChannel == selectedLiveChannel) {
-                            titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label-focused");
+                            titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                             titleHBoxChildren = titleHBox.getChildren();
                             if (!titleHBoxChildren.contains(PLAYING_GIF_IMAGE_VIEW)) {
                                 titleHBoxChildren.add(1, PLAYING_GIF_IMAGE_VIEW);
                             }
                         } else {
-                            titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label");
+                            titleLabelStyleClass.add("player-live-channel-list-view-title-label");
                         }
                         graphicBorderPane.setCenter(titleHBox);
                         // 台标
@@ -1785,14 +1756,14 @@ public class VLCPlayer {
             titleLabelStyleClass = titleLabel.getStyleClass();
             titleHBoxChildren = titleHBox.getChildren();
             if (lastLiveChannel == null) {
-                titleLabelStyleClass.remove("vlc-player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label-focused");
+                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
+                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                 if (!titleHBoxChildren.contains(PLAYING_GIF_IMAGE_VIEW)) {
                     titleHBoxChildren.add(1, PLAYING_GIF_IMAGE_VIEW);
                 }
             } else if (lastLiveChannel != liveChannel) {
-                titleLabelStyleClass.remove("vlc-player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("vlc-player-live-channel-list-view-title-label-focused");
+                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
+                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                 lastSelectedTitleHBox = liveChannelAndTitleHBoxMap.get(lastLiveChannel);
                 lastSelectedTitleLabel = CastUtil.cast(CollectionUtil.getFirst(lastSelectedTitleHBox.getChildren()));
                 if (lastSelectedTitleLabel == null) {
@@ -1801,10 +1772,10 @@ public class VLCPlayer {
                 }
                 lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
                 lastSelectedTitleLabelStyleClass.remove(
-                        "vlc-player-live-channel-list-view-title-label-focused"
+                        "player-live-channel-list-view-title-label-focused"
                 );
                 lastSelectedTitleLabelStyleClass.add(
-                        "vlc-player-live-channel-list-view-title-label"
+                        "player-live-channel-list-view-title-label"
                 );
                 lastSelectedTitleHBoxChildren = lastSelectedTitleHBox.getChildren();
                 lastSelectedTitleHBoxChildren.remove(PLAYING_GIF_IMAGE_VIEW);

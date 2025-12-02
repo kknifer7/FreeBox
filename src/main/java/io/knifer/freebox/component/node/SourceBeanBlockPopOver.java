@@ -11,6 +11,7 @@ import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.SourceBeanBlockList;
 import io.knifer.freebox.util.CastUtil;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -44,6 +45,7 @@ public class SourceBeanBlockPopOver extends PopOver {
         HBox btnHBox;
         VBox root;
         List<SourceBean> items;
+        ObservableList<SourceBean> checkedItems;
 
         setTitle(I18nHelper.get(I18nKeys.TV_SOURCE_BEAN_BLOCK));
         setOnShowing(evt -> setDetached(true));
@@ -56,13 +58,19 @@ public class SourceBeanBlockPopOver extends PopOver {
         checkListView.setFocusTraversable(false);
         checkListView.setCellFactory(new SourceBeanCheckListCellFactory(checkListView, ignored -> {}));
         items = checkListView.getItems();
+        checkedItems = checkListView.getCheckModel().getCheckedItems();
+        checkedItems.addListener((ListChangeListener<SourceBean>) ignored -> {
+            boolean okBtnDisableFlag = checkedItems.size() == items.size();
+
+            if (okBtn.disableProperty().get() != okBtnDisableFlag) {
+                okBtn.setDisable(okBtnDisableFlag);
+            }
+        });
         resetBtn.setFocusTraversable(false);
         resetBtn.setOnAction(evt -> checkListView.getCheckModel().clearChecks());
         okBtn.setFocusTraversable(false);
         okBtn.setDefaultButton(true);
         okBtn.setOnAction(evt -> {
-            ObservableList<SourceBean> checkedItems = checkListView.getCheckModel().getCheckedItems();
-
             if (!blockedSourceBeans.equals(checkedItems)) {
                 blockedSourceBeans.clear();
                 blockedSourceBeans.addAll(checkedItems);
@@ -80,24 +88,33 @@ public class SourceBeanBlockPopOver extends PopOver {
         setContentNode(root);
     }
 
+    /**
+     * 设置源列表，返回屏蔽过滤后的源列表
+     * @param sourceBeans 源列表
+     * @return 屏蔽过滤后的源列表
+     */
     public List<SourceBean> setSourceBeans(List<SourceBean> sourceBeans) {
         ObservableList<SourceBean> items = checkListView.getItems();
         Set<String> blockedSourceBeanKeys;
         IndexedCheckModel<SourceBean> checkModel;
 
         items.clear();
+        blockedSourceBeans.clear();
         if (sourceBeans.isEmpty()) {
+
             return items;
         }
         items.addAll(sourceBeans);
         blockedSourceBeanKeys = loadBlockedSourceBeanKeys();
         if (blockedSourceBeanKeys.isEmpty()) {
+
             return items;
         }
         checkModel = checkListView.getCheckModel();
         sourceBeans.forEach(sourceBean -> {
             if (blockedSourceBeanKeys.contains(sourceBean.getKey())) {
                 checkModel.check(sourceBean);
+                blockedSourceBeans.add(sourceBean);
             }
         });
 

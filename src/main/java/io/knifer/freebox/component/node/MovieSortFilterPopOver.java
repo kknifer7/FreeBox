@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 
 /**
  * 影视分类过滤条件树弹出框
+ *
  * @author Knifer
  */
 public class MovieSortFilterPopOver extends PopOver {
@@ -43,6 +44,7 @@ public class MovieSortFilterPopOver extends PopOver {
         treeView.setFocusTraversable(false);
         treeView.setShowRoot(false);
         treeView.setRoot(treeRoot);
+        treeRoot.setExpanded( true);
         treeView.setCellFactory(new Callback<>() {
             @Override
             public TreeCell<MovieSortFilterTreeItem> call(TreeView<MovieSortFilterTreeItem> view) {
@@ -136,10 +138,10 @@ public class MovieSortFilterPopOver extends PopOver {
             ObservableList<TreeItem<MovieSortFilterTreeItem>> itemChildren = treeItem.getChildren();
 
             treeItem.setIndependent(true);
+            treeItem.setExpanded(true);
             items.add(treeItem);
             filter.getValues().entrySet().forEach(filterValueNameAndValue -> {
-                CheckBoxTreeItem<MovieSortFilterTreeItem> childItem =
-                        new CheckBoxTreeItem<>(convertToTreeItem(filterValueNameAndValue));
+                CheckBoxTreeItem<MovieSortFilterTreeItem> childItem = new CheckBoxTreeItem<>(convertToTreeItem(filterValueNameAndValue));
                 String filterVal;
 
                 itemChildren.add(childItem);
@@ -149,25 +151,25 @@ public class MovieSortFilterPopOver extends PopOver {
                 if (filterVal != null && filterVal.equals(filterValueNameAndValue.getValue())) {
                     childItem.setSelected(true);
                 }
-                childItem.selectedProperty()
-                        .addListener((ob, oldVal, newVal) -> {
-                            if (!newVal) {
-                                return;
-                            }
-                            itemChildren.forEach(i -> {
-                                CheckBoxTreeItem<?> iCheckItem;
+                childItem.selectedProperty().addListener((ob, oldVal, newVal) -> {
+                    if (!newVal) {
+                        return;
+                    }
+                    itemChildren.forEach(i -> {
+                        CheckBoxTreeItem<?> iCheckItem;
 
-                                if (i.equals(childItem)) {
-                                    return;
-                                }
-                                iCheckItem = (CheckBoxTreeItem<?>) i;
-                                if (iCheckItem.isSelected()) {
-                                    iCheckItem.setSelected(false);
-                                }
-                            });
-                        });
+                        if (i.equals(childItem)) {
+                            return;
+                        }
+                        iCheckItem = (CheckBoxTreeItem<?>) i;
+                        if (iCheckItem.isSelected()) {
+                            iCheckItem.setSelected(false);
+                        }
+                    });
+                });
             });
         });
+
     }
 
     private MovieSortFilterTreeItem convertToTreeItem(MovieSort.SortFilter sortDataFilter) {

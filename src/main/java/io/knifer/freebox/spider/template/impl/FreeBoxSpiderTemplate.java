@@ -14,6 +14,7 @@ import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.common.catvod.Class;
+import io.knifer.freebox.model.common.catvod.Filter;
 import io.knifer.freebox.model.common.catvod.Result;
 import io.knifer.freebox.model.common.catvod.Vod;
 import io.knifer.freebox.model.common.tvbox.*;
@@ -186,7 +187,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         List<Vod> list = result.getList();
         Movie movie;
 
-        absSortXml.setClasses(resultClassToMovieSort(result.getClasses()));
+        absSortXml.setClasses(resultClassToMovieSort(result.getClasses(), result.getFilters()));
         if (CollectionUtil.isNotEmpty(list)) {
             movie = new Movie();
             movie.setVideoList(list.stream().map(v -> vodToVideo(v, sourceKey)).toList());
@@ -196,7 +197,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         return absSortXml;
     }
 
-    private MovieSort resultClassToMovieSort(List<Class> classes) {
+    private MovieSort resultClassToMovieSort(List<Class> classes, Map<String, List<Filter>> filters) {
         MovieSort movieSort = new MovieSort();
         List<MovieSort.SortData> sortList;
 
@@ -206,10 +207,31 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             sortList = classes.stream()
                     .map(c -> {
                         MovieSort.SortData sortData = new MovieSort.SortData();
+                        String typeId = c.getTypeId();
+                        List<Filter> filterList;
+                        ArrayList<MovieSort.SortFilter> sortDataFilterList;
 
-                        sortData.setId(c.getTypeId());
+                        sortData.setId(typeId);
                         sortData.setName(c.getTypeName());
                         sortData.setFlag(c.getTypeFlag());
+                        if (filters != null && !CollectionUtil.isEmpty(filterList = filters.get(typeId))) {
+                            sortDataFilterList = new ArrayList<>(
+                                    filterList.stream().map(f -> {
+                                        MovieSort.SortFilter filter = new MovieSort.SortFilter();
+
+                                        filter.key = f.getKey();
+                                        filter.name = f.getName();
+                                        filter.values = new LinkedHashMap<>(
+                                                f.getValue().stream().collect(
+                                                        Collectors.toMap(Filter.Value::getN, Filter.Value::getV)
+                                                )
+                                        );
+
+                                        return filter;
+                                    }).toList()
+                            );
+                            sortData.setFilters(sortDataFilterList);
+                        }
 
                         return sortData;
                     })

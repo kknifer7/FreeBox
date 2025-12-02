@@ -377,7 +377,6 @@ public class SettingsController {
     public void onHttpServiceStartBtnAction() {
         Integer httpPort = ConfigHelper.getHttpPort();
         String ip = ConfigHelper.getServiceIPv4();
-        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(httpPort);
 
         disableHttpServiceBtn();
         disableHttpServiceForm();
@@ -386,32 +385,24 @@ public class SettingsController {
                 httpServiceStatusFontIcon,
                 Color.ORANGE
         );
-        checkPortUsingService.setOnSucceeded(evt -> {
-            if (checkPortUsingService.getValue()) {
-                ToastHelper.showError(String.format(
-                        I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
-                        httpPort
-                ));
-                showServiceStatus(
-                        httpServiceStatusLabel,
-                        httpServiceStatusFontIcon,
-                        Color.GRAY
-                );
-                httpServiceStartBtn.setDisable(false);
-                enableHttpServiceForm();
-            } else {
-                ConfigHelper.checkAndSave();
-                httpServer.start(ip, httpPort);
-                showServiceStatus(
-                        httpServiceStatusLabel,
-                        httpServiceStatusFontIcon,
-                        Color.GREEN
-                );
-                httpServiceStopBtn.setDisable(false);
-                ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_HTTP_SERVICE_UP);
-            }
-        });
-        checkPortUsingService.start();
+        if (httpServer.start(ip, httpPort)) {
+            ConfigHelper.checkAndSave();
+            showServiceStatus(
+                    httpServiceStatusLabel,
+                    httpServiceStatusFontIcon,
+                    Color.GREEN
+            );
+            httpServiceStopBtn.setDisable(false);
+            ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_HTTP_SERVICE_UP);
+        } else {
+            showServiceStatus(
+                    httpServiceStatusLabel,
+                    httpServiceStatusFontIcon,
+                    Color.GRAY
+            );
+            httpServiceStartBtn.setDisable(false);
+            enableHttpServiceForm();
+        }
     }
 
     @FXML

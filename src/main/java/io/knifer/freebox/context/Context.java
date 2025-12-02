@@ -190,7 +190,7 @@ public enum Context {
                 spiderTemplateMap.values().forEach(SpiderTemplate::destroy);
             }
         }
-        SingleInstanceApplicationHandler.release();
+        SingleInstanceApplicationHandler.getInstance().releaseLock();
         System.exit(0);
     }
 

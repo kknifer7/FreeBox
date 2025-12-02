@@ -16,7 +16,7 @@ public class SingleInstanceApplicationService extends Service<Void> {
         return new Task<>() {
             @Override
             protected Void call() {
-                new SingleInstanceApplicationHandler().handle();
+                SingleInstanceApplicationHandler.getInstance().handle();
 
                 return null;
             }

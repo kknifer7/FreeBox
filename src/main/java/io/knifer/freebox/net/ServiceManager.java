@@ -3,12 +3,10 @@ package io.knifer.freebox.net;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.ConfigHelper;
-import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
-import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import javafx.concurrent.Service;
 import lombok.Getter;
@@ -65,8 +63,6 @@ public class ServiceManager {
                             .stream()
                             .noneMatch(pair -> ip.equals(pair.getValue()));
             int port;
-            CheckPortUsingService httpCheckPortUsingService;
-            CheckPortUsingService wsCheckPortUsingService;
 
             if (ipChangedFlag) {
                 ToastHelper.showInfoI18n(I18nKeys.INIT_IP_CHANGED_MESSAGE);
@@ -76,46 +72,12 @@ public class ServiceManager {
             }
             if (httpAutoStartFlag) {
                 port = ConfigHelper.getHttpPort();
-                httpCheckPortUsingService = new CheckPortUsingService(port);
-                httpCheckPortUsingService.setOnSucceeded(ignore -> {
-                    Boolean isPortUsing = httpCheckPortUsingService.getValue();
-                    Integer httpPort = httpCheckPortUsingService.getPort();
-
-                    if (isPortUsing) {
-                        ToastHelper.showError(String.format(
-                                I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
-                                httpPort
-                        ));
-                    } else {
-                        httpServer.start(ip, httpPort);
-                        log.info("http service started");
-                    }
-                    if (!wsAutoStartFlag) {
-                        // 启动http服务后，如果不需要再启动ws服务，就直接触发init的完成回调
-                        callback.run();
-                    }
-                });
-                httpCheckPortUsingService.start();
+                httpServer.start(ip, port);
             }
             if(wsAutoStartFlag) {
-                port = ConfigHelper.getWsPort();
-                wsCheckPortUsingService = new CheckPortUsingService(port);
-                wsCheckPortUsingService.setOnSucceeded(ignore -> {
-                    Boolean isPortUsing = wsCheckPortUsingService.getValue();
-                    Integer wsPort = wsCheckPortUsingService.getPort();
-
-                    if (isPortUsing) {
-                        ToastHelper.showError(String.format(
-                                I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
-                                wsPort
-                        ));
-                    } else {
-                        wsServer.start(ip, wsPort);
-                    }
-                    callback.run();
-                });
-                wsCheckPortUsingService.start();
+                wsServer.start(ip, ConfigHelper.getWsPort());
             }
+            callback.run();
         });
         loadNetworkInterfaceService.start();
     }

@@ -3,6 +3,7 @@ package io.knifer.freebox.net.websocket.server;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.core.ClientManager;
@@ -14,6 +15,7 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
@@ -73,10 +75,19 @@ public class KebSocketServer extends WebSocketServer {
 	@Override
 	public void onError(WebSocket conn, Exception ex) {
 		log.error("an error occurred on connection {}", conn, ex);
+		if (ex instanceof BindException) {
+			Platform.runLater(() ->
+				ToastHelper.showError(String.format(
+						I18nHelper.get(I18nKeys.SETTINGS_PORT_IN_USE),
+						getAddress().getPort()
+				))
+			);
+		}
 	}
 	
 	@Override
 	public void onStart() {
-		log.info("WebSocket Service start successfully.");
+		log.info("websocket service start successfully");
+		Platform.runLater(() -> Context.INSTANCE.postEvent(new AppEvents.WsServerStartedEvent(this)));
 	}
 }

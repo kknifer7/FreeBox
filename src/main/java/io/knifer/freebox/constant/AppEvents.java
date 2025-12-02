@@ -1,6 +1,7 @@
 package io.knifer.freebox.constant;
 
 import io.knifer.freebox.model.domain.ClientInfo;
+import io.knifer.freebox.net.websocket.server.KebSocketServer;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -15,15 +16,13 @@ public class AppEvents {
 
     public static final AppInitializedEvent APP_INITIALIZED = new AppInitializedEvent();
 
-    public static final WsServerStartedEvent WS_SERVER_STARTED = new WsServerStartedEvent();
-
     public static final HttpServerStartedEvent HTTP_SERVER_STARTED = new HttpServerStartedEvent();
 
     public interface Event {}
 
     public static final class AppInitializedEvent implements Event {}
 
-    public static final class WsServerStartedEvent implements Event {}
+    public record WsServerStartedEvent(KebSocketServer server) implements Event {}
 
     public static final class HttpServerStartedEvent implements Event {}
 

@@ -187,7 +187,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         List<Vod> list = result.getList();
         Movie movie;
 
-        absSortXml.setClasses(resultClassToMovieSort(result.getClasses(),result.getFilters()));
+        absSortXml.setClasses(resultClassToMovieSort(result.getClasses(), result.getFilters()));
         if (CollectionUtil.isNotEmpty(list)) {
             movie = new Movie();
             movie.setVideoList(list.stream().map(v -> vodToVideo(v, sourceKey)).toList());
@@ -207,22 +207,30 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             sortList = classes.stream()
                     .map(c -> {
                         MovieSort.SortData sortData = new MovieSort.SortData();
+                        String typeId = c.getTypeId();
+                        List<Filter> filterList;
+                        ArrayList<MovieSort.SortFilter> sortDataFilterList;
 
-                        sortData.setId(c.getTypeId());
+                        sortData.setId(typeId);
                         sortData.setName(c.getTypeName());
                         sortData.setFlag(c.getTypeFlag());
-                        if(filters!=null&&!filters.get(c.getTypeId()).isEmpty()){
-                            sortData.setFilters(new ArrayList<>(
-                                    filters.get(c.getTypeId()).stream().map(f -> {
-
+                        if (filters != null && !CollectionUtil.isEmpty(filterList = filters.get(typeId))) {
+                            sortDataFilterList = new ArrayList<>(
+                                    filterList.stream().map(f -> {
                                         MovieSort.SortFilter filter = new MovieSort.SortFilter();
+
                                         filter.key = f.getKey();
                                         filter.name = f.getName();
-                                        filter.values = new LinkedHashMap<>(f.getValue().stream().collect(Collectors.toMap(Filter.Value::getN, Filter.Value::getV)));
-                                        return filter;
-                                    }).collect(Collectors.toList())
-                            ));
+                                        filter.values = new LinkedHashMap<>(
+                                                f.getValue().stream().collect(
+                                                        Collectors.toMap(Filter.Value::getN, Filter.Value::getV)
+                                                )
+                                        );
 
+                                        return filter;
+                                    }).toList()
+                            );
+                            sortData.setFilters(sortDataFilterList);
                         }
 
                         return sortData;

@@ -50,7 +50,7 @@ javafx {
 
 ext {
     dv = [
-            controlsFX: '11.1.2',
+            controlsFX: '11.2.2',
             ikonli: '12.3.1',
             gson: '2.11.0',
             guava: '33.2.1-jre',

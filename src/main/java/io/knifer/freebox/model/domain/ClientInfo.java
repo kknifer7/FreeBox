@@ -48,7 +48,8 @@ public class ClientInfo implements Savable {
     }
 
     public boolean isOpen() {
-        if (clientType == ClientType.CATVOD_SPIDER) {
+        if (clientType == ClientType.CATVOD_SPIDER || clientType == ClientType.SINGLE_LIVE) {
+
             return true;
         }
 

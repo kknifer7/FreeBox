@@ -15,10 +15,7 @@ import io.knifer.freebox.handler.impl.MacVLCPlayerCheckHandler;
 import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
-import io.knifer.freebox.model.domain.ClientInfo;
-import io.knifer.freebox.model.domain.MovieCollection;
-import io.knifer.freebox.model.domain.MovieHistory;
-import io.knifer.freebox.model.domain.SourceBeanBlockList;
+import io.knifer.freebox.model.domain.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import io.knifer.freebox.service.UpgradeCheckService;
@@ -366,24 +363,28 @@ public class HomeController {
         clientManager.unregister(clientInfo);
         clientListView.getItems().remove(clientInfo);
         clientId = clientInfo.getId();
-        StorageHelper.delete(clientId, SourceBeanBlockList.class);
-        if (clientInfo.getClientType() == ClientType.CATVOD_SPIDER) {
-            StorageHelper.delete(clientId, MovieHistory.class);
-            StorageHelper.delete(clientId, MovieCollection.class);
-            StorageHelper.delete(clientInfo);
-            ToastHelper.showInfoI18n(
-                    I18nKeys.HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED,
-                    clientInfo.getName()
-            );
-
-        } else if (clientInfo.getClientType() == ClientType.SINGLE_LIVE) {
-            StorageHelper.delete(clientInfo);
-            ToastHelper.showInfoI18n(
-                    I18nKeys.HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED,
-                    clientInfo.getName()
-            );
-        } else {
-            ToastHelper.showInfoI18n(
+        switch (clientInfo.getClientType()) {
+            case CATVOD_SPIDER -> {
+                StorageHelper.delete(clientId, SourceBeanBlockList.class);
+                StorageHelper.delete(clientId, MovieHistory.class);
+                StorageHelper.delete(clientId, MovieCollection.class);
+                StorageHelper.delete(clientId, ClientTVProperties.class);
+                StorageHelper.delete(clientId, ClientLiveProperties.class);
+                StorageHelper.delete(clientInfo);
+                ToastHelper.showInfoI18n(
+                        I18nKeys.HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED,
+                        clientInfo.getName()
+                );
+            }
+            case SINGLE_LIVE -> {
+                StorageHelper.delete(clientInfo);
+                StorageHelper.delete(clientId, ClientLiveProperties.class);
+                ToastHelper.showInfoI18n(
+                        I18nKeys.HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED,
+                        clientInfo.getName()
+                );
+            }
+            case TVBOX_K -> ToastHelper.showInfoI18n(
                     I18nKeys.MESSAGE_CLIENT_UNREGISTERED,
                     clientInfo.getName()
             );
@@ -479,7 +480,6 @@ public class HomeController {
         homeStage = WindowHelper.getStage(root);
         liveStage = stageAndController.getLeft();
         liveStage.setTitle(I18nHelper.getFormatted(I18nKeys.LIVE_WINDOW_TITLE, clientInfo.getName()));
-        stageAndController.getRight().setData(clientInfo);
         WindowHelper.route(homeStage, liveStage);
     }
 
@@ -489,6 +489,5 @@ public class HomeController {
 
         hyperlink.setVisited(false);
         ipInfoPopOver.show(hyperlink);
-
     }
 }

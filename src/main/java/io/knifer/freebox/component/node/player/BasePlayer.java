@@ -57,6 +57,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
@@ -968,11 +969,11 @@ public abstract class BasePlayer<T extends Node> {
             // 切换频道时，显示banner（同一个频道切换线路时不显示）
             showLiveChannelBanner(liveChannel, liveChannelLine);
         }
-        updateLiveChannelLinesHBox(lastPlayingLiveChannel, liveChannel);
+        updateLiveChannelLinesHBox(lastPlayingLiveChannel, liveChannel, liveChannelLine);
     }
 
     private void updateLiveChannelLinesHBox(
-            @Nullable LiveChannel lastPlayingLiveChannel, LiveChannel liveChannel
+            @Nullable LiveChannel lastPlayingLiveChannel, LiveChannel liveChannel, LiveChannel.Line liveChannelLine
     ) {
         if (lastPlayingLiveChannel != liveChannel) {
             liveChannelLinesWithPaginator.clear();
@@ -981,6 +982,7 @@ public abstract class BasePlayer<T extends Node> {
                     liveChannelLinesWithPaginator.addLine(line);
                 }
             }
+            liveChannelLinesWithPaginator.focus(liveChannelLine);
         }
     }
 
@@ -1265,6 +1267,40 @@ public abstract class BasePlayer<T extends Node> {
 
     public void setEpgServiceUrl(String epgServiceUrl) {
         epgServiceUrlProperty.set(epgServiceUrl);
+    }
+
+    /**
+     * 获取当前正在播放的直播信息
+     * @throws IllegalStateException 如果当前不是直播模式
+     * @return 直播分组名称，频道名称，频道线路名称
+     */
+    @Nullable
+    public Triple<String, String, String> getCurrentLiveInfo() {
+        LiveChannelGroup group;
+        LiveChannel channel;
+        LiveChannel.Line line;
+
+        if (!config.getLiveMode()) {
+
+            throw new IllegalStateException("Not in live mode");
+        }
+        if (playingLive == null) {
+
+            return null;
+        }
+        group = playingLive.getLiveChannelGroup();
+        if (group == null) {
+
+            return null;
+        }
+        channel = playingLive.getLiveChannel();
+        line = playingLive.getLiveChannelLine();
+
+        return Triple.of(
+                group.getTitle(),
+                channel == null ? null : channel.getTitle(),
+                line == null ? null : line.getTitle()
+        );
     }
 
     /**
@@ -1570,13 +1606,15 @@ public abstract class BasePlayer<T extends Node> {
                 titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
                 titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                 lastSelectedTitleLabel = liveChannelGroupAndTitleLabelMap.get(lastLiveChannelGroup);
-                lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
-                lastSelectedTitleLabelStyleClass.remove(
-                        "player-live-channel-list-view-title-label-focused"
-                );
-                lastSelectedTitleLabelStyleClass.add(
-                        "player-live-channel-list-view-title-label"
-                );
+                if (lastSelectedTitleLabel != null) {
+                    lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
+                    lastSelectedTitleLabelStyleClass.remove(
+                            "player-live-channel-list-view-title-label-focused"
+                    );
+                    lastSelectedTitleLabelStyleClass.add(
+                            "player-live-channel-list-view-title-label"
+                    );
+                }
                 setLiveChannels(liveChannelGroup.getChannels(), isPlaying);
             }
         }

@@ -1,7 +1,6 @@
 package io.knifer.freebox.component.node.player;
 
 import cn.hutool.core.util.IdUtil;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.util.AsyncUtil;
@@ -10,6 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.javafx.fullscreen.JavaFXFullScreenStrategy;
@@ -32,7 +32,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * VLC播放器自定义组件
- * PS：我知道这里的代码很乱，没有注释，因为我没指望谁有心思动这个类。如果你有什么想法，直接告诉我。
  *
  * @author Knifer
  */
@@ -47,17 +46,17 @@ public class VLCPlayer extends BasePlayer<ImageView> {
     private final Lock playingResourceLock = new ReentrantLock();
     private final ExecutorService playbackExecutor = Executors.newSingleThreadExecutor();
 
-    public VLCPlayer(Pane parent) {
-        this(parent, Config.builder().liveMode(false).build());
-    }
-
     public VLCPlayer(Pane parent, Config config) {
         super(parent, config);
+
+        if (BooleanUtils.isNotFalse(config.getExternalMode())) {
+            config.setExternalMode(false);
+        }
 
         Stage stage = WindowHelper.getStage(parent);
         MediaPlayerFactory mediaPlayerFactory;
 
-        mediaPlayerFactory = Context.INSTANCE.isDebug() ?
+        mediaPlayerFactory = SystemHelper.isDebug() ?
                 new MediaPlayerFactory(List.of("-vvv")) : new MediaPlayerFactory();
         mediaPlayer = mediaPlayerFactory.mediaPlayers().newEmbeddedMediaPlayer();
         mediaPlayer.fullScreen().strategy(new JavaFXFullScreenStrategy(stage){

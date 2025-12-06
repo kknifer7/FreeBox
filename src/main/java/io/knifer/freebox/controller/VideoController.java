@@ -4,7 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.knifer.freebox.component.node.player.VLCPlayer;
+import io.knifer.freebox.component.node.player.BasePlayer;
 import io.knifer.freebox.constant.CacheKeys;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
@@ -88,7 +88,7 @@ public class VideoController extends BaseController implements Destroyable {
     private Movie videoDetail;
     private VideoPlayInfoBO playInfo;
     private SourceBean source;
-    private VLCPlayer player;
+    private BasePlayer<?> player;
     private SpiderTemplate template;
     private Consumer<VideoPlayInfoBO> onClose;
 

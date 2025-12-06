@@ -5,7 +5,7 @@ import io.knifer.freebox.component.node.MovieInfoListPopOver;
 import io.knifer.freebox.component.node.MovieRankPopOver;
 import io.knifer.freebox.component.node.MovieSortFilterPopOver;
 import io.knifer.freebox.component.node.SourceBeanBlockPopOver;
-import io.knifer.freebox.component.node.player.VLCPlayer;
+import io.knifer.freebox.component.node.player.BasePlayer;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
@@ -40,7 +40,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -434,7 +434,7 @@ public class TVController implements Destroyable {
                                 detailContent,
                                 playInfo,
                                 sourceBean,
-                                new VLCPlayer((HBox) videoStage.getScene().getRoot()),
+                                BasePlayer.createPlayer((Pane) videoStage.getScene().getRoot()),
                                 template,
                                 newPlayInfo -> {
                                     if (newPlayInfo != null) {

@@ -8,11 +8,7 @@ import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.dialog.LicenseDialogController;
 import io.knifer.freebox.controller.dialog.UpgradeDialogController;
-import io.knifer.freebox.exception.FBException;
-import io.knifer.freebox.handler.VLCPlayerCheckHandler;
-import io.knifer.freebox.handler.impl.LinuxVLCPlayerCheckHandler;
-import io.knifer.freebox.handler.impl.MacVLCPlayerCheckHandler;
-import io.knifer.freebox.handler.impl.WindowsRegistryVLCPlayerCheckHandler;
+import io.knifer.freebox.handler.PlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.model.domain.*;
@@ -60,7 +56,9 @@ public class HomeController {
     @FXML
     private HBox showIpPromptHBox;
     @FXML
-    private HBox vlcHBox;
+    private HBox playerHBox;
+    @FXML
+    private Label playerNotFoundLabel;
     @FXML
     private Label versionInfoLabel;
     @FXML
@@ -80,33 +78,11 @@ public class HomeController {
     private final BooleanProperty allowLiveOpProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty allowSourceAuditOpProperty = new SimpleBooleanProperty(false);
 
-    private final static VLCPlayerCheckHandler VLC_PLAYER_CHECK_HANDLER;
-
-    static {
-        switch (SystemHelper.getPlatform()) {
-            case WINDOWS:
-                VLC_PLAYER_CHECK_HANDLER = new WindowsRegistryVLCPlayerCheckHandler();
-                break;
-            case DEB_LINUX:
-            case RPM_LINUX:
-            case OTHER_LINUX:
-                VLC_PLAYER_CHECK_HANDLER = new LinuxVLCPlayerCheckHandler();
-                break;
-            case MAC:
-                VLC_PLAYER_CHECK_HANDLER = new MacVLCPlayerCheckHandler();
-                break;
-            default:
-                throw new FBException("unsupported platform");
-        }
-    }
-
     @FXML
     private void initialize() {
         ObservableList<ClientInfo> clientItems = clientListView.getItems();
-        boolean vlcNotInstalled = !VLC_PLAYER_CHECK_HANDLER.handle();
 
-        vlcHBox.setVisible(vlcNotInstalled);
-        vlcHBox.setManaged(vlcNotInstalled);
+        checkPlayerInstalledAndUpdateUI();
         vodButton.disableProperty().bind(allowVodOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
         liveButton.disableProperty().bind(allowLiveOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
         sourceAuditButton.disableProperty().bind(allowSourceAuditOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
@@ -171,6 +147,9 @@ public class HomeController {
             root.setDisable(false);
         });
         Context.INSTANCE.registerEventListener(
+                AppEvents.SETTINGS_SAVED, ignored -> checkPlayerInstalledAndUpdateUI()
+        );
+        Context.INSTANCE.registerEventListener(
                 AppEvents.WsServerStartedEvent.class, evt -> refreshServiceStatusInfo()
         );
         Context.INSTANCE.registerEventListener(
@@ -202,6 +181,16 @@ public class HomeController {
                 model.selectFirst();
             }
         });
+    }
+
+    private void checkPlayerInstalledAndUpdateUI() {
+        boolean playerNotFound = !PlayerCheckHandler.select().handle();
+
+        playerHBox.setVisible(playerNotFound);
+        playerHBox.setManaged(playerNotFound);
+        playerNotFoundLabel.setText(I18nHelper.getFormatted(
+                I18nKeys.HOME_PLAYER_NOT_FOUND, ConfigHelper.getPlayerType().getName()
+        ));
     }
 
     private void openLicenseDialogIfNeeded() {
@@ -323,10 +312,10 @@ public class HomeController {
     private void onVodBtnAction() {
         ClientInfo clientInfo;
 
-        if (!VLC_PLAYER_CHECK_HANDLER.handle()) {
+        if (!PlayerCheckHandler.select().handle()) {
             ToastHelper.showErrorAlert(
-                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND_TITLE,
-                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND,
+                    I18nKeys.HOME_MESSAGE_PLAYER_NOT_FOUND_TITLE,
+                    I18nKeys.HOME_MESSAGE_PLAYER_NOT_FOUND,
                     evt -> {}
             );
 
@@ -411,12 +400,8 @@ public class HomeController {
     }
 
     @FXML
-    private void onVLCDownloadHyperlinkClick() {
-        if (SystemHelper.getPlatform() == Platform.WINDOWS) {
-            HostServiceHelper.showDocument(BaseValues.VLC_DOWNLOAD_URL_WINDOWS);
-        } else {
-            HostServiceHelper.showDocument(BaseValues.VLC_DOWNLOAD_URL);
-        }
+    private void onPlayerDownloadHyperlinkClick() {
+        HostServiceHelper.showDocument(ConfigHelper.getPlayerType().getDownloadLink());
     }
 
     @FXML
@@ -465,10 +450,10 @@ public class HomeController {
         if (clientInfo == null) {
             return;
         }
-        if (!VLC_PLAYER_CHECK_HANDLER.handle()) {
+        if (!PlayerCheckHandler.select().handle()) {
             ToastHelper.showErrorAlert(
-                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND_TITLE,
-                    I18nKeys.HOME_MESSAGE_VLC_NOT_FOUND,
+                    I18nKeys.HOME_MESSAGE_PLAYER_NOT_FOUND_TITLE,
+                    I18nKeys.HOME_MESSAGE_PLAYER_NOT_FOUND,
                     evt -> {}
             );
 

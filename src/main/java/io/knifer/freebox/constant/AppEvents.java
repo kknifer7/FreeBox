@@ -18,6 +18,8 @@ public class AppEvents {
 
     public static final HttpServerStartedEvent HTTP_SERVER_STARTED = new HttpServerStartedEvent();
 
+    public static final SettingsSavedEvent SETTINGS_SAVED = new SettingsSavedEvent();
+
     public interface Event {}
 
     public static final class AppInitializedEvent implements Event {}
@@ -25,6 +27,8 @@ public class AppEvents {
     public record WsServerStartedEvent(KebSocketServer server) implements Event {}
 
     public static final class HttpServerStartedEvent implements Event {}
+
+    public static final class SettingsSavedEvent implements Event {}
 
     public record ClientRegisteredEvent(ClientInfo clientInfo) implements Event {}
 

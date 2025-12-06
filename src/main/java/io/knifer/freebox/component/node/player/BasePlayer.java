@@ -12,10 +12,7 @@ import io.knifer.freebox.controller.EPGOverviewController;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.EpgFetchingHandler;
 import io.knifer.freebox.handler.impl.ParameterizedEpgFetchingHandler;
-import io.knifer.freebox.helper.I18nHelper;
-import io.knifer.freebox.helper.SystemHelper;
-import io.knifer.freebox.helper.ToastHelper;
-import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.EPGOverviewBO;
 import io.knifer.freebox.model.bo.TVPlayBO;
 import io.knifer.freebox.model.common.diyp.EPG;
@@ -83,7 +80,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * 播放器基类
  * 若无注释说明，此基类中的方法均不允许阻塞
- *
+ * PS：我知道这里的代码很乱，没有注释，因为我没指望谁有心思动这个类。如果你有什么想法，直接告诉我。
  * @author Knifer
  */
 @Slf4j
@@ -171,6 +168,7 @@ public abstract class BasePlayer<T extends Node> {
 
     public BasePlayer(Pane parent, Config config) {
         boolean liveMode = BooleanUtils.toBoolean(config.getLiveMode());
+        boolean externalMode = BooleanUtils.toBoolean(config.getExternalMode());
         ObservableList<Node> parentChildren = parent.getChildren();
         ReadOnlyDoubleProperty parentWidthProp = parent.widthProperty();
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
@@ -527,6 +525,7 @@ public abstract class BasePlayer<T extends Node> {
             videoProgressLabel = null;
             videoProgressSplitLabel = null;
             videoProgressLengthLabel = null;
+            progressLabelHBox = null;
             liveChannelLinesWithPaginator = new PlayerLiveChannelLinesWithPaginator(
                     line -> play(
                             playingLive.getLiveChannelGroup(),
@@ -707,23 +706,42 @@ public abstract class BasePlayer<T extends Node> {
                 toggleFullScreen();
             }
         });
-        // 键盘快捷键事件绑定
-        parent.addEventFilter(KeyEvent.KEY_PRESSED, evt -> {
-            switch (evt.getCode()) {
-                case SPACE -> togglePause();
-                case ESCAPE -> {
-                    if (isFullScreen()) {
-                        toggleFullScreen();
-                    }
-                }
-                case F -> toggleFullScreen();
-                case Z -> fillWindowToggleSwitch.setSelected(!fillWindowToggleSwitch.isSelected());
-                case RIGHT -> movePosition(true);
-                case LEFT -> movePosition(false);
-                case UP -> moveVolume(true);
-                case DOWN -> moveVolume(false);
+        if (externalMode) {
+            // 使用外部播放器，隐藏用不上的控件
+            progressMiddleStackPane.setVisible(false);
+            settingsLabel.setVisible(false);
+            settingsLabel.setManaged(false);
+            pauseLabel.setVisible(false);
+            pauseLabel.setManaged(false);
+            volumeLabel.setVisible(false);
+            volumeLabel.setManaged(false);
+            fullScreenLabel.setVisible(false);
+            fullScreenLabel.setManaged(false);
+            if (!liveMode) {
+                progressLabelHBox.setVisible(false);
+                progressLabelHBox.setManaged(false);
+                videoProgressBar.setVisible(false);
+                videoProgressBar.setManaged(false);
             }
-        });
+        } else {
+            // 使用内嵌播放器，键盘快捷键事件绑定
+            parent.addEventFilter(KeyEvent.KEY_PRESSED, evt -> {
+                switch (evt.getCode()) {
+                    case SPACE -> togglePause();
+                    case ESCAPE -> {
+                        if (isFullScreen()) {
+                            toggleFullScreen();
+                        }
+                    }
+                    case F -> toggleFullScreen();
+                    case Z -> fillWindowToggleSwitch.setSelected(!fillWindowToggleSwitch.isSelected());
+                    case RIGHT -> movePosition(true);
+                    case LEFT -> movePosition(false);
+                    case UP -> moveVolume(true);
+                    case DOWN -> moveVolume(false);
+                }
+            });
+        }
         // 鼠标移动事件处理
         parent.addEventHandler(MouseEvent.MOUSE_MOVED, evt -> setControlsVisible(true));
         parentChildren.add(0, playerPane);
@@ -731,7 +749,7 @@ public abstract class BasePlayer<T extends Node> {
         setLoading(true);
     }
 
-    private void setControlsVisible(boolean flag) {
+    protected void setControlsVisible(boolean flag) {
         Cursor cursor = playerPane.getCursor();
 
         if (controlPane.isVisible() != flag) {
@@ -752,7 +770,7 @@ public abstract class BasePlayer<T extends Node> {
         }
     }
 
-    private void setControlsAutoHide(boolean flag) {
+    protected void setControlsAutoHide(boolean flag) {
         if (flag) {
             controlPaneHideTimer.restart();
         } else {
@@ -1314,6 +1332,11 @@ public abstract class BasePlayer<T extends Node> {
          * 直播模式
          */
         private Boolean liveMode;
+
+        /**
+         * 外部模式
+         */
+        private Boolean externalMode;
     }
 
     private static class LiveChannelBanner extends HBox {
@@ -1832,5 +1855,26 @@ public abstract class BasePlayer<T extends Node> {
         private LiveChannel liveChannel;
 
         private LiveChannel.Line liveChannelLine;
+    }
+
+    public static BasePlayer<?> createPlayer(Pane parentPane) {
+
+        return createPlayer(parentPane, null);
+    }
+
+    public static BasePlayer<?> createPlayer(Pane parentPane, @Nullable Config config) {
+        if (config == null) {
+            config = Config.builder().liveMode(false).externalMode(false).build();
+        }
+
+        return switch (ConfigHelper.getPlayerType()) {
+            case VLC -> new VLCPlayer(parentPane, config);
+            case MPV_EXTERNAL -> {
+                if (!BooleanUtils.toBoolean(config.getExternalMode())) {
+                    config.setExternalMode(true);
+                }
+                yield new MPVExternalPlayer(parentPane, config);
+            }
+        };
     }
 }

@@ -76,6 +76,20 @@ public class ToastHelper {
                 });
     }
 
+    public void showWarningI18n(String i18nKey) {
+        showWarning(I18nHelper.get(i18nKey));
+    }
+
+    public void showWarning(String warningMessage) {
+        createNotification(warningMessage)
+                .ifPresent(n -> {
+                    n.position(Pos.TOP_CENTER)
+                            .graphic(FontIcon.of(FontAwesome.EXCLAMATION_TRIANGLE, 32, Color.ORANGE))
+                            .show();
+                    postProcessNotification(Pos.TOP_CENTER);
+                });
+    }
+
     public void showInfoI18n(String i18nKey) {
         showInfo(I18nHelper.get(i18nKey));
     }

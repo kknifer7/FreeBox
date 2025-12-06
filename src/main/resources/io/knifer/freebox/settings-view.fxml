@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import io.knifer.freebox.component.converter.NetworkInterfaceAndIP2StringConverter?>
+<?import io.knifer.freebox.component.converter.PlayerType2StringConverter?>
+<?import io.knifer.freebox.constant.PlayerType?>
+<?import javafx.collections.FXCollections?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -10,6 +13,7 @@
 <BorderPane fx:id="root" stylesheets="@css/view/settings-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SettingsController">
    <fx:define>
       <NetworkInterfaceAndIP2StringConverter fx:id="ipChoiceBoxConverter" />
+      <PlayerType2StringConverter fx:id="playerTypeChoiceBoxConverter" />
    </fx:define>
    <center>
       <TabPane BorderPane.alignment="CENTER">
@@ -256,18 +260,30 @@
                                  </HBox>
                               </HBox>
 
-                              <Label text="%settings.usage" styleClass="setting-title-label" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                              <Label styleClass="fs-big, bold" text="%settings.player" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+                              <HBox spacing="5.0" alignment="CENTER_LEFT" GridPane.rowIndex="6" GridPane.columnIndex="1">
+                                 <ComboBox fx:id="playerTypeComboBox" onAction="#onPlayerComboBoxAction" converter="$playerTypeChoiceBoxConverter">
+                                    <items>
+                                       <FXCollections fx:factory="observableArrayList">
+                                          <PlayerType fx:value="VLC"/>
+                                          <PlayerType fx:value="MPV_EXTERNAL"/>
+                                       </FXCollections>
+                                    </items>
+                                 </ComboBox>
+                              </HBox>
 
-                              <Label styleClass="fs-big, bold" text="%settings.font-family" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
-                              <HBox spacing="5.0" alignment="CENTER_LEFT" GridPane.rowIndex="7" GridPane.columnIndex="1">
+                              <Label text="%settings.usage" styleClass="setting-title-label" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+
+                              <Label styleClass="fs-big, bold" text="%settings.font-family" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+                              <HBox spacing="5.0" alignment="CENTER_LEFT" GridPane.rowIndex="8" GridPane.columnIndex="1">
                                  <SearchableComboBox fx:id="usageFontFamilyComboBox" onAction="#onUsageFontFamilyComboBoxAction" />
                                  <Label fx:id="usageFontFamilyExampleLabel" text="%settings.font-family-example" />
                               </HBox>
 
-                              <Label text="%settings.other" styleClass="setting-title-label" GridPane.rowIndex="8" GridPane.columnIndex="0" />
+                              <Label text="%settings.other" styleClass="setting-title-label" GridPane.rowIndex="9" GridPane.columnIndex="0" />
 
-                              <Label styleClass="fs-big, bold" text="%settings.license" GridPane.rowIndex="9" GridPane.columnIndex="0"/>
-                              <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
+                              <Label styleClass="fs-big, bold" text="%settings.license" GridPane.rowIndex="10" GridPane.columnIndex="0"/>
+                              <Button text="%settings.show-license" onAction="#onShowLicenseButtonAction" mnemonicParsing="false" focusTraversable="false" GridPane.rowIndex="10" GridPane.columnIndex="1"/>
                            </children>
                         </GridPane>
                      </VBox>

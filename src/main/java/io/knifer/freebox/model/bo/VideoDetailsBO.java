@@ -1,6 +1,6 @@
 package io.knifer.freebox.model.bo;
 
-import io.knifer.freebox.component.node.player.VLCPlayer;
+import io.knifer.freebox.component.node.player.BasePlayer;
 import io.knifer.freebox.model.common.tvbox.AbsXml;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.spider.template.SpiderTemplate;
@@ -34,7 +34,7 @@ public class VideoDetailsBO {
     /**
      * 播放器
      */
-    private VLCPlayer player;
+    private BasePlayer<?> player;
 
     /**
      * KebSocket通信模板对象
@@ -50,7 +50,7 @@ public class VideoDetailsBO {
             AbsXml videoDetail,
             VideoPlayInfoBO playInfo,
             SourceBean source,
-            VLCPlayer player,
+            BasePlayer<?> player,
             SpiderTemplate template,
             Consumer<VideoPlayInfoBO> onClose
     ) {

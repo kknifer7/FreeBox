@@ -3,7 +3,7 @@ package io.knifer.freebox.handler.impl;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import io.knifer.freebox.exception.FBException;
-import io.knifer.freebox.handler.VLCPlayerCheckHandler;
+import io.knifer.freebox.handler.PlayerCheckHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -13,7 +13,7 @@ import org.apache.commons.lang3.ArrayUtils;
  * @author Knifer
  */
 @Slf4j
-public class WindowsRegistryVLCPlayerCheckHandler implements VLCPlayerCheckHandler {
+public class WindowsRegistryVLCPlayerCheckHandler implements PlayerCheckHandler {
 
     @Override
     public boolean handle() {

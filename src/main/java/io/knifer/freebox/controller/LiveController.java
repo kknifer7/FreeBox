@@ -2,7 +2,7 @@ package io.knifer.freebox.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
-import io.knifer.freebox.component.node.player.VLCPlayer;
+import io.knifer.freebox.component.node.player.BasePlayer;
 import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
@@ -60,7 +60,7 @@ public class LiveController implements Destroyable {
 
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(true);
 
-    private VLCPlayer player;
+    private BasePlayer<?> player;
 
     private Service<List<LiveChannelGroup>> loadLiveChannelGroupService;
 
@@ -196,9 +196,9 @@ public class LiveController implements Destroyable {
     }
 
     private void setupPlayer(ReadOnlyDoubleProperty rootHeightProp, DoubleBinding playerHBoxHeightProp) {
-        player = new VLCPlayer(
+        player = BasePlayer.createPlayer(
                 playerHBox,
-                VLCPlayer.Config.builder()
+                BasePlayer.Config.builder()
                         .liveMode(true)
                         .build()
         );

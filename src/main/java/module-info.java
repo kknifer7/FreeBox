@@ -1,4 +1,6 @@
 module io.knifer.freebox {
+    requires java.sql;
+    requires java.desktop;
     requires java.net.http;
     requires jdk.httpserver;
 
@@ -26,8 +28,9 @@ module io.knifer.freebox {
     requires annotations;
     requires org.json;
     requires cn.hutool;
-    requires java.sql;
     requires net.bjoernpetersen.m3u;
+    requires mpv;
+    requires ipcsocket;
 
     requires static lombok;
     requires org.jsoup;

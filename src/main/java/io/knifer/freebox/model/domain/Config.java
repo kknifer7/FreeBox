@@ -1,5 +1,6 @@
 package io.knifer.freebox.model.domain;
 
+import io.knifer.freebox.constant.PlayerType;
 import lombok.Data;
 
 /**
@@ -76,4 +77,14 @@ public class Config {
      * -1时禁用强制过滤
      */
     private Double adFilterDynamicThresholdFactor;
+
+    /**
+     * 播放器类型
+     */
+    private PlayerType playerType;
+
+    /**
+     * mpv播放器路径
+     */
+    private String mpvPath;
 }

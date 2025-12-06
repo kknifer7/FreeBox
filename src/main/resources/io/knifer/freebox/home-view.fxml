@@ -31,10 +31,10 @@
                         <Label text="%home.welcome" styleClass="fs-large" />
                          <Label text="%home.description" styleClass="gray, fs-big" wrapText="true" />
                          <Label fx:id="versionInfoLabel" textFill="blue" />
-                        <HBox fx:id="vlcHBox" alignment="CENTER">
+                        <HBox fx:id="playerHBox" alignment="CENTER">
                            <children>
-                              <Label text="%home.vlc-not-found" textFill="red" />
-                              <Hyperlink onAction="#onVLCDownloadHyperlinkClick" text="%home.vlc-download" />
+                              <Label fx:id="playerNotFoundLabel" text="%home.player-not-found" textFill="red" />
+                              <Hyperlink onAction="#onPlayerDownloadHyperlinkClick" text="%home.player-download" />
                            </children>
                         </HBox>
                         <Hyperlink onAction="#onFreeBoxRepositoryHyperLinkClick" text="%home.repository" />

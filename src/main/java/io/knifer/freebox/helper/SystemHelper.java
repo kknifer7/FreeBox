@@ -4,6 +4,8 @@ import cn.hutool.core.util.RuntimeUtil;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
 import io.knifer.freebox.constant.Architecture;
+import io.knifer.freebox.constant.BaseResources;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.Platform;
 import io.knifer.freebox.exception.FBException;
 import lombok.experimental.UtilityClass;
@@ -27,6 +29,7 @@ public class SystemHelper {
 
     private final static io.knifer.freebox.constant.Platform CURRENT_PLATFORM;
     private final static Architecture CURRENT_ARCHITECTURE;
+    private final static boolean DEBUG_FLAG = "true".equals(BaseResources.X_PROPERTIES.getProperty(BaseValues.X_DEBUG));
 
     static {
         String exeResult;
@@ -99,5 +102,9 @@ public class SystemHelper {
 
     public Architecture getArchitecture() {
         return CURRENT_ARCHITECTURE;
+    }
+
+    public boolean isDebug() {
+        return DEBUG_FLAG;
     }
 }

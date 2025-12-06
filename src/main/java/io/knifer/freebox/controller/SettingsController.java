@@ -3,10 +3,7 @@ package io.knifer.freebox.controller;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import io.knifer.freebox.component.validator.PortValidator;
-import io.knifer.freebox.constant.AppEvents;
-import io.knifer.freebox.constant.BaseValues;
-import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.constant.Views;
+import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.dialog.LicenseDialogController;
 import io.knifer.freebox.controller.dialog.UpgradeDialogController;
@@ -35,6 +32,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +43,7 @@ import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.validation.ValidationSupport;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.io.File;
 import java.net.NetworkInterface;
 import java.util.Collection;
 import java.util.List;
@@ -115,6 +114,10 @@ public class SettingsController {
     private CheckBox adFilterCheckBox;
     @FXML
     private ToggleGroup adFilterDynamicThresholdFactorToggleGroup;
+    @FXML
+    private ComboBox<PlayerType> playerTypeComboBox;
+
+    private final FileChooser playerExternalFileChooser = new FileChooser();
 
     private String oldUsageFontFamily;
 
@@ -272,6 +275,7 @@ public class SettingsController {
             radioButton = (RadioButton) toggle;
             radioButton.disableProperty().bind(adFilterCheckBox.selectedProperty().not());
         }
+        playerTypeComboBox.getSelectionModel().select(ConfigHelper.getPlayerType());
     }
 
     private void disableHttpServiceForm() {
@@ -333,6 +337,7 @@ public class SettingsController {
                 windows.forEach(window -> WindowHelper.setFontFamily(window, usageFontFamily));
                 Context.INSTANCE.postEvent(new AppEvents.UsageFontChangedEvent(usageFontFamily));
             }
+            Context.INSTANCE.postEvent(AppEvents.SETTINGS_SAVED);
         }
     }
 
@@ -620,5 +625,30 @@ public class SettingsController {
         }
         ConfigHelper.setAdFilterDynamicThresholdFactor(value);
         ConfigHelper.markToUpdate();
+    }
+
+    @FXML
+    private void onPlayerComboBoxAction() {
+        PlayerType playerType = playerTypeComboBox.getValue();
+        File externalPlayerFile;
+
+        if (playerType == PlayerType.MPV_EXTERNAL) {
+            playerExternalFileChooser.getExtensionFilters()
+                    .add(new FileChooser.ExtensionFilter("mpv.exe", "mpv.exe"));
+            playerExternalFileChooser.setTitle(I18nHelper.get(I18nKeys.SETTINGS_SELECT_PLAYER));
+            externalPlayerFile = playerExternalFileChooser.showOpenDialog(WindowHelper.getStage(root));
+            if (externalPlayerFile == null) {
+                playerTypeComboBox.setValue(PlayerType.VLC);
+                playerType = PlayerType.VLC;
+                ToastHelper.showWarningI18n(I18nKeys.SETTINGS_MESSAGE_EXTERNAL_PLAYER_NOT_SELECTED);
+            } else {
+                ConfigHelper.setMpvPath(externalPlayerFile.getAbsolutePath());
+                ConfigHelper.markToUpdate();
+            }
+        }
+        if (playerType != ConfigHelper.getPlayerType()) {
+            ConfigHelper.setPlayerType(playerType);
+            ConfigHelper.markToUpdate();
+        }
     }
 }

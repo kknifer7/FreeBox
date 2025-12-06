@@ -634,7 +634,7 @@ public class SettingsController {
 
         if (playerType == PlayerType.MPV_EXTERNAL) {
             playerExternalFileChooser.getExtensionFilters()
-                    .add(new FileChooser.ExtensionFilter("mpv.exe", "mpv.exe"));
+                    .add(new FileChooser.ExtensionFilter("mpv", "mpv", "mpv.exe"));
             playerExternalFileChooser.setTitle(I18nHelper.get(I18nKeys.SETTINGS_SELECT_PLAYER));
             externalPlayerFile = playerExternalFileChooser.showOpenDialog(WindowHelper.getStage(root));
             if (externalPlayerFile == null) {

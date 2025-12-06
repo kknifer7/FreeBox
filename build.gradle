@@ -69,7 +69,7 @@ ext {
             json: '20250517',
             zxingCore: '3.5.3',
             twelvemonkeys: '3.12.0',
-            mpv: '0.1.2',
+            mpv: '0.1.3',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]

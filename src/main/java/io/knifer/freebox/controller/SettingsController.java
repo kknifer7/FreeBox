@@ -11,10 +11,7 @@ import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
-import io.knifer.freebox.service.CheckPortUsingService;
-import io.knifer.freebox.service.LoadConfigService;
-import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
-import io.knifer.freebox.service.UpgradeCheckService;
+import io.knifer.freebox.service.*;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.FXMLUtil;
 import io.knifer.freebox.util.FormattingUtil;
@@ -43,13 +40,13 @@ import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.validation.ValidationSupport;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.net.NetworkInterface;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-
-
+import java.util.function.Function;
 
 
 /**
@@ -117,7 +114,8 @@ public class SettingsController {
     @FXML
     private ComboBox<PlayerType> playerTypeComboBox;
 
-    private final FileChooser playerExternalFileChooser = new FileChooser();
+    private Stage stage;
+    private FileChooser playerExternalFileChooser;
 
     private String oldUsageFontFamily;
 
@@ -125,6 +123,7 @@ public class SettingsController {
     private final BooleanProperty ipChoiceBoxDisableProp = new SimpleBooleanProperty();
 
     private final LoadConfigService loadConfigService = new LoadConfigService();
+    private final CommandExecService externalPlayerCmdExecService = new CommandExecService();
     private final ValidationSupport validationSupport = new ValidationSupport();
 
     private final FreeBoxHttpServerHolder httpServer = Context.INSTANCE.getHttpServer();
@@ -158,6 +157,7 @@ public class SettingsController {
             saveBtn.setDisable(false);
         });
         loadConfigService.start();
+        Platform.runLater(() -> stage = WindowHelper.getStage(root));
     }
 
     private void putDataInIpChoiceBox(
@@ -544,7 +544,7 @@ public class SettingsController {
         WindowHelper.setFontFamily(dialogPane, ConfigHelper.getUsageFontFamily());
         okBtn = CastUtil.cast(dialogPane.lookupButton(ButtonType.OK));
         okBtn.setOnAction(evt -> {
-            LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_QUIT_LOADING);
+            LoadingHelper.showLoading(stage, I18nKeys.MESSAGE_QUIT_LOADING);
             StorageHelper.clearData();
             Context.INSTANCE.destroy();
         });
@@ -630,19 +630,107 @@ public class SettingsController {
     @FXML
     private void onPlayerComboBoxAction() {
         PlayerType playerType = playerTypeComboBox.getValue();
+        Function<String, Boolean> resultChecker;
+
+        if (playerType == PlayerType.VLC) {
+            // 对于vlc播放器，直接应用
+            applyExternalPlayerSetting(playerType, null);
+        } else if (playerType == PlayerType.MPV_EXTERNAL) {
+            // 对于mpv外部播放器，先自动检测，如果检测失败，则手动选择
+            LoadingHelper.showLoading(stage);
+            resultChecker = execResult ->
+                    StringUtils.isNotBlank(execResult) &&
+                            execResult.contains("Copyright") &&
+                            execResult.contains("mpv");
+            checkExternalPlayer(
+                    new String[]{ "mpv", "--version" },
+                    resultChecker,
+                    () -> {
+                        // 自动检测成功
+                        ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_MESSAGE_AUTO_CHECK_EXTERNAL_PLAYER_SUCCESS);
+                        applyExternalPlayerSetting(playerType, "mpv");
+                        LoadingHelper.hideLoading();
+                    },
+                    () -> {
+                        // 自动检测失败，让用户手动选择
+                        String mpvPath;
+
+                        LoadingHelper.hideLoading();
+                        mpvPath = manualChooseExternalPlayer();
+                        if (StringUtils.isBlank(mpvPath)) {
+                            applyExternalPlayerSetting(playerType, null);
+
+                            return;
+                        }
+                        LoadingHelper.showLoading(stage);
+                        // 手动选择后，再次检测以确定播放器是可用的
+                        checkExternalPlayer(
+                                new String[]{ mpvPath, "--version" },
+                                resultChecker,
+                                () -> {
+                                    applyExternalPlayerSetting(playerType, mpvPath);
+                                    LoadingHelper.hideLoading();
+                                },
+                                () -> {
+                                    applyExternalPlayerSetting(playerType, null);
+                                    LoadingHelper.hideLoading();
+                                }
+                        );
+                    }
+            );
+        }
+    }
+
+    /**
+     * 自动检测mpv外部播放器
+     */
+    private void checkExternalPlayer(
+            String[] commands,
+            Function<String, Boolean> resultChecker,
+            Runnable successCallback,
+            Runnable failCallback
+    ) {
+        externalPlayerCmdExecService.setCommands(commands);
+        externalPlayerCmdExecService.setChecker(resultChecker);
+        externalPlayerCmdExecService.setOnSucceeded(evt -> {
+            Pair<Boolean, String> pair = externalPlayerCmdExecService.getValue();
+
+            if (pair.getLeft()) {
+                successCallback.run();
+            } else {
+                failCallback.run();
+            }
+        });
+        externalPlayerCmdExecService.restart();
+    }
+
+    /**
+     * 手动选择外部播放器路径
+     * @return 选择的路径
+     */
+    @Nullable
+    private String manualChooseExternalPlayer() {
         File externalPlayerFile;
 
-        if (playerType == PlayerType.MPV_EXTERNAL) {
+        if (playerExternalFileChooser == null) {
+            playerExternalFileChooser = new FileChooser();
             playerExternalFileChooser.getExtensionFilters()
                     .add(new FileChooser.ExtensionFilter("mpv", "mpv", "mpv.exe"));
             playerExternalFileChooser.setTitle(I18nHelper.get(I18nKeys.SETTINGS_SELECT_PLAYER));
-            externalPlayerFile = playerExternalFileChooser.showOpenDialog(WindowHelper.getStage(root));
-            if (externalPlayerFile == null) {
+        }
+        externalPlayerFile = playerExternalFileChooser.showOpenDialog(WindowHelper.getStage(root));
+
+        return externalPlayerFile == null || !externalPlayerFile.exists() ? null : externalPlayerFile.getAbsolutePath();
+    }
+
+    private void applyExternalPlayerSetting(PlayerType playerType, @Nullable String playerPath) {
+        if (playerType == PlayerType.MPV_EXTERNAL) {
+            if (playerPath == null) {
                 playerTypeComboBox.setValue(PlayerType.VLC);
                 playerType = PlayerType.VLC;
                 ToastHelper.showWarningI18n(I18nKeys.SETTINGS_MESSAGE_EXTERNAL_PLAYER_NOT_SELECTED);
             } else {
-                ConfigHelper.setMpvPath(externalPlayerFile.getAbsolutePath());
+                ConfigHelper.setMpvPath(playerPath);
                 ConfigHelper.markToUpdate();
             }
         }

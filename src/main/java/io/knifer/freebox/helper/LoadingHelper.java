@@ -2,6 +2,7 @@ package io.knifer.freebox.helper;
 
 import io.knifer.freebox.component.node.LoadingDialog;
 import io.knifer.freebox.component.node.WaitForClientReconnectingDialog;
+import io.knifer.freebox.constant.I18nKeys;
 import javafx.stage.Stage;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,10 @@ public class LoadingHelper {
 
     private static LoadingDialog loadingDialog = null;
     private static WaitForClientReconnectingDialog waitingReconnectingDialog = null;
+
+    public void showLoading(Stage ownerStage) {
+        showLoading(ownerStage, I18nKeys.MESSAGE_LOADING);
+    }
 
     public void showLoading(Stage ownerStage, String headerTextI18nKey) {
         if (loadingDialog != null && loadingDialog.isShowing()) {

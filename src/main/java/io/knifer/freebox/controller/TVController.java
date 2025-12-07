@@ -396,7 +396,7 @@ public class TVController implements Destroyable {
         SourceBean sourceBean = getSourceBean(sourceKey);
 
         Platform.runLater(
-                () -> LoadingHelper.showLoading(WindowHelper.getStage(root), I18nKeys.MESSAGE_LOADING)
+                () -> LoadingHelper.showLoading(WindowHelper.getStage(root))
         );
         template.getDetailContent(
                 GetDetailContentDTO.of(sourceBean.getKey(), videoId),

@@ -128,7 +128,10 @@ public class I18nKeys {
     public static final String SETTINGS_PLAYER_VLC = "settings.player.vlc";
     public static final String SETTINGS_PLAYER_MPV_EXTERNAL = "settings.player.mpv-external";
     public static final String SETTINGS_SELECT_PLAYER = "settings.select-player";
-    public static final String SETTINGS_MESSAGE_EXTERNAL_PLAYER_NOT_SELECTED = "settings.message.external-player-not-selected";
+    public static final String SETTINGS_MESSAGE_EXTERNAL_PLAYER_NOT_SELECTED =
+            "settings.message.external-player-not-found";
+    public static final String SETTINGS_MESSAGE_AUTO_CHECK_EXTERNAL_PLAYER_SUCCESS =
+            "settings.message.auto-check-external-player-success";
 
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";

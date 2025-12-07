@@ -18,6 +18,7 @@ public class I18nKeys {
     public static final String HOME_MESSAGE_PLAYER_NOT_FOUND = "home.message.player-not-found";
     public static final String HOME_MESSAGE_REMOVE_SPIDER_CONFIG_SUCCEED =
             "home.message.remove-spider-config-succeed";
+    public static final String HOME_CLIENT_CONTEXT_MENU_ITEM_COPY_URL = "home.client-context-menu-item-copy-url";
     public static final String HOME_IMPORT_API_SELECT_TYPE_TITLE = "home.import-api.select-type.title";
     public static final String HOME_IMPORT_API_SELECT_TYPE_CONTENT = "home.import-api.select-type.content";
     public static final String HOME_IMPORT_API_SELECT_TYPE_CAT_VOD_TYPE_TITLE =

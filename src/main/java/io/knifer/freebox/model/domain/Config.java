@@ -1,6 +1,7 @@
 package io.knifer.freebox.model.domain;
 
 import io.knifer.freebox.constant.PlayerType;
+import io.knifer.freebox.constant.VideoPlaybackTrigger;
 import lombok.Data;
 
 /**
@@ -65,6 +66,11 @@ public class Config {
      * 字体
      */
     private String usageFontFamily;
+
+    /**
+     * 影视播放触发方式
+     */
+    private VideoPlaybackTrigger videoPlaybackTrigger;
 
     /**
      * 启用广告过滤

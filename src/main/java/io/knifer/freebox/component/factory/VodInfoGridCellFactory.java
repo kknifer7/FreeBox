@@ -3,6 +3,8 @@ package io.knifer.freebox.component.factory;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.constant.VideoPlaybackTrigger;
+import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
@@ -10,6 +12,7 @@ import io.knifer.freebox.model.common.tvbox.VodInfo;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ContextMenu;
@@ -152,6 +155,11 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             }
             setupActionEventFilter(item);
             setupMovieInfoOverlay(movieInfoOverlay, item);
+            if (ConfigHelper.getVideoPlaybackTrigger() == VideoPlaybackTrigger.SINGLE_CLICK) {
+                setCursor(Cursor.HAND);
+            } else if (getCursor() != Cursor.DEFAULT) {
+                setCursor(Cursor.DEFAULT);
+            }
             setGraphic(container);
             setId(itemId);
         }
@@ -161,7 +169,16 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 removeEventFilter(MouseEvent.MOUSE_CLICKED, actionEventFilter);
             }
             actionEventFilter = event -> {
-                if (event.getButton() != MouseButton.PRIMARY || event.getClickCount() < 2) {
+                VideoPlaybackTrigger playbackTrigger;
+                int expectClickCount;
+
+                if (event.getButton() != MouseButton.PRIMARY) {
+
+                    return;
+                }
+                playbackTrigger = ConfigHelper.getVideoPlaybackTrigger();
+                expectClickCount = playbackTrigger == VideoPlaybackTrigger.SINGLE_CLICK ? 1 : 2;
+                if (event.getClickCount() != expectClickCount) {
 
                     return;
                 }

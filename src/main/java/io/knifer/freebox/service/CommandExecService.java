@@ -39,7 +39,7 @@ public class CommandExecService extends Service<Pair<Boolean, String>> {
                     result = RuntimeUtil.execForStr(commands);
                     success = checker == null || checker.apply(result);
                 } catch (Exception e) {
-                    log.error("command run failed", e);
+                    log.warn("command run failed", e);
                     success = false;
                 }
                 log.info("\ncommand:\n{}\nresult:\n{}\nsuccess:{}", commands, result, success);

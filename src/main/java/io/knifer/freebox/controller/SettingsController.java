@@ -46,6 +46,7 @@ import java.net.NetworkInterface;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 
@@ -113,6 +114,8 @@ public class SettingsController {
     private ToggleGroup adFilterDynamicThresholdFactorToggleGroup;
     @FXML
     private ComboBox<PlayerType> playerTypeComboBox;
+    @FXML
+    private ToggleGroup videoPlaybackTriggerToggleGroup;
 
     private Stage stage;
     private FileChooser playerExternalFileChooser;
@@ -132,22 +135,11 @@ public class SettingsController {
     @FXML
     private void initialize() {
         LoadNetworkInterfaceDataService loadNetworkInterfaceService = new LoadNetworkInterfaceDataService();
-        List<String> fontFamilies = Font.getFamilies();
 
         setupComponent();
-        usageFontFamilyComboBox.getItems().addAll(fontFamilies);
         loadConfigService.setOnSucceeded(evt -> {
-            String usageFontFamily = ConfigHelper.getUsageFontFamily();
-            SingleSelectionModel<String> selectionModel = usageFontFamilyComboBox.getSelectionModel();
-
+            setupComponentData();
             loadNetworkInterfaceService.restart();
-            // 字体
-            oldUsageFontFamily = usageFontFamily;
-            if (CollUtil.contains(fontFamilies, usageFontFamily)) {
-                selectionModel.select(usageFontFamily);
-            } else {
-                selectionModel.selectFirst();
-            }
         });
         loadNetworkInterfaceService.setOnSucceeded(evt -> {
             // 网卡信息获取完成，填充数据
@@ -196,11 +188,6 @@ public class SettingsController {
     }
 
     private void setupComponent() {
-        String applicationDataSize;
-        Integer configPort = ConfigHelper.getHttpPort();
-        List<Toggle> adFilterDTFToggles;
-        Double adFilterDTFFactor;
-
         // 注册表单验证器
         validationSupport.registerValidator(httpPortTextField, PortValidator.getInstance());
         validationSupport.registerValidator(wsPortTextField, PortValidator.getInstance());
@@ -212,6 +199,14 @@ public class SettingsController {
         wsIpChoiceBox.valueProperty().bindBidirectional(ipValueProp);
         httpIpChoiceBox.disableProperty().bind(ipChoiceBoxDisableProp);
         wsIpChoiceBox.disableProperty().bind(ipChoiceBoxDisableProp);
+    }
+
+    private void setupComponentData() {
+        String applicationDataSize;
+        Integer configPort = ConfigHelper.getHttpPort();
+        List<String> fontFamilies = Font.getFamilies();
+        String usageFontFamily = ConfigHelper.getUsageFontFamily();
+        SingleSelectionModel<String> selectionModel = usageFontFamilyComboBox.getSelectionModel();
 
         if (configPort != null) {
             httpPortTextField.setText(configPort.toString());
@@ -255,7 +250,6 @@ public class SettingsController {
             );
             wsServiceStopBtn.setDisable(true);
         }
-
         // 常规设置tab
         applicationDataSize = FormattingUtil.sizeFormat(FileUtil.size(StorageHelper.getLocalStoragePath().toFile()));
         applicationDataLabel.setText(I18nHelper.getFormatted(I18nKeys.SETTINGS_APPLICATION_DATA, applicationDataSize));
@@ -263,19 +257,42 @@ public class SettingsController {
                 I18nHelper.getFormatted(I18nKeys.SETTINGS_APPLICATION_VERSION, ConfigHelper.getAppVersion())
         );
         autoCheckUpgradeCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAutoCheckUpgrade()));
-        adFilterCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAdFilter()));
-        adFilterDTFToggles = adFilterDynamicThresholdFactorToggleGroup.getToggles();
-        adFilterDTFFactor = ConfigHelper.getAdFilterDynamicThresholdFactor();
-        for (Toggle toggle : adFilterDTFToggles) {
-            RadioButton radioButton;
-
-            if (Objects.equals(toggle.getProperties().get("value"), adFilterDTFFactor)) {
-                adFilterDynamicThresholdFactorToggleGroup.selectToggle(toggle);
-            }
-            radioButton = (RadioButton) toggle;
-            radioButton.disableProperty().bind(adFilterCheckBox.selectedProperty().not());
+        usageFontFamilyComboBox.getItems().addAll(fontFamilies);
+        oldUsageFontFamily = usageFontFamily;
+        if (CollUtil.contains(usageFontFamilyComboBox.getItems(), usageFontFamily)) {
+            selectionModel.select(usageFontFamily);
+        } else {
+            selectionModel.selectFirst();
         }
+        adFilterCheckBox.setSelected(BooleanUtils.toBoolean(ConfigHelper.getAdFilter()));
+        setupToggleGroup(
+                adFilterDynamicThresholdFactorToggleGroup,
+                ConfigHelper.getAdFilterDynamicThresholdFactor(),
+                toggle -> {
+                    RadioButton radioButton = (RadioButton) toggle;
+
+                    radioButton.disableProperty().bind(adFilterCheckBox.selectedProperty().not());
+                }
+        );
+        setupToggleGroup(videoPlaybackTriggerToggleGroup, ConfigHelper.getVideoPlaybackTrigger(), null);
         playerTypeComboBox.getSelectionModel().select(ConfigHelper.getPlayerType());
+    }
+
+    private void setupToggleGroup(
+            ToggleGroup toggleGroup,
+            Object selectedValue,
+            @Nullable Consumer<Toggle> toggleInitConsumer
+    ) {
+        List<Toggle> toggles = toggleGroup.getToggles();
+
+        for (Toggle toggle : toggles) {
+            if (Objects.equals(toggle.getProperties().get("value"), selectedValue)) {
+                toggleGroup.selectToggle(toggle);
+            }
+            if (toggleInitConsumer != null) {
+                toggleInitConsumer.accept(toggle);
+            }
+        }
     }
 
     private void disableHttpServiceForm() {
@@ -637,6 +654,10 @@ public class SettingsController {
         PlayerType playerType = playerTypeComboBox.getValue();
         Function<String, Boolean> resultChecker;
 
+        if (playerType == ConfigHelper.getPlayerType()) {
+            // 可能在赋初值，忽略事件触发
+            return;
+        }
         if (playerType == PlayerType.VLC) {
             // 对于vlc播放器，直接应用
             applyExternalPlayerSetting(playerType, null);
@@ -743,5 +764,18 @@ public class SettingsController {
             ConfigHelper.setPlayerType(playerType);
             ConfigHelper.markToUpdate();
         }
+    }
+
+    @FXML
+    private void onVideoPlaybackTriggerRadioButtonAction(ActionEvent event) {
+        RadioButton radioButton = (RadioButton) event.getSource();
+        VideoPlaybackTrigger playbackTrigger = (VideoPlaybackTrigger) radioButton.getProperties().get("value");
+
+        if (playbackTrigger == ConfigHelper.getVideoPlaybackTrigger()) {
+
+            return;
+        }
+        ConfigHelper.setVideoPlaybackTrigger(playbackTrigger);
+        ConfigHelper.markToUpdate();
     }
 }

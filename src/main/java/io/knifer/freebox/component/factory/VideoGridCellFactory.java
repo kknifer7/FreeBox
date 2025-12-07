@@ -2,6 +2,8 @@ package io.knifer.freebox.component.factory;
 
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.constant.VideoPlaybackTrigger;
+import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.ImageHelper;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
@@ -11,6 +13,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
@@ -121,6 +124,11 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
 
                 return;
             }
+            if (ConfigHelper.getVideoPlaybackTrigger() == VideoPlaybackTrigger.SINGLE_CLICK) {
+                setCursor(Cursor.HAND);
+            } else if (getCursor() != Cursor.DEFAULT) {
+                setCursor(Cursor.DEFAULT);
+            }
             itemId = item.getId();
             container = ITEM_ID_AND_CONTAINER_MAP.get(itemId);
             if (container == null) {
@@ -141,6 +149,9 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 // 图片
                 moviePicImageView = new ImageView();
                 if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
+                    if (getCursor() != Cursor.HAND) {
+                        setCursor(Cursor.HAND);
+                    }
                     moviePicImageView.setImage(BaseResources.LOAD_MORE_IMG);
                 } else {
                     moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
@@ -180,6 +191,8 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 removeEventFilter(MouseEvent.MOUSE_CLICKED, eventFilter);
             }
             eventFilter = evt -> {
+                int expectClickCount;
+
                 if (evt.getButton() != MouseButton.PRIMARY) {
 
                     return;
@@ -189,7 +202,8 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
 
                     return;
                 }
-                if (evt.getClickCount() == 2) {
+                expectClickCount = ConfigHelper.getVideoPlaybackTrigger() == VideoPlaybackTrigger.SINGLE_CLICK ? 1 : 2;
+                if (evt.getClickCount() == expectClickCount) {
                     onVideoOpen.accept(item);
                 }
             };

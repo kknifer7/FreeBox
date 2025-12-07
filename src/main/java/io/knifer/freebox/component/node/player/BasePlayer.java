@@ -2,14 +2,12 @@ package io.knifer.freebox.component.node.player;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
-import io.knifer.freebox.FreeBoxApplication;
 import io.knifer.freebox.component.node.LogoPane;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.controller.EPGOverviewController;
-import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.EpgFetchingHandler;
 import io.knifer.freebox.handler.impl.ParameterizedEpgFetchingHandler;
 import io.knifer.freebox.helper.*;
@@ -153,7 +151,7 @@ public abstract class BasePlayer<T extends Node> {
 
     private final DoubleBinding paneWidthProp;
 
-    private volatile boolean destroyFlag = false;
+    protected volatile boolean destroyFlag = false;
 
     private List<LiveChannelGroup> liveChannelGroups = null;
     private LiveInfoBO selectedLive = null;
@@ -198,10 +196,7 @@ public abstract class BasePlayer<T extends Node> {
         this.config = config;
         stage = WindowHelper.getStage(parent);
         scene = stage.getScene();
-        stylesheetUrl = FreeBoxApplication.class.getResource("css/player.css");
-        if (stylesheetUrl == null) {
-            throw new FBException("player.css not found");
-        }
+        stylesheetUrl = BaseResources.PLAYER_CSS;
         scene.getStylesheets().add(stylesheetUrl.toExternalForm());
         playerPane = new StackPane();
         stage.setFullScreenExitHint(StringUtils.EMPTY);
@@ -1240,6 +1235,10 @@ public abstract class BasePlayer<T extends Node> {
      * 此类中的方法不会阻塞，但子类（比如VLC播放器）中覆盖的方法可能会阻塞
      */
     public void destroy() {
+        if (destroyFlag) {
+
+            return;
+        }
         destroyFlag = true;
         controlPaneHideTimer.stop();
         volumePopOverHideTimer.stop();

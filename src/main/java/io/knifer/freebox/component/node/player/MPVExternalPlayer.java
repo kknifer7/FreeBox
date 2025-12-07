@@ -1,6 +1,7 @@
 package io.knifer.freebox.component.node.player;
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.IdUtil;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.github.macfja.mpv.Service;
@@ -26,6 +27,8 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 外部MPV播放器
@@ -37,6 +40,9 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
 
     private Shorthand mpv;
     private CompletableFuture<Void> playerInitialized;
+    private final AtomicLong playingResourceId = new AtomicLong();
+    private final Lock playingResourceLock = new ReentrantLock();
+    private final ExecutorService playbackExecutor = Executors.newSingleThreadExecutor();
     private ScheduledFuture<?> catchProgressTask;
     private final ScheduledExecutorService catchProgressExecutor;
     private final AtomicLong progressCaught;
@@ -55,6 +61,11 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
     }
 
     private void initPlayer() {
+        if (destroyFlag) {
+            log.info("player destroyed, cancel init new player");
+
+            return;
+        }
         showToast(I18nHelper.get(I18nKeys.VIDEO_EXTERNAL_PLAYER_LOADING));
         playerInitialized = new CompletableFuture<>();
         mpv = new Shorthand(new Service(ConfigHelper.getMpvPath(), MPV_EXTRA_ARGS));
@@ -117,7 +128,6 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
             });
         } catch (IOException e) {
             log.error("mpv register property change error", e);
-            Platform.runLater(() -> ToastHelper.showException(e));
         }
     }
 
@@ -134,17 +144,31 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
     @Override
     protected boolean doPlay(String url, Map<String, String> headers, String videoTitle, @Nullable Long progress) {
         FutureWaitingService<Void> futureWaitingService;
+        long playingResourceId;
 
+        if (destroyFlag) {
+            log.info("player destroyed, cancel play");
+
+            return false;
+        }
         doPlayInit(progress);
         if (!super.doPlay(url, headers, videoTitle, progress) || !playerInitialized.isDone()) {
             futureWaitingService = new FutureWaitingService<>(playerInitialized);
             futureWaitingService.setOnSucceeded(ignored -> doPlay(url, headers, videoTitle, progress));
             futureWaitingService.start();
         }
-        AsyncUtil.execute(() -> {
+        playingResourceId = IdUtil.getSnowflakeNextId();
+        this.playingResourceId.set(playingResourceId);
+        log.info("play url={}", url);
+        playbackExecutor.execute(() -> {
             boolean successFlag = false;
 
             try {
+                playingResourceLock.lock();
+                if (playingResourceId != this.playingResourceId.get()) {
+
+                    return;
+                }
                 mpv.addMedia(url, false);
                 mpv.setProperty("title", videoTitle);
                 mpv.waitForEvent("playback-restart");
@@ -157,7 +181,9 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
                                     val = mpv.getProperty("time-pos", Integer.class);
                                 } catch (Exception e) {
                                     log.warn("cancel catchProgressTask, because mpv get time-pos error", e);
-                                    catchProgressTask.cancel(true);
+                                    if (catchProgressTask != null) {
+                                        catchProgressTask.cancel(true);
+                                    }
 
                                     return;
                                 }
@@ -182,14 +208,17 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
             } catch (Exception e) {
                 log.error("mpv unknown error", e);
                 Platform.runLater(() -> ToastHelper.showException(e));
+            } finally {
+                playingResourceLock.unlock();
             }
             if (!successFlag) {
                 IoUtil.close(mpv);
-                if (!config.getLiveMode()) {
+                if (!config.getLiveMode() && catchProgressTask != null) {
                     catchProgressTask.cancel(true);
                 }
-                if (ipcFailedCount.incrementAndGet() > 3) {
+                if (ipcFailedCount.incrementAndGet() >= 3) {
                     Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.VIDEO_EXTERNAL_PLAYER_UNAVAILABLE));
+                    destroy();
 
                     return;
                 }
@@ -220,6 +249,10 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
 
     @Override
     public void destroy() {
+        if (destroyFlag) {
+
+            return;
+        }
         super.destroy();
         if (!config.getLiveMode()) {
             catchProgressExecutor.shutdownNow();

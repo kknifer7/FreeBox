@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.text.StrPool;
 import cn.hutool.core.util.StrUtil;
+import com.google.common.net.HttpHeaders;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.M3u8AdFilterHandler;
 import io.knifer.freebox.model.domain.M3u8AdFilterResult;
@@ -136,7 +138,9 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
             log.info("process subPlaylist, subPlaylistUrl={}", subPlaylistUrl);
             try {
                 subPlaylistFullUrl = resolveRelativeUrl(subPlaylistUrl, baseUrl);
-                subPlaylistContent = HttpUtil.getAsync(subPlaylistFullUrl).get(downloadTimeout, TimeUnit.SECONDS);
+                subPlaylistContent = HttpUtil.getAsync(
+                        subPlaylistFullUrl, HttpHeaders.USER_AGENT, BaseValues.USER_AGENT
+                ).get(downloadTimeout, TimeUnit.SECONDS);
                 if (StringUtils.isBlank(subPlaylistContent)) {
                     log.warn("process subPlaylist failed, subPlaylistUrl={}, content is blank", subPlaylistUrl);
                     continue;

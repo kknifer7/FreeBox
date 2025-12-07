@@ -1,0 +1,70 @@
+/* loading-dialog.css */
+
+/* 主对话框样式 */
+.loading-dialog {
+    -fx-background-color: #f8f9fa;
+    -fx-background-radius: 8;
+    -fx-border-color: #dee2e6;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0, 0, 2);
+    -fx-min-width: 200;
+}
+
+/* 内容区域 */
+.loading-content {
+    -fx-padding: 25 30 20 30;
+    -fx-alignment: center;
+    -fx-spacing: 15;
+}
+
+/* 进度指示器 */
+.loading-indicator {
+    -fx-progress-color: #007bff;
+    -fx-pref-width: 40px;
+    -fx-pref-height: 40px;
+}
+
+/* 按钮区域 */
+.button-area {
+    -fx-alignment: center;
+    -fx-padding: 10 0 0 0;
+}
+
+/* 取消按钮 */
+.cancel-button {
+    -fx-background-color: #6c757d;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 500;
+    -fx-padding: 8 20;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.cancel-button:hover {
+    -fx-background-color: #5a6268;
+}
+
+.cancel-button:pressed {
+    -fx-background-color: #4a5258;
+    -fx-translate-y: 1px;
+}
+
+.cancel-button:disabled {
+    -fx-opacity: 0.6;
+}
+
+/* 对话框标题栏 */
+.dialog-pane > .header-panel {
+    -fx-background-color: #f8f9fa;
+    -fx-padding: 10;
+    -fx-font-size: 14;
+    -fx-font-weight: 500;
+}
+
+/* 按钮类型样式 */
+.dialog-pane .button-bar .container {
+    -fx-padding: 10;
+}

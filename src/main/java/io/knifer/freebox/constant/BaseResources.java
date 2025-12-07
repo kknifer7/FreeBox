@@ -4,8 +4,11 @@ import com.google.common.io.Resources;
 import io.knifer.freebox.FreeBoxApplication;
 import javafx.scene.image.Image;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
 
 /**
@@ -13,6 +16,7 @@ import java.util.Properties;
  *
  * @author Knifer
  */
+@Slf4j
 @UtilityClass
 @SuppressWarnings("ConstantConditions")
 public class BaseResources {
@@ -44,4 +48,21 @@ public class BaseResources {
             }
         }
     };
+
+    @NotNull
+    public static final URL PLAYER_CSS = FreeBoxApplication.class.getResource("css/player.css");
+    @NotNull
+    public static final URL LOADING_DIALOG_CSS =
+            FreeBoxApplication.class.getResource("css/dialog/loading-dialog.css");
+
+    static {
+        if (PLAYER_CSS == null) {
+            log.error("player.css not found");
+            System.exit(-1);
+        }
+        if (LOADING_DIALOG_CSS == null) {
+            log.error("loading-dialog.css not found");
+            System.exit(-1);
+        }
+    }
 }

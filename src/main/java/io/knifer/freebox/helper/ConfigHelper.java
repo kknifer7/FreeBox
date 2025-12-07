@@ -286,10 +286,15 @@ public class ConfigHelper {
     /**
      * 检测并保存配置
      */
-    public void checkAndSave() {
-        if (updateFlag.getAndSet(false)) {
+    public boolean checkAndSave() {
+        boolean saved;
+
+        saved = updateFlag.getAndSet(false);
+        if (saved) {
             saveAnyWay();
         }
+
+        return saved;
     }
 
     /**

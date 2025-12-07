@@ -328,17 +328,22 @@ public class SettingsController {
         String usageFontFamily;
         List<Window> windows;
 
-        if (ValidationHelper.validate(validationSupport)) {
-            WindowHelper.close(root);
-            ConfigHelper.checkAndSave();
-            usageFontFamily = usageFontFamilyComboBox.getValue();
-            if (!StringUtils.equals(oldUsageFontFamily, usageFontFamily)) {
-                windows = Window.getWindows();
-                windows.forEach(window -> WindowHelper.setFontFamily(window, usageFontFamily));
-                Context.INSTANCE.postEvent(new AppEvents.UsageFontChangedEvent(usageFontFamily));
-            }
-            Context.INSTANCE.postEvent(AppEvents.SETTINGS_SAVED);
+        if (!ValidationHelper.validate(validationSupport)) {
+
+            return;
         }
+        WindowHelper.close(root);
+        if (!ConfigHelper.checkAndSave()) {
+
+            return;
+        }
+        usageFontFamily = usageFontFamilyComboBox.getValue();
+        if (!StringUtils.equals(oldUsageFontFamily, usageFontFamily)) {
+            windows = Window.getWindows();
+            windows.forEach(window -> WindowHelper.setFontFamily(window, usageFontFamily));
+            Context.INSTANCE.postEvent(new AppEvents.UsageFontChangedEvent(usageFontFamily));
+        }
+        Context.INSTANCE.postEvent(AppEvents.SETTINGS_SAVED);
     }
 
     @FXML
@@ -647,9 +652,9 @@ public class SettingsController {
                     resultChecker,
                     () -> {
                         // 自动检测成功
+                        LoadingHelper.hideLoading();
                         ToastHelper.showSuccessI18n(I18nKeys.SETTINGS_MESSAGE_AUTO_CHECK_EXTERNAL_PLAYER_SUCCESS);
                         applyExternalPlayerSetting(playerType, "mpv");
-                        LoadingHelper.hideLoading();
                     },
                     () -> {
                         // 自动检测失败，让用户手动选择

@@ -254,6 +254,7 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
             return;
         }
         super.destroy();
+        playbackExecutor.shutdownNow();
         if (!config.getLiveMode()) {
             catchProgressExecutor.shutdownNow();
         }

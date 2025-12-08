@@ -15,7 +15,7 @@
 <p align="center">
     <a href="https://github.com/kknifer7/FreeBox"><img src="https://img.shields.io/github/release/kknifer7/FreeBox" alt="Release version"></a>
     <a href="https://sourceforge.net/projects/freeboxk/files/latest/download"><img alt="Download FreeBox" src="https://img.shields.io/sourceforge/dm/freeboxk.svg" ></a>
-    <a href="https://openjdk.org/projects/jdk/17"><img src="https://img.shields.io/badge/JDK-17+-FFD700" alt="JDK"></a>
+    <a href="https://openjdk.org/projects/jdk/17"><img src="https://img.shields.io/badge/JDK-17+-20b2aa" alt="JDK"></a>
     <a href="https://gluonhq.com/products/javafx/"><img src="https://img.shields.io/badge/javafx-21.0.9-blue" alt="JavaFX"></a>
 </p>
 
@@ -31,7 +31,7 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 
 - 更新方便：作者将持续维护、发版，且软件的安装版支持自更新
 
-- ~~开箱即用~~：前提是你安装一个[VLC播放器](https://www.videolan.org/vlc/)
+- ~~开箱即用~~：前提是你安装一个[受支持的播放器](https://github.com/kknifer7/FreeBox/wiki/%E6%92%AD%E6%94%BE%E5%99%A8%E7%9A%84%E9%80%89%E6%8B%A9%E5%92%8C%E6%94%AF%E6%8C%81%E6%83%85%E5%86%B5)
 
 - 主流三端+双架构支持，提供AppImage，可以照顾到多数Linux发行版
 
@@ -73,9 +73,9 @@ TVBox-K下载👇
 
 [蓝奏云 - 密码：bwbi](https://wwzj.lanzoul.com/b0139bgbve)
 
-### 3. 安装VLC播放器
+### 3. 安装播放器
 
-软件会自动检测你的电脑上是否安装了VLC播放器，如果软件在首页提示你“未安装VLC播放器”，请点击软件中的蓝色提示，到 [VLC播放器官网](https://www.videolan.org/vlc/) 去下载安装
+软件会自动检测你的电脑上是否安装了[受支持的播放器](https://github.com/kknifer7/FreeBox/wiki/%E6%92%AD%E6%94%BE%E5%99%A8%E7%9A%84%E9%80%89%E6%8B%A9%E5%92%8C%E6%94%AF%E6%8C%81%E6%83%85%E5%86%B5)
 
 ### 4. Spider项目
 
@@ -196,7 +196,7 @@ TVBox-K下载👇
 | 直播源支持                            | 高       | 支持                                                                         | ✅    |
 | 播放器字幕支持                          | 高       | 支持在线搜索，支持多种字幕格式                                                            | ✅    |
 | 播放器弹幕支持                          | 高       | 支持导入ass格式弹幕                                                                | ✅    |
-| 外部播放器支持                          | 高       | 支持调用mpv、potplayer外部播放器                                                     | ❌️   |
+| 外部播放器支持                          | 高       | 支持vlc和mpv播放器                                                               | ✅    |
 | 部分特殊源支持                          | 中       | 若有源无法观看，请反馈                                                                | ➖    |
 | 字体切换                             | 中       | 支持一键切换界面字体                                                                 | ✅    |
 | 播放器空降                            | 中       | 支持自定义空降，跳过影视片头、片尾                                                          | ❌️   |

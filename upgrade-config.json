@@ -9,7 +9,7 @@
 		{
 			"platform": "windows",
 			"architecture": "amd64",
-			"fileSize": "55395746",
+			"fileSize": "53362039",
 			"fileName": "FreeBox_1.5.0.msi",
 			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0.msi"
 		},

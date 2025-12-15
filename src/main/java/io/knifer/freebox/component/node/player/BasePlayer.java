@@ -1226,6 +1226,12 @@ public abstract class BasePlayer<T extends Node> {
     public long getCurrentProgress() { return 0; }
 
     /**
+     * 获取当前影片时长（允许阻塞）
+     * @return 当前影片时长
+     */
+    public long getCurrentDuration() { return Math.max(videoLength.get(), 0); }
+
+    /**
      * 停止播放
      */
     public void stop() {}

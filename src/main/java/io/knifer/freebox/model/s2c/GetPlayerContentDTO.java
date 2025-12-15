@@ -12,14 +12,9 @@ import java.util.List;
 public class GetPlayerContentDTO {
 
     /**
-     * 源
+     * 站点key
      */
     private String sourceKey;
-
-    /**
-     * 进度
-     */
-    private String processKey;
 
     /**
      * 播放标志
@@ -29,7 +24,7 @@ public class GetPlayerContentDTO {
     /**
      * 视频ID
      */
-    private String id;
+    private String vodId;
 
     /**
      * VIP解析标志
@@ -38,16 +33,14 @@ public class GetPlayerContentDTO {
 
     public static GetPlayerContentDTO of(
             String sourceKey,
-            String processKey,
             String playFlag,
-            String id
+            String vodId
     ) {
         GetPlayerContentDTO result = new GetPlayerContentDTO();
 
         result.setSourceKey(sourceKey);
-        result.setProcessKey(processKey);
         result.setPlayFlag(playFlag);
-        result.setId(id);
+        result.setVodId(vodId);
 
         return result;
     }

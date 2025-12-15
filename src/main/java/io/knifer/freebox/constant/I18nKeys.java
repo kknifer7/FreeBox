@@ -107,6 +107,7 @@ public class I18nKeys {
 
     public static final String MESSAGE_CLIENT_REGISTERED = "message.client-registered";
     public static final String MESSAGE_CLIENT_UNREGISTERED = "message.client-unregistered";
+    public static final String MESSAGE_OLD_CLIENT_UNSUPPORTED = "message.old-client-unsupported";
     public static final String MESSAGE_LOADING = "message.loading";
     public static final String MESSAGE_QUIT_LOADING = "message.quit-loading";
     public static final String MESSAGE_UPGRADE_QUIT_LOADING = "message.upgrade-quit-loading";

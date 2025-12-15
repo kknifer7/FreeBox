@@ -37,9 +37,14 @@ public class VideoPlayInfoBO {
     private Long progress;
 
     /**
-     * 播放集数名称（仅在保存历史记录时需要）
+     * 播放集数名称（续播历史记录时，若无playIndex，则使用该属性匹配出playIndex）
      */
     private String playNote;
+
+    /**
+     * 影片时长
+     */
+    private Long duration;
 
     public static VideoPlayInfoBO of(VodInfo vodInfo) {
         VideoPlayInfoBO result = new VideoPlayInfoBO();
@@ -49,6 +54,7 @@ public class VideoPlayInfoBO {
         result.setPlayIndex(vodInfo.getPlayIndex());
         result.setReverseSort(vodInfo.isReverseSort());
         result.setProgress(vodInfo.getProgress());
+        result.setPlayNote(vodInfo.getPlayNote());
 
         return result;
     }

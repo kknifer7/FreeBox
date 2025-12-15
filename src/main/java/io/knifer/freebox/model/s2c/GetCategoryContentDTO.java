@@ -1,8 +1,8 @@
 package io.knifer.freebox.model.s2c;
 
-import io.knifer.freebox.model.common.tvbox.MovieSort;
-import io.knifer.freebox.model.common.tvbox.SourceBean;
 import lombok.Data;
+
+import java.util.HashMap;
 
 /**
  * 获取指定分类信息
@@ -10,19 +10,46 @@ import lombok.Data;
  */
 @Data
 public class GetCategoryContentDTO {
-    
-    private SourceBean source;
-    
-    private MovieSort.SortData sortData;
-    
-    private Integer page;
 
-    public static GetCategoryContentDTO of(SourceBean source, MovieSort.SortData sortData, Integer page) {
+    /**
+     * 站点key
+     */
+    private String sourceKey;
+
+    /**
+     * 分类id
+     */
+    private String tid;
+
+    /**
+     * 是否过滤
+     */
+    private boolean filter;
+
+    /**
+     * 页数
+     */
+    private String page;
+
+    /**
+     * 筛选参数
+     */
+    private HashMap<String, String> extend;
+
+    public static GetCategoryContentDTO of(
+            String sourceKey,
+            String tid,
+            boolean filter,
+            String page,
+            HashMap<String, String> extend
+    ) {
         GetCategoryContentDTO dto = new GetCategoryContentDTO();
 
-        dto.setSource(source);
-        dto.setSortData(sortData);
+        dto.setSourceKey(sourceKey);
+        dto.setTid(tid);
+        dto.setFilter(filter);
         dto.setPage(page);
+        dto.setExtend(extend);
 
         return dto;
     }

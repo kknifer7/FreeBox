@@ -31,9 +31,9 @@ public class ValidationHandler implements KebSocketMessageHandler<Void> {
     }
 
     @Override
-    public void handle(Message<Void> message, WebSocket connection) {
+    public void handle(Message<Void> message, WebSocket connection) throws ForbiddenException {
         if (!clientManager.isRegistered(connection)) {
-            log.warn("ip [{}] not registered", connection.getRemoteSocketAddress().getHostName());
+            log.warn("ip [{}] not registered", connection.getRemoteSocketAddress().getHostString());
 
             throw new ForbiddenException(connection);
         }

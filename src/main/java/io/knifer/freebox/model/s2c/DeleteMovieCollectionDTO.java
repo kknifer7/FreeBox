@@ -12,14 +12,20 @@ import lombok.Data;
 public class DeleteMovieCollectionDTO {
 
     /**
-     * 影片信息
+     * 站点key
      */
-    private VodInfo vodInfo;
+    private String sourceKey;
+
+    /**
+     * 影片ID
+     */
+    private String vodId;
 
     public static DeleteMovieCollectionDTO of(VodInfo vodInfo) {
         DeleteMovieCollectionDTO result = new DeleteMovieCollectionDTO();
 
-        result.setVodInfo(vodInfo);
+        result.setSourceKey(vodInfo.getSourceKey());
+        result.setVodId(vodInfo.getId());
 
         return result;
     }

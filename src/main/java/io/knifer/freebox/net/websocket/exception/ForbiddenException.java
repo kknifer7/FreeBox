@@ -10,7 +10,7 @@ import org.java_websocket.WebSocket;
  * @author Knifer
  */
 @Getter
-public class ForbiddenException extends RuntimeException{
+public class ForbiddenException extends Exception {
 
     private final String ip;
 

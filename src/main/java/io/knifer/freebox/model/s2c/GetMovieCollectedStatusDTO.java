@@ -10,7 +10,7 @@ import lombok.Data;
 public class GetMovieCollectedStatusDTO {
 
     /**
-     * 数据条数
+     * 站点key
      */
     private String sourceKey;
 

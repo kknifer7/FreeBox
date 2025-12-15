@@ -3,6 +3,7 @@ package io.knifer.freebox.net.websocket.core;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.common.tvbox.Message;
 import io.knifer.freebox.net.websocket.exception.ForbiddenException;
 import io.knifer.freebox.net.websocket.handler.KebSocketMessageHandler;
@@ -11,6 +12,7 @@ import io.knifer.freebox.net.websocket.handler.impl.CommonTopicHandler;
 import io.knifer.freebox.net.websocket.handler.impl.ValidationHandler;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.json.GsonUtil;
+import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 
@@ -43,14 +45,14 @@ public class KebSocketMessageDispatcher {
             msgUnResolved = GsonUtil.fromJson(message, new TypeToken<>(){});
         } catch (JsonSyntaxException e) {
             connection.close();
-            log.warn("ip [{}] send wrong message, closed", connection.getRemoteSocketAddress().getHostName());
+            log.warn("ip [{}] send wrong message, closed", connection.getRemoteSocketAddress().getHostString());
 
             return;
         }
         code = msgUnResolved.getCode();
         if (code == null) {
             connection.close();
-            log.warn("ip [{}] send wrong message, closed", connection.getRemoteSocketAddress().getHostName());
+            log.warn("ip [{}] send wrong message, closed", connection.getRemoteSocketAddress().getHostString());
 
             return;
         }
@@ -64,6 +66,9 @@ public class KebSocketMessageDispatcher {
         } catch (ForbiddenException e) {
             connection.close();
             log.warn("ip [{}] send wrong message, closed", e.getIp());
+        } catch (Exception e) {
+            log.error("dispatch error", e);
+            Platform.runLater(() -> ToastHelper.showException(e));
         }
     }
 }

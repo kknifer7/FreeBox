@@ -12,14 +12,20 @@ import lombok.Data;
 public class DeletePlayHistoryDTO {
 
     /**
-     * 影片信息
+     * 站点ID
      */
-    private VodInfo vodInfo;
+    private String sourceKey;
+
+    /**
+     * 影片ID
+     */
+    private String vodId;
 
     public static DeletePlayHistoryDTO of(VodInfo vodInfo) {
         DeletePlayHistoryDTO result = new DeletePlayHistoryDTO();
 
-        result.setVodInfo(vodInfo);
+        result.setSourceKey(vodInfo.getSourceKey());
+        result.setVodId(vodInfo.getId());
 
         return result;
     }

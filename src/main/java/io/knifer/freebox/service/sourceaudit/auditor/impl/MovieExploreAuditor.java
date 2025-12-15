@@ -7,9 +7,9 @@ import io.knifer.freebox.model.common.tvbox.AbsSortXml;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.MovieSort;
 import io.knifer.freebox.model.s2c.GetCategoryContentDTO;
-import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.sourceaudit.SourceAuditContext;
 import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditor;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import org.apache.commons.lang3.tuple.Pair;
@@ -55,7 +55,9 @@ public class MovieExploreAuditor extends SourceAuditor {
         Consumer<Pair<SourceAuditType, List<SourceAuditResult>>> onFinish = context.getOnFinish();
         AbsSortXml homeContent = context.getHomeContent();
         MovieSort.SortData sortData = homeContent.getClasses().getSortList().get(0);
-        GetCategoryContentDTO dto = GetCategoryContentDTO.of(context.getSourceBean(),sortData, 1);
+        GetCategoryContentDTO dto = GetCategoryContentDTO.of(
+                context.getSourceBean().getKey(), sortData.getId(), false, "1", sortData.getFilterSelect()
+        );
         Consumer<Pair<SourceAuditType, String>> onRequest = context.getOnRequest();
         Consumer<Pair<SourceAuditType, String>> onResponse = context.getOnResponse();
         int maxRetryCount = context.getMaxRetryCount();

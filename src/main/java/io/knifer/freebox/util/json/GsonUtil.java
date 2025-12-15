@@ -19,11 +19,13 @@ public class GsonUtil {
 
     private final static Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
+            .registerTypeAdapterFactory(new ValueEnumTypeAdapterFactory())
             .create();
 
     private final static Gson prettyGson = new GsonBuilder()
             .setPrettyPrinting()
             .registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
+            .registerTypeAdapterFactory(new ValueEnumTypeAdapterFactory())
             .create();
 
     public String toJson(Object object){

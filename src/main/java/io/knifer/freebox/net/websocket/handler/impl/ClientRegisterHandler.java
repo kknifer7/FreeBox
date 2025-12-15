@@ -1,9 +1,7 @@
 package io.knifer.freebox.net.websocket.handler.impl;
 
 import com.google.gson.reflect.TypeToken;
-import io.knifer.freebox.constant.AppEvents;
-import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.constant.MessageCodes;
+import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.c2s.RegisterInfo;
@@ -39,22 +37,32 @@ public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterIn
     }
 
     @Override
-    public void handle(Message<RegisterInfo> registerInfoMsg, WebSocket connection) {
+    public void handle(Message<RegisterInfo> registerInfoMsg, WebSocket connection) throws ForbiddenException {
         RegisterInfo registerInfo = registerInfoMsg.getData();
         ClientInfo clientInfo;
 
         if (registerInfo == null || StringUtils.isBlank(registerInfo.getClientId())) {
             throw new ForbiddenException(connection);
         } else {
+            if (isOldTVBoxApp(registerInfo)) {
+                Platform.runLater(() -> ToastHelper.showInfoI18n(I18nKeys.MESSAGE_OLD_CLIENT_UNSUPPORTED));
+                throw new ForbiddenException(connection);
+            }
             clientInfo = ClientInfo.of(registerInfo, connection);
             clientManager.register(clientInfo);
             Platform.runLater(() -> {
                 ToastHelper.showSuccessI18n(
                         I18nKeys.MESSAGE_CLIENT_REGISTERED,
-                        connection.getRemoteSocketAddress().getHostName()
+                        clientInfo.getName()
                 );
                 Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
             });
         }
+    }
+
+    private boolean isOldTVBoxApp(RegisterInfo registerInfo) {
+        KType kType = registerInfo.getKType();
+
+        return kType == null;
     }
 }

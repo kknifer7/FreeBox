@@ -79,14 +79,14 @@ public class ClientManager {
     }
 
     public boolean isRegistered(WebSocket connection) {
-        String hostName = connection.getRemoteSocketAddress().getHostName();
+        String hostName = connection.getRemoteSocketAddress().getHostString();
 
         return clients.values()
                 .stream()
                 .anyMatch(clientInfo -> {
                     WebSocket conn = clientInfo.getConnection();
 
-                    return conn != null && conn.getRemoteSocketAddress().getHostName().equals(hostName);
+                    return conn != null && conn.getRemoteSocketAddress().getHostString().equals(hostName);
                 });
     }
 

@@ -1,5 +1,6 @@
 package io.knifer.freebox.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
@@ -207,9 +208,12 @@ public class VideoController extends BaseController implements Destroyable {
             return;
         }
         tabs = resourceTabPane.getTabs();
-        playFlag = hasPlayInfo ?
-                ObjectUtils.defaultIfNull(playInfo.getPlayFlag(), StringUtils.EMPTY) :
-                StringUtils.EMPTY;
+        if (hasPlayInfo) {
+            setPlayIndexIfNeeded(playInfo, videoDetail);
+            playFlag = ObjectUtils.defaultIfNull(playInfo.getPlayFlag(), StringUtils.EMPTY);
+        } else {
+            playFlag = StringUtils.EMPTY;
+        }
         urlInfoList.forEach(urlInfo -> {
             String urlFlag = urlInfo.getFlag();
             List<Movie.Video.UrlBean.UrlInfo.InfoBean> beanList = urlInfo.getBeanList();
@@ -303,6 +307,49 @@ public class VideoController extends BaseController implements Destroyable {
         );
     }
 
+    /**
+     * 如有必要，设置要恢复播放的集数索引
+     * 在与FongMi TV配对时，由于其提供的历史记录中没有playIndex，因此需要通过playNote来匹配
+     * @param playInfo 播放信息
+     * @param movie 影视数据
+     */
+    private void setPlayIndexIfNeeded(VideoPlayInfoBO playInfo, Movie movie) {
+        int playIndex = playInfo.getPlayIndex();
+        List<Movie.Video> videos;
+        Movie.Video.UrlBean urlBean;
+        List<Movie.Video.UrlBean.UrlInfo> infoList;
+        Movie.Video.UrlBean.UrlInfo urlInfo;
+        String playFlag;
+        String playNote;
+
+        if (playIndex > 0) {
+
+            return;
+        }
+        videos = movie.getVideoList();
+        urlBean = videos.get(0).getUrlBean();
+        infoList = urlBean.getInfoList();
+        if (CollectionUtil.isEmpty(infoList)) {
+
+            return;
+        }
+        playFlag = playInfo.getPlayFlag();
+        playNote = playInfo.getPlayNote();
+        if (playFlag == null || playNote == null) {
+
+            return;
+        }
+        urlInfo = CollectionUtil.findFirst(infoList, info -> playFlag.equals(info.getFlag())).orElse(null);
+        if (urlInfo == null) {
+
+            return;
+        }
+        playIndex = CollUtil.indexOf(urlInfo.getBeanList(), urlB -> playNote.equals(urlB.getName()));
+        if (playIndex != -1) {
+            playInfo.setPlayIndex(playIndex);
+        }
+    }
+
     private void startPlayVideo() {
         Movie.Video video = videoDetail.getVideoList().get(0);
         Movie.Video.UrlBean.UrlInfo urlInfo;
@@ -370,7 +417,7 @@ public class VideoController extends BaseController implements Destroyable {
 
         Platform.runLater(() -> player.stop());
         template.getPlayerContent(
-                GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
+                GetPlayerContentDTO.of(video.getSourceKey(), flag, urlInfoBean.getUrl()),
                 playerContentJson ->
                     Platform.runLater(() -> {
                         JsonElement propsElm;
@@ -549,6 +596,7 @@ public class VideoController extends BaseController implements Destroyable {
         playInfo.setPlayFlag(playFlag);
         playInfo.setPlayIndex(playingUrlInfo.getBeanList().indexOf(playingInfoBean));
         playInfo.setProgress(player.getCurrentProgress());
+        playInfo.setDuration(player.getCurrentDuration());
         playInfo.setPlayNote(selectedEpBtn.getText());
         CollectionUtil.findFirst(resourceTabPane.getTabs(), tab -> tab.getText().equals(playFlag))
                 .ifPresent(tab -> {

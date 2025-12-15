@@ -1,6 +1,10 @@
 package io.knifer.freebox.model.common.tvbox;
 
+import io.knifer.freebox.model.common.catvod.History;
+import io.knifer.freebox.model.s2c.SavePlayHistoryDTO;
 import lombok.Data;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.*;
@@ -46,7 +50,7 @@ public class VodInfo implements Serializable {
     public String playerCfg = "";
     public boolean reverseSort = false;
 
-    /*
+    /* *
      * ↓ by knifer
      * */
     /**
@@ -114,6 +118,40 @@ public class VodInfo implements Serializable {
         VodInfo result = new VodInfo();
 
         result.setVideo(video);
+
+        return result;
+    }
+
+    public static VodInfo from(SavePlayHistoryDTO dto) {
+        VodInfo result = new VodInfo();
+
+        result.setId(dto.getVodId());
+        result.setSourceKey(dto.getSourceKey());
+        result.setName(dto.getVodName());
+        result.setPic(dto.getVodPic());
+        result.setPlayFlag(dto.getVodFlag());
+        result.setPlayIndex(dto.getEpisodeIndex());
+        result.setReverseSort(dto.isRevSort());
+        result.setProgress(dto.getPosition());
+
+        return result;
+    }
+
+    public static VodInfo from(History history) {
+        VodInfo result = new VodInfo();
+        String key = history.getKey();
+        String[] keySplit = StringUtils.split(key, "@@@");
+        String sourceKey = ArrayUtils.get(keySplit, 0);
+        String vodId = ArrayUtils.get(keySplit, 1);
+
+        result.setId(vodId);
+        result.setSourceKey(sourceKey);
+        result.setName(history.getVodName());
+        result.setPic(history.getVodPic());
+        result.setPlayFlag(history.getVodFlag());
+        result.setPlayNote(history.getVodRemarks());
+        result.setReverseSort(history.isRevSort());
+        result.setProgress(history.getPosition());
 
         return result;
     }

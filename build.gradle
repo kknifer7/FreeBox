@@ -55,7 +55,7 @@ ext {
             gson: '2.11.0',
             guava: '33.2.1-jre',
             lang3: '3.16.0',
-            javaWebSocket: '1.5.7',
+            javaWebSocket: '1.6.0',
             slf4jSimple: '2.1.0-alpha1',
             blockingMap: '0.91',
             vlcjJavaFX: '1.2.0',

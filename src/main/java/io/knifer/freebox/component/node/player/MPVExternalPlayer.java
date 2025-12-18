@@ -283,8 +283,12 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
 
     @Override
     public long getCurrentDuration() {
+        Long duration;
+
         try {
-            return mpv.getProperty("duration", Long.class) * 1000;
+            duration = mpv.getProperty("duration", Long.class);
+
+            return duration == null ? 0 : duration * 1000;
         } catch (IOException e) {
             log.warn("mpv get duration error", e);
 

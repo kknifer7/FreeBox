@@ -57,6 +57,10 @@ public class VodInfo implements Serializable {
      * 播放进度
      */
     private Long progress;
+    /**
+     * 影片时长
+     */
+    private Long duration;
 
     public void setVideo(Movie.Video video) {
         sourceKey = video.sourceKey;
@@ -129,10 +133,12 @@ public class VodInfo implements Serializable {
         result.setSourceKey(dto.getSourceKey());
         result.setName(dto.getVodName());
         result.setPic(dto.getVodPic());
-        result.setPlayFlag(dto.getVodFlag());
+        result.setPlayNote(dto.getVodFlag());
+        result.setPlayFlag(dto.getPlayFlag());
         result.setPlayIndex(dto.getEpisodeIndex());
         result.setReverseSort(dto.isRevSort());
         result.setProgress(dto.getPosition());
+        result.setDuration(dto.getDuration());
 
         return result;
     }
@@ -148,10 +154,11 @@ public class VodInfo implements Serializable {
         result.setSourceKey(sourceKey);
         result.setName(history.getVodName());
         result.setPic(history.getVodPic());
-        result.setPlayFlag(history.getVodFlag());
-        result.setPlayNote(history.getVodRemarks());
+        result.setPlayNote(history.getVodFlag());
+        result.setNote(history.getVodRemarks());
         result.setReverseSort(history.isRevSort());
         result.setProgress(history.getPosition());
+        result.setDuration(history.getDuration());
 
         return result;
     }

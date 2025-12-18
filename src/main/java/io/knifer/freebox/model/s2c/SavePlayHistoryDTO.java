@@ -33,6 +33,11 @@ public class SavePlayHistoryDTO {
     private String vodPic;
 
     /**
+     * 播放源名称
+     */
+    private String playFlag;
+
+    /**
      * 播放的ep名称
      */
     private String vodFlag;
@@ -72,6 +77,7 @@ public class SavePlayHistoryDTO {
         result.setVodName(vodInfo.getName());
         result.setVodPic(vodInfo.getPic());
         result.setVodFlag(episode.getName());
+        result.setPlayFlag(playInfo.getPlayFlag());
         result.setEpisodeIndex(vodInfo.getPlayIndex());
         result.setEpisodeUrl(episode.getUrl());
         result.setRevSort(vodInfo.isReverseSort());

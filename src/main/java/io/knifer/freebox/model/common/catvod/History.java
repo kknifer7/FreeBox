@@ -3,8 +3,17 @@ package io.knifer.freebox.model.common.catvod;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
+/**
+ * 历史记录
+ * 该类和该包下大部分的类都来源于FongMi影视，因其中的部分字段命名易与TVBox的混淆，特此记录：
+ *     key: 历史记录/收藏记录的主键，格式为“站点key@@@影片ID@@@cid”
+ *     vodFlag: 播放源的名称
+ *     vodRemarks: 播放剧集的名称（如“第一集”、“第二集”）而非影视备注
+ * 有坑注意：在FongMi影视中，影片只有单个线路（源）时，vodFlag会被赋值为vodRemarks，多线路时又会被赋值为播放源的名称，
+ *     由此导致的歧义让vodFlag字段变得很不可靠，因此，不要完全依赖vodFlag来判断播放源
+ */
 @Data
-public class History{
+public class History {
 
     @SerializedName("key")
     private String key;

@@ -146,6 +146,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                     sourceNameLabel = new Label();
                     sourceNameLabel.getStyleClass().add("movie-source-label");
                     sourceNameLabel.setText(sourceName);
+                    sourceNameLabel.setMaxWidth(CELL_WIDTH);
                     AnchorPane.setTopAnchor(sourceNameLabel, 0d);
                     AnchorPane.setLeftAnchor(sourceNameLabel, 0d);
                     tagContainerChildren.add(sourceNameLabel);

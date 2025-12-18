@@ -45,7 +45,7 @@ public class VodInfo implements Serializable {
     public String des;// <![CDATA[权来]
     public String playFlag = null;      // 播放的源
     public int playIndex = 0;           // 播放的集下标
-    public String playNote = "";
+    public String playNote = "";        // 播放的集名
     public String sourceKey;
     public String playerCfg = "";
     public boolean reverseSort = false;
@@ -133,7 +133,7 @@ public class VodInfo implements Serializable {
         result.setSourceKey(dto.getSourceKey());
         result.setName(dto.getVodName());
         result.setPic(dto.getVodPic());
-        result.setPlayNote(dto.getVodFlag());
+        result.setPlayNote(dto.getEpisodeFlag());
         result.setPlayFlag(dto.getPlayFlag());
         result.setPlayIndex(dto.getEpisodeIndex());
         result.setReverseSort(dto.isRevSort());
@@ -149,13 +149,15 @@ public class VodInfo implements Serializable {
         String[] keySplit = StringUtils.splitByWholeSeparator(key, "@@@");
         String sourceKey = ArrayUtils.get(keySplit, 0);
         String vodId = ArrayUtils.get(keySplit, 1);
+        String vodRemarks = history.getVodRemarks();
 
         result.setId(vodId);
         result.setSourceKey(sourceKey);
         result.setName(history.getVodName());
         result.setPic(history.getVodPic());
-        result.setPlayNote(history.getVodFlag());
-        result.setNote(history.getVodRemarks());
+        result.setPlayNote(vodRemarks);
+        result.setPlayFlag(history.getVodFlag());
+        result.setNote(vodRemarks);
         result.setReverseSort(history.isRevSort());
         result.setProgress(history.getPosition());
         result.setDuration(history.getDuration());

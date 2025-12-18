@@ -318,8 +318,10 @@ public class VideoController extends BaseController implements Destroyable {
         List<Movie.Video> videos;
         Movie.Video.UrlBean urlBean;
         List<Movie.Video.UrlBean.UrlInfo> infoList;
+        int infoListSize;
         Movie.Video.UrlBean.UrlInfo urlInfo;
         String playFlag;
+        final String finalPlayFlag;
         String playNote;
 
         if (playIndex > 0) {
@@ -329,17 +331,23 @@ public class VideoController extends BaseController implements Destroyable {
         videos = movie.getVideoList();
         urlBean = videos.get(0).getUrlBean();
         infoList = urlBean.getInfoList();
-        if (CollectionUtil.isEmpty(infoList)) {
+        infoListSize = CollUtil.size(infoList);
+        if (infoListSize == 0) {
 
             return;
         }
         playFlag = playInfo.getPlayFlag();
+        if (playFlag == null || infoListSize == 1) {
+            playFlag = infoList.get(0).getFlag();
+        }
         playNote = playInfo.getPlayNote();
-        if (playFlag == null || playNote == null) {
+        if (playNote == null) {
 
             return;
         }
-        urlInfo = CollectionUtil.findFirst(infoList, info -> playFlag.equals(info.getFlag())).orElse(null);
+        finalPlayFlag = playFlag;
+        urlInfo = CollectionUtil.findFirst(infoList, info -> finalPlayFlag.equals(info.getFlag()))
+                .orElse(null);
         if (urlInfo == null) {
 
             return;

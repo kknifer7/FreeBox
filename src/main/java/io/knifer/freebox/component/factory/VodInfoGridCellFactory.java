@@ -112,6 +112,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 // 影片左上角源名称
                 sourceNameLabel = new Label();
                 sourceNameLabel.getStyleClass().add("movie-source-label");
+                sourceNameLabel.setMaxWidth(CELL_WIDTH / 2);
                 sourceName = sourceKeyAndNameMap.get(item.getSourceKey());
                 if (StringUtils.isNotBlank(sourceName)) {
                     sourceNameLabel.setText(sourceName);
@@ -121,6 +122,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 // 影片右上角备注（需要根据历史记录、收藏夹的不同性质动态更新，因此先不设置文本）
                 movieRemarkLabel = new Label();
                 movieRemarkLabel.getStyleClass().add("movie-remark-label");
+                movieRemarkLabel.setMaxWidth(CELL_WIDTH / 2);
                 AnchorPane.setTopAnchor(movieRemarkLabel, 0d);
                 AnchorPane.setRightAnchor(movieRemarkLabel, 0d);
                 tagContainer = new AnchorPane(sourceNameLabel, movieRemarkLabel);

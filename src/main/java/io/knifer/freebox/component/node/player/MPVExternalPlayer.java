@@ -103,6 +103,8 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
                     if ("eof".equals(reason)) {
                         progressCaught.set(0);
                         postFinished();
+                    } else if ("error".equals(reason)) {
+                        Platform.runLater(() -> showToast(I18nHelper.get(I18nKeys.COMMON_VIDEO_LOADING_ERROR)));
                     }
 
                     return null;
@@ -205,6 +207,13 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
                 Platform.runLater(() -> showToast(I18nHelper.getFormatted(
                         I18nKeys.VIDEO_EXTERNAL_PLAYER_IPC_FAILED, e.getMessage()
                 )));
+            } catch (RejectedExecutionException e) {
+                if (destroyFlag) {
+                    log.info("player destroyed, cancel catch progress", e);
+                } else {
+                    log.error("catch progress error", e);
+                    Platform.runLater(() -> ToastHelper.showException(e));
+                }
             } catch (Exception e) {
                 log.error("mpv unknown error", e);
                 Platform.runLater(() -> ToastHelper.showException(e));

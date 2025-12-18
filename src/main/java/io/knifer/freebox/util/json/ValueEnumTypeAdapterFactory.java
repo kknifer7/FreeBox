@@ -1,7 +1,6 @@
 package io.knifer.freebox.util.json;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
@@ -9,12 +8,15 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import io.knifer.freebox.constant.ValueEnum;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ValueEnumTypeAdapterFactory implements TypeAdapterFactory {
 
     @Override
@@ -67,22 +69,28 @@ public class ValueEnumTypeAdapterFactory implements TypeAdapterFactory {
 
             @Override
             public T read(JsonReader in) throws IOException {
+                Object value;
+                T result;
+
                 if (in.peek() == JsonToken.NULL) {
                     in.nextNull();
+
                     return null;
                 }
+                value = readValue(in);
+                if (value == null) {
 
-                Object value = readValue(in);
-                T result = valueToEnum.get(value);
-
-                if (result == null) {
-                    throw new JsonSyntaxException(
-                            String.format("Unknown value '%s' for enum %s", value, rawType.getName())
-                    );
+                    return null;
                 }
+                result = valueToEnum.get(value);
+                if (result == null) {
+                    log.warn("Unknown value '{}' for enum {}", value, rawType.getName());
+                }
+
                 return result;
             }
 
+            @Nullable
             private Object readValue(JsonReader in) throws IOException {
                 JsonToken token = in.peek();
                 switch (token) {
@@ -106,7 +114,8 @@ public class ValueEnumTypeAdapterFactory implements TypeAdapterFactory {
                     case BOOLEAN:
                         return in.nextBoolean();
                     default:
-                        throw new JsonSyntaxException("Unexpected token: " + token);
+                        log.warn("Invalid token {} for enum {}", token, rawType.getName());
+                        return null;
                 }
             }
         };

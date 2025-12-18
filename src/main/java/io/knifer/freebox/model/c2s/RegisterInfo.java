@@ -25,4 +25,9 @@ public class RegisterInfo {
      * 远程客户端类型
      */
     private KType kType;
+
+    /**
+     * 协议版本号
+     */
+    private Integer protocolVersionCode;
 }

@@ -44,6 +44,8 @@ public class BaseValues {
      */
     public static final String X_APP_VERSION = "app-version";
     public static final String X_APP_VERSION_CODE = "app-version-code";
+    public static final String X_SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE =
+            "supported-keb-socket-protocol-version-code";
     public static final String X_UPGRADE_CONFIG_URL = "upgrade-config-url";
     public static final String X_DEBUG = "debug";
 

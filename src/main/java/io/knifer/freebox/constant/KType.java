@@ -13,11 +13,7 @@ public enum KType implements ValueEnum<Integer> {
     /**
      * FongMi TV
      */
-    TV(0),
-    /**
-     * jun版 TVBox
-     */
-    TVBox_OSC_Jun(1);
+    TV(0);
 
     private final Integer value;
 }

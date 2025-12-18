@@ -219,7 +219,7 @@ public class ConfigHelper {
                 configLoaded = new Config();
                 configLoaded.setUuid(UUID.randomUUID().toString());
                 configLoaded.setAppVersion(BaseResources.X_PROPERTIES.getProperty(
-                        BaseValues.X_APP_VERSION, AppVersions.ONE_ZERO_ZERO
+                        BaseValues.X_APP_VERSION, "1.0.0"
                 ));
                 versionCodeStr = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
                 configLoaded.setAppVersionCode(

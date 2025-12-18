@@ -14,6 +14,7 @@ import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.java_websocket.WebSocket;
 
 /**
@@ -25,6 +26,14 @@ import org.java_websocket.WebSocket;
 public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterInfo> {
 
     private final ClientManager clientManager;
+
+    private final static int SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE;
+
+    static {
+        String code = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE);
+
+        SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE = NumberUtils.toInt(code, 1);
+    }
 
     @Override
     public boolean support(Message<?> message) {
@@ -43,26 +52,27 @@ public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterIn
 
         if (registerInfo == null || StringUtils.isBlank(registerInfo.getClientId())) {
             throw new ForbiddenException(connection);
-        } else {
-            if (isOldTVBoxApp(registerInfo)) {
-                Platform.runLater(() -> ToastHelper.showInfoI18n(I18nKeys.MESSAGE_OLD_CLIENT_UNSUPPORTED));
-                throw new ForbiddenException(connection);
-            }
-            clientInfo = ClientInfo.of(registerInfo, connection);
-            clientManager.register(clientInfo);
-            Platform.runLater(() -> {
-                ToastHelper.showSuccessI18n(
-                        I18nKeys.MESSAGE_CLIENT_REGISTERED,
-                        clientInfo.getName()
-                );
-                Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
-            });
         }
+        if (isOldTVBoxApp(registerInfo)) {
+            Platform.runLater(() -> ToastHelper.showInfoI18n(I18nKeys.MESSAGE_OLD_CLIENT_UNSUPPORTED));
+            throw new ForbiddenException(connection);
+        }
+        clientInfo = ClientInfo.of(registerInfo, connection);
+        clientManager.register(clientInfo);
+        Platform.runLater(() -> {
+            ToastHelper.showSuccessI18n(
+                    I18nKeys.MESSAGE_CLIENT_REGISTERED,
+                    clientInfo.getName()
+            );
+            Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
+        });
     }
 
     private boolean isOldTVBoxApp(RegisterInfo registerInfo) {
-        KType kType = registerInfo.getKType();
+        Integer protocolVersionCode = registerInfo.getProtocolVersionCode();
 
-        return kType == null;
+        return registerInfo.getKType() == null ||
+                protocolVersionCode == null ||
+                protocolVersionCode < SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE;
     }
 }

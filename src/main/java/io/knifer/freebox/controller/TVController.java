@@ -153,6 +153,11 @@ public class TVController implements Destroyable {
                     );
                 }), () -> searchLoadingProperty.set(false));
 
+            // 源选择框字符串转换设置
+            sourceBeanComboBox.setButtonCell(sourceBeanComboBox.getCellFactory().call(null));
+            // 手动show并hide一次，让框架正确计算出下拉框坐标
+            sourceBeanComboBox.show();
+            sourceBeanComboBox.hide();
             // 源屏蔽弹出框
             sourceBeanBlockPopOver = new SourceBeanBlockPopOver(sourceBeans -> {
                 clearMovieData();

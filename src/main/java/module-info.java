@@ -31,6 +31,7 @@ module io.knifer.freebox {
     requires net.bjoernpetersen.m3u;
     requires mpv;
     requires ipcsocket;
+    requires emojiJava;
 
     requires static lombok;
     requires org.jsoup;

@@ -1,5 +1,9 @@
 @import "../common.css";
 
+.left-top-tool-box {
+    -fx-max-height: 17px;
+}
+
 .movie-remark-label {
     -fx-background-color: #4AAF5A;
     -fx-text-fill: white;

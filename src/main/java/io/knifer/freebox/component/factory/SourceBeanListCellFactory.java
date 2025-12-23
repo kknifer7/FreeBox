@@ -28,8 +28,7 @@ public class SourceBeanListCellFactory implements Callback<ListView<SourceBean>,
                 setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
                 emojiLabel = new EmojiableLabel();
                 styleClasses = emojiLabel.getStyleClass();
-                styleClasses.add("fs-big");
-                styleClasses.add("fse-big");
+                styleClasses.add("fse-medium");
             }
             
             @Override

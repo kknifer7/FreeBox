@@ -183,7 +183,8 @@ run {
             '--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls',
             '--add-opens=org.controlsfx.controls/org.controlsfx.control=io.knifer.freebox',
             '--add-opens=javafx.graphics/javafx.scene=org.controlsfx.controls',
-            "--add-opens=javafx.graphics/javafx.scene.text=cn.hutool"
+            '--add-opens=javafx.graphics/javafx.scene.text=cn.hutool',
+            '--add-opens=javafx.graphics/javafx.scene.text=io.knifer.merged.module'
     ]
 }
 
@@ -208,6 +209,7 @@ jlink {
         requires 'jdk.httpserver'
         requires 'jdk.crypto.ec'
         requires 'org.slf4j'
+        requires 'org.json'
         requires 'com.google.gson'
         requires 'ipcsocket'
         uses 'cn.hutool.core.convert.Converter'

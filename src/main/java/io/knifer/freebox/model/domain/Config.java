@@ -93,4 +93,9 @@ public class Config {
      * mpv播放器路径
      */
     private String mpvPath;
+
+    /**
+     * vlc播放器路径（vlcj NativeDiscovery失败时使用）
+     */
+    private String vlcPath;
 }

@@ -184,6 +184,17 @@ public class ConfigHelper {
         config.setMpvPath(mpvPath);
     }
 
+    public String getVlcPath() {
+        assertIfConfigLoaded();
+
+        return config.getVlcPath();
+    }
+
+    public synchronized void setVlcPath(String vlcPath) {
+        assertIfConfigLoaded();
+        config.setVlcPath(vlcPath);
+    }
+
     public VideoPlaybackTrigger getVideoPlaybackTrigger() {
         assertIfConfigLoaded();
 

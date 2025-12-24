@@ -556,7 +556,7 @@ public abstract class BasePlayer<T extends Node> {
         AnchorPane.setLeftAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setTopAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(leftToolBarHbox, 10.0);
-        AnchorPane.setRightAnchor(rightToolBarHbox, 10.0);
+        AnchorPane.setRightAnchor(rightToolBarHbox, 20.0);
         AnchorPane.setTopAnchor(rightToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(rightToolBarHbox, 10.0);
         // 顶端标题
@@ -795,7 +795,6 @@ public abstract class BasePlayer<T extends Node> {
     private void setOtherNodesVisibleWhenFullScreen(boolean visible) {
         parent.getChildren().forEach(p -> {
             if (p != playerPane) {
-                log.info("{} - set {}", p, visible);
                 p.setVisible(visible);
             }
         });

@@ -2,6 +2,7 @@ package io.knifer.freebox.model.bo;
 
 import io.knifer.freebox.model.common.tvbox.VodInfo;
 import lombok.Data;
+import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * 影片播放信息
@@ -53,7 +54,8 @@ public class VideoPlayInfoBO {
         result.setPlayFlag(vodInfo.getPlayFlag());
         result.setPlayIndex(vodInfo.getPlayIndex());
         result.setReverseSort(vodInfo.isReverseSort());
-        result.setProgress(vodInfo.getProgress());
+        result.setProgress(ObjectUtils.defaultIfNull(vodInfo.getProgress(), 0L));
+        result.setDuration(ObjectUtils.defaultIfNull(vodInfo.getDuration(), 0L));
         result.setPlayNote(vodInfo.getPlayNote());
 
         return result;

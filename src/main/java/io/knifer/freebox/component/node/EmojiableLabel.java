@@ -5,11 +5,14 @@ import com.vdurmont.emoji.Emoji;
 import com.vdurmont.emoji.EmojiManager;
 import com.vdurmont.emoji.EmojiParser;
 import io.knifer.freebox.helper.ImageHelper;
+import io.knifer.freebox.util.CastUtil;
 import javafx.application.Platform;
 import javafx.css.*;
 import javafx.css.converter.FontConverter;
+import javafx.css.converter.InsetsConverter;
 import javafx.css.converter.PaintConverter;
 import javafx.css.converter.SizeConverter;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -19,6 +22,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.*;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -32,6 +36,7 @@ public class EmojiableLabel extends Region {
     private boolean updatingFont = false;
     private String originalText;
 
+    @Getter
     private final TextFlow textFlow;
 
     private final StyleableObjectProperty<Paint> textFill;
@@ -571,11 +576,23 @@ public class EmojiableLabel extends Region {
                     }
                 };
 
+        private static final CssMetaData<EmojiableLabel, Insets> LABEL_PADDING =
+                new CssMetaData<>("-fx-label-padding", InsetsConverter.getInstance(), Insets.EMPTY) {
+                    @Override
+                    public boolean isSettable(EmojiableLabel node) {
+                        return !node.getTextFlow().paddingProperty().isBound();
+                    }
+                    @Override
+                    public StyleableObjectProperty<Insets> getStyleableProperty(EmojiableLabel node) {
+                        return CastUtil.cast(node.getTextFlow().paddingProperty());
+                    }
+                };
+
         private static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
 
         static {
-            final List<CssMetaData<? extends Styleable, ?>> styleables =
-                    new ArrayList<>(Region.getClassCssMetaData());
+            List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Region.getClassCssMetaData());
+
             styleables.add(FONT);
             styleables.add(FONT_FAMILY);
             styleables.add(FONT_SIZE);
@@ -583,6 +600,7 @@ public class EmojiableLabel extends Region {
             styleables.add(FONT_WEIGHT);
             styleables.add(TEXT_FILL);
             styleables.add(EMOJI_SIZE);
+            styleables.add(LABEL_PADDING);
             STYLEABLES = Collections.unmodifiableList(styleables);
         }
     }

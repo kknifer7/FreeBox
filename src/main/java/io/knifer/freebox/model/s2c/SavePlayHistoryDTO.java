@@ -4,6 +4,7 @@ import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.VodInfo;
 import lombok.Data;
+import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * 保存观看历史
@@ -81,8 +82,8 @@ public class SavePlayHistoryDTO {
         result.setEpisodeIndex(vodInfo.getPlayIndex());
         result.setEpisodeUrl(episode.getUrl());
         result.setRevSort(vodInfo.isReverseSort());
-        result.setPosition(vodInfo.getProgress());
-        result.setDuration(playInfo.getDuration());
+        result.setPosition(ObjectUtils.defaultIfNull(vodInfo.getProgress(), 0L));
+        result.setDuration(ObjectUtils.defaultIfNull(playInfo.getDuration(), 0L));
 
         return result;
     }

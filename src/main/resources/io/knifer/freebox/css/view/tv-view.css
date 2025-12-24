@@ -13,7 +13,7 @@
 .movie-source-label {
     -fx-background-color: darkorange;
     -fx-text-fill: white;
-    -fx-label-padding: 1px;
+    -fx-label-padding: 2px;
 }
 
 .movie-info-overlay {
@@ -26,6 +26,13 @@
     -fx-background-color: transparent;
     -fx-pref-width: 38px;
     -fx-pref-height: 38px;
+    -fx-effect: dropshadow(gaussian, #000000, 8, 0.7, 0, 0);
+}
+.movie-progress-indicator .percentage {
+    -fx-fill: #32CD32;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, #000000, 8, 0.7, 0, 0);
 }
 .movie-progress-indicator .indicator {
     -fx-background-color: rgba(0, 0, 0, 0.6);

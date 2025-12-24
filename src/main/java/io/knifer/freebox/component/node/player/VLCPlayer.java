@@ -38,7 +38,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Slf4j
 public class VLCPlayer extends BasePlayer<ImageView> {
 
-    private int trackId = -1;
+    private volatile int trackId = -1;
 
     private final EmbeddedMediaPlayer mediaPlayer;
 
@@ -273,14 +273,12 @@ public class VLCPlayer extends BasePlayer<ImageView> {
     @Override
     public void destroy() {
         super.destroy();
-        AsyncUtil.execute(() -> {
-            if (mediaPlayer.status().isPlaying()) {
-                SystemHelper.allowSleep();
-            }
-            playbackExecutor.shutdownNow();
-            mediaPlayer.release();
-            log.info("vlc media player released");
-        });
+        if (mediaPlayer.status().isPlaying()) {
+            SystemHelper.allowSleep();
+        }
+        playbackExecutor.shutdownNow();
+        mediaPlayer.release();
+        log.info("vlc media player released");
     }
 
     @Override

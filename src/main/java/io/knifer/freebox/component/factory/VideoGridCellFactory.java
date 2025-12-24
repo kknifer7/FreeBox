@@ -1,5 +1,6 @@
 package io.knifer.freebox.component.factory;
 
+import io.knifer.freebox.component.node.EmojiableLabel;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.VideoPlaybackTrigger;
@@ -108,7 +109,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             String note;
             String picUrl;
             String sourceName;
-            Label sourceNameLabel;
+            EmojiableLabel sourceNameLabel;
             AnchorPane tagContainer;
             List<Node> tagContainerChildren;
 
@@ -143,10 +144,10 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 // 影片左上角源名称
                 sourceName = SOURCE_KEY_AND_NAME_MAP.get(item.getSourceKey());
                 if (StringUtils.isNotBlank(sourceName)) {
-                    sourceNameLabel = new Label();
+                    sourceNameLabel = new EmojiableLabel();
                     sourceNameLabel.getStyleClass().add("movie-source-label");
                     sourceNameLabel.setText(sourceName);
-                    sourceNameLabel.setMaxWidth(CELL_WIDTH);
+                    sourceNameLabel.setMaxWidth(CELL_WIDTH / 2);
                     AnchorPane.setTopAnchor(sourceNameLabel, 0d);
                     AnchorPane.setLeftAnchor(sourceNameLabel, 0d);
                     tagContainerChildren.add(sourceNameLabel);
@@ -156,6 +157,7 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 note = item.getNote();
                 if (StringUtils.isNotBlank(note)) {
                     movieNoteLabel = new Label(note);
+                    movieNoteLabel.setMaxWidth(CELL_WIDTH / 2);
                     movieNoteLabel.getStyleClass().add("movie-remark-label");
                     AnchorPane.setTopAnchor(movieNoteLabel, 0d);
                     AnchorPane.setRightAnchor(movieNoteLabel, 0d);

@@ -1,5 +1,6 @@
 package io.knifer.freebox.component.factory;
 
+import io.knifer.freebox.component.node.EmojiableLabel;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
@@ -92,7 +93,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             ImageView moviePicImageView;
             String picUrl;
             String sourceName;
-            Label sourceNameLabel;
+            EmojiableLabel sourceNameLabel;
             AnchorPane tagContainer;
             ProgressIndicator progressIndicator;
             StackPane progressContainer;
@@ -110,7 +111,7 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 container.setAlignment(Pos.TOP_RIGHT);
                 containerChildren = container.getChildren();
                 // 影片左上角源名称
-                sourceNameLabel = new Label();
+                sourceNameLabel = new EmojiableLabel();
                 sourceNameLabel.getStyleClass().add("movie-source-label");
                 sourceNameLabel.setMaxWidth(CELL_WIDTH / 2);
                 sourceName = sourceKeyAndNameMap.get(item.getSourceKey());

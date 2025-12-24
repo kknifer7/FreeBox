@@ -20,10 +20,6 @@
     -fx-emoji-size: 22px;
 }
 
-.medium {
-    -fx-font-weight: medium;
-}
-
 .bold {
     -fx-font-weight: bold;
 }

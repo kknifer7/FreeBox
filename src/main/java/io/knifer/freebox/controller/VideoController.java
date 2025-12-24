@@ -57,10 +57,7 @@ import javax.annotation.Nullable;
 import java.net.URLDecoder;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -102,6 +99,13 @@ public class VideoController extends BaseController implements Destroyable {
     private Movie.Video.UrlBean.UrlInfo playingUrlInfo;
     private Movie.Video.UrlBean.UrlInfo.InfoBean playingInfoBean;
     public final BooleanProperty operationLoading = new SimpleBooleanProperty(true);
+
+    private static final Set<String> HTTP_HEADERS_PROXY_EXCLUDE = Set.of(
+            "content-length",
+            "Content-Length",
+            "transfer-encoding",
+            "Transfer-Encoding"
+    );
 
     @FXML
     private void initialize() {
@@ -558,10 +562,9 @@ public class VideoController extends BaseController implements Destroyable {
                 return;
             }
             content = result.getContent();
-            proxyHeaders = resp.headers().map();
-            if (proxyHeaders.containsKey("content-length")) {
-                proxyHeaders = Maps.filterKeys(proxyHeaders, key -> !key.equals("content-length"));
-            }
+            proxyHeaders = Maps.filterKeys(
+                    resp.headers().map(), key -> !HTTP_HEADERS_PROXY_EXCLUDE.contains(key)
+            );
             callback.accept(Pair.of(
                     true, createAdFilteredM3u8Url(content, proxyHeaders)
             ));
@@ -585,9 +588,11 @@ public class VideoController extends BaseController implements Destroyable {
 
     @Override
     public void destroy() {
-        updatePlayInfo();
-        onClose.accept(playInfo);
-        player.destroy();
+        AsyncUtil.execute(() -> {
+            updatePlayInfo();
+            onClose.accept(playInfo);
+            player.destroy();
+        });
         Context.INSTANCE.popAndShowLastStage();
     }
 

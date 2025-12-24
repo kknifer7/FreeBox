@@ -12,6 +12,8 @@ import io.knifer.freebox.constant.CacheKeys;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.handler.M3u8AdFilterHandler;
+import io.knifer.freebox.handler.M3u8TsProxyHandler;
+import io.knifer.freebox.handler.impl.BadM3u8TsProxyHandler;
 import io.knifer.freebox.handler.impl.SmartM3u8AdFilterHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.TVPlayBO;
@@ -93,6 +95,7 @@ public class VideoController extends BaseController implements Destroyable {
     private Consumer<VideoPlayInfoBO> onClose;
 
     private M3u8AdFilterHandler m3u8AdFilterHandler;
+    private M3u8TsProxyHandler m3u8TsProxyHandler;
 
     private Button selectedEpBtn = null;
     private Movie.Video playingVideo;
@@ -110,6 +113,7 @@ public class VideoController extends BaseController implements Destroyable {
     @FXML
     private void initialize() {
         m3u8AdFilterHandler = new SmartM3u8AdFilterHandler();
+        m3u8TsProxyHandler = new BadM3u8TsProxyHandler();
         Platform.runLater(() -> {
             VideoDetailsBO bo = getData();
 
@@ -478,7 +482,7 @@ public class VideoController extends BaseController implements Destroyable {
                         videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
                         if (parse == 0) {
                             if (ConfigHelper.getAdFilter() && playUrl.contains(".m3u8")) {
-                                // 处理m3u8广告过滤
+                                // 处理m3u8广告过滤、ts代理
                                 filterAdAndProxy(playUrl, headers, isAdFilteredAndProxyUrl -> {
                                     Boolean isAdFiltered = isAdFilteredAndProxyUrl.getLeft();
                                     String proxyUrl = isAdFilteredAndProxyUrl.getRight();
@@ -526,7 +530,12 @@ public class VideoController extends BaseController implements Destroyable {
             M3u8AdFilterResult result;
             String content;
             HttpResponse<String> resp;
-            Map<String, List<String>> proxyHeaders;
+            Map<String, List<String>> proxyHeaders = null;
+            boolean isAdFiltered = false;
+            String playUrlForTsProxy;
+            String proxyUrlPrefix;
+            Pair<Boolean, String> proxyTsFlagAndProxiedM3u8Content;
+            String resultPlayUrl;
 
             requestBuilder = HttpRequest.newBuilder()
                     .GET()
@@ -540,42 +549,71 @@ public class VideoController extends BaseController implements Destroyable {
                         .sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofString())
                         .get(6, TimeUnit.SECONDS);
             } catch (Exception e) {
+                // 下载m3u8失败，直接返回原地址
                 callback.accept(Pair.of(false, playUrl));
 
                 return;
             }
+            proxyUrlPrefix = createProxyUrlPrefix();
+            // 处理m3u8广告过滤
             try {
+                content = resp.body();
                 result = m3u8AdFilterHandler.handle(
                         playUrl,
-                        resp.body(),
+                        content,
                         Map.of(SmartM3u8AdFilterHandler.EXTRA_KEY_DTF, ConfigHelper.getAdFilterDynamicThresholdFactor())
                 );
+                isAdFiltered = result.getAdLineCount() > 0;
+                if (isAdFiltered) {
+                    content = result.getContent();
+                    proxyHeaders = Maps.filterKeys(
+                            resp.headers().map(), key -> !HTTP_HEADERS_PROXY_EXCLUDE.contains(key)
+                    );
+                }
+                playUrlForTsProxy = isAdFiltered ? proxyM3u8(content, proxyUrlPrefix, proxyHeaders) : playUrl;
             } catch (Exception e) {
                 log.warn("filter ad exception", e);
-                callback.accept(Pair.of(false, playUrl));
-
-                return;
+                content = resp.body();
+                playUrlForTsProxy = playUrl;
             }
-            if (result.getAdLineCount() == 0) {
-                callback.accept(Pair.of(false, playUrl));
-
-                return;
+            // 处理损坏文件头的ts代理
+            try {
+                proxyTsFlagAndProxiedM3u8Content =
+                        m3u8TsProxyHandler.handle(
+                                playUrlForTsProxy, content, proxyUrlPrefix + "/proxy/ts/"
+                        );
+                if (proxyTsFlagAndProxiedM3u8Content.getLeft()) {
+                    content = proxyTsFlagAndProxiedM3u8Content.getRight();
+                    if (proxyHeaders == null) {
+                        proxyHeaders = Maps.filterKeys(
+                                resp.headers().map(), key -> !HTTP_HEADERS_PROXY_EXCLUDE.contains(key)
+                        );
+                    }
+                    resultPlayUrl = proxyM3u8(content, proxyUrlPrefix, proxyHeaders);
+                } else {
+                    resultPlayUrl = playUrlForTsProxy;
+                }
+            } catch (Exception e) {
+                log.warn("proxy ts exception", e);
+                resultPlayUrl = playUrlForTsProxy;
             }
-            content = result.getContent();
-            proxyHeaders = Maps.filterKeys(
-                    resp.headers().map(), key -> !HTTP_HEADERS_PROXY_EXCLUDE.contains(key)
-            );
-            callback.accept(Pair.of(
-                    true, createAdFilteredM3u8Url(content, proxyHeaders)
-            ));
+            callback.accept(Pair.of(isAdFiltered, resultPlayUrl));
         });
     }
 
-    private String createAdFilteredM3u8Url(String m3u8Content, Map<String, List<String>> proxyHeaders) {
-        String proxyUrl = "http://127.0.0.1:" +
-                ConfigHelper.getHttpPort() +
-                "/proxy-cache/" +
-                CacheKeys.AD_FILTERED_M3U8;
+    private String createProxyUrlPrefix() {
+        return "http://127.0.0.1:" + ConfigHelper.getHttpPort();
+    }
+
+    /**
+     * 代理m3u8内容
+     * @param m3u8Content m3u8内容
+     * @param proxyUrlPrefix 代理前缀
+     * @param proxyHeaders 代理请求头
+     * @return 代理链接
+     */
+    private String proxyM3u8(String m3u8Content, String proxyUrlPrefix, Map<String, List<String>> proxyHeaders) {
+        String proxyUrl = proxyUrlPrefix + "/proxy-cache/" + CacheKeys.AD_FILTERED_M3U8;
 
         CacheHelper.put(CacheKeys.AD_FILTERED_M3U8, m3u8Content);
         CacheHelper.put(

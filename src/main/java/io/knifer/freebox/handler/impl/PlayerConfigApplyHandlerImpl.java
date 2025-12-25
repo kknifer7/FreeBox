@@ -13,6 +13,7 @@ import javafx.application.Platform;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -28,6 +29,7 @@ import java.util.function.Function;
  *
  * @author Knifer
  */
+@Slf4j
 public class PlayerConfigApplyHandlerImpl implements PlayerConfigApplyHandler {
 
     private Function<String, Boolean> mpvResultChecker;
@@ -53,16 +55,20 @@ public class PlayerConfigApplyHandlerImpl implements PlayerConfigApplyHandler {
                     Platform.runLater(() -> {
                         String playerDirectory = choosePlayerDirectory(stage);
                         String backupPlayerDirectory = ConfigHelper.getVlcPath();
+                        PlayerType backupPlayerType = ConfigHelper.getPlayerType();
                         boolean isSuccess;
 
                         try {
                             // 暂时设置vlc目录，便于让handler检测该目录是否可用
                             ConfigHelper.setVlcPath(playerDirectory);
+                            ConfigHelper.setPlayerType(PlayerType.VLC);
                             isSuccess = PlayerCheckHandler.select().handle();
                         } finally {
-                            // 恢复之前的vlc目录
+                            // 恢复之前的vlc目录、播放器类型
                             ConfigHelper.setVlcPath(backupPlayerDirectory);
+                            ConfigHelper.setPlayerType(backupPlayerType);
                         }
+                        log.info("apply player, success={}, path={}", isSuccess, playerDirectory);
                         if (isSuccess) {
                             NativeLibrary.addSearchPath(
                                     SystemUtils.IS_OS_WINDOWS ? "libvlc" : "vlc",
@@ -87,6 +93,7 @@ public class PlayerConfigApplyHandlerImpl implements PlayerConfigApplyHandler {
                         mpvResultChecker,
                         () -> {
                             // 自动检测成功
+                            log.info("apply player, success=true, path=mpv");
                             callback.accept(Pair.of(true, "mpv"));
                         },
                         () -> {
@@ -97,14 +104,21 @@ public class PlayerConfigApplyHandlerImpl implements PlayerConfigApplyHandler {
                                     new FileChooser.ExtensionFilter("mpv", "mpv", "mpv.exe"), stage
                             );
                             if (mpvPath == null) {
+                                log.info("apply player, success=false, path=null");
                                 callback.accept(Pair.of(false, null));
                             } else {
                                 // 手动选择后，再次检测以确定播放器是可用的
                                 checkExternalPlayer(
                                         new String[]{ mpvPath, "--version" },
                                         mpvResultChecker,
-                                        () -> callback.accept(Pair.of(true, mpvPath)),
-                                        () -> callback.accept(Pair.of(false, null))
+                                        () -> {
+                                            log.info("apply player, success=true, path={}", mpvPath);
+                                            callback.accept(Pair.of(true, mpvPath));
+                                        },
+                                        () -> {
+                                            log.info("apply player, success=false, path={}", mpvPath);
+                                            callback.accept(Pair.of(false, null));
+                                        }
                                 );
                             }
                         }

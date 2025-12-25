@@ -869,7 +869,9 @@ public abstract class BasePlayer<T extends Node> {
             return;
         }
         videoLength.set(newLength);
-        videoProgressLengthLabel.setText(formatProgressText(newLength));
+        if (!config.getExternalMode()) {
+            videoProgressLengthLabel.setText(formatProgressText(newLength));
+        }
     }
 
     protected void postMovedPosition() {}

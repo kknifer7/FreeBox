@@ -114,10 +114,13 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
                 @Override
                 public void changed(String propertyName, Object value, Integer id) {
                     long progress = resumeProgress.get();
+                    int seekProgress;
 
                     if (progress > 0 && value instanceof Boolean seekable && seekable) {
+                        seekProgress = (int) (progress / 1000);
+                        log.info("resume last progress: {}", seekProgress);
                         try {
-                            mpv.seek((int) (progress / 1000), Shorthand.Seek.Absolute);
+                            mpv.seek(seekProgress, Shorthand.Seek.Absolute);
                         } catch (IOException e) {
                             log.error("mpv ipc error (seek)", e);
                             Platform.runLater(() -> showToast(I18nHelper.getFormatted(
@@ -154,26 +157,33 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
             return false;
         }
         doPlayInit(progress);
-        if (!super.doPlay(url, headers, videoTitle, progress) || !playerInitialized.isDone()) {
+        if (!playerInitialized.isDone()) {
             futureWaitingService = new FutureWaitingService<>(playerInitialized);
             futureWaitingService.setOnSucceeded(ignored -> doPlay(url, headers, videoTitle, progress));
             futureWaitingService.start();
+
+            return false;
         }
         playingResourceId = IdUtil.getSnowflakeNextId();
         this.playingResourceId.set(playingResourceId);
         log.info("play url={}", url);
         playbackExecutor.execute(() -> {
             boolean successFlag = false;
+            long currentDuration;
 
             try {
                 playingResourceLock.lock();
                 if (playingResourceId != this.playingResourceId.get()) {
-
+                    // 期望播放内容发生变化，播放任务取消
                     return;
                 }
                 mpv.addMedia(url, false);
                 mpv.setProperty("title", videoTitle);
                 mpv.waitForEvent("playback-restart");
+                currentDuration = getCurrentDuration();
+                if (currentDuration > 0) {
+                    postLengthChanged(currentDuration);
+                }
                 if (!config.getLiveMode()) {
                     catchProgressTask = catchProgressExecutor.scheduleWithFixedDelay(
                             () -> {
@@ -190,7 +200,7 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
                                     return;
                                 }
                                 if (val != null && val > 0) {
-                                    val = val * 1000;
+                                    val *= 1000;
                                     progressCaught.set(val);
                                     log.debug("mpv progress caught: {}", val);
                                 }
@@ -297,11 +307,11 @@ public class MPVExternalPlayer extends BasePlayer<StackPane> {
         try {
             duration = mpv.getProperty("duration", Long.class);
 
-            return duration == null ? 0 : duration * 1000;
+            return duration == null ? super.getCurrentDuration() : duration * 1000;
         } catch (IOException e) {
             log.warn("mpv get duration error", e);
 
-            return 0;
+            return super.getCurrentDuration();
         }
     }
 }

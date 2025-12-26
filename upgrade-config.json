@@ -1,73 +1,73 @@
 {
 	"minRequiredVersionCode": 8,
-	"version": "v1.5.0",
-	"versionCode": 10,
-	"changelog": "新功能：\n1. 支持外部 mpv 播放器。与内嵌的vlc播放器一样，外部mpv播放器同样支持播放进度记录、自动续播等功能（#81）：\n    ① 对比内嵌vlc播放器的方案，mpv的安装和使用稍麻烦一些，但因其有硬件加速（硬解），性能更好，对4k等高质量视频的播放效果也更好，自行取舍；\n    ② 软件通过 JSON-IPC 技术与mpv播放器进行通信、实现功能交互，对此感兴趣的可以去查看我的 MpvService 项目；\n    ③ 该功能未在macOS环境测试，遇问题请反馈。\n3. 保存用户选择的播放源，在下次进入时自动恢复（#94）；\n4. 保存用户观看的直播源、分组、频道、线路，在下次进入时自动恢复；\n5. 完善PC端源对影视筛选器的支持（#93）；\n6. 允许强制关闭加载窗口；增加播放影片触发方式自定义配置（#45）；\n7. 主界面源列表支持右键复制地址。\n\n修复问题和优化：\n1. 修复频繁切换剧集导致播放器卡顿、崩溃的问题；\n2. 修复端口被占用，导致服务启动时的报错（#95）；\n3. 修复一个controlsFX框架bug导致的报错（#97）；\n4. 修复屏蔽播放源偶尔失效的问题，优化操作逻辑；\n5. 更健壮的应用单例支持。基于底层tcp，不依赖固定端口的http服务。",
-	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.5.0/",
-	"releaseDate": "2025-12-08",
+	"version": "v1.6.0",
+	"versionCode": 11,
+	"changelog": "本次为重大更新，建议仔细阅读 “新功能” 部分。\n\n新功能：\n1. 适配的安卓端app更换为“影视-K”（基于FongMi影视移动端开发），性能、使用体验有很大提升（下载链接在下面）。原 TVBox-K 不再受支持，将无法与该版本及之后版本的FreeBox配对（#87）；\n2. 新增对ts分片的代理机制，实现对部分非标准格式m3u8的播放；\n3. 历史记录卡片支持显示剧集和剧集的播放进度；\n4. 源站点名称显示支持彩色emoji；\n5. 作为等待应用启动时的过渡，现在应用打开时会先在屏幕中央显示LOGO画面。\n\n修复问题和优化：\n1. 优化远程TVBox配对连接性能，避免配对成功后FreeBox的卡顿；\n2. 解决安卓设备锁屏或app处于后台时与FreeBox断连、响应速度缓慢的问题（#107）；\n3. 优化VLC播放器安装检测机制，现在检测更精确，未检测到播放器时，支持用户手动选择播放器路径（#104）；\n4. 优化与远程TVBox配对使用时的请求效率，提升并发请求响应速度；\n5. 解决影视搜索时任务积压从而影响其他请求（如打开影视、打开历史记录等）的问题；\n6. 修复内嵌播放器控件自动隐藏问题，优化控件样式；\n7. 其他小的优化和bug修复。",
+	"releaseUrl": "https://sourceforge.net/projects/freeboxk/files/v1.6.0/",
+	"releaseDate": "2025-12-27",
 	"releaseFiles": [
 		{
 			"platform": "windows",
 			"architecture": "amd64",
-			"fileSize": "53362039",
-			"fileName": "FreeBox_1.5.0.msi",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0.msi"
+			"fileSize": "53476727",
+			"fileName": "FreeBox_1.6.0.msi",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0.msi"
 		},
 		{
 			"platform": "mac",
 			"architecture": "amd64",
-			"fileSize": "55823314",
-			"fileName": "FreeBox_1.5.0_amd64.dmg",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_amd64.dmg"
+			"fileSize": "55924211",
+			"fileName": "FreeBox_1.6.0_amd64.dmg",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_amd64.dmg"
 		},
 		{
 			"platform": "deb_linux",
 			"architecture": "amd64",
-			"fileSize": "53101678",
-			"fileName": "FreeBox_1.5.0_amd64.deb",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_amd64.deb"
+			"fileSize": "53215574",
+			"fileName": "FreeBox_1.6.0_amd64.deb",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_amd64.deb"
 		},
 		{
 			"platform": "rpm_linux",
 			"architecture": "amd64",
-			"fileSize": "56621584",
-			"fileName": "FreeBox_1.5.0_amd64.rpm",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_amd64.rpm"
+			"fileSize": "56735232",
+			"fileName": "FreeBox_1.6.0_amd64.rpm",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_amd64.rpm"
 		},
 		{
 			"platform": "other_linux",
 			"architecture": "amd64",
-			"fileSize": "56236536",
-			"fileName": "FreeBox_1.5.0_amd64.AppImage",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_amd64.AppImage"
+			"fileSize": "56363512",
+			"fileName": "FreeBox_1.6.0_amd64.AppImage",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_amd64.AppImage"
 		},
 		{
 			"platform": "mac",
 			"architecture": "arm64",
-			"fileSize": "54561158",
-			"fileName": "FreeBox_1.5.0_arm64.dmg",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_arm64.dmg"
+			"fileSize": "54663927",
+			"fileName": "FreeBox_1.6.0_arm64.dmg",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_arm64.dmg"
 		},
 		{
 			"platform": "deb_linux",
 			"architecture": "arm64",
-			"fileSize": "52762086",
-			"fileName": "FreeBox_1.5.0_arm64.deb",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_arm64.deb"
+			"fileSize": "52899350",
+			"fileName": "FreeBox_1.6.0_arm64.deb",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_arm64.deb"
 		},
 		{
 			"platform": "rpm_linux",
 			"architecture": "arm64",
-			"fileSize": "56304199",
-			"fileName": "FreeBox_1.5.0_arm64.rpm",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_arm64.rpm"
+			"fileSize": "56417739",
+			"fileName": "FreeBox_1.6.0_arm64.rpm",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_arm64.rpm"
 		},
 		{
 			"platform": "other_linux",
 			"architecture": "arm64",
-			"fileSize": "55843336",
-			"fileName": "FreeBox_1.5.0_arm64.AppImage",
-			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.5.0/FreeBox_1.5.0_arm64.AppImage"
+			"fileSize": "55953928",
+			"fileName": "FreeBox_1.6.0_arm64.AppImage",
+			"downloadLink": "https://ghproxy.net/https://github.com/kknifer7/FreeBox/releases/download/v1.6.0/FreeBox_1.6.0_arm64.AppImage"
 		}
 	]
 }

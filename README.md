@@ -57,21 +57,21 @@ FreeBox是一款集成了**影视播放**和**资源审计**功能的桌面端�
 
 | 操作系统    | 版本要求 | amd64                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | arm64                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 |:-------:|:----:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Windows | >=10 | [MSI安装包](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0.msi) \| [ZIP](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_win.zip)                                                                                                                                                                                                                                                              | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| macOS   | >=11 | [DMG](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_amd64.dmg)                                                                                                                                                                                                                                                                                                                                                                             | [DMG](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_arm64.dmg)                                                                                                                                                                                                                                                                                                                                                                             |
-| Linux   | -    | [DEB](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_amd64.deb) \| [RPM](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_amd64.rpm) \| [AppImage](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_amd64.AppImage) \| [tar.gz](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_amd64.tar.gz) | [DEB](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_arm64.deb) \| [RPM](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_arm64.rpm) \| [AppImage](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_arm64.AppImage) \| [tar.gz](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.5.0_arm64.tar.gz) |
+| Windows | >=10 | [MSI安装包](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0.msi) \| [ZIP](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_win.zip)                                                                                                                                                                                                                                                              | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| macOS   | >=11 | [DMG](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_amd64.dmg)                                                                                                                                                                                                                                                                                                                                                                             | [DMG](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_arm64.dmg)                                                                                                                                                                                                                                                                                                                                                                             |
+| Linux   | -    | [DEB](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_amd64.deb) \| [RPM](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_amd64.rpm) \| [AppImage](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_amd64.AppImage) \| [tar.gz](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_amd64.tar.gz) | [DEB](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_arm64.deb) \| [RPM](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_arm64.rpm) \| [AppImage](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_arm64.AppImage) \| [tar.gz](https://gh-proxy.org/https://github.com/kknifer7/FreeBox/releases/latest/download/FreeBox_1.6.0_arm64.tar.gz) |
 
-### 2. TVBox-K下载
+### 2. 影视-K下载
 
-**如果您下载或使用了TVBox-K软件，视为您已阅读并同意TVBox-K软件的[免责声明](https://github.com/kknifer7/TVBoxOS-K/raw/refs/heads/main/doc/%E5%85%8D%E8%B4%A3%E5%A3%B0%E6%98%8E.txt)**
+**如果您下载或使用了影视-K软件，视为您已阅读并同意影视-K软件的[免责声明](https://github.com/kknifer7/TV-K/raw/refs/heads/main/doc/%E5%85%8D%E8%B4%A3%E5%A3%B0%E6%98%8E.txt)**
 
-TVBox-K项目地址👇
+影视-K项目地址👇
 
-[GitHub - kknifer7/TVBoxOS-K](https://github.com/kknifer7/TVBoxOS-K)
+[GitHub - kknifer7/TV-K](https://github.com/kknifer7/TV-K)
 
-TVBox-K下载👇
+影视-K下载👇
 
-[蓝奏云 - 密码：bwbi](https://wwzj.lanzoul.com/b0139bgbve)
+[蓝奏云 - 密码：2i4s](https://wwblv.lanzoul.com/b0139erm1e)
 
 ### 3. 安装播放器
 
@@ -91,9 +91,9 @@ TVBox-K下载👇
 
 - 导入源：是指将接口链接直接配置进本软件，只支持Java格式的Spider（type=3），其他类型的Spider后续将按需考虑支持。
 
-- TVBox源：为了**缓解**PC端不能播放安卓端接口的问题，以及为实现后续更多的功能（如弹幕、放映厅、异地多端同步播放等），本软件可以与特定的[TVBox-K](https://github.com/kknifer7/TVBoxOS-K)项目一起使用，实现用PC端来播放安卓端资源。
+- TVBox源：为了**缓解**PC端不能播放安卓端接口的问题，以及为实现后续更多的功能（如弹幕、放映厅、异地同步播放等），本软件可以与特定的 [影视-K](https://github.com/kknifer7/TV-K) 项目一起使用，实现把安卓端的资源投放到PC端来播放。
 
-- 关于TVBox源的更多解释：总的来说，**目前阶段如果你希望在PC端播放安卓端的资源，本软件可以帮你省去在电脑上使用手机模拟器的过程，你只需要在同网络环境下的手机/电视盒子的后台挂一个TVBox来连接本软件即可**
+- 关于TVBox源的更多解释：总的来说，**目前阶段如果你希望在PC端播放安卓端的资源，本软件可以帮你省去在电脑上使用手机模拟器的过程（模拟器启动慢、性能差、对4k资源的支持有限），你只需要在同网络环境下的手机后台挂一个影视-K来连接本软件即可**
   
   - 作者正在考虑更换/改进此方案，欢迎到 [更好的安卓源兼容方案 · Issue #100](https://github.com/kknifer7/FreeBox/issues/100) 参与讨论。
 
@@ -115,21 +115,17 @@ TVBox-K下载👇
 
 使用方式：
 
-1. 在 TVBox-K App 中进入“设置”
-   
-   ![tvbox_home](doc/tvbox_home.png)
-
-2. 进入“FreeBox配对”
+1. 在 影视-K App 右下角进入设置，再点击“FreeBox配对”
    
    ![tvbox_setting](doc/tvbox_setting.png)
 
-3. 在下方输入框中输入FreeBox主界面显示的的IP和端口
+2. 在弹出的对话框中输入FreeBox主界面显示的本机IP和WebSocket服务的端口
    
    **请仔细查看，相同颜色的框中的内容要一一对应**
    
    ![tvbox_typing](doc/tvbox_typing.png)
 
-4. 点击下面的“连接/重连”按钮，连接成功后TVBox-K中弹出提示，FreeBox也会收到通知
+3. 点击下面的“连接/重连”按钮，连接成功后 影视-K App 中会弹出提示，FreeBox也会收到通知
 
 ### 2. 源审计
 

@@ -10,7 +10,7 @@ import lombok.Data;
 public class GetOnePlayHistoryDTO {
 
     /**
-     * 数据条数
+     * 站点key
      */
     private String sourceKey;
 

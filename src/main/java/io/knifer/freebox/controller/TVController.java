@@ -1,5 +1,6 @@
 package io.knifer.freebox.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
 import io.knifer.freebox.component.node.MovieInfoListPopOver;
 import io.knifer.freebox.component.node.MovieRankPopOver;
@@ -152,6 +153,11 @@ public class TVController implements Destroyable {
                     );
                 }), () -> searchLoadingProperty.set(false));
 
+            // 源选择框字符串转换设置
+            sourceBeanComboBox.setButtonCell(sourceBeanComboBox.getCellFactory().call(null));
+            // 手动show并hide一次，让框架正确计算出下拉框坐标
+            sourceBeanComboBox.show();
+            sourceBeanComboBox.hide();
             // 源屏蔽弹出框
             sourceBeanBlockPopOver = new SourceBeanBlockPopOver(sourceBeans -> {
                 clearMovieData();
@@ -332,6 +338,7 @@ public class TVController implements Destroyable {
         MovieSort.SortData sortData;
         MutablePair<Movie, List<Movie.Video>> movieAndVideoCached;
         Movie movieCached;
+        HashMap<String, String> filterSelectMap;
 
         loadMoreCell.setDisable(true);
         sortData = classesListView.getSelectionModel().getSelectedItem();
@@ -345,8 +352,15 @@ public class TVController implements Destroyable {
             return;
         }
         movieCached = movieAndVideoCached.getLeft();
+        filterSelectMap = sortData.getFilterSelect();
         template.getCategoryContent(
-                GetCategoryContentDTO.of(getSourceBean(), sortData, movieCached.getPage() + 1),
+                GetCategoryContentDTO.of(
+                        getSourceBean().getKey(),
+                        sortData.getId(),
+                        !filterSelectMap.isEmpty(),
+                        String.valueOf(movieCached.getPage() + 1),
+                        filterSelectMap
+                ),
                 categoryContent -> {
                     Movie movie = categoryContent.getMovie();
                     ObservableList<Movie.Video> items = videosGridView.getItems();
@@ -454,17 +468,41 @@ public class TVController implements Destroyable {
      * @param playInfo 播放信息
      */
     private void savePlayHistory(AbsXml detailContent, VideoPlayInfoBO playInfo) {
-        VodInfo vodInfo = new VodInfo();
-        Movie.Video video = detailContent.getMovie().getVideoList().get(0);
+        int playIndex = playInfo.getPlayIndex();
+        String playFlag = playInfo.getPlayFlag();
+        VodInfo vodInfo;
+        Movie.Video video;
+        Movie.Video.UrlBean.UrlInfo urlInfo;
+        Movie.Video.UrlBean.UrlInfo.InfoBean infoBean;
 
+        vodInfo = new VodInfo();
+        video = detailContent.getMovie().getVideoList().get(0);
+        if (playFlag == null) {
+            log.warn("can't savePlayHistory: no playFlag, playInfo={}", playInfo);
+
+            return;
+        }
+        urlInfo = CollectionUtil.findFirst(video.getUrlBean().getInfoList(), info -> playFlag.equals(info.getFlag()))
+                .orElse(null);
+        if (urlInfo == null) {
+            log.warn("can't savePlayHistory: no urlInfo, playInfo={}", playInfo);
+
+            return;
+        }
+        infoBean = CollUtil.get(urlInfo.getBeanList(), playIndex);
+        if (infoBean == null) {
+            log.warn("can't savePlayHistory: no infoBean, playInfo={}", playInfo);
+
+            return;
+        }
         vodInfo.setVideo(video);
-        vodInfo.setPlayFlag(playInfo.getPlayFlag());
-        vodInfo.setPlayIndex(playInfo.getPlayIndex());
+        vodInfo.setPlayFlag(playFlag);
+        vodInfo.setPlayIndex(playIndex);
         vodInfo.setProgress(playInfo.getProgress());
         vodInfo.setReverseSort(playInfo.isReverseSort());
         vodInfo.setPlayNote(playInfo.getPlayNote());
         template.savePlayHistory(
-                SavePlayHistoryDTO.of(vodInfo), exception -> {
+                SavePlayHistoryDTO.of(vodInfo, infoBean, playInfo), exception -> {
                     ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SAVE_HISTORY_FAILED);
                     ToastHelper.showException(exception);
                 }
@@ -639,6 +677,7 @@ public class TVController implements Destroyable {
     private void loadMovieBySortData(MovieSort.SortData sortData) {
         ObservableList<Movie.Video> items;
         MutablePair<Movie, List<Movie.Video>> movieAndVideosCached;
+        HashMap<String, String> filterSelectMap;
 
         resetMovieSearchService();
         movieLoadingProperty.set(true);
@@ -648,10 +687,17 @@ public class TVController implements Destroyable {
         }
         setVideoGridShowSourceName(false);
         movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
+        filterSelectMap = sortData.getFilterSelect();
         if (movieAndVideosCached == null) {
             // 拉取影片数据
             template.getCategoryContent(
-                    GetCategoryContentDTO.of(getSourceBean(), sortData, 1),
+                    GetCategoryContentDTO.of(
+                            getSourceBean().getKey(),
+                            sortData.getId(),
+                            !filterSelectMap.isEmpty(),
+                            "1",
+                            filterSelectMap
+                    ),
                     categoryContent -> {
                         Movie movie;
                         MutablePair<Movie, List<Movie.Video>> movieAndVideos;

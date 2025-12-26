@@ -11,7 +11,7 @@ import io.knifer.freebox.helper.SystemHelper;
 import java.util.Map;
 
 /**
- * VCLPlayer处理器（检测安装情况）
+ * Player处理器（检测安装情况）
  *
  * @author Knifer
  */

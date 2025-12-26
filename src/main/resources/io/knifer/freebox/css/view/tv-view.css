@@ -1,5 +1,9 @@
 @import "../common.css";
 
+.left-top-tool-box {
+    -fx-max-height: 17px;
+}
+
 .movie-remark-label {
     -fx-background-color: #4AAF5A;
     -fx-text-fill: white;
@@ -9,10 +13,34 @@
 .movie-source-label {
     -fx-background-color: darkorange;
     -fx-text-fill: white;
-    -fx-label-padding: 1px;
+    -fx-label-padding: 2px;
 }
 
 .movie-info-overlay {
     -fx-font-weight: bold;
     -fx-font-size: 14px;
+}
+
+.movie-progress-indicator {
+    -fx-progress-color: #32CD32;
+    -fx-background-color: transparent;
+    -fx-pref-width: 38px;
+    -fx-pref-height: 38px;
+    -fx-effect: dropshadow(gaussian, #000000, 8, 0.7, 0, 0);
+}
+.movie-progress-indicator .percentage {
+    -fx-fill: #32CD32;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, #000000, 8, 0.7, 0, 0);
+}
+.movie-progress-indicator .indicator {
+    -fx-background-color: rgba(0, 0, 0, 0.6);
+    -fx-border-color: #32CD32;
+    -fx-border-width: 2px;
+    -fx-border-radius: 50%;
+}
+.movie-progress-indicator .progress {
+    -fx-stroke: #32CD32;
+    -fx-stroke-width: 3px;
 }

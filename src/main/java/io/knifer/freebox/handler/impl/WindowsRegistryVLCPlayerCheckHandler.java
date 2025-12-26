@@ -1,11 +1,13 @@
 package io.knifer.freebox.handler.impl;
 
-import com.sun.jna.platform.win32.Advapi32Util;
-import com.sun.jna.platform.win32.WinReg;
-import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.PlayerCheckHandler;
+import io.knifer.freebox.helper.ConfigHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * 注册表方式检测 VCL Player 是否安装
@@ -17,13 +19,24 @@ public class WindowsRegistryVLCPlayerCheckHandler implements PlayerCheckHandler 
 
     @Override
     public boolean handle() {
-        try {
-            String[] keys = Advapi32Util.registryGetKeys(WinReg.HKEY_CLASSES_ROOT, "Applications");
+        String vlcPath;
 
-            return ArrayUtils.contains(keys, "vlc.exe");
-        } catch (Throwable e) {
-            log.error("search vlc player failed", e);
-            throw new FBException("search vlc player failed", e);
+        try {
+            if (new NativeDiscovery().discover()) {
+
+                return true;
+            }
+            vlcPath = ConfigHelper.getVlcPath();
+            if (StringUtils.isBlank(vlcPath)) {
+
+                return false;
+            }
+
+            return Files.exists(Path.of(vlcPath, "libvlc.dll"));
+        } catch (Exception e) {
+            log.warn("search vlc player failed", e);
+
+            return false;
         }
     }
 }

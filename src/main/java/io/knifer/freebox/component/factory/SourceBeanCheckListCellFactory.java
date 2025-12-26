@@ -1,15 +1,21 @@
 package io.knifer.freebox.component.factory;
 
+import io.knifer.freebox.component.node.EmojiableLabel;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.CheckListView;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -26,15 +32,38 @@ public class SourceBeanCheckListCellFactory implements Callback<ListView<SourceB
     @Override
     public ListCell<SourceBean> call(ListView<SourceBean> param) {
         CheckBoxListCell<SourceBean> cell = new CheckBoxListCell<>(checkListView::getItemBooleanProperty) {
+
+            private final EmojiableLabel emojiLabel;
+
+            {
+                List<String> styleClasses;
+
+                setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                emojiLabel = new EmojiableLabel();
+                styleClasses = emojiLabel.getStyleClass();
+                styleClasses.add("fse-medium");
+            }
+
             @Override
             public void updateItem(SourceBean item, boolean empty) {
+                Node graphic;
+                HBox newGraphic;
+
                 super.updateItem(item, empty);
                 if (item == null || empty) {
-                    setText(StringUtils.EMPTY);
+                    setGraphic(null);
 
                     return;
                 }
-                setText(item.getName());
+                emojiLabel.setText(item.getName());
+                graphic = getGraphic();
+                if (graphic instanceof CheckBox) {
+                    // 初始化Graphic
+                    newGraphic = new HBox(graphic, emojiLabel);
+                    newGraphic.setAlignment(Pos.CENTER_LEFT);
+                    newGraphic.setSpacing(3);
+                    setGraphic(newGraphic);
+                }
             }
         };
 

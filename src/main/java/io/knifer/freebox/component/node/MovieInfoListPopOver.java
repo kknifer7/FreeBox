@@ -1,6 +1,7 @@
 package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.component.factory.VodInfoGridCellFactory;
+import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.common.tvbox.VodInfo;
@@ -36,7 +37,9 @@ public class MovieInfoListPopOver extends PopOver {
         setOnShowing(evt -> setDetached(true));
         setTitle(I18nHelper.get(titleI18n));
         vodInfoGridView = new GridView<>();
-        vodInfoGridViewCellFactory = new VodInfoGridCellFactory(onItemAction, onItemDelete);
+        vodInfoGridViewCellFactory = new VodInfoGridCellFactory(
+                I18nKeys.TV_HISTORY.equals(titleI18n), onItemAction, onItemDelete
+        );
         vodInfoGridView.setCellFactory(vodInfoGridViewCellFactory);
         vodInfoGridView.setHorizontalCellSpacing(50);
         vodInfoGridView.setVerticalCellSpacing(75);

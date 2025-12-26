@@ -272,6 +272,11 @@
                                           </FXCollections>
                                        </items>
                                     </ComboBox>
+                                    <HBox spacing="3.0" alignment="CENTER_LEFT">
+                                       <Label text="播放器状态:" />
+                                       <Label fx:id="playerStatusLabel" />
+                                       <Hyperlink fx:id="playerSelectHyperlink" onAction="#onPlayerSelectHyperlinkAction" text="%settings.please-select" />
+                                    </HBox>
                                  </HBox>
 
                                  <Label text="%settings.usage" styleClass="setting-title-label" GridPane.rowIndex="7" GridPane.columnIndex="0"/>

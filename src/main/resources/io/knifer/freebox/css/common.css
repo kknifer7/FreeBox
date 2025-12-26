@@ -8,6 +8,18 @@
     -fx-font-size: 20px;
 }
 
+.fse-medium {
+    -fx-emoji-size: 15px;
+}
+
+.fse-big {
+    -fx-emoji-size: 18px;
+}
+
+.fse-large {
+    -fx-emoji-size: 22px;
+}
+
 .bold {
     -fx-font-weight: bold;
 }

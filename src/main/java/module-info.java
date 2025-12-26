@@ -31,6 +31,7 @@ module io.knifer.freebox {
     requires net.bjoernpetersen.m3u;
     requires mpv;
     requires ipcsocket;
+    requires emojiJava;
 
     requires static lombok;
     requires org.jsoup;
@@ -45,6 +46,8 @@ module io.knifer.freebox {
     exports io.knifer.freebox.model.common.tvbox;
     exports io.knifer.freebox.model.common.catvod;
     exports io.knifer.freebox.model.c2s;
+    exports io.knifer.freebox.model.s2c;
+    exports io.knifer.freebox.model.bo;
     exports io.knifer.freebox.spider;
     exports io.knifer.freebox.component.factory;
     opens io.knifer.freebox to javafx.fxml;

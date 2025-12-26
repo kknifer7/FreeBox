@@ -56,7 +56,10 @@ public class KebSocketServer extends WebSocketServer {
 		}
 		Platform.runLater(() -> {
 			Context.INSTANCE.postEvent(new AppEvents.ClientUnregisteredEvent(clientInfo));
-			ToastHelper.showInfoI18n(I18nKeys.MESSAGE_CLIENT_UNREGISTERED, conn.getRemoteSocketAddress().getHostName());
+			ToastHelper.showInfoI18n(
+					I18nKeys.MESSAGE_CLIENT_UNREGISTERED,
+					conn.getRemoteSocketAddress().getHostString()
+			);
 		});
 	}
 

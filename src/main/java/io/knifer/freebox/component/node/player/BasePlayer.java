@@ -26,6 +26,7 @@ import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -53,7 +54,6 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.MutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.controlsfx.control.PopOver;
 import org.controlsfx.control.ToggleSwitch;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -95,8 +95,6 @@ public abstract class BasePlayer<T extends Node> {
     private final PlayerToastPane toastPane;
     private final AnchorPane controlPane;
     private final Timer controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
-    private final Timer volumePopOverHideTimer;
-    private final Timer settingsPopOverHideTimer;
     private final ProgressIndicator loadingProgressIndicator;
     private final Label loadingProgressLabel;
     private final ImageView pausedPlayButtonImageView;
@@ -107,7 +105,7 @@ public abstract class BasePlayer<T extends Node> {
     private final Label stepBackwardLabel;
     private final Label stepForwardLabel;
     private final Slider volumeSlider;
-    private final Label volumeLabel;
+    private final PlayerPopOverControlLabel volumePopOverLabel;
     private final ToggleGroup rateSettingToggleGroup;
     private final RadioButton rate0_5SettingRadioButton;
     private final RadioButton rate1SettingRadioButton;
@@ -119,7 +117,7 @@ public abstract class BasePlayer<T extends Node> {
     private final Button subtitleButton;
     private final Button danMaKuButton;
     private final PlayerSubtitleSettingPopOver subtitleSettingPopOver;
-    private final Label settingsLabel;
+    private final PlayerPopOverControlLabel settingsPopOverLabel;
     private final PlayerLiveChannelLinesWithPaginator liveChannelLinesWithPaginator;
     private final ProgressBar videoProgressBar;
     private final Label videoProgressLabel;
@@ -128,7 +126,6 @@ public abstract class BasePlayer<T extends Node> {
     private final Label fullScreenLabel;
     private final Label videoTitleLabel;
     private final Label epgOpenLabel;
-    private final HBox controlTopHBox;
     private final LiveChannelBanner liveChannelBanner;
     private final LiveDrawer liveChannelDrawer;
     private final EpgFetchingHandler epgFetchingHandler;
@@ -172,8 +169,8 @@ public abstract class BasePlayer<T extends Node> {
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
         URL stylesheetUrl;
         List<Node> paneChildren;
+        HBox controlTopHBox;
         VBox volumePopOverInnerVBox;
-        PopOver volumePopOver;
         Label rateSettingTitleLabel;
         HBox rateSettingRadioButtonHBox;
         HBox rateSettingHBox;
@@ -184,7 +181,8 @@ public abstract class BasePlayer<T extends Node> {
         HBox subtitleAndDanMaKuControlHBox;
         HBox subtitleAndDanMaKuHBox;
         VBox settingsPopOverInnerVBox;
-        PopOver settingsPopOver;
+        EventHandler<MouseEvent> controlsOnMouseEnteredEventHandler;
+        EventHandler<MouseEvent> controlsOnMouseExitedEventHandler;
         HBox progressLabelHBox;
         HBox leftToolBarHbox;
         HBox rightToolBarHbox;
@@ -226,7 +224,6 @@ public abstract class BasePlayer<T extends Node> {
         // 暂停设置
         pauseLabel = new Label();
         pauseLabel.setGraphic(pauseIcon);
-        pauseLabel.getStyleClass().add("player-control-label");
         pauseLabel.setOnMouseClicked(evt -> {
             if (evt.getButton() == MouseButton.PRIMARY) {
                 togglePause();
@@ -235,10 +232,8 @@ public abstract class BasePlayer<T extends Node> {
         // 上一集、下一集
         stepBackwardLabel = new Label();
         stepBackwardLabel.setGraphic(stepBackwardIcon);
-        stepBackwardLabel.getStyleClass().add("player-control-label");
         stepForwardLabel = new Label();
         stepForwardLabel.setGraphic(stepForwardIcon);
-        stepForwardLabel.getStyleClass().add("player-control-label");
         if (liveMode) {
             epgFetchingHandler = ParameterizedEpgFetchingHandler.getInstance();
             selectedLive = new LiveInfoBO();
@@ -373,35 +368,15 @@ public abstract class BasePlayer<T extends Node> {
             subtitleAndDanMaKuHBox.setAlignment(Pos.CENTER_LEFT);
         }
         // 音量设置
-        volumeLabel = new Label();
-        volumeLabel.setGraphic(volumeOnIcon);
-        volumeLabel.getStyleClass().add("player-control-label");
-        volumeLabel.setOnMouseClicked(evt -> {
-            volumeLabel.setGraphic(isMute() ? volumeOnIcon : volumeOffIcon);
-            toggleMute();
-        });
         volumeSlider = new Slider(0, 100, 100);
         volumeSlider.setOrientation(Orientation.VERTICAL);
         volumePopOverInnerVBox = new VBox(volumeSlider);
         volumePopOverInnerVBox.setAlignment(Pos.CENTER);
-        volumePopOver = new PopOver(volumePopOverInnerVBox);
-        volumePopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
-        volumePopOver.getStyleClass().add("player-pop-over");
-        volumePopOver.setDetachable(false);
-        volumePopOverHideTimer = new Timer(1000, evt -> volumePopOver.hide());
-        volumePopOverInnerVBox.addEventFilter(MouseEvent.ANY, evt -> {
-            EventType<? extends MouseEvent> eventType = evt.getEventType();
-
-            if (eventType == MouseEvent.MOUSE_ENTERED) {
-                setControlsAutoHide(false);
-                volumePopOverHideTimer.stop();
-                if (!volumePopOver.isShowing()) {
-                    volumePopOver.show(volumeLabel);
-                }
-            } else if (eventType == MouseEvent.MOUSE_EXITED) {
-                setControlsAutoHide(true);
-                volumePopOverHideTimer.start();
-            }
+        volumePopOverLabel = new PlayerPopOverControlLabel(volumeOnIcon, volumePopOverInnerVBox);
+        volumePopOverLabel.setGraphic(volumeOnIcon);
+        volumePopOverLabel.setOnMouseClicked(evt -> {
+            volumePopOverLabel.setGraphic(isMute() ? volumeOnIcon : volumeOffIcon);
+            toggleMute();
         });
         volumeSlider.valueProperty().addListener((ob, oldVal, newVal) -> {
             int volume = newVal.intValue();
@@ -410,18 +385,9 @@ public abstract class BasePlayer<T extends Node> {
             if (isMute()) {
                 // 如果是静音状态，解除静音状态
                 toggleMute();
-                volumeLabel.setGraphic(volumeOnIcon);
+                volumePopOverLabel.setGraphic(volumeOnIcon);
             }
         });
-        volumeLabel.setOnMouseEntered(evt -> {
-            volumePopOverHideTimer.restart();
-            if (!volumePopOver.isShowing()) {
-                volumePopOver.show(volumeLabel);
-            }
-        });
-        settingsLabel = new Label();
-        settingsLabel.getStyleClass().add("player-control-label");
-        settingsLabel.setGraphic(settingsIcon);
         // 倍速设置
         rateSettingTitleLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_SETTINGS_RATE));
         HBox.setMargin(rateSettingTitleLabel, new Insets(0, 10, 0, 0));
@@ -477,43 +443,22 @@ public abstract class BasePlayer<T extends Node> {
         reloadSettingsHBox.setSpacing(15);
         reloadSettingsHBox.setAlignment(Pos.CENTER_LEFT);
         // 设置弹出框
-        settingsPopOver = new PopOver();
-        settingsPopOver.setArrowLocation(PopOver.ArrowLocation.BOTTOM_CENTER);
-        settingsPopOver.getStyleClass().add("player-pop-over");
-        settingsPopOver.setDetachable(false);
-        settingsPopOverHideTimer = new Timer(1000, evt -> settingsPopOver.hide());
+        controlsOnMouseEnteredEventHandler = evt -> setControlsAutoHide(false);
+        controlsOnMouseExitedEventHandler = evt -> setControlsAutoHide(true);
         settingsPopOverInnerVBox = liveMode ?
                 new VBox(reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox) :
                 new VBox(subtitleAndDanMaKuHBox, reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox);
         settingsPopOverInnerVBox.setSpacing(10.0);
-        settingsPopOverInnerVBox.addEventFilter(MouseEvent.ANY, evt -> {
-            EventType<? extends MouseEvent> eventType = evt.getEventType();
-
-            if (eventType == MouseEvent.MOUSE_ENTERED) {
-                setControlsAutoHide(false);
-                settingsPopOverHideTimer.stop();
-                if (!settingsPopOver.isShowing()) {
-                    settingsPopOver.show(settingsLabel);
-                }
-            } else if (eventType == MouseEvent.MOUSE_EXITED) {
-                setControlsAutoHide(true);
-                settingsPopOverHideTimer.start();
-            }
-        });
-        settingsPopOver.setContentNode(settingsPopOverInnerVBox);
-        settingsLabel.setOnMouseEntered(evt -> {
-            settingsPopOverHideTimer.restart();
-            if (!settingsPopOver.isShowing()) {
-                settingsPopOver.show(settingsLabel);
-            }
-        });
+        settingsPopOverInnerVBox.setOnMouseEntered(controlsOnMouseEnteredEventHandler);
+        settingsPopOverInnerVBox.setOnMouseExited(controlsOnMouseExitedEventHandler);
+        settingsPopOverLabel = new PlayerPopOverControlLabel(settingsIcon, settingsPopOverInnerVBox);
         // 铺满、全屏组件
         fullScreenLabel = new Label();
-        fullScreenLabel.getStyleClass().add("player-control-label");
         fullScreenLabel.setGraphic(fullScreenIcon);
         fullScreenLabel.setOnMouseClicked(evt -> toggleFullScreen());
         rightToolBarHbox = new HBox(fullScreenLabel);
-        rightToolBarHbox.setSpacing(20);
+        rightToolBarHbox.setSpacing(25);
+        rightToolBarHbox.setAlignment(Pos.CENTER);
         if (liveMode) {
             // 直播模式，不用显示进度条相关组件
             videoProgressBar = null;
@@ -529,7 +474,7 @@ public abstract class BasePlayer<T extends Node> {
                     )
             );
             leftToolBarHbox = new HBox(
-                    pauseLabel, stepBackwardLabel, stepForwardLabel, volumeLabel, settingsLabel, liveChannelLinesWithPaginator
+                    pauseLabel, stepBackwardLabel, stepForwardLabel, volumePopOverLabel, settingsPopOverLabel, liveChannelLinesWithPaginator
             );
             controlBottomAnchorPane = new AnchorPane(leftToolBarHbox, rightToolBarHbox);
         } else {
@@ -592,26 +537,26 @@ public abstract class BasePlayer<T extends Node> {
             videoProgressBar.disableProperty().bind(isLoading.and(isError.not()));
             videoProgressSplitLabel = new Label("/");
             videoProgressSplitLabel.getStyleClass().add("player-progress-label");
-            videoProgressLengthLabel = new Label("-:-:-");
+            videoProgressLengthLabel = new Label("00:00:00");
             videoProgressLengthLabel.getStyleClass().add("player-progress-label");
             progressLabelHBox = new HBox(videoProgressLabel, videoProgressSplitLabel, videoProgressLengthLabel);
             progressLabelHBox.setSpacing(5);
             progressLabelHBox.setAlignment(Pos.CENTER);
-            leftToolBarHbox = new HBox(pauseLabel, stepForwardLabel, volumeLabel, settingsLabel, progressLabelHBox);
+            leftToolBarHbox = new HBox(pauseLabel, stepForwardLabel, volumePopOverLabel, settingsPopOverLabel, progressLabelHBox);
             controlBottomAnchorPane = new AnchorPane(leftToolBarHbox, videoProgressBar, rightToolBarHbox);
-            AnchorPane.setLeftAnchor(videoProgressBar, 490.0);
+            AnchorPane.setLeftAnchor(videoProgressBar, 460.0);
             AnchorPane.setRightAnchor(videoProgressBar, 70.0);
             AnchorPane.setTopAnchor(videoProgressBar, 10.0);
             AnchorPane.setBottomAnchor(videoProgressBar, 10.0);
         }
-        leftToolBarHbox.setSpacing(20);
+        leftToolBarHbox.setSpacing(25);
         leftToolBarHbox.setAlignment(Pos.CENTER);
         controlBottomAnchorPane.getStyleClass().add("player-anchor-pane");
         controlBottomAnchorPane.setOnMouseClicked(Event::consume);
         AnchorPane.setLeftAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setTopAnchor(leftToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(leftToolBarHbox, 10.0);
-        AnchorPane.setRightAnchor(rightToolBarHbox, 10.0);
+        AnchorPane.setRightAnchor(rightToolBarHbox, 20.0);
         AnchorPane.setTopAnchor(rightToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(rightToolBarHbox, 10.0);
         // 顶端标题
@@ -704,12 +649,12 @@ public abstract class BasePlayer<T extends Node> {
         if (externalMode) {
             // 使用外部播放器，隐藏用不上的控件
             progressMiddleStackPane.setVisible(false);
-            settingsLabel.setVisible(false);
-            settingsLabel.setManaged(false);
+            settingsPopOverLabel.setVisible(false);
+            settingsPopOverLabel.setManaged(false);
             pauseLabel.setVisible(false);
             pauseLabel.setManaged(false);
-            volumeLabel.setVisible(false);
-            volumeLabel.setManaged(false);
+            volumePopOverLabel.setVisible(false);
+            volumePopOverLabel.setManaged(false);
             fullScreenLabel.setVisible(false);
             fullScreenLabel.setManaged(false);
             if (!liveMode) {
@@ -739,8 +684,14 @@ public abstract class BasePlayer<T extends Node> {
         }
         // 鼠标移动事件处理
         parent.addEventHandler(MouseEvent.MOUSE_MOVED, evt -> setControlsVisible(true));
+        controlPane.addEventFilter(MouseEvent.MOUSE_MOVED, Event::consume);
+        controlTopAnchorPane.addEventFilter(MouseEvent.MOUSE_ENTERED, controlsOnMouseEnteredEventHandler);
+        controlTopAnchorPane.addEventFilter(MouseEvent.MOUSE_EXITED, controlsOnMouseExitedEventHandler);
+        controlBottomAnchorPane.addEventFilter(MouseEvent.MOUSE_ENTERED, controlsOnMouseEnteredEventHandler);
+        controlBottomAnchorPane.addEventFilter(MouseEvent.MOUSE_EXITED, controlsOnMouseExitedEventHandler);
         parentChildren.add(0, playerPane);
         parent.requestFocus();
+        setControlsAutoHide(true);
         setLoading(true);
     }
 
@@ -844,7 +795,6 @@ public abstract class BasePlayer<T extends Node> {
     private void setOtherNodesVisibleWhenFullScreen(boolean visible) {
         parent.getChildren().forEach(p -> {
             if (p != playerPane) {
-                log.info("{} - set {}", p, visible);
                 p.setVisible(visible);
             }
         });
@@ -919,7 +869,9 @@ public abstract class BasePlayer<T extends Node> {
             return;
         }
         videoLength.set(newLength);
-        videoProgressLengthLabel.setText(formatProgressText(newLength));
+        if (!config.getExternalMode()) {
+            videoProgressLengthLabel.setText(formatProgressText(newLength));
+        }
     }
 
     protected void postMovedPosition() {}
@@ -929,7 +881,7 @@ public abstract class BasePlayer<T extends Node> {
     }
 
     protected void postMuted() {
-        volumeLabel.setGraphic(volumeOnIcon);
+        volumePopOverLabel.setGraphic(volumeOnIcon);
     }
 
     private String formatProgressText(long totalMilliseconds) {
@@ -1226,6 +1178,12 @@ public abstract class BasePlayer<T extends Node> {
     public long getCurrentProgress() { return 0; }
 
     /**
+     * 获取当前影片时长（允许阻塞）
+     * @return 当前影片时长
+     */
+    public long getCurrentDuration() { return Math.max(videoLength.get(), 0); }
+
+    /**
      * 停止播放
      */
     public void stop() {}
@@ -1241,8 +1199,8 @@ public abstract class BasePlayer<T extends Node> {
         }
         destroyFlag = true;
         controlPaneHideTimer.stop();
-        volumePopOverHideTimer.stop();
-        settingsPopOverHideTimer.stop();
+        settingsPopOverLabel.destroy();
+        volumePopOverLabel.destroy();
         Platform.runLater(() -> {
             if (epgStage != null && epgStage.isShowing()) {
                 epgStage.hide();

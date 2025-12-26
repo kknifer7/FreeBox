@@ -1,7 +1,10 @@
 package io.knifer.freebox.model.common.tvbox;
 
+import lombok.Data;
+
 import java.util.ArrayList;
 
+@Data
 public class SourceBean {
     private String key;
     private String name;
@@ -17,99 +20,7 @@ public class SourceBean {
     private int playerType; // 0 system 1 ikj 2 exo 10 mxplayer -1 以参数设置页面的为准
     private String clickSelector; // 需要点击播放的嗅探站点selector   ddrk.me;#id
 
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getApi() {
-        return api;
-    }
-
-    public void setApi(String api) {
-        this.api = api;
-    }
-
-    public void setPlayerUrl(String playerUrl) {
-        this.playerUrl = playerUrl;
-    }
-
-    public String getPlayerUrl() {
-        return playerUrl;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
     public boolean isSearchable() {
-        return searchable != 0;
+        return searchable == 1;
     }
-
-    public void setSearchable(int searchable) {
-        this.searchable = searchable;
-    }
-
-    public boolean isQuickSearch() {
-        return quickSearch != 0;
-    }
-
-    public void setQuickSearch(int quickSearch) {
-        this.quickSearch = quickSearch;
-    }
-
-    public int getFilterable() {
-        return filterable;
-    }
-
-    public void setFilterable(int filterable) {
-        this.filterable = filterable;
-    }
-
-    public String getExt() {
-        return ext;
-    }
-
-    public void setExt(String ext) {
-        this.ext = ext;
-    }
-
-    public ArrayList<String> getCategories() {
-        return categories;
-    }
-
-    public void setCategories(ArrayList<String> categories) {
-        this.categories = categories;
-    }
-
-    public String getJar() {
-        return jar;
-    }
-
-    public void setJar(String jar) {
-        this.jar = jar;
-    }
-
-    public int getPlayerType() { return playerType; }
-
-    public void setPlayerType(int playerType) { this.playerType = playerType; }
-
-    public String getClickSelector() { return clickSelector; }
-
-    public void setClickSelector(String clickSelector) { this.clickSelector = clickSelector; }
 }

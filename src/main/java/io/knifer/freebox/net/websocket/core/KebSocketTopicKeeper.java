@@ -3,6 +3,7 @@ package io.knifer.freebox.net.websocket.core;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.BaseValues;
+import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.model.common.tvbox.Message;
 import io.knifer.freebox.util.json.GsonUtil;
@@ -39,6 +40,22 @@ public class KebSocketTopicKeeper {
             }
     );
 
+    private final ThreadPoolExecutor SEARCH_EXECUTOR = new ThreadPoolExecutor(
+            3,
+            3,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(),
+            r -> {
+                Thread t = new Thread(r);
+
+                t.setName("KebSocket-Search-Thread");
+                t.setUncaughtExceptionHandler(GlobalExceptionHandler.getInstance());
+
+                return t;
+            }
+    );
+
     private final static KebSocketTopicKeeper INSTANCE = new KebSocketTopicKeeper();
 
     private KebSocketTopicKeeper() {}
@@ -51,7 +68,7 @@ public class KebSocketTopicKeeper {
         DATA_MAP.put(message.getTopicId(), message);
     }
 
-    public <T> Future<T> getTopic(String topicId, TypeToken<T> typeToken) {
+    public <T> Future<T> getTopic(String topicId, TypeToken<T> typeToken, Integer code) {
         return CompletableFuture.supplyAsync(() -> {
             Message<JsonElement> message;
             JsonElement jsonData;
@@ -72,12 +89,13 @@ public class KebSocketTopicKeeper {
             }
 
             return null;
-        }, EXECUTOR);
+        }, code == MessageCodes.GET_SEARCH_CONTENT ? SEARCH_EXECUTOR : EXECUTOR);
     }
 
     public void destroy() {
         log.info("destroy KebSocketTopicKeeper......");
         DATA_MAP.clear();
         EXECUTOR.shutdownNow();
+        SEARCH_EXECUTOR.shutdownNow();
     }
 }

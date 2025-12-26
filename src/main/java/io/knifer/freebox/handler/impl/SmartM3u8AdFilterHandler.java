@@ -10,6 +10,8 @@ import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.M3u8AdFilterHandler;
 import io.knifer.freebox.model.domain.M3u8AdFilterResult;
 import io.knifer.freebox.util.HttpUtil;
+import io.knifer.freebox.util.UrlUtil;
+import io.knifer.freebox.util.hls.HLSUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -97,15 +99,22 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
             String url, String content, Map<String, Object> extraData
     ) {
         List<String> lines;
+        M3u8AdFilterResult result;
 
         init(extraData);
         lines = List.of(content.split("\n"));
-        if (isMasterPlaylist(lines)) {
+        if (HLSUtil.isMasterPlaylist(lines)) {
             log.info("start process master play list");
-            return processMasterPlaylist(url, content);
+            result = processMasterPlaylist(url, lines);
+            if (result.getAdLineCount() == 0) {
+                result.setContent(content);
+            }
+
+            return result;
         } else {
             log.info("start process media play list");
-            return processSinglePlayList(url, content);
+
+            return processSinglePlayList(url, lines);
         }
     }
 
@@ -124,10 +133,9 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
     /**
      * 处理主播放列表并返回合并后的内容
      */
-    private M3u8AdFilterResult processMasterPlaylist(String masterUrl, String masterContent) {
-        List<String> lines = List.of(masterContent.split(StrPool.LF));
-        String baseUrl = getBaseUrl(masterUrl);
-        List<String> subPlaylistUrls = extractSubPlaylistUrls(lines, baseUrl);
+    private M3u8AdFilterResult processMasterPlaylist(String masterUrl, List<String> lines) {
+        String baseUrl = UrlUtil.getParent(masterUrl);
+        List<String> subPlaylistUrls = HLSUtil.getSubPlaylistUrls(lines, baseUrl);
         List<String> filteredSubPlaylistContents = new ArrayList<>(subPlaylistUrls.size());
         String subPlaylistContent;
         Pair<Integer, List<String>> adLineCountAndLinesFiltered;
@@ -137,7 +145,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
         for (String subPlaylistUrl : subPlaylistUrls) {
             log.info("process subPlaylist, subPlaylistUrl={}", subPlaylistUrl);
             try {
-                subPlaylistFullUrl = resolveRelativeUrl(subPlaylistUrl, baseUrl);
+                subPlaylistFullUrl = UrlUtil.resolveRelative(subPlaylistUrl, baseUrl);
                 subPlaylistContent = HttpUtil.getAsync(
                         subPlaylistFullUrl, HttpHeaders.USER_AGENT, BaseValues.USER_AGENT
                 ).get(downloadTimeout, TimeUnit.SECONDS);
@@ -146,7 +154,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
                     continue;
                 }
                 adLineCountAndLinesFiltered =
-                        doFilter(StrUtil.split(subPlaylistContent, StrPool.LF), getBaseUrl(subPlaylistFullUrl));
+                        doFilter(StrUtil.split(subPlaylistContent, StrPool.LF), UrlUtil.getParent(subPlaylistFullUrl));
                 adLineCount += adLineCountAndLinesFiltered.getLeft();
                 filteredSubPlaylistContents.add(StringUtils.join(adLineCountAndLinesFiltered.getRight(), StrPool.LF));
             } catch (Exception e) {
@@ -155,16 +163,15 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
         }
 
         return filteredSubPlaylistContents.isEmpty() ?
-                M3u8AdFilterResult.of(0, masterContent) :
+                M3u8AdFilterResult.of(0, null) :
                 M3u8AdFilterResult.of(adLineCount, mergeSubPlaylists(filteredSubPlaylistContents));
     }
 
     /**
      * 处理媒体播放列表
      */
-    private M3u8AdFilterResult processSinglePlayList(String mediaPlaylistUrl, String content) {
-        List<String> lines = List.of(content.split(StrPool.LF));
-        Pair<Integer, List<String>> adLineCountAndLinesFiltered = doFilter(lines, getBaseUrl(mediaPlaylistUrl));
+    private M3u8AdFilterResult processSinglePlayList(String mediaPlaylistUrl, List<String> lines) {
+        Pair<Integer, List<String>> adLineCountAndLinesFiltered = doFilter(lines, UrlUtil.getParent(mediaPlaylistUrl));
 
         return M3u8AdFilterResult.of(
                 adLineCountAndLinesFiltered.getLeft(),
@@ -197,7 +204,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
             for (String line : lines) {
                 // 跳过子播放列表的头部信息（除了第一个播放列表）
                 if (inHeader) {
-                    if (line.startsWith("#EXTINF:") || (!line.startsWith("#") && line.contains(".ts"))) {
+                    if (line.startsWith("#EXTINF:") || (!line.startsWith("#") && (line.contains(".ts") || line.contains(".png")))) {
                         inHeader = false;
                     } else {
                         // 第一个播放列表保留部分关键头部信息
@@ -246,36 +253,6 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
             }
         }
         return maxTargetDuration;
-    }
-
-    /**
-     * 判断是否是主播放列表
-     */
-    private boolean isMasterPlaylist(List<String> lines) {
-        return lines.stream().anyMatch(line -> line.startsWith("#EXT-X-STREAM-INF:"));
-    }
-
-    /**
-     * 从主播放列表中提取子m3u8URL
-     */
-    private List<String> extractSubPlaylistUrls(List<String> lines, String baseUrl) {
-        List<String> urls = new ArrayList<>();
-        String line;
-        String urlLine;
-        String fullUrl;
-
-        for (int i = 0; i < lines.size(); i++) {
-            line = lines.get(i);
-            if (line.startsWith("#EXT-X-STREAM-INF:") && i + 1 < lines.size()) {
-                urlLine = lines.get(i + 1);
-                if (!urlLine.startsWith("#")) {
-                    fullUrl = resolveRelativeUrl(urlLine, baseUrl);
-                    urls.add(fullUrl);
-                }
-            }
-        }
-
-        return urls;
     }
 
     /**
@@ -339,7 +316,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
                     0,
                     lines.stream()
                             .map(l -> StringUtils.isNotBlank(l) && StringUtils.startsWith(l, "#") ?
-                                    l : resolveRelativeUrl(l, baseUrl)
+                                    l : UrlUtil.resolveRelative(l, baseUrl)
                             )
                             .toList()
             );
@@ -402,7 +379,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
 
         for (int i = startLineIdx; i < endLineIdx; i++) {
             line = lines.get(i);
-            if (StringUtils.isEmpty(line) || line.startsWith("#") || !line.endsWith(".ts")) {
+            if (StringUtils.isEmpty(line) || line.startsWith("#") || !line.endsWith(".ts") || !line.endsWith(".png")) {
                 continue;
             }
             totalTsCount++;
@@ -504,11 +481,11 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
 
         for (int i = startLineIdx; i < endLineIdx; i++) {
             line = lines.get(i);
-            if (StringUtils.isEmpty(line) || line.startsWith("#") || !line.endsWith(".ts")) {
+            if (StringUtils.isEmpty(line) || line.startsWith("#")) {
                 continue;
             }
-            tsNameLen = line.indexOf(".ts");
-            if (tsNameLen == 0) {
+            tsNameLen = Math.max(line.indexOf(".ts"), line.indexOf(".png"));
+            if (tsNameLen < 1) {
                 continue;
             }
             totalTsCount++;
@@ -619,7 +596,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
             if (StringUtils.isBlank(line)) {
                 continue;
             }
-            if (line.startsWith("#") || !line.endsWith(".ts")) {
+            if (line.startsWith("#") || !line.endsWith(".ts") || !line.endsWith(".png")) {
                 result.add(line);
                 continue;
             }
@@ -629,7 +606,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
                     Long.valueOf(benchmarkTsDigitName + stepVal).equals(tsDigitName)
             ) {
                 benchmarkTsDigitName = tsDigitName;
-                line = resolveRelativeUrl(line, baseUrl);
+                line = UrlUtil.resolveRelative(line, baseUrl);
                 result.add(line);
             } else {
                 log.info("digit, filter line {}:\n{}", i + 1, line);
@@ -665,7 +642,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
 
         for (int i = startIdx; i < lineSize; i++) {
             line = lines.get(i);
-            if (StringUtils.isBlank(line) || line.startsWith("#") || !line.endsWith(".ts")) {
+            if (StringUtils.isBlank(line) || line.startsWith("#") || !line.endsWith(".ts") || !line.endsWith(".png")) {
                 continue;
             }
             result = extractNumberBeforeTs(line);
@@ -697,12 +674,12 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
             if (StringUtils.isBlank(line)) {
                 continue;
             }
-            if (line.startsWith("#") || !line.endsWith(".ts")) {
+            if (line.startsWith("#") || !line.endsWith(".ts") || !line.endsWith(".png")) {
                 result.add(line);
                 continue;
             }
-            tsNameLen = line.indexOf(".ts");
-            if (tsNameLen == 0) {
+            tsNameLen = Math.max(line.indexOf(".ts"), line.indexOf(".png"));
+            if (tsNameLen < 1) {
                 continue;
             }
             if (tsNameLen != benchmarkTsNameLen) {
@@ -710,7 +687,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
                 adLineCount = adLineCount + 1 + filterBackwardLinesForTs(result, i + 1);
                 continue;
             }
-            line = resolveRelativeUrl(line, baseUrl);
+            line = UrlUtil.resolveRelative(line, baseUrl);
             result.add(line);
         }
 
@@ -832,8 +809,8 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
                 adLineCount++;
             } else {
                 for (String l : segment.getLines()) {
-                    if (!l.startsWith("#") && l.contains(".ts")) {
-                        l = resolveRelativeUrl(l, baseUrl);
+                    if (!l.startsWith("#") && (l.contains(".ts") || l.contains(".png"))) {
+                        l = UrlUtil.resolveRelative(l, baseUrl);
                     }
                     result.add(l);
                 }
@@ -848,30 +825,6 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
      */
     private boolean isAdSegment(Segment segment, int threshold) {
         return !segment.isFirstSegment() && segment.getTsCount() < threshold;
-    }
-
-    /**
-     * 获取基础路径
-     */
-    private String getBaseUrl(String url) {
-        int lastSlash = url.lastIndexOf(StrPool.SLASH);
-
-        if (lastSlash != -1) {
-            return url.substring(0, lastSlash + 1);
-        }
-
-        return StringUtils.EMPTY;
-    }
-
-    /**
-     * 解析相对URL为绝对URL
-     */
-    private String resolveRelativeUrl(String relativeUrl, String baseUrl) {
-        if (StringUtils.isBlank(baseUrl) || relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://")) {
-            return relativeUrl;
-        }
-
-        return baseUrl + relativeUrl;
     }
 
     /**
@@ -898,7 +851,7 @@ public class SmartM3u8AdFilterHandler implements M3u8AdFilterHandler {
         private int countTsFiles(List<String> lines) {
             int count = 0;
             for (String line : lines) {
-                if (!line.startsWith("#") && line.contains(".ts")) {
+                if (!line.startsWith("#") && (line.contains(".ts") || line.contains(".png"))) {
                     count++;
                 }
             }

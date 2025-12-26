@@ -30,5 +30,5 @@ public interface KebSocketMessageHandler<T> {
      * @param message 消息
      * @param connection 客户端连接对象
      */
-    void handle(Message<T> message, WebSocket connection);
+    void handle(Message<T> message, WebSocket connection) throws Exception;
 }

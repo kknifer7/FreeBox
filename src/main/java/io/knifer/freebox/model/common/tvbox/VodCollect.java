@@ -1,6 +1,10 @@
 package io.knifer.freebox.model.common.tvbox;
 
+import io.knifer.freebox.model.common.catvod.Keep;
+import io.knifer.freebox.model.s2c.SaveMovieCollectionDTO;
 import lombok.Data;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 
@@ -18,14 +22,28 @@ public class VodCollect implements Serializable {
     public String name;
     public String pic;
 
-    public static VodCollect from(VodInfo vodInfo) {
+    public static VodCollect from(SaveMovieCollectionDTO dto) {
         VodCollect vodCollect = new VodCollect();
 
-        vodCollect.vodId = vodInfo.id;
+        vodCollect.vodId = dto.getVodId();
         vodCollect.updateTime = System.currentTimeMillis();
-        vodCollect.sourceKey = vodInfo.sourceKey;
-        vodCollect.name = vodInfo.name;
-        vodCollect.pic = vodInfo.pic;
+        vodCollect.sourceKey = dto.getSourceKey();
+        vodCollect.name = dto.getVodName();
+        vodCollect.pic = dto.getVodPic();
+
+        return vodCollect;
+    }
+
+    public static VodCollect from(Keep keep) {
+        VodCollect vodCollect = new VodCollect();
+        String key = keep.getKey();
+        String[] keySplit = StringUtils.split(key, "@@@");
+
+        vodCollect.vodId = ArrayUtils.get(keySplit, 1);
+        vodCollect.updateTime = keep.getCreateTime();
+        vodCollect.sourceKey = ArrayUtils.get(keySplit, 0);
+        vodCollect.name = keep.getVodName();
+        vodCollect.pic = keep.getVodPic();
 
         return vodCollect;
     }

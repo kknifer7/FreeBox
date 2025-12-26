@@ -1,21 +1,23 @@
 package io.knifer.freebox.spider.template.impl;
 
-import cn.hutool.core.net.Ipv4Util;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.constant.MessageCodes;
+import io.knifer.freebox.model.c2s.FreeBoxLive;
+import io.knifer.freebox.model.common.catvod.History;
+import io.knifer.freebox.model.common.catvod.Keep;
+import io.knifer.freebox.model.common.catvod.Result;
 import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.ClientInfo;
-import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.s2c.*;
+import io.knifer.freebox.net.websocket.converter.CatVodBeanConverter;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.core.KebSocketRunner;
-import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.service.FutureWaitingService;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CastUtil;
+import io.knifer.freebox.util.CollectionUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RegExUtils;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -38,9 +40,12 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
     private final Set<Class<? extends Throwable>> ignoringToastThrowableClassesInMovieSearching =
             Set.of(TimeoutException.class);
 
+    private final CatVodBeanConverter beanConverter;
+
     public KebSocketSpiderTemplate(KebSocketRunner runner, ClientManager clientManager) {
         this.runner = runner;
         this.clientManager = clientManager;
+        this.beanConverter = CatVodBeanConverter.getInstance();
     }
 
     @Override
@@ -58,8 +63,10 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         execute(
                 MessageCodes.GET_HOME_CONTENT,
                 sourceBean,
-                new TypeToken<AbsSortXml>(){},
-                msg -> callback.accept(CastUtil.cast(msg))
+                new TypeToken<Result>(){},
+                msg -> callback.accept(
+                        msg == null ? null : beanConverter.resultToAbsSortXml(msg, sourceBean.getKey())
+                )
         );
     }
 
@@ -68,8 +75,10 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         execute(
                 MessageCodes.GET_CATEGORY_CONTENT,
                 dto,
-                new TypeToken<AbsXml>(){},
-                msg -> callback.accept(CastUtil.cast(msg))
+                new TypeToken<Result>(){},
+                msg -> callback.accept(
+                        msg == null ? null : beanConverter.resultToAbsXml(msg, dto.getSourceKey())
+                )
         );
     }
 
@@ -78,8 +87,10 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         execute(
                 MessageCodes.GET_DETAIL_CONTENT,
                 dto,
-                new TypeToken<AbsXml>(){},
-                msg -> callback.accept(CastUtil.cast(msg))
+                new TypeToken<Result>(){},
+                msg -> callback.accept(
+                        msg == null ? null : beanConverter.resultToAbsXml(msg, dto.getSourceKey())
+                )
         );
     }
 
@@ -90,31 +101,18 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
                 dto,
                 new TypeToken<JsonObject>(){},
                 msg -> {
-                    JsonElement jsonElem;
-                    JsonObject jsonObject;
-                    String url;
                     ClientInfo clientInfo;
 
-                    if (msg != null && msg.has("nameValuePairs")) {
-                        jsonElem = msg.getAsJsonObject("nameValuePairs");
-                        if (jsonElem.isJsonObject()) {
-                            jsonObject = jsonElem.getAsJsonObject();
-                            if (jsonObject.has("url")) {
-                                clientInfo = clientManager.getCurrentClientImmediately();
-                                if (clientInfo == null) {
-                                    throw new AssertionError();
-                                }
-                                url = jsonObject.get("url").getAsString();
-                                url = RegExUtils.replaceAll(
-                                        url,
-                                        Ipv4Util.LOCAL_IP,
-                                        clientInfo.getConnection().getRemoteSocketAddress().getHostName()
-                                );
-                                jsonObject.addProperty("url", url);
-                            }
-                        }
+                    if (msg == null) {
+                        callback.accept(null);
+
+                        return;
                     }
-                    callback.accept(CastUtil.cast(msg));
+                    clientInfo = clientManager.getCurrentClientImmediately();
+                    if (clientInfo == null) {
+                        throw new AssertionError();
+                    }
+                    callback.accept(beanConverter.catVodPlayContentToTVBoxPlayContent(msg, clientInfo));
                 }
         );
     }
@@ -124,8 +122,10 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         execute(
                 MessageCodes.GET_PLAY_HISTORY,
                 dto,
-                new TypeToken<List<VodInfo>>(){},
-                msg -> callback.accept(CastUtil.cast(msg))
+                new TypeToken<List<History>>(){},
+                msg -> callback.accept(
+                        CollectionUtil.isEmpty(msg) ? List.of() : msg.stream().map(VodInfo::from).toList()
+                )
         );
     }
 
@@ -134,8 +134,8 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         execute(
                 MessageCodes.GET_ONE_PLAY_HISTORY,
                 dto,
-                new TypeToken<VodInfo>(){},
-                msg -> callback.accept(CastUtil.cast(msg))
+                new TypeToken<History>(){},
+                msg -> callback.accept(msg == null ? null : VodInfo.from(msg))
         );
     }
 
@@ -144,8 +144,10 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         execute(
                 MessageCodes.GET_SEARCH_CONTENT,
                 dto,
-                new TypeToken<AbsXml>(){},
-                msg -> callback.accept(CastUtil.cast(msg)),
+                new TypeToken<Result>(){},
+                msg -> callback.accept(
+                        msg == null ? null : beanConverter.resultToAbsXml(msg, dto.getSourceKey())
+                ),
                 ignoringToastThrowableClassesInMovieSearching
         );
     }
@@ -215,8 +217,10 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
         execute(
                 MessageCodes.GET_MOVIE_COLLECTION,
                 null,
-                new TypeToken<List<VodCollect>>(){},
-                msg -> callback.accept(CastUtil.cast(msg))
+                new TypeToken<List<Keep>>(){},
+                msg -> callback.accept(
+                        CollectionUtil.isEmpty(msg) ? List.of() : msg.stream().map(VodCollect::from).toList()
+                )
         );
     }
 

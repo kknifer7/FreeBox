@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import io.knifer.freebox.component.converter.SourceBean2StringConverter?>
 <?import io.knifer.freebox.component.factory.ClassListCellFactory?>
+<?import io.knifer.freebox.component.factory.SourceBeanListCellFactory?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import org.controlsfx.control.GridView?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
-<BorderPane fx:id="root" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/tv-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.TVController">
+<?import org.kordamp.ikonli.javafx.*?>
+<BorderPane fx:id="root" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/tv-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.TVController">
    <fx:define>
-      <SourceBean2StringConverter fx:id="sourceBean2StringConverter" />
+      <SourceBeanListCellFactory fx:id="sourceBeanListCellFactory" />
       <ClassListCellFactory fx:id="classListCellFactory" />
    </fx:define>
 
    <left>
       <BorderPane BorderPane.alignment="CENTER">
          <top>
-            <HBox BorderPane.alignment="CENTER">
+            <HBox styleClass="left-top-tool-box" BorderPane.alignment="CENTER">
                <children>
-                  <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" converter="$sourceBean2StringConverter" prefWidth="150.0" />
+                  <ComboBox fx:id="sourceBeanComboBox" onAction="#onSourceBeanComboBoxAction" cellFactory="$sourceBeanListCellFactory" prefWidth="150.0" />
                   <Button fx:id="sourceBeanBlockButton" focusTraversable="false" mnemonicParsing="false" onAction="#onSourceBeanBlockButtonAction">
                      <graphic>
                         <FontIcon iconLiteral="fa-filter:16:brown" />

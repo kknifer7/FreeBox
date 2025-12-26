@@ -41,7 +41,7 @@ public class ClientInfo implements Savable {
      */
     public String getName() {
         if (connection != null) {
-            return connection.getRemoteSocketAddress().getHostName();
+            return connection.getRemoteSocketAddress().getHostString();
         }
 
         return clientName;

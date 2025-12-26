@@ -40,11 +40,6 @@
     -fx-background-color: rgba(0,0,0,0.5);
 }
 
-.player-control-label {
-    -fx-pref-width: 40px;
-    -fx-pref-height: 40px;
-}
-
 .player-progress-label {
     -fx-text-fill: white;
     -fx-font-size: 24px;

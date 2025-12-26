@@ -55,7 +55,7 @@ ext {
             gson: '2.11.0',
             guava: '33.2.1-jre',
             lang3: '3.16.0',
-            javaWebSocket: '1.5.7',
+            javaWebSocket: '1.6.0',
             slf4jSimple: '2.1.0-alpha1',
             blockingMap: '0.91',
             vlcjJavaFX: '1.2.0',
@@ -69,6 +69,7 @@ ext {
             json: '20250517',
             zxingCore: '3.5.3',
             twelvemonkeys: '3.12.0',
+            emojiJava: '5.1.1',
             mpv: '0.1.3',
             lombok: '1.18.34',
             junit: '5.9.2'
@@ -97,6 +98,7 @@ dependencies {
     implementation "com.google.zxing:core:${dv.zxingCore}"
     implementation "com.twelvemonkeys.imageio:imageio-webp:${dv.twelvemonkeys}"
     implementation "com.twelvemonkeys.imageio:imageio-jpeg:${dv.twelvemonkeys}"
+    implementation "com.vdurmont:emoji-java:${dv.emojiJava}"
     implementation("io.github.kknifer7:mpv:${dv.mpv}") {
         // vlcj依赖中已包含模块化的高版本jna，所以这里排除
         exclude group: 'net.java.dev.jna'
@@ -148,6 +150,8 @@ extraJavaModuleInfo {
     automaticModule('cn.wanghaomiao:JsoupXpath', 'jsoupXpath')
     // mpv
     automaticModule('io.github.kknifer7:mpv', 'mpv')
+    // emoji-java
+    automaticModule('com.vdurmont:emoji-java', 'emojiJava')
 }
 
 test {
@@ -178,7 +182,9 @@ run {
     jvmArgs = [
             '--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls',
             '--add-opens=org.controlsfx.controls/org.controlsfx.control=io.knifer.freebox',
-            '--add-opens=javafx.graphics/javafx.scene=org.controlsfx.controls'
+            '--add-opens=javafx.graphics/javafx.scene=org.controlsfx.controls',
+            '--add-opens=javafx.graphics/javafx.scene.text=cn.hutool',
+            '--add-opens=javafx.graphics/javafx.scene.text=io.knifer.merged.module'
     ]
 }
 
@@ -203,6 +209,7 @@ jlink {
         requires 'jdk.httpserver'
         requires 'jdk.crypto.ec'
         requires 'org.slf4j'
+        requires 'org.json'
         requires 'com.google.gson'
         requires 'ipcsocket'
         uses 'cn.hutool.core.convert.Converter'

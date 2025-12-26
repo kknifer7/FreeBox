@@ -41,7 +41,7 @@ public class KebSocketRunner {
 
         send(connection, topic);
 
-        return topicKeeper.getTopic(topic.getTopicId(), resultData);
+        return topicKeeper.getTopic(topic.getTopicId(), resultData, code);
     }
 
     public <T, R> Future<R> sendTopic(WebSocket connection, Integer code, T data, String topicId, TypeToken<R> resultData) {
@@ -49,7 +49,7 @@ public class KebSocketRunner {
 
         send(connection, topic);
 
-        return topicKeeper.getTopic(topic.getTopicId(), resultData);
+        return topicKeeper.getTopic(topic.getTopicId(), resultData, code);
     }
 
     public <T> void send(WebSocket connection, Message<T> message) {

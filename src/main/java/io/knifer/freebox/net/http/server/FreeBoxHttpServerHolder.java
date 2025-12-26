@@ -30,10 +30,11 @@ public class FreeBoxHttpServerHolder {
 
     private static final List<HttpHandler> HANDLERS = List.of(
             new TVBoxPairingInfoHandler(),
+            new MsgHandler(),
             new ProxyCkHandler(),
             new ProxyHandler(),
-            new MsgHandler(),
-            new ProxyCacheHandler()
+            new ProxyCacheHandler(),
+            new ProxyTsHandler()
     );
 
     public synchronized boolean start(String hostname, int port) {

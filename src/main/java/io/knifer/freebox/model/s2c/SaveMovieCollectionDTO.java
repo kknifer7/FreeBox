@@ -11,14 +11,29 @@ import lombok.Data;
 public class SaveMovieCollectionDTO {
 
     /**
-     * 影片信息
+     * 影片ID
      */
-    private VodInfo vodInfo;
+    private String vodId;
+    /**
+     * 站点key
+     */
+    private String sourceKey;
+    /**
+     * 影片名称
+     */
+    private String vodName;
+    /**
+     * 影片海报
+     */
+    private String vodPic;
 
     public static SaveMovieCollectionDTO of(VodInfo vodInfo) {
         SaveMovieCollectionDTO result = new SaveMovieCollectionDTO();
 
-        result.setVodInfo(vodInfo);
+        result.setVodId(vodInfo.getId());
+        result.setSourceKey(vodInfo.getSourceKey());
+        result.setVodName(vodInfo.getName());
+        result.setVodPic(vodInfo.getPic());
 
         return result;
     }

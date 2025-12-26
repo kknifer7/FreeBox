@@ -102,10 +102,12 @@ public enum Context {
         this.primaryStage = primaryStage;
         registerEventListener(AppEvents.WsServerStartedEvent.class, evt -> {
             // 初始化websocket模板
-            spiderTemplateMap = Map.of(
-                    ClientType.TVBOX_K, new KebSocketSpiderTemplate(KebSocketRunner.getInstance(), clientManager),
-                    ClientType.CATVOD_SPIDER, new FreeBoxSpiderTemplate(clientManager)
-            );
+            if (spiderTemplateMap == null) {
+                spiderTemplateMap = Map.of(
+                        ClientType.TVBOX_K, new KebSocketSpiderTemplate(KebSocketRunner.getInstance(), clientManager),
+                        ClientType.CATVOD_SPIDER, new FreeBoxSpiderTemplate(clientManager)
+                );
+            }
         });
         // 配置读取
         loadConfigService.setOnSucceeded(evt -> {

@@ -1,5 +1,6 @@
 package io.knifer.freebox.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
@@ -11,6 +12,8 @@ import io.knifer.freebox.constant.CacheKeys;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.handler.M3u8AdFilterHandler;
+import io.knifer.freebox.handler.M3u8TsProxyHandler;
+import io.knifer.freebox.handler.impl.BadM3u8TsProxyHandler;
 import io.knifer.freebox.handler.impl.SmartM3u8AdFilterHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.TVPlayBO;
@@ -56,10 +59,7 @@ import javax.annotation.Nullable;
 import java.net.URLDecoder;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -95,6 +95,7 @@ public class VideoController extends BaseController implements Destroyable {
     private Consumer<VideoPlayInfoBO> onClose;
 
     private M3u8AdFilterHandler m3u8AdFilterHandler;
+    private M3u8TsProxyHandler m3u8TsProxyHandler;
 
     private Button selectedEpBtn = null;
     private Movie.Video playingVideo;
@@ -102,9 +103,17 @@ public class VideoController extends BaseController implements Destroyable {
     private Movie.Video.UrlBean.UrlInfo.InfoBean playingInfoBean;
     public final BooleanProperty operationLoading = new SimpleBooleanProperty(true);
 
+    private static final Set<String> HTTP_HEADERS_PROXY_EXCLUDE = Set.of(
+            "content-length",
+            "Content-Length",
+            "transfer-encoding",
+            "Transfer-Encoding"
+    );
+
     @FXML
     private void initialize() {
         m3u8AdFilterHandler = new SmartM3u8AdFilterHandler();
+        m3u8TsProxyHandler = new BadM3u8TsProxyHandler();
         Platform.runLater(() -> {
             VideoDetailsBO bo = getData();
 
@@ -207,9 +216,12 @@ public class VideoController extends BaseController implements Destroyable {
             return;
         }
         tabs = resourceTabPane.getTabs();
-        playFlag = hasPlayInfo ?
-                ObjectUtils.defaultIfNull(playInfo.getPlayFlag(), StringUtils.EMPTY) :
-                StringUtils.EMPTY;
+        if (hasPlayInfo) {
+            setPlayIndexIfNeeded(playInfo, videoDetail);
+            playFlag = ObjectUtils.defaultIfNull(playInfo.getPlayFlag(), StringUtils.EMPTY);
+        } else {
+            playFlag = StringUtils.EMPTY;
+        }
         urlInfoList.forEach(urlInfo -> {
             String urlFlag = urlInfo.getFlag();
             List<Movie.Video.UrlBean.UrlInfo.InfoBean> beanList = urlInfo.getBeanList();
@@ -303,6 +315,57 @@ public class VideoController extends BaseController implements Destroyable {
         );
     }
 
+    /**
+     * 如有必要，设置要恢复播放的集数索引
+     * 在与FongMi TV配对时，由于其提供的历史记录中没有playIndex，因此需要通过playNote来匹配
+     * @param playInfo 播放信息
+     * @param movie 影视数据
+     */
+    private void setPlayIndexIfNeeded(VideoPlayInfoBO playInfo, Movie movie) {
+        int playIndex = playInfo.getPlayIndex();
+        List<Movie.Video> videos;
+        Movie.Video.UrlBean urlBean;
+        List<Movie.Video.UrlBean.UrlInfo> infoList;
+        int infoListSize;
+        Movie.Video.UrlBean.UrlInfo urlInfo;
+        String playFlag;
+        final String finalPlayFlag;
+        String playNote;
+
+        if (playIndex > 0) {
+
+            return;
+        }
+        videos = movie.getVideoList();
+        urlBean = videos.get(0).getUrlBean();
+        infoList = urlBean.getInfoList();
+        infoListSize = CollUtil.size(infoList);
+        if (infoListSize == 0) {
+
+            return;
+        }
+        playFlag = playInfo.getPlayFlag();
+        if (playFlag == null || infoListSize == 1) {
+            playFlag = infoList.get(0).getFlag();
+        }
+        playNote = playInfo.getPlayNote();
+        if (playNote == null) {
+
+            return;
+        }
+        finalPlayFlag = playFlag;
+        urlInfo = CollectionUtil.findFirst(infoList, info -> finalPlayFlag.equals(info.getFlag()))
+                .orElse(null);
+        if (urlInfo == null) {
+
+            return;
+        }
+        playIndex = CollUtil.indexOf(urlInfo.getBeanList(), urlB -> playNote.equals(urlB.getName()));
+        if (playIndex != -1) {
+            playInfo.setPlayIndex(playIndex);
+        }
+    }
+
     private void startPlayVideo() {
         Movie.Video video = videoDetail.getVideoList().get(0);
         Movie.Video.UrlBean.UrlInfo urlInfo;
@@ -370,7 +433,7 @@ public class VideoController extends BaseController implements Destroyable {
 
         Platform.runLater(() -> player.stop());
         template.getPlayerContent(
-                GetPlayerContentDTO.of(video.getSourceKey(), StringUtils.EMPTY, flag, urlInfoBean.getUrl()),
+                GetPlayerContentDTO.of(video.getSourceKey(), flag, urlInfoBean.getUrl()),
                 playerContentJson ->
                     Platform.runLater(() -> {
                         JsonElement propsElm;
@@ -419,7 +482,7 @@ public class VideoController extends BaseController implements Destroyable {
                         videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
                         if (parse == 0) {
                             if (ConfigHelper.getAdFilter() && playUrl.contains(".m3u8")) {
-                                // 处理m3u8广告过滤
+                                // 处理m3u8广告过滤、ts代理
                                 filterAdAndProxy(playUrl, headers, isAdFilteredAndProxyUrl -> {
                                     Boolean isAdFiltered = isAdFilteredAndProxyUrl.getLeft();
                                     String proxyUrl = isAdFilteredAndProxyUrl.getRight();
@@ -467,7 +530,12 @@ public class VideoController extends BaseController implements Destroyable {
             M3u8AdFilterResult result;
             String content;
             HttpResponse<String> resp;
-            Map<String, List<String>> proxyHeaders;
+            Map<String, List<String>> proxyHeaders = null;
+            boolean isAdFiltered = false;
+            String playUrlForTsProxy;
+            String proxyUrlPrefix;
+            Pair<Boolean, String> proxyTsFlagAndProxiedM3u8Content;
+            String resultPlayUrl;
 
             requestBuilder = HttpRequest.newBuilder()
                     .GET()
@@ -481,43 +549,71 @@ public class VideoController extends BaseController implements Destroyable {
                         .sendAsync(requestBuilder.build(), HttpResponse.BodyHandlers.ofString())
                         .get(6, TimeUnit.SECONDS);
             } catch (Exception e) {
+                // 下载m3u8失败，直接返回原地址
                 callback.accept(Pair.of(false, playUrl));
 
                 return;
             }
+            proxyUrlPrefix = createProxyUrlPrefix();
+            // 处理m3u8广告过滤
             try {
+                content = resp.body();
                 result = m3u8AdFilterHandler.handle(
                         playUrl,
-                        resp.body(),
+                        content,
                         Map.of(SmartM3u8AdFilterHandler.EXTRA_KEY_DTF, ConfigHelper.getAdFilterDynamicThresholdFactor())
                 );
+                isAdFiltered = result.getAdLineCount() > 0;
+                if (isAdFiltered) {
+                    content = result.getContent();
+                    proxyHeaders = Maps.filterKeys(
+                            resp.headers().map(), key -> !HTTP_HEADERS_PROXY_EXCLUDE.contains(key)
+                    );
+                }
+                playUrlForTsProxy = isAdFiltered ? proxyM3u8(content, proxyUrlPrefix, proxyHeaders) : playUrl;
             } catch (Exception e) {
                 log.warn("filter ad exception", e);
-                callback.accept(Pair.of(false, playUrl));
-
-                return;
+                content = resp.body();
+                playUrlForTsProxy = playUrl;
             }
-            if (result.getAdLineCount() == 0) {
-                callback.accept(Pair.of(false, playUrl));
-
-                return;
+            // 处理损坏文件头的ts代理
+            try {
+                proxyTsFlagAndProxiedM3u8Content =
+                        m3u8TsProxyHandler.handle(
+                                playUrlForTsProxy, content, proxyUrlPrefix + "/proxy/ts/"
+                        );
+                if (proxyTsFlagAndProxiedM3u8Content.getLeft()) {
+                    content = proxyTsFlagAndProxiedM3u8Content.getRight();
+                    if (proxyHeaders == null) {
+                        proxyHeaders = Maps.filterKeys(
+                                resp.headers().map(), key -> !HTTP_HEADERS_PROXY_EXCLUDE.contains(key)
+                        );
+                    }
+                    resultPlayUrl = proxyM3u8(content, proxyUrlPrefix, proxyHeaders);
+                } else {
+                    resultPlayUrl = playUrlForTsProxy;
+                }
+            } catch (Exception e) {
+                log.warn("proxy ts exception", e);
+                resultPlayUrl = playUrlForTsProxy;
             }
-            content = result.getContent();
-            proxyHeaders = resp.headers().map();
-            if (proxyHeaders.containsKey("content-length")) {
-                proxyHeaders = Maps.filterKeys(proxyHeaders, key -> !key.equals("content-length"));
-            }
-            callback.accept(Pair.of(
-                    true, createAdFilteredM3u8Url(content, proxyHeaders)
-            ));
+            callback.accept(Pair.of(isAdFiltered, resultPlayUrl));
         });
     }
 
-    private String createAdFilteredM3u8Url(String m3u8Content, Map<String, List<String>> proxyHeaders) {
-        String proxyUrl = "http://127.0.0.1:" +
-                ConfigHelper.getHttpPort() +
-                "/proxy-cache/" +
-                CacheKeys.AD_FILTERED_M3U8;
+    private String createProxyUrlPrefix() {
+        return "http://127.0.0.1:" + ConfigHelper.getHttpPort();
+    }
+
+    /**
+     * 代理m3u8内容
+     * @param m3u8Content m3u8内容
+     * @param proxyUrlPrefix 代理前缀
+     * @param proxyHeaders 代理请求头
+     * @return 代理链接
+     */
+    private String proxyM3u8(String m3u8Content, String proxyUrlPrefix, Map<String, List<String>> proxyHeaders) {
+        String proxyUrl = proxyUrlPrefix + "/proxy-cache/" + CacheKeys.AD_FILTERED_M3U8;
 
         CacheHelper.put(CacheKeys.AD_FILTERED_M3U8, m3u8Content);
         CacheHelper.put(
@@ -530,9 +626,11 @@ public class VideoController extends BaseController implements Destroyable {
 
     @Override
     public void destroy() {
-        updatePlayInfo();
-        onClose.accept(playInfo);
-        player.destroy();
+        AsyncUtil.execute(() -> {
+            updatePlayInfo();
+            onClose.accept(playInfo);
+            player.destroy();
+        });
         Context.INSTANCE.popAndShowLastStage();
     }
 
@@ -549,6 +647,7 @@ public class VideoController extends BaseController implements Destroyable {
         playInfo.setPlayFlag(playFlag);
         playInfo.setPlayIndex(playingUrlInfo.getBeanList().indexOf(playingInfoBean));
         playInfo.setProgress(player.getCurrentProgress());
+        playInfo.setDuration(player.getCurrentDuration());
         playInfo.setPlayNote(selectedEpBtn.getText());
         CollectionUtil.findFirst(resourceTabPane.getTabs(), tab -> tab.getText().equals(playFlag))
                 .ifPresent(tab -> {

@@ -1,6 +1,10 @@
 package io.knifer.freebox.model.common.tvbox;
 
+import io.knifer.freebox.model.common.catvod.History;
+import io.knifer.freebox.model.s2c.SavePlayHistoryDTO;
 import lombok.Data;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.*;
@@ -41,18 +45,22 @@ public class VodInfo implements Serializable {
     public String des;// <![CDATA[权来]
     public String playFlag = null;      // 播放的源
     public int playIndex = 0;           // 播放的集下标
-    public String playNote = "";
+    public String playNote = "";        // 播放的集名
     public String sourceKey;
     public String playerCfg = "";
     public boolean reverseSort = false;
 
-    /*
+    /* *
      * ↓ by knifer
      * */
     /**
      * 播放进度
      */
     private Long progress;
+    /**
+     * 影片时长
+     */
+    private Long duration;
 
     public void setVideo(Movie.Video video) {
         sourceKey = video.sourceKey;
@@ -71,11 +79,11 @@ public class VodInfo implements Serializable {
         actor = video.actor;
         director = video.director;
         des = video.des;
-        if (video.urlBean != null && video.urlBean.infoList != null && video.urlBean.infoList.size() > 0) {
+        if (video.urlBean != null && video.urlBean.infoList != null && !video.urlBean.infoList.isEmpty()) {
             LinkedHashMap<String, List<VodSeries>> tempSeriesMap = new LinkedHashMap<>();
             seriesFlags = new ArrayList<>();
             for (Movie.Video.UrlBean.UrlInfo urlInfo : video.urlBean.infoList) {
-                if (urlInfo.beanList != null && urlInfo.beanList.size() > 0) {
+                if (urlInfo.beanList != null && !urlInfo.beanList.isEmpty()) {
                     List<VodSeries> seriesList = new ArrayList<>();
                     for (Movie.Video.UrlBean.UrlInfo.InfoBean infoBean : urlInfo.beanList) {
                         seriesList.add(new VodSeries(infoBean.name, infoBean.url));
@@ -114,6 +122,45 @@ public class VodInfo implements Serializable {
         VodInfo result = new VodInfo();
 
         result.setVideo(video);
+
+        return result;
+    }
+
+    public static VodInfo from(SavePlayHistoryDTO dto) {
+        VodInfo result = new VodInfo();
+
+        result.setId(dto.getVodId());
+        result.setSourceKey(dto.getSourceKey());
+        result.setName(dto.getVodName());
+        result.setPic(dto.getVodPic());
+        result.setPlayNote(dto.getEpisodeFlag());
+        result.setPlayFlag(dto.getPlayFlag());
+        result.setPlayIndex(dto.getEpisodeIndex());
+        result.setReverseSort(dto.isRevSort());
+        result.setProgress(dto.getPosition());
+        result.setDuration(dto.getDuration());
+
+        return result;
+    }
+
+    public static VodInfo from(History history) {
+        VodInfo result = new VodInfo();
+        String key = history.getKey();
+        String[] keySplit = StringUtils.splitByWholeSeparator(key, "@@@");
+        String sourceKey = ArrayUtils.get(keySplit, 0);
+        String vodId = ArrayUtils.get(keySplit, 1);
+        String vodRemarks = history.getVodRemarks();
+
+        result.setId(vodId);
+        result.setSourceKey(sourceKey);
+        result.setName(history.getVodName());
+        result.setPic(history.getVodPic());
+        result.setPlayNote(vodRemarks);
+        result.setPlayFlag(history.getVodFlag());
+        result.setNote(vodRemarks);
+        result.setReverseSort(history.isRevSort());
+        result.setProgress(history.getPosition());
+        result.setDuration(history.getDuration());
 
         return result;
     }

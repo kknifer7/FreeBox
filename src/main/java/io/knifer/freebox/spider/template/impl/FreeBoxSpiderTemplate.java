@@ -13,13 +13,11 @@ import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.c2s.FreeBoxLive;
-import io.knifer.freebox.model.common.catvod.Class;
-import io.knifer.freebox.model.common.catvod.Filter;
 import io.knifer.freebox.model.common.catvod.Result;
-import io.knifer.freebox.model.common.catvod.Vod;
 import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.*;
 import io.knifer.freebox.model.s2c.*;
+import io.knifer.freebox.net.websocket.converter.CatVodBeanConverter;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.spider.SpiderJarLoader;
@@ -32,17 +30,14 @@ import io.knifer.freebox.util.catvod.SpiderInvokeUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * FreeBox爬虫模板实现
@@ -54,6 +49,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
 
     private final ClientManager clientManager;
     private final SpiderJarLoader spiderJarLoader;
+    private final CatVodBeanConverter beanConverter;
 
     private FreeBoxApiConfig apiConfig;
     private List<SourceBean> sourceBeans;
@@ -78,6 +74,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         this.clientManager = clientManager;
         this.spiderJarLoader = SpiderJarLoader.getInstance();
         this.sourceBeans = List.of();
+        beanConverter = CatVodBeanConverter.getInstance();
     }
 
     @Override
@@ -178,154 +175,28 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             Result result = GsonUtil.fromJson(SpiderInvokeUtil.homeContent(spider, false), Result.class);
 
             log.info("getHomeContent: {}", result);
-            callback.accept(result == null ? null : resultToAbsSortXml(result, sourceBean.getKey()));
+            callback.accept(
+                    result == null ? null : beanConverter.resultToAbsSortXml(result, sourceBean.getKey())
+            );
         });
-    }
-
-    private AbsSortXml resultToAbsSortXml(Result result, String sourceKey) {
-        AbsSortXml absSortXml = new AbsSortXml();
-        List<Vod> list = result.getList();
-        Movie movie;
-
-        absSortXml.setClasses(resultClassToMovieSort(result.getClasses(), result.getFilters()));
-        if (CollectionUtil.isNotEmpty(list)) {
-            movie = new Movie();
-            movie.setVideoList(list.stream().map(v -> vodToVideo(v, sourceKey)).toList());
-            absSortXml.setList(movie);
-        }
-
-        return absSortXml;
-    }
-
-    private MovieSort resultClassToMovieSort(List<Class> classes, Map<String, List<Filter>> filters) {
-        MovieSort movieSort = new MovieSort();
-        List<MovieSort.SortData> sortList;
-
-        if (CollectionUtil.isEmpty(classes)) {
-            sortList = List.of();
-        } else {
-            sortList = classes.stream()
-                    .map(c -> {
-                        MovieSort.SortData sortData = new MovieSort.SortData();
-                        String typeId = c.getTypeId();
-                        List<Filter> filterList;
-                        ArrayList<MovieSort.SortFilter> sortDataFilterList;
-
-                        sortData.setId(typeId);
-                        sortData.setName(c.getTypeName());
-                        sortData.setFlag(c.getTypeFlag());
-                        if (filters != null && !CollectionUtil.isEmpty(filterList = filters.get(typeId))) {
-                            sortDataFilterList = new ArrayList<>(
-                                    filterList.stream().map(f -> {
-                                        MovieSort.SortFilter filter = new MovieSort.SortFilter();
-
-                                        filter.key = f.getKey();
-                                        filter.name = f.getName();
-                                        filter.values = new LinkedHashMap<>(
-                                                f.getValue().stream().collect(
-                                                        Collectors.toMap(Filter.Value::getN, Filter.Value::getV)
-                                                )
-                                        );
-
-                                        return filter;
-                                    }).toList()
-                            );
-                            sortData.setFilters(sortDataFilterList);
-                        }
-
-                        return sortData;
-                    })
-                    .toList();
-        }
-        movieSort.setSortList(sortList);
-
-        return movieSort;
-    }
-
-    private Movie.Video vodToVideo(Vod vod, String sourceKey) {
-        Movie.Video video = new Movie.Video();
-        String[] playFroms;
-        String vodPlayUrl;
-        String[] playUrls;
-        Movie.Video.UrlBean.UrlInfo urlInfo;
-        String[] eps;
-        List<Movie.Video.UrlBean.UrlInfo> urlInfos = List.of();
-        List<Movie.Video.UrlBean.UrlInfo.InfoBean> infoBeans;
-        Movie.Video.UrlBean urlBean;
-
-        video.setId(vod.getVodId());
-        video.setName(vod.getVodName());
-        video.setNote(vod.getVodRemarks());
-        video.setType(vod.getTypeName());
-        video.setPic(vod.getVodPic());
-        video.setArea(vod.getVodArea());
-        video.setYear(NumberUtils.toInt(vod.getVodYear()));
-        video.setActor(vod.getVodActor());
-        video.setDirector(vod.getVodDirector());
-        video.setDes(vod.getVodContent());
-        video.setTag(vod.getVodTag());
-        video.setSourceKey(sourceKey);
-        playFroms = StringUtils.split(vod.getVodPlayFrom(), "$$$");
-        vodPlayUrl = vod.getVodPlayUrl();
-        if (!ArrayUtils.isEmpty(playFroms) || StringUtils.isNotBlank(vodPlayUrl)) {
-            playUrls = vodPlayUrl.split("\\$\\$\\$");
-            if (!ArrayUtils.isEmpty(playUrls)) {
-                urlInfos = new ArrayList<>(playFroms.length);
-                for (int i = 0; i < playFroms.length; i++) {
-                    String playUrl = ArrayUtils.get(playUrls, i);
-                    String playFrom;
-
-                    if (playUrl == null) {
-                        continue;
-                    }
-                    playFrom = playFroms[i];
-                    urlInfo = new Movie.Video.UrlBean.UrlInfo();
-                    urlInfo.setFlag(playFrom);
-                    urlInfo.setUrls(playUrl);
-                    eps = playUrl.split("#");
-                    if (ArrayUtils.isEmpty(eps)) {
-                        continue;
-                    }
-                    infoBeans = Arrays.stream(eps)
-                            .map(epStr -> {
-                                String[] ep = epStr.split("\\$");
-
-                                if (ArrayUtils.getLength(ep) != 2) {
-                                    return null;
-                                }
-
-                                return new Movie.Video.UrlBean.UrlInfo.InfoBean(ep[0], ep[1]);
-                            })
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList());
-                    urlInfo.setBeanList(infoBeans);
-                    urlInfos.add(urlInfo);
-                }
-            }
-        }
-        urlBean = new Movie.Video.UrlBean();
-        urlBean.setInfoList(urlInfos);
-        video.setUrlBean(urlBean);
-
-        return video;
     }
 
     @Override
     public void getCategoryContent(GetCategoryContentDTO dto, Consumer<AbsXml> callback) {
         EXECUTOR.execute(() -> {
-            Object spider = getSpider(dto.getSource());
-            MovieSort.SortData sortData = dto.getSortData();
-            HashMap<String, String> filterSelect = sortData.getFilterSelect();
+            String sourceKey = dto.getSourceKey();
+            Object spider = getSpider(sourceKey);
+            HashMap<String, String> filterSelect = dto.getExtend();
             boolean filter = !filterSelect.isEmpty();
             Result result = GsonUtil.fromJson(
                     SpiderInvokeUtil.categoryContent(
-                            spider, sortData.getId(),String.valueOf(dto.getPage()), filter, filterSelect
+                            spider, dto.getTid(), dto.getPage(), filter, filterSelect
                     ),
                     Result.class
             );
 
             log.info("getCategoryContent: {}", result);
-            callback.accept(result == null ? null : resultToAbsXml(result, dto.getSource().getKey()));
+            callback.accept(result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey()));
         });
     }
 
@@ -334,31 +205,12 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         EXECUTOR.execute(() -> {
             Object spider = getSpider(dto.getSourceKey());
             Result result = GsonUtil.fromJson(
-                    SpiderInvokeUtil.detailContent(spider, List.of(dto.getVideoId())), Result.class
+                    SpiderInvokeUtil.detailContent(spider, List.of(dto.getVodId())), Result.class
             );
 
             log.info("getDetailContent: {}", result);
-            callback.accept(result == null ? null : resultToAbsXml(result, dto.getSourceKey()));
+            callback.accept(result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey()));
         });
-    }
-
-    private AbsXml resultToAbsXml(Result result, String sourceKey) {
-        AbsXml absXml = new AbsXml();
-        List<Vod> list = result.getList();
-        Movie movie = new Movie();
-
-        if (CollectionUtil.isEmpty(list)) {
-            movie.setVideoList(List.of());
-        } else {
-            movie.setVideoList(list.stream().map(v -> vodToVideo(v, sourceKey)).toList());
-        }
-        movie.setPagecount(ObjectUtils.defaultIfNull(result.getPagecount(), Integer.MAX_VALUE));
-        movie.setPagesize(ObjectUtils.defaultIfNull(result.getLimit(), movie.getVideoList().size()));
-        movie.setPage(ObjectUtils.defaultIfNull(result.getPage(), 1));
-        movie.setRecordcount(ObjectUtils.defaultIfNull(result.getTotal(), Integer.MAX_VALUE));
-        absXml.setMovie(movie);
-
-        return absXml;
     }
 
     @Override
@@ -366,7 +218,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         EXECUTOR.execute(() -> {
             Object spider = getSpider(dto.getSourceKey());
             JsonObject sourceResult = GsonUtil.fromJson(
-                    SpiderInvokeUtil.playerContent(spider, dto.getPlayFlag(), dto.getId(), List.of()),
+                    SpiderInvokeUtil.playerContent(spider, dto.getPlayFlag(), dto.getVodId(), List.of()),
                     JsonObject.class
             );
             JsonObject result;
@@ -433,7 +285,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             );
 
             log.info("getSearchContent: {}", result);
-            callback.accept(result == null ? null : resultToAbsXml(result, dto.getSourceKey()));
+            callback.accept(result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey()));
         });
     }
 
@@ -453,7 +305,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             } else {
                 data = movieHistory.getData();
             }
-            vodInfo = dto.getVodInfo();
+            vodInfo = VodInfo.from(dto);
             data.put(
                     DigestUtil.md5Hex(vodInfo.getSourceKey() + vodInfo.getId()),
                     vodInfo
@@ -470,15 +322,13 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         EXECUTOR.execute(() -> {
             MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
                     .orElse(null);
-            VodInfo vodInfo;
             VodInfo removed;
 
             if (movieHistory == null) {
                 callback.run();
             } else {
-                vodInfo = dto.getVodInfo();
                 removed = movieHistory.getData().remove(
-                        DigestUtil.md5Hex(vodInfo.getSourceKey() + vodInfo.getId())
+                        DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
                 );
                 if (removed != null) {
                     StorageHelper.save(movieHistory);
@@ -497,7 +347,6 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
                     .orElse(null);
             Map<String, VodCollect> data;
-            VodInfo vodInfo;
 
             if (movieCollection == null) {
                 data = new HashMap<>();
@@ -505,10 +354,9 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             } else {
                 data = movieCollection.getData();
             }
-            vodInfo = dto.getVodInfo();
             data.put(
-                    DigestUtil.md5Hex(vodInfo.getSourceKey() + vodInfo.getId()),
-                    VodCollect.from(vodInfo)
+                    DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId()),
+                    VodCollect.from(dto)
             );
             StorageHelper.save(movieCollection);
             callback.run();
@@ -523,15 +371,13 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         EXECUTOR.execute(() -> {
             MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
                     .orElse(null);
-            VodInfo vodInfo;
             VodCollect removed;
 
             if (movieCollection == null) {
                 callback.run();
             } else {
-                vodInfo = dto.getVodInfo();
                 removed = movieCollection.getData().remove(
-                        DigestUtil.md5Hex(vodInfo.getSourceKey() + vodInfo.getId())
+                        DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
                 );
                 if (removed != null) {
                     StorageHelper.save(movieCollection);

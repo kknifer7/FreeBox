@@ -63,7 +63,6 @@ public class MoviePlayAuditor extends SourceAuditor {
         Movie.Video.UrlBean.UrlInfo urlInfo = video.getUrlBean().getInfoList().get(0);
         GetPlayerContentDTO dto = GetPlayerContentDTO.of(
                 video.getSourceKey(),
-                StringUtils.EMPTY,
                 urlInfo.getFlag(),
                 urlInfo.getBeanList().get(0).getUrl()
         );

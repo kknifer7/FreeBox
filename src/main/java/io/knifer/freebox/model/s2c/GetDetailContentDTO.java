@@ -17,13 +17,13 @@ public class GetDetailContentDTO {
     /**
      * 视频ID
      */
-    private String videoId;
+    private String vodId;
 
-    public static GetDetailContentDTO of(String sourceKey, String videoId) {
+    public static GetDetailContentDTO of(String sourceKey, String vodId) {
         GetDetailContentDTO result = new GetDetailContentDTO();
 
         result.setSourceKey(sourceKey);
-        result.setVideoId(videoId);
+        result.setVodId(vodId);
 
         return result;
     }

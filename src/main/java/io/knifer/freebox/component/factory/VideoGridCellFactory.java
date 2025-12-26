@@ -1,5 +1,6 @@
 package io.knifer.freebox.component.factory;
 
+import io.knifer.freebox.component.node.EmojiableLabel;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.VideoPlaybackTrigger;
@@ -20,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
@@ -107,8 +109,9 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
             String note;
             String picUrl;
             String sourceName;
-            Label sourceNameLabel;
-            StackPane sourceNameContainer;
+            EmojiableLabel sourceNameLabel;
+            AnchorPane tagContainer;
+            List<Node> tagContainerChildren;
 
             super.updateItem(item, empty);
             rootNode = getGraphic();
@@ -136,16 +139,30 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 container = new StackPane();
                 container.setAlignment(Pos.TOP_RIGHT);
                 containerChildren = container.getChildren();
+                tagContainer = new AnchorPane();
+                tagContainerChildren = tagContainer.getChildren();
                 // 影片左上角源名称
-                sourceNameLabel = new Label();
-                sourceNameLabel.getStyleClass().add("movie-source-label");
                 sourceName = SOURCE_KEY_AND_NAME_MAP.get(item.getSourceKey());
                 if (StringUtils.isNotBlank(sourceName)) {
+                    sourceNameLabel = new EmojiableLabel();
+                    sourceNameLabel.getStyleClass().add("movie-source-label");
                     sourceNameLabel.setText(sourceName);
+                    sourceNameLabel.setMaxWidth(CELL_WIDTH / 2);
+                    AnchorPane.setTopAnchor(sourceNameLabel, 0d);
+                    AnchorPane.setLeftAnchor(sourceNameLabel, 0d);
+                    tagContainerChildren.add(sourceNameLabel);
+                    sourceNameLabel.visibleProperty().bind(showSourceName);
                 }
-                sourceNameContainer = new StackPane(sourceNameLabel);
-                sourceNameContainer.setAlignment(Pos.TOP_LEFT);
-                sourceNameContainer.visibleProperty().bind(showSourceName);
+                // 影片右上角备注
+                note = item.getNote();
+                if (StringUtils.isNotBlank(note)) {
+                    movieNoteLabel = new Label(note);
+                    movieNoteLabel.setMaxWidth(CELL_WIDTH / 2);
+                    movieNoteLabel.getStyleClass().add("movie-remark-label");
+                    AnchorPane.setTopAnchor(movieNoteLabel, 0d);
+                    AnchorPane.setRightAnchor(movieNoteLabel, 0d);
+                    tagContainerChildren.add(movieNoteLabel);
+                }
                 // 图片
                 moviePicImageView = new ImageView();
                 if (BaseValues.LOAD_MORE_ITEM_ID.equals(itemId)) {
@@ -169,15 +186,8 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
                 moviePicImageView.setFitHeight(CELL_HEIGHT);
                 movieInfoOverlay = new InfoOverlay(moviePicImageView, item.getName());
                 movieInfoOverlay.getStyleClass().add("movie-info-overlay");
-                // 影片右上角备注
-                note = item.getNote();
                 containerChildren.add(movieInfoOverlay);
-                containerChildren.add(sourceNameContainer);
-                if (StringUtils.isNotBlank(note)) {
-                    movieNoteLabel = new Label(note);
-                    movieNoteLabel.getStyleClass().add("movie-remark-label");
-                    containerChildren.add(movieNoteLabel);
-                }
+                containerChildren.add(tagContainer);
                 ITEM_ID_AND_CONTAINER_MAP.put(itemId, container);
             }
             rootChildren = root.getChildren();

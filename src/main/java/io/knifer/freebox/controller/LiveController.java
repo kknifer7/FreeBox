@@ -236,8 +236,10 @@ public class LiveController implements Destroyable {
         }
         if (player != null) {
             saveClientProperties();
-            AsyncUtil.execute(() -> FileUtil.clean(LIVE_CONFIG_CACHE_PATH.toFile()));
-            player.destroy();
+            AsyncUtil.execute(() -> {
+                FileUtil.clean(LIVE_CONFIG_CACHE_PATH.toFile());
+                player.destroy();
+            });
         }
         ImageHelper.clearCache();
         Context.INSTANCE.popAndShowLastStage();

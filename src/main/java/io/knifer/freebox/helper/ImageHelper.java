@@ -142,7 +142,7 @@ public class ImageHelper {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException e) {
                         log.warn("download image failed: {}", imageUrl, e);
-                        handleLoadImageFail(future, imageUrl, true);
+                        handleLoadImageFail(future, imageUrl, isRetrying);
                     }
                 });
     }

@@ -52,7 +52,7 @@ public class EmojiableLabel extends Region {
     private final Map<Text, String> placeholderIds = new HashMap<>();
 
     private static final AtomicLong idCounter = new AtomicLong(0);
-    private static final String TWEMOJI_BASE_URL = "https://twemoji.maxcdn.com/v/latest/72x72/";
+    private static final String TWEMOJI_BASE_URL = "https://cdn.bootcdn.net/ajax/libs/twemoji/16.0.1/72x72/";
     private static final String[] LEADING_ZEROS = {
             "000", "00", "0", ""
     };

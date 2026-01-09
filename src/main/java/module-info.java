@@ -19,6 +19,7 @@ module io.knifer.freebox {
     requires uk.co.caprica.vlcj.natives;
     requires org.slf4j;
     requires org.tinylog.api;
+    requires org.tinylog.api.slf4j;
     requires org.tinylog.impl;
     requires filelize;
     requires com.fasterxml.jackson.databind;
@@ -42,6 +43,8 @@ module io.knifer.freebox {
 
     requires static lombok;
     requires org.jsoup;
+
+    uses org.tinylog.slf4j.TinylogSlf4jServiceProvider;
 
     exports io.knifer.freebox;
     exports io.knifer.freebox.constant;

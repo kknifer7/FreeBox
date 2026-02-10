@@ -245,5 +245,6 @@ public class ImageHelper {
 
     public void clearCache() {
         CACHE.invalidateAll();
+        CACHE.cleanUp();
     }
 }

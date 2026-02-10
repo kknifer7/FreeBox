@@ -9,8 +9,8 @@ import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.controller.EPGOverviewController;
 import io.knifer.freebox.handler.EpgFetchingHandler;
-import io.knifer.freebox.handler.impl.ParameterizedEpgFetchingHandler;
 import io.knifer.freebox.helper.*;
+import io.knifer.freebox.ioc.IOC;
 import io.knifer.freebox.model.bo.EPGOverviewBO;
 import io.knifer.freebox.model.bo.TVPlayBO;
 import io.knifer.freebox.model.common.diyp.EPG;
@@ -235,7 +235,7 @@ public abstract class BasePlayer<T extends Node> {
         stepForwardLabel = new Label();
         stepForwardLabel.setGraphic(stepForwardIcon);
         if (liveMode) {
-            epgFetchingHandler = ParameterizedEpgFetchingHandler.getInstance();
+            epgFetchingHandler = IOC.getBean(EpgFetchingHandler.class);
             selectedLive = new LiveInfoBO();
             playingLive = new LiveInfoBO();
             stepBackwardLabel.setOnMouseClicked(evt -> {

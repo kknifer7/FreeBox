@@ -3,8 +3,8 @@ package io.knifer.freebox.spider;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.github.catvod.crawler.spider.Spider;
-import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.FreeBoxApiConfig;
@@ -12,7 +12,11 @@ import io.knifer.freebox.spider.js.JSSpider;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.catvod.SpiderInvokeUtil;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javafx.application.Platform;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -41,6 +45,8 @@ import java.util.jar.JarFile;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
+@Singleton
 public class SpiderJarLoader {
 
     private final ConcurrentHashMap<String, URLClassLoader> loaders = new ConcurrentHashMap<>();
@@ -51,11 +57,13 @@ public class SpiderJarLoader {
     @Setter
     private FreeBoxApiConfig apiConfig = null;
 
+    // 使用Provider注入，避免循环依赖
+    private final Provider<Context> contextProvider;
+
     private final static String SPIDER_PACKAGE_NAME = "com.github.catvod.spider";
     private final static String SPIDER_PROXY_CLASS_NAME = SPIDER_PACKAGE_NAME + ".Proxy";
     private final static String SPIDER_INIT_CLASS_NAME = SPIDER_PACKAGE_NAME + ".Init";
     private final static Path SPIDER_CACHE_PATH = StorageHelper.getSpiderCachePath();
-    private final static SpiderJarLoader INSTANCE = new SpiderJarLoader();
 
     static {
         if (!Files.exists(SPIDER_CACHE_PATH)) {
@@ -65,10 +73,6 @@ public class SpiderJarLoader {
                 ToastHelper.showException(e);
             }
         }
-    }
-
-    public static SpiderJarLoader getInstance() {
-        return INSTANCE;
     }
 
     @Nullable
@@ -326,7 +330,9 @@ public class SpiderJarLoader {
                 log.warn("proxyInvoke error, can't find recent spider. recent={}", recent);
             } else {
                 resultFuture = new CompletableFuture<>();
-                Platform.runLater(() -> Context.INSTANCE.getSpiderTemplate().proxy(resultFuture::complete, params));
+                Platform.runLater(
+                        () -> contextProvider.get().getSpiderTemplate().proxy(resultFuture::complete, params)
+                );
                 try {
                     result = resultFuture.get();
                 } catch (InterruptedException | ExecutionException e) {

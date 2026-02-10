@@ -1,17 +1,18 @@
 package io.knifer.freebox.controller;
 
 import cn.hutool.core.collection.CollUtil;
+import io.knifer.freebox.context.Context;
 import io.knifer.freebox.component.factory.VideoGridCellFactory;
 import io.knifer.freebox.component.node.MovieInfoListPopOver;
 import io.knifer.freebox.component.node.MovieRankPopOver;
 import io.knifer.freebox.component.node.MovieSortFilterPopOver;
 import io.knifer.freebox.component.node.SourceBeanBlockPopOver;
 import io.knifer.freebox.component.node.player.BasePlayer;
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
 import io.knifer.freebox.handler.impl.IQiYiMovieSuggestionHandler;
@@ -29,6 +30,7 @@ import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -43,6 +45,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -60,6 +63,7 @@ import java.util.*;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class TVController implements Destroyable {
 
     @FXML
@@ -100,12 +104,15 @@ public class TVController implements Destroyable {
 
     private AutoCompletionBinding<String> searchTextFieldAutoCompletionBinding;
 
+    private final ClientManager clientManager;
+    private final Router router;
+    private final Context context;
+
     private final BooleanProperty sortsLoadingProperty = new SimpleBooleanProperty(true);
     private final BooleanProperty movieLoadingProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty searchLoadingProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty classFilterButtonDisableProperty = new SimpleBooleanProperty(true);
     private SpiderTemplate template;
-    private ClientManager clientManager;
     private Movie.Video fetchMoreItem;
     private ClientTVProperties clientTVPropertiesBackup;
     private ClientTVProperties clientTVProperties;
@@ -118,20 +125,19 @@ public class TVController implements Destroyable {
 
     @FXML
     private void initialize() {
-        template = Context.INSTANCE.getSpiderTemplate();
+        template = context.getSpiderTemplate();
         fetchMoreItem = new Movie.Video();
         fetchMoreItem.setId(BaseValues.LOAD_MORE_ITEM_ID);
         fetchMoreItem.setName(I18nHelper.get(I18nKeys.TV_LOAD_MORE));
-        Context.INSTANCE.registerEventListener(
+        context.registerEventListener(
                 AppEvents.ClientUnregisteredEvent.class,
                 evt -> LoadingHelper.hideLoading()
         );
         Platform.runLater(() -> {
-            clientManager = Context.INSTANCE.getClientManager();
             stage = WindowHelper.getStage(root);
             stage.setOnCloseRequest(evt -> {
-               destroy();
-               Context.INSTANCE.popAndShowLastStage();
+                destroy();
+                router.back();
             });
             movieSearchService = new MovieSearchService(keywordAndSearchContent ->
                 Platform.runLater(() -> {
@@ -457,7 +463,7 @@ public class TVController implements Destroyable {
                                 }
                         ));
                         LoadingHelper.hideLoading();
-                        WindowHelper.route(tvStage, videoStage);
+                        router.route(tvStage, videoStage);
                     })
         );
     }

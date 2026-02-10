@@ -3,6 +3,7 @@ package io.knifer.freebox.helper;
 import io.knifer.freebox.component.node.LoadingDialog;
 import io.knifer.freebox.component.node.WaitForClientReconnectingDialog;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.ioc.IOC;
 import javafx.stage.Stage;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,7 @@ public class LoadingHelper {
         if (waitingReconnectingDialog != null && waitingReconnectingDialog.isShowing()) {
             return;
         }
-        waitingReconnectingDialog = new WaitForClientReconnectingDialog();
+        waitingReconnectingDialog = IOC.getBean(WaitForClientReconnectingDialog.class);
         waitingReconnectingDialog.initOwner(ownerStage);
         waitingReconnectingDialog.show();
     }

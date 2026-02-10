@@ -2,14 +2,16 @@ package io.knifer.freebox.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.ZipUtil;
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.component.validator.PortValidator;
 import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.dialog.LicenseDialogController;
+import io.knifer.freebox.controller.dialog.LogConsoleDialogController;
 import io.knifer.freebox.controller.dialog.UpgradeDialogController;
 import io.knifer.freebox.handler.PlayerCheckHandler;
 import io.knifer.freebox.handler.PlayerConfigApplyHandler;
-import io.knifer.freebox.handler.impl.PlayerConfigApplyHandlerImpl;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
@@ -18,9 +20,11 @@ import io.knifer.freebox.service.CheckPortUsingService;
 import io.knifer.freebox.service.LoadConfigService;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import io.knifer.freebox.service.UpgradeCheckService;
+import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.FXMLUtil;
 import io.knifer.freebox.util.FormattingUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -35,18 +39,23 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.stage.Stage;
-import javafx.stage.Window;
+import javafx.stage.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.ThreadUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.validation.ValidationSupport;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.tinylog.Level;
+import org.tinylog.provider.ProviderRegistry;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.net.NetworkInterface;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -59,6 +68,7 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor_ = @__(@Inject))
 public class SettingsController {
 
     @FXML
@@ -123,10 +133,14 @@ public class SettingsController {
     private Hyperlink playerSelectHyperlink;
     @FXML
     private ToggleGroup videoPlaybackTriggerToggleGroup;
+    @FXML
+    private ComboBox<Level> logLevelComboBox;
 
     private Stage stage;
+    private FileChooser logZipFileSaveChooser;
 
     private String oldUsageFontFamily;
+    private Level oldLogLevel;
 
     private final ObjectProperty<Pair<NetworkInterface, String>> ipValueProp = new SimpleObjectProperty<>();
     private final BooleanProperty ipChoiceBoxDisableProp = new SimpleBooleanProperty();
@@ -134,10 +148,12 @@ public class SettingsController {
     private final LoadConfigService loadConfigService = new LoadConfigService();
     private final ValidationSupport validationSupport = new ValidationSupport();
 
-    private final FreeBoxHttpServerHolder httpServer = Context.INSTANCE.getHttpServer();
-    private final KebSocketServerHolder wsServer = Context.INSTANCE.getWsServer();
-
-    private final PlayerConfigApplyHandler playerConfigApplyHandler = PlayerConfigApplyHandlerImpl.getInstance();
+    private final FreeBoxHttpServerHolder httpServer;
+    private final KebSocketServerHolder wsServer;
+    private final Context context;
+    private final Router router;
+    private final PlayerConfigApplyHandler playerConfigApplyHandler;
+    private final PortValidator portValidator;
 
     @FXML
     private void initialize() {
@@ -196,8 +212,8 @@ public class SettingsController {
 
     private void setupComponent() {
         // 注册表单验证器
-        validationSupport.registerValidator(httpPortTextField, PortValidator.getInstance());
-        validationSupport.registerValidator(wsPortTextField, PortValidator.getInstance());
+        validationSupport.registerValidator(httpPortTextField, portValidator);
+        validationSupport.registerValidator(wsPortTextField, portValidator);
 
         // 表单数据监听与绑定
         httpPortTextField.textProperty().addListener((ob, oldVal, newVal) -> onHttpPortTextFieldChange());
@@ -299,6 +315,9 @@ public class SettingsController {
                         I18nHelper.get(I18nKeys.SETTINGS_PLAYER_STATUS_NOT_FOUND)
         );
         playerTypeComboBox.getSelectionModel().select(ConfigHelper.getPlayerType());
+        // 调试设置tab
+        oldLogLevel = ConfigHelper.getLogLevel();
+        logLevelComboBox.getSelectionModel().select(oldLogLevel);
     }
 
     private void setupToggleGroup(
@@ -367,6 +386,9 @@ public class SettingsController {
     private void onSaveBtnAction() {
         String usageFontFamily;
         List<Window> windows;
+        Level logLevel;
+        Pair<Stage, LogConsoleDialogController> logConsoleDialogStageAndController;
+        LogConsoleDialogController logConsoleDialogController;
 
         if (!ValidationHelper.validate(validationSupport)) {
 
@@ -377,13 +399,35 @@ public class SettingsController {
 
             return;
         }
+        // 处理字体更新
         usageFontFamily = usageFontFamilyComboBox.getValue();
         if (!StringUtils.equals(oldUsageFontFamily, usageFontFamily)) {
             windows = Window.getWindows();
             windows.forEach(window -> WindowHelper.setFontFamily(window, usageFontFamily));
-            Context.INSTANCE.postEvent(new AppEvents.UsageFontChangedEvent(usageFontFamily));
+            context.postEvent(new AppEvents.UsageFontChangedEvent(usageFontFamily));
         }
-        Context.INSTANCE.postEvent(AppEvents.SETTINGS_SAVED);
+        // 处理日志等级更新
+        logConsoleDialogStageAndController = router.getSecondary(Views.LOG_CONSOLE_DIALOG);
+        logLevel = logLevelComboBox.getValue();
+        if (logLevel != oldLogLevel) {
+            log.info("set log level to {}", logLevel.name());
+            if (
+                    logConsoleDialogStageAndController == null ||
+                    !logConsoleDialogStageAndController.getLeft().isShowing()
+            ) {
+                SystemHelper.reloadLogging();
+            } else {
+                log.debug("log console is alive, restart log listening");
+                logConsoleDialogController = logConsoleDialogStageAndController.getRight();
+                logConsoleDialogController.stopListening();
+                SystemHelper.reloadLogging();
+                AsyncUtil.execute(() -> {
+                    ThreadUtils.sleepQuietly(Duration.ofSeconds(2L));
+                    Platform.runLater(logConsoleDialogController::startListening);
+                });
+            }
+        }
+        context.postEvent(AppEvents.SETTINGS_SAVED);
     }
 
     @FXML
@@ -590,8 +634,13 @@ public class SettingsController {
         okBtn = CastUtil.cast(dialogPane.lookupButton(ButtonType.OK));
         okBtn.setOnAction(evt -> {
             LoadingHelper.showLoading(stage, I18nKeys.MESSAGE_QUIT_LOADING);
-            StorageHelper.clearData();
-            Context.INSTANCE.destroy();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    ProviderRegistry.getLoggingProvider().shutdown();
+                } catch (InterruptedException ignored) {}
+                StorageHelper.clearData();
+            }));
+            Platform.exit();
         });
         alert.show();
     }
@@ -736,5 +785,72 @@ public class SettingsController {
             ConfigHelper.setPlayerType(playerType);
             ConfigHelper.markToUpdate();
         }
+    }
+
+    @FXML
+    private void onLogLevelComboBoxAction() {
+        Level level = logLevelComboBox.getValue();
+
+        if (level == ConfigHelper.getLogLevel()) {
+
+            return;
+        }
+        ConfigHelper.setLogLevel(level);
+        ConfigHelper.markToUpdate();
+    }
+
+    @FXML
+    private void onLogExportButtonAction() {
+        List<FileChooser.ExtensionFilter> filters;
+        File saveFile;
+
+        if (logZipFileSaveChooser == null) {
+            logZipFileSaveChooser = new FileChooser();
+            logZipFileSaveChooser.setTitle(I18nHelper.get(I18nKeys.SETTINGS_DEBUGGING_LOG_EXPORT));
+            filters = logZipFileSaveChooser.getExtensionFilters();
+            filters.add(new FileChooser.ExtensionFilter("zip", "*.zip"));
+            filters.add(new FileChooser.ExtensionFilter("*", "*.*"));
+            logZipFileSaveChooser.setInitialFileName("latest_logs.zip");
+        }
+        saveFile = logZipFileSaveChooser.showSaveDialog(stage);
+        if (saveFile == null) {
+
+            return;
+        }
+        LoadingHelper.showLoading(stage);
+        AsyncUtil.execute(() -> {
+            ZipUtil.zip(StorageHelper.getLogStoragePath().toString(), saveFile.getPath(), true);
+            Platform.runLater(() -> {
+                LoadingHelper.hideLoading();
+                ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+                HostServiceHelper.openFileInExplorer(saveFile);
+            });
+        });
+    }
+
+    @FXML
+    private void onOpenLogConsoleButtonAction() {
+        Stage stage;
+        Pair<Stage, LogConsoleDialogController> logConsoleStageAndController =
+                router.getSecondary(Views.LOG_CONSOLE_DIALOG);
+
+        if (logConsoleStageAndController != null) {
+            logConsoleStageAndController.getLeft().toFront();
+
+            return;
+        }
+        logConsoleStageAndController = FXMLUtil.loadDialog(
+                Views.LOG_CONSOLE_DIALOG, StageStyle.DECORATED, Modality.NONE
+        );
+        router.putSecondary(Views.LOG_CONSOLE_DIALOG, logConsoleStageAndController);
+        stage = logConsoleStageAndController.getLeft();
+        stage.setTitle(I18nHelper.get(I18nKeys.SETTINGS_DEBUGGING_LOG_CONSOLE));
+        stage.show();
+    }
+
+    @FXML
+    private void onDoGcButtonAction() {
+        System.gc();
+        ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
     }
 }

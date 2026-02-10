@@ -1,7 +1,7 @@
 package io.knifer.freebox.exception;
 
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.ToastHelper;
+import jakarta.inject.Singleton;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Knifer
  */
 @Slf4j
+@Singleton
 public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
 
     private static final GlobalExceptionHandler INSTANCE = new GlobalExceptionHandler();
@@ -26,12 +27,10 @@ public class GlobalExceptionHandler implements Thread.UncaughtExceptionHandler {
 
             return;
         }
-        if (Context.INSTANCE.isInitialized()) {
-            if (Platform.isFxApplicationThread()) {
-                ToastHelper.showException(e);
-            } else {
-                Platform.runLater(() -> ToastHelper.showException(e));
-            }
+        if (Platform.isFxApplicationThread()) {
+            ToastHelper.showException(e);
+        } else {
+            Platform.runLater(() -> ToastHelper.showException(e));
         }
         log.error("thread {} uncaughtException", t.getName(), e);
     }

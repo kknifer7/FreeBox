@@ -1,6 +1,7 @@
 package io.knifer.freebox.spider.template;
 
 import com.google.gson.JsonObject;
+import io.knifer.freebox.ioc.IOC;
 import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.s2c.*;
@@ -130,7 +131,7 @@ public interface SpiderTemplate {
      * @param params 参数
      */
     default void proxy(Consumer<Object[]> callback, Map<String, String> params) {
-        Object spider = SpiderJarLoader.getInstance().getSpider();
+        Object spider = IOC.getBean(SpiderJarLoader.class).getSpider();
 
         if (spider == null) {
             callback.accept(ArrayUtils.EMPTY_OBJECT_ARRAY);

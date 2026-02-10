@@ -28,6 +28,7 @@ import io.knifer.freebox.util.ValidationUtil;
 import io.knifer.freebox.util.catvod.ApiConfigUtil;
 import io.knifer.freebox.util.catvod.SpiderInvokeUtil;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -70,11 +71,14 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             }
     );
 
-    public FreeBoxSpiderTemplate(ClientManager clientManager) {
+    @Inject
+    public FreeBoxSpiderTemplate(
+            ClientManager clientManager, SpiderJarLoader spiderJarLoader, CatVodBeanConverter catVodBeanConverter
+    ) {
         this.clientManager = clientManager;
-        this.spiderJarLoader = SpiderJarLoader.getInstance();
+        this.spiderJarLoader = spiderJarLoader;
+        this.beanConverter = catVodBeanConverter;
         this.sourceBeans = List.of();
-        beanConverter = CatVodBeanConverter.getInstance();
     }
 
     @Override

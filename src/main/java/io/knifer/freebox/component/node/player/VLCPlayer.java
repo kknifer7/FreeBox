@@ -22,6 +22,7 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -173,7 +174,7 @@ public class VLCPlayer extends BasePlayer<ImageView> {
         // 为防止频繁切换播放资源时多次调用play，导致播放器长时间阻塞，这里为资源生成唯一ID，利用单线程池+锁的方式将播放任务串行化
         playingResourceId = IdUtil.getSnowflakeNextId();
         this.playingResourceId.set(playingResourceId);
-        log.info("play url={}, options={}", url, options);
+        log.info("play url={}, options={}", url, Arrays.toString(options));
         playbackExecutor.execute(() -> {
             try {
                 playingResourceLock.lock();

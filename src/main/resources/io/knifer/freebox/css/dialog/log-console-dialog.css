@@ -1,0 +1,118 @@
+@import "../common.css";
+
+.log-console-dialog {
+    -fx-background-color: #f0f0f0;
+}
+
+.log-text-flow {
+    -fx-background-color: white;
+    -fx-padding: 10px;
+    -fx-line-spacing: 3px;
+    -fx-font-size: 14px;
+}
+
+.log-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1px;
+}
+
+.log-scroll-pane .viewport {
+    -fx-background-color: white;
+}
+
+.log-scroll-pane .scroll-bar {
+    -fx-background-color: #f0f0f0;
+}
+
+.log-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #cccccc;
+}
+
+.log-button {
+    -fx-background-color: #e0e0e0;
+    -fx-text-fill: #333333;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+    -fx-padding: 5px 15px;
+    -fx-font-size: 12px;
+}
+
+.log-button:hover {
+    -fx-background-color: #d0d0d0;
+}
+
+.log-button:pressed {
+    -fx-background-color: #c0c0c0;
+}
+
+.log-status-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #666666;
+}
+
+.text-log-debug {
+    -fx-fill: #888888;
+    -fx-font-style: italic;
+}
+
+.text-log-info {
+    -fx-fill: #007bff;
+    -fx-font-weight: bold;
+}
+
+.text-log-warn {
+    -fx-fill: #ffc107;
+    -fx-font-weight: bold;
+}
+
+.text-log-error {
+    -fx-fill: #dc3545;
+    -fx-font-weight: bold;
+}
+
+.log-entry:hover {
+    -fx-background-color: #edf2f7;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 3, 0, 0, 1);
+    -fx-translate-y: -1px;
+}
+
+.log-debug:hover {
+    -fx-background-color: #d4edfd;
+}
+
+.log-info:hover {
+    -fx-background-color: #e3f2fd;
+}
+
+.log-warn:hover {
+    -fx-background-color: #fff3cd;
+}
+
+.log-error:hover {
+    -fx-background-color: #fdecea;
+}
+
+.log-entry:pressed {
+    -fx-background-color: #e2e8f0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.03), 1, 0, 0, 0);
+    -fx-translate-y: 0px;
+}
+
+.log-debug:pressed {
+    -fx-background-color: #c2e4fc;
+}
+
+.log-info:pressed {
+    -fx-background-color: #d1e8ff;
+}
+
+.log-warn:pressed {
+    -fx-background-color: #ffeaa7;
+}
+
+.log-error:pressed {
+    -fx-background-color: #fcd4d6;
+}

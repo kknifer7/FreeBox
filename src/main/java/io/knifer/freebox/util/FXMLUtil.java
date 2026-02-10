@@ -5,6 +5,7 @@ import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.WindowHelper;
+import io.knifer.freebox.ioc.IOC;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -31,21 +32,22 @@ public class FXMLUtil {
     }
 
     public <T> Pair<Stage, T> loadDialog(String path) {
+        return loadDialog(path, StageStyle.TRANSPARENT, Modality.APPLICATION_MODAL);
+    }
+
+    public <T> Pair<Stage, T> loadDialog(String path, StageStyle stageStyle, Modality modality) {
         Pair<Stage, T> stageAndController =
                 load(path, BaseValues.DEFAULT_DIALOG_WIDTH, BaseValues.DEFAULT_DIALOG_HEIGHT);
         Stage stage = stageAndController.getLeft();
 
-        stage.initStyle(StageStyle.TRANSPARENT);
-        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initStyle(stageStyle);
+        stage.initModality(modality);
 
         return stageAndController;
     }
 
     public <T> Pair<Stage, T> load(String path, double width, double height) {
-        FXMLLoader loader = new FXMLLoader(
-                FreeBoxApplication.class.getResource(path),
-                ResourceBundle.getBundle("i18n.chs")
-        );
+        FXMLLoader loader = createLoader(path);
         Scene scene;
         Stage stage;
 
@@ -67,10 +69,7 @@ public class FXMLUtil {
     }
 
     public void load(String path, Stage stage, double width, double height) {
-        FXMLLoader loader = new FXMLLoader(
-                FreeBoxApplication.class.getResource(path),
-                ResourceBundle.getBundle("i18n.chs")
-        );
+        FXMLLoader loader = createLoader(path);
         Scene scene;
 
         try {
@@ -81,6 +80,17 @@ public class FXMLUtil {
         stage.getIcons().add(BaseResources.LOGO_IMG);
         stage.setScene(scene);
         postProcess(stage);
+    }
+
+    private FXMLLoader createLoader(String path) {
+        FXMLLoader loader = new FXMLLoader(
+                FreeBoxApplication.class.getResource(path),
+                ResourceBundle.getBundle("i18n.chs")
+        );
+
+        loader.setControllerFactory(IOC::getBean);
+
+        return loader;
     }
 
     private void postProcess(Stage stage) {

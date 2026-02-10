@@ -1,6 +1,10 @@
 package io.knifer.freebox.controller;
 
-import io.knifer.freebox.component.node.*;
+import io.knifer.freebox.component.node.IPInfoPopOver;
+import io.knifer.freebox.component.node.ImportCatVodApiDialog;
+import io.knifer.freebox.component.node.ImportSingleLiveApiDialog;
+import io.knifer.freebox.component.node.ImportUrlApiDialog;
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.dialog.LicenseDialogController;
@@ -9,11 +13,14 @@ import io.knifer.freebox.handler.PlayerCheckHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.model.domain.*;
+import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.core.ClientManager;
+import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
 import io.knifer.freebox.service.UpgradeCheckService;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
+import jakarta.inject.Inject;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
@@ -26,6 +33,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -38,6 +46,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 @Slf4j
+@RequiredArgsConstructor(onConstructor_ = @__(@Inject))
 public class HomeController {
 
     @FXML
@@ -69,7 +78,11 @@ public class HomeController {
 
     private PopOver ipInfoPopOver;
 
-    private ClientManager clientManager;
+    private final ClientManager clientManager;
+    private final Router router;
+    private final Context context;
+    private final FreeBoxHttpServerHolder httpServer;
+    private final KebSocketServerHolder wsServer;
 
     private final BooleanProperty allowVodOpProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty allowLiveOpProperty = new SimpleBooleanProperty(false);
@@ -113,8 +126,7 @@ public class HomeController {
         showIpPromptHBox.visibleProperty().bind(settingsInfoText.textProperty().isNotEmpty());
         showIpPromptHBox.managedProperty().bind(showIpPromptHBox.visibleProperty());
         ipInfoPopOver = new IPInfoPopOver();
-        Context.INSTANCE.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
-            clientManager = Context.INSTANCE.getClientManager();
+        context.registerEventListener(AppEvents.APP_INITIALIZED, evt -> {
             refreshServiceStatusInfo();
             StorageHelper.findAll(ClientInfo.class)
                     .values()
@@ -143,16 +155,16 @@ public class HomeController {
             settingsBtn.setDisable(false);
             root.setDisable(false);
         });
-        Context.INSTANCE.registerEventListener(
+        context.registerEventListener(
                 AppEvents.SETTINGS_SAVED, ignored -> checkPlayerInstalledAndUpdateUI()
         );
-        Context.INSTANCE.registerEventListener(
+        context.registerEventListener(
                 AppEvents.WsServerStartedEvent.class, evt -> refreshServiceStatusInfo()
         );
-        Context.INSTANCE.registerEventListener(
+        context.registerEventListener(
                 AppEvents.HttpServerStartedEvent.class, evt -> refreshServiceStatusInfo()
         );
-        Context.INSTANCE.registerEventListener(AppEvents.ClientRegisteredEvent.class, evt -> {
+        context.registerEventListener(AppEvents.ClientRegisteredEvent.class, evt -> {
             MultipleSelectionModel<ClientInfo> model = clientListView.getSelectionModel();
             ClientInfo clientInfo = evt.clientInfo();
             ClientInfo oldClientInfo;
@@ -170,7 +182,7 @@ public class HomeController {
                 model.select(clientInfo);
             }
         });
-        Context.INSTANCE.registerEventListener(AppEvents.ClientUnregisteredEvent.class, evt -> {
+        context.registerEventListener(AppEvents.ClientUnregisteredEvent.class, evt -> {
             MultipleSelectionModel<ClientInfo> model = clientListView.getSelectionModel();
 
             clientItems.remove(evt.clientInfo());
@@ -228,15 +240,16 @@ public class HomeController {
     private void onSettingsBtnClick() {
         Stage stage = FXMLUtil.load(Views.SETTINGS).getLeft();
 
-        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(WindowHelper.getStage(root));
         stage.setTitle(I18nHelper.get(I18nKeys.SETTINGS));
         stage.showAndWait();
         refreshServiceStatusInfo();
     }
 
     private void refreshServiceStatusInfo() {
-        boolean isHttpServiceRunning = Context.INSTANCE.getHttpServer().isRunning();
-        boolean isWsServiceRunning = Context.INSTANCE.getWsServer().isRunning();
+        boolean isHttpServiceRunning = httpServer.isRunning();
+        boolean isWsServiceRunning = wsServer.isRunning();
         String httpServiceRunningStatus;
         String httpPort;
         String wsServiceRunningStatus;
@@ -335,7 +348,7 @@ public class HomeController {
         clientManager.updateCurrentClient(clientInfo);
         stageAndController = FXMLUtil.load(Views.TV);
         tvStage = stageAndController.getLeft();
-        WindowHelper.route(homeStage, tvStage);
+        router.route(homeStage, tvStage);
     }
 
     @FXML
@@ -393,7 +406,7 @@ public class HomeController {
         homeStage = WindowHelper.getStage(root);
         sourceAuditStage = stageAndController.getLeft();
         log.info("enter source audit for [{}]", clientInfo.getName());
-        WindowHelper.route(homeStage, sourceAuditStage);
+        router.route(homeStage, sourceAuditStage);
     }
 
     @FXML
@@ -412,7 +425,7 @@ public class HomeController {
             StorageHelper.save(clientInfo);
             if (!clientManager.isRegistered(clientInfo)) {
                 clientManager.register(clientInfo);
-                Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
+                context.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
             }
         };
         ButtonType result;
@@ -462,7 +475,7 @@ public class HomeController {
         homeStage = WindowHelper.getStage(root);
         liveStage = stageAndController.getLeft();
         liveStage.setTitle(I18nHelper.getFormatted(I18nKeys.LIVE_WINDOW_TITLE, clientInfo.getName()));
-        WindowHelper.route(homeStage, liveStage);
+        router.route(homeStage, liveStage);
     }
 
     @FXML

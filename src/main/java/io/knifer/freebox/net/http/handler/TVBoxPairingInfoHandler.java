@@ -7,6 +7,7 @@ import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.model.s2c.PairingInfo;
 import io.knifer.freebox.util.NetworkUtil;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.Collection;
  *
  * @author Knifer
  */
+@Singleton
 public class TVBoxPairingInfoHandler implements HttpHandler {
 
     @Override

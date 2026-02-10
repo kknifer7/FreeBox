@@ -1,8 +1,10 @@
 package io.knifer.freebox.component.node;
 
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.net.websocket.core.ClientManager;
+import jakarta.inject.Inject;
 import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -23,7 +25,8 @@ import java.util.List;
  */
 public class WaitForClientReconnectingDialog extends AbstractNotificationDialog<Void> {
 
-    public WaitForClientReconnectingDialog() {
+    @Inject
+    public WaitForClientReconnectingDialog(Router router, ClientManager clientManager) {
         super();
         ProgressIndicator pi = new ProgressIndicator();
         Button cancelBtn = new Button(I18nHelper.get(I18nKeys.COMMON_CANCEL_AND_BACK_TO_HOME));
@@ -31,26 +34,26 @@ public class WaitForClientReconnectingDialog extends AbstractNotificationDialog<
         VBox root;
 
         cancelBtn.setOnAction(evt -> {
-            Stage stage = Context.INSTANCE.getCurrentStage();
-            List<Stage> stages = Context.INSTANCE.popAllStage();
+            Stage stage = router.getCurrent();
+            List<Stage> stages = router.popAll();
 
             if (stage != null) {
                 closeStage(stage);
             }
             for (Stage s : stages) {
-                if (s == Context.INSTANCE.getPrimaryStage()) {
+                if (s == router.getPrimary()) {
                     if (!s.isShowing()) {
                         s.show();
                     }
-                    Context.INSTANCE.setCurrentStage(s);
                     break;
                 }
                 closeStage(s);
             }
+            router.resetCurrent();
             if (isShowing()) {
                 close();
             }
-            Context.INSTANCE.getClientManager().shutdownConnectingExecutor();
+            clientManager.shutdownConnectingExecutor();
         });
         cancelBtn.setFocusTraversable(false);
         pi.setPrefSize(30, 30);

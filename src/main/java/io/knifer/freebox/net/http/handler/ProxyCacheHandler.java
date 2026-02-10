@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpExchange;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.CacheKeys;
 import io.knifer.freebox.helper.CacheHelper;
+import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,6 +18,7 @@ import java.util.Map;
  * 用于本地代理获取缓存数据
  */
 @Slf4j
+@Singleton
 public class ProxyCacheHandler implements HttpHandler{
     @Override
     public boolean support(HttpExchange httpExchange) {

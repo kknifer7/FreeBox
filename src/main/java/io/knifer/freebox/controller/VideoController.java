@@ -7,10 +7,10 @@ import com.google.common.net.HttpHeaders;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.knifer.freebox.component.node.player.BasePlayer;
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.CacheKeys;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.handler.M3u8AdFilterHandler;
 import io.knifer.freebox.handler.M3u8TsProxyHandler;
 import io.knifer.freebox.handler.impl.BadM3u8TsProxyHandler;
@@ -32,6 +32,7 @@ import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -47,6 +48,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import okhttp3.Request;
@@ -69,6 +71,7 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class VideoController extends BaseController implements Destroyable {
 
     @FXML
@@ -102,6 +105,8 @@ public class VideoController extends BaseController implements Destroyable {
     private Movie.Video.UrlBean.UrlInfo playingUrlInfo;
     private Movie.Video.UrlBean.UrlInfo.InfoBean playingInfoBean;
     public final BooleanProperty operationLoading = new SimpleBooleanProperty(true);
+
+    private final Router router;
 
     private static final Set<String> HTTP_HEADERS_PROXY_EXCLUDE = Set.of(
             "content-length",
@@ -604,7 +609,7 @@ public class VideoController extends BaseController implements Destroyable {
      * @return 代理链接
      */
     private String proxyM3u8(String m3u8Content, String proxyUrlPrefix, Map<String, List<String>> proxyHeaders) {
-        String proxyUrl = proxyUrlPrefix + "proxy-cache/" + CacheKeys.AD_FILTERED_M3U8;
+        String proxyUrl = proxyUrlPrefix + "/proxy-cache/" + CacheKeys.AD_FILTERED_M3U8;
 
         CacheHelper.put(CacheKeys.AD_FILTERED_M3U8, m3u8Content);
         CacheHelper.put(
@@ -622,7 +627,7 @@ public class VideoController extends BaseController implements Destroyable {
             onClose.accept(playInfo);
             player.destroy();
         });
-        Context.INSTANCE.popAndShowLastStage();
+        router.back();
     }
 
     private void updatePlayInfo() {

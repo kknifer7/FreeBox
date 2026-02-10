@@ -21,6 +21,7 @@ public class StorageHelper {
 
     private final Path LOCAL_STORAGE_PATH;
     private final Path TEMP_STORAGE_PATH;
+    private final Path LOG_STORAGE_PATH;
     private final Path LIVE_CONFIG_CACHE_PATH;
     private final Path SPIDER_CACHE_PATH;
     private final Filelizer filelizer;
@@ -43,6 +44,7 @@ public class StorageHelper {
             default:
                 throw new FBException("unsupported platform");
         }
+        LOG_STORAGE_PATH = LOCAL_STORAGE_PATH.resolve(Path.of("data", "log"));
         LIVE_CONFIG_CACHE_PATH = LOCAL_STORAGE_PATH.resolve(Path.of("data", "live_cache"));
         SPIDER_CACHE_PATH = LOCAL_STORAGE_PATH.resolve(Path.of("data", "spider_cache"));
         filelizer = new Filelizer(
@@ -64,6 +66,10 @@ public class StorageHelper {
 
     public Path getTempStoragePath() {
         return TEMP_STORAGE_PATH;
+    }
+
+    public Path getLogStoragePath() {
+        return LOG_STORAGE_PATH;
     }
 
     public Path getLiveConfigCachePath() {

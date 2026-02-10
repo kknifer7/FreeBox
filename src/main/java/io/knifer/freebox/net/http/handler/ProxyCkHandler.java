@@ -3,6 +3,7 @@ package io.knifer.freebox.net.http.handler;
 import cn.hutool.http.HttpStatus;
 import com.sun.net.httpserver.HttpExchange;
 import io.knifer.freebox.constant.BaseValues;
+import jakarta.inject.Singleton;
 
 
 /**
@@ -10,7 +11,7 @@ import io.knifer.freebox.constant.BaseValues;
  *
  * @author Knifer
  */
-
+@Singleton
 public class ProxyCkHandler implements HttpHandler{
 
     @Override

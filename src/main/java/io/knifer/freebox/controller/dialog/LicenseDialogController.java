@@ -3,12 +3,12 @@ package io.knifer.freebox.controller.dialog;
 import cn.hutool.core.io.IoUtil;
 import io.knifer.freebox.FreeBoxApplication;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.LoadingHelper;
 import io.knifer.freebox.helper.WindowHelper;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -74,7 +74,7 @@ public class LicenseDialogController {
     @FXML
     private void onDisagreeButtonAction() {
         LoadingHelper.showLoading(WindowHelper.getStage(disagreeButton), I18nKeys.MESSAGE_QUIT_LOADING);
-        Context.INSTANCE.destroy();
+        Platform.exit();
     }
 
     @FXML

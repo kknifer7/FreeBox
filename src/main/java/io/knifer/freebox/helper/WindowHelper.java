@@ -1,6 +1,5 @@
 package io.knifer.freebox.helper;
 
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.util.CastUtil;
 import javafx.event.Event;
 import javafx.scene.Node;
@@ -66,12 +65,5 @@ public class WindowHelper {
         } else if (!oldFontFamily.equals(fontFamily)) {
             parent.setStyle(style.replace(oldFontFamily, fontFamily));
         }
-    }
-
-    public void route(Stage currentStage, Stage nextStage) {
-        Context.INSTANCE.pushStage(currentStage);
-        Context.INSTANCE.setCurrentStage(nextStage);
-        currentStage.hide();
-        nextStage.show();
     }
 }

@@ -72,6 +72,7 @@ ext {
             mpv: '0.1.3',
             graal: '24.2.2',
             kotlinxCoroutines: '1.8.1',
+            guice: '7.0.0',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]
@@ -97,6 +98,7 @@ dependencies {
     implementation "cn.hutool:hutool-crypto:${dv.hutool}"
     implementation "cn.hutool:hutool-http:${dv.hutool}"
     implementation "cn.hutool:hutool-json:${dv.hutool}"
+    implementation "cn.hutool:hutool-system:${dv.hutool}"
     implementation "org.jsoup:jsoup:${dv.jsoup}"
     implementation "cn.wanghaomiao:JsoupXpath:${dv.jsoupXpath}"
     implementation "org.json:json:${dv.json}"
@@ -113,6 +115,7 @@ dependencies {
     implementation "org.graalvm.polyglot:polyglot:${dv.graal}"
     implementation "org.graalvm.js:js-language:${dv.graal}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${dv.kotlinxCoroutines}"
+    implementation "com.google.inject:guice:${dv.guice}"
 
     compileOnly "org.projectlombok:lombok:${dv.lombok}"
     annotationProcessor "org.projectlombok:lombok:${dv.lombok}"
@@ -164,16 +167,22 @@ extraJavaModuleInfo {
     automaticModule('io.github.kknifer7:mpv', 'mpv')
     // emoji-java
     automaticModule('com.vdurmont:emoji-java', 'emojiJava')
+    // guice
+    automaticModule('aopalliance:aopalliance', 'aopalliance')
 }
 
 test {
     useJUnitPlatform()
 }
 
+def isPackaging = gradle.startParameter.taskNames.contains('jpackage')
 sourceSets {
     main {
         resources {
             srcDirs = ['src/main/resources']
+            if (isPackaging) {
+                exclude 'tinylog-dev.properties'
+            }
         }
     }
 }
@@ -196,9 +205,10 @@ run {
             '--add-opens=org.controlsfx.controls/org.controlsfx.control=io.knifer.freebox',
             '--add-opens=javafx.graphics/javafx.scene=org.controlsfx.controls',
             '--add-opens=javafx.graphics/javafx.scene.text=cn.hutool.core',
-            '--add-opens=org.tinylog.api/org.tinylog.configuration=io.knifer.freebox'
+            '--add-opens=org.tinylog.api/org.tinylog.configuration=io.knifer.freebox',
+            '-Dpolyglot.engine.WarnInterpreterOnly=false'
     ]
-    if (gradle.startParameter.taskNames.contains('jpackage')) {
+    if (isPackaging) {
         jvmArgs += [
                 '--add-opens=javafx.graphics/javafx.scene.text=io.knifer.merged.module',
                 '-Dfreebox.profile=PROD'
@@ -229,6 +239,7 @@ jlink {
         requires 'com.google.gson'
         requires 'ipcsocket'
         requires 'kotlin.stdlib'
+        requires 'jakarta.inject'
         uses 'cn.hutool.core.convert.Converter'
     }
     tasks.named('jlink') {

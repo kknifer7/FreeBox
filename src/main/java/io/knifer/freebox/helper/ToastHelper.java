@@ -167,16 +167,15 @@ public class ToastHelper {
 
     private void buildExceptionDialogBtn(ExceptionDialog dialog) {
         DialogPane dialogPane = dialog.getDialogPane();
-        ObservableList<Node> children = dialogPane.getChildren();
-        ButtonBar buttonBar = (ButtonBar) children.stream()
-                .filter(node -> node instanceof ButtonBar)
-                .findFirst()
-                .orElseThrow();
-        ObservableList<Node> buttons = buttonBar.getButtons();
+        ButtonBar buttonBar;
+        ObservableList<Node> buttons;
+        TextArea textArea;
         Button reportBtn;
 
         dialogPane.setHeaderText(I18nHelper.get(I18nKeys.ERROR_HEADER_TITLE));
         WindowHelper.setFontFamily(dialog.getDialogPane(), ConfigHelper.getUsageFontFamily());
+        buttonBar = (ButtonBar) dialogPane.lookup(".button-bar");
+        buttons = buttonBar.getButtons();
         buttons.forEach(node -> {
             if (node instanceof Button button) {
                 String text = button.getText();
@@ -192,6 +191,10 @@ public class ToastHelper {
                 HostServiceHelper.showDocument(BaseValues.REPOSITORY_NEW_ISSUE_URL)
         );
         buttons.add(reportBtn);
+        textArea = (TextArea) dialogPane.lookup(".text-area");
+        textArea.setText("%s\n------------------------\n\n%s".formatted(
+                SystemHelper.getSystemSummary(), textArea.getText()
+        ));
     }
 
     public void showErrorAlert(

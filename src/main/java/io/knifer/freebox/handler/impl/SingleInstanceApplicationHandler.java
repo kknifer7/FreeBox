@@ -4,6 +4,7 @@ import cn.hutool.core.text.StrPool;
 import io.knifer.freebox.handler.NoParameterHandler;
 import io.knifer.freebox.helper.StorageHelper;
 import io.knifer.freebox.util.ValidationUtil;
+import jakarta.inject.Singleton;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -26,18 +27,13 @@ import java.nio.file.Path;
  * @author Knifer
  */
 @Slf4j
+@Singleton
 public class SingleInstanceApplicationHandler implements NoParameterHandler {
 
     private ServerSocket server;
 
     private final static String WAKEUP = "wakeup";
     private final static Path LOCKFILE_PATH = StorageHelper.getLocalStoragePath().resolve(".lock");
-
-    private final static SingleInstanceApplicationHandler INSTANCE = new SingleInstanceApplicationHandler();
-
-    public static SingleInstanceApplicationHandler getInstance() {
-        return INSTANCE;
-    }
 
     @Override
     public void handle() {

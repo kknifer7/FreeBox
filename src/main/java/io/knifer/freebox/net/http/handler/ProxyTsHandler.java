@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.ValidationUtil;
+import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Knifer
  */
 @Slf4j
+@Singleton
 public class ProxyTsHandler implements HttpHandler {
 
     private static final byte[] WRONG_HEADER = { (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };

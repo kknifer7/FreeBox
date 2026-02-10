@@ -2,6 +2,7 @@ package io.knifer.freebox.constant;
 
 import com.google.common.net.HttpHeaders;
 import lombok.experimental.UtilityClass;
+import org.tinylog.Level;
 
 /**
  * 常量
@@ -23,6 +24,10 @@ public class BaseValues {
      * 默认WS服务端口
      */
     public static final Integer DEFAULT_WS_PORT = 9898;
+    /**
+     * 默认日志等级
+     */
+    public static final Level DEFAULT_LOG_LEVEL = Level.INFO;
     /**
      * 首页链接相关
      */

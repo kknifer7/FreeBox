@@ -7,6 +7,7 @@ import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.model.common.tvbox.Message;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.thavam.util.concurrent.blockingMap.BlockingHashMap;
 import org.thavam.util.concurrent.blockingMap.BlockingMap;
@@ -20,6 +21,7 @@ import java.util.concurrent.*;
  * @author Knifer
  */
 @Slf4j
+@Singleton
 public class KebSocketTopicKeeper {
 
     private final BlockingMap<String, Message<JsonElement>> DATA_MAP = new BlockingHashMap<>();
@@ -55,14 +57,6 @@ public class KebSocketTopicKeeper {
                 return t;
             }
     );
-
-    private final static KebSocketTopicKeeper INSTANCE = new KebSocketTopicKeeper();
-
-    private KebSocketTopicKeeper() {}
-
-    public static KebSocketTopicKeeper getInstance() {
-        return INSTANCE;
-    }
 
     public void addTopic(Message<JsonElement> message) {
         DATA_MAP.put(message.getTopicId(), message);

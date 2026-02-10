@@ -3,6 +3,9 @@ package io.knifer.freebox.net.websocket.core;
 import com.google.gson.reflect.TypeToken;
 import io.knifer.freebox.model.common.tvbox.Message;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 
@@ -14,19 +17,11 @@ import java.util.concurrent.Future;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
+@Singleton
 public class KebSocketRunner {
 
-    private KebSocketRunner(KebSocketTopicKeeper topicKeeper) {
-        this.topicKeeper = topicKeeper;
-    }
-
     private final KebSocketTopicKeeper topicKeeper;
-
-    private final static KebSocketRunner INSTANCE = new KebSocketRunner(KebSocketTopicKeeper.getInstance());
-
-    public static KebSocketRunner getInstance() {
-        return INSTANCE;
-    }
 
     public <T> void send(WebSocket connection, Integer code, T data) {
         send(connection, Message.oneWay(code, data));

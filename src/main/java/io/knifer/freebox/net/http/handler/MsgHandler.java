@@ -4,6 +4,7 @@ import cn.hutool.http.HttpStatus;
 import com.sun.net.httpserver.HttpExchange;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.helper.ToastHelper;
+import jakarta.inject.Singleton;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Knifer
  */
 @Slf4j
+@Singleton
 public class MsgHandler implements HttpHandler {
 
     @Override

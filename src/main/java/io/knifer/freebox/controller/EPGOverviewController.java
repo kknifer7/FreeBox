@@ -8,7 +8,7 @@ import io.knifer.freebox.component.node.EPGProgramBlockPane;
 import io.knifer.freebox.component.node.EPGProgramBlockPopOver;
 import io.knifer.freebox.constant.EPGTimelineMode;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.handler.impl.ParameterizedEpgFetchingHandler;
+import io.knifer.freebox.handler.EpgFetchingHandler;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.helper.WindowHelper;
@@ -18,6 +18,7 @@ import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CollectionUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -35,6 +36,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,6 +66,7 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor_ = @__(@Inject))
 public class EPGOverviewController extends BaseController implements Destroyable {
 
     @FXML
@@ -99,12 +102,13 @@ public class EPGOverviewController extends BaseController implements Destroyable
     private LocalDateTime now;
     private Timer datetimeUpdateTimer;
     private Set<LiveChannel> addedChannels;
-    private ParameterizedEpgFetchingHandler epgFetchingHandler;
     private List<LiveChannelGroup> liveChannelGroups;
     private String epgServiceUrl;
     private Table<LocalDate, LiveChannel, EPG> epgDataTable;
 
     private EPGTimelineMode timelineMode = EPGTimelineMode.COMMON;
+
+    private final EpgFetchingHandler epgFetchingHandler;
 
     private final static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy年MM月dd日 EEEE");
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
@@ -116,7 +120,6 @@ public class EPGOverviewController extends BaseController implements Destroyable
         ReadOnlyDoubleProperty timelineScrollPaneHeightProp;
         DoubleBinding searchAddChannelComboBoxWidthProp;
 
-        epgFetchingHandler = ParameterizedEpgFetchingHandler.getInstance();
         epgDataTable = new RowKeyTable<>();
         addedChannels = new HashSet<>();
         now = LocalDateTime.now();

@@ -427,6 +427,7 @@ public class TVController implements Destroyable {
                         Stage videoStage;
                         Movie movie;
                         List<Movie.Video> videos;
+                        Movie.Video video;
                         Movie.Video.UrlBean urlBean;
 
                         if (
@@ -439,12 +440,16 @@ public class TVController implements Destroyable {
 
                             return;
                         }
-                        urlBean = videos.get(0).getUrlBean();
+                        video = videos.get(0);
+                        urlBean = video.getUrlBean();
                         if (CollectionUtil.isEmpty(urlBean.getInfoList())) {
                             // 没有播放列表，有可能不是影片，而是源作者自行添加的广告一类的东西
                             LoadingHelper.hideLoading();
 
                             return;
+                        }
+                        if (video.getId() == null) {
+                            video.setId(videoId);
                         }
                         stageAndController = FXMLUtil.load(Views.VIDEO);
                         tvStage = WindowHelper.getStage(root);

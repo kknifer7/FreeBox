@@ -236,19 +236,21 @@ public class VideoController extends BaseController implements Destroyable {
             ScrollPane scrollPane = new ScrollPane(flowPane);
             CheckMenuItem reverseMenuItem;
 
-            scrollPane.setFitToWidth(true);
-            scrollPane.setFitToHeight(true);
             flowPane.setHgap(10);
             flowPane.setVgap(10);
             flowPane.setAlignment(Pos.TOP_CENTER);
-            flowPane.setPadding(new Insets(10, 0, 60, 0));
+            flowPane.setPadding(new Insets(5, 5, 0, 5));
+            scrollPane.setFitToWidth(true);
+            scrollPane.setFitToHeight(true);
             if (hasPlayInfo && urlFlag.equals(playInfo.getPlayFlag()) && playInfo.isReverseSort()) {
                 Collections.reverse(beanList);
             }
             beanList.forEach(bean -> {
-                Button btn = new Button(bean.getName());
+                String name = bean.getName();
+                Button btn = new Button(name);
 
                 children.add(btn);
+                btn.setTooltip(new Tooltip(name));
                 btn.setOnAction(evt -> {
                     if (btn == selectedEpBtn) {
                         return;
@@ -275,6 +277,7 @@ public class VideoController extends BaseController implements Destroyable {
             }
             // 添加标签页
             tabs.add(tab);
+            tab.getTabPane().setPadding(new Insets(0, 0, 90, 0));
         });
     }
 

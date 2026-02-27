@@ -5,6 +5,7 @@ import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.common.tvbox.VodInfo;
 import lombok.Data;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 保存观看历史
@@ -72,18 +73,23 @@ public class SavePlayHistoryDTO {
             VodInfo vodInfo, Movie.Video.UrlBean.UrlInfo.InfoBean episode, VideoPlayInfoBO playInfo
     ) {
         SavePlayHistoryDTO result = new SavePlayHistoryDTO();
+        String vodId = vodInfo.getId();
+        String episodeUrl = episode.getUrl();
 
         result.setSourceKey(vodInfo.getSourceKey());
-        result.setVodId(vodInfo.getId());
         result.setVodName(vodInfo.getName());
         result.setVodPic(vodInfo.getPic());
         result.setEpisodeFlag(episode.getName());
         result.setPlayFlag(playInfo.getPlayFlag());
         result.setEpisodeIndex(vodInfo.getPlayIndex());
-        result.setEpisodeUrl(episode.getUrl());
+        result.setEpisodeUrl(episodeUrl);
         result.setRevSort(vodInfo.isReverseSort());
         result.setPosition(ObjectUtils.defaultIfNull(vodInfo.getProgress(), 0L));
         result.setDuration(ObjectUtils.defaultIfNull(playInfo.getDuration(), 0L));
+        if (StringUtils.isBlank(vodId)) {
+            vodId = episodeUrl;
+        }
+        result.setVodId(vodId);
 
         return result;
     }

@@ -7,6 +7,7 @@ import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ClientType;
+import io.knifer.freebox.controller.BaseController;
 import io.knifer.freebox.handler.impl.SingleInstanceApplicationHandler;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.StorageHelper;
@@ -28,12 +29,12 @@ import jakarta.inject.Singleton;
 import javafx.application.Application;
 import javafx.concurrent.Service;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.tinylog.Level;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -101,9 +102,13 @@ public class Context {
 
         this.app = app;
         primaryStage.setOnHidden(evt -> {
-            if (router.hasMainStages()) {
+            Collection<Pair<Stage, ? extends BaseController>> secondaries = router.getSecondaries();
+
+            if (!secondaries.isEmpty()) {
                 log.debug("primary stage is closed, hide other windows to exit the application.");
-                List.copyOf(Window.getWindows()).forEach(Window::hide);
+                for (Pair<Stage, ? extends BaseController> pair : secondaries) {
+                    pair.getLeft().hide();
+                }
             }
         });
         logBaseInfo();

@@ -50,15 +50,16 @@ public class Router {
         this.secondaryStageAndControllerMap = new HashMap<>();
     }
 
-    public boolean hasMainStages() {
-
-        return !mainStageStack.isEmpty();
-    }
-
     public void route(Stage currentStage, Stage nextStage) {
         push(currentStage);
         this.current = nextStage;
         currentStage.hide();
+        if (currentStage == primary && !secondaryStageAndControllerMap.isEmpty()) {
+            // 当前窗口是主窗口时，一旦主窗口隐藏，次要窗口会随之隐藏，因此需要手动将次要窗口重新show出来
+            secondaryStageAndControllerMap.values().forEach(pair ->
+                pair.getLeft().show()
+            );
+        }
         nextStage.show();
     }
 
@@ -131,6 +132,14 @@ public class Router {
     @Nullable
     public <T extends BaseController> Pair<Stage, T> getSecondary(String viewName) {
         return CastUtil.cast(secondaryStageAndControllerMap.get(viewName));
+    }
+
+    /**
+     * 获取所有次要窗口+控制器
+     * @return 所有 窗口+控制器
+     */
+    public Collection<Pair<Stage, ? extends BaseController>> getSecondaries() {
+        return secondaryStageAndControllerMap.values();
     }
 
     public Stage getCurrent() {

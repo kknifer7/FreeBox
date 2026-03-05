@@ -3,6 +3,7 @@ package io.knifer.freebox.model.domain;
 import io.knifer.freebox.constant.PlayerType;
 import io.knifer.freebox.constant.VideoPlaybackTrigger;
 import lombok.Data;
+import org.tinylog.Level;
 
 /**
  * 本地设置
@@ -98,4 +99,9 @@ public class Config {
      * vlc播放器路径（vlcj NativeDiscovery失败时使用）
      */
     private String vlcPath;
+
+    /**
+     * 日志等级
+     */
+    private Level logLevel;
 }

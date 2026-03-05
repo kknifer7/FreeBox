@@ -2,6 +2,7 @@ package io.knifer.freebox.constant;
 
 import com.google.common.net.HttpHeaders;
 import lombok.experimental.UtilityClass;
+import org.tinylog.Level;
 
 /**
  * 常量
@@ -23,6 +24,10 @@ public class BaseValues {
      * 默认WS服务端口
      */
     public static final Integer DEFAULT_WS_PORT = 9898;
+    /**
+     * 默认日志等级
+     */
+    public static final Level DEFAULT_LOG_LEVEL = Level.INFO;
     /**
      * 首页链接相关
      */
@@ -66,6 +71,8 @@ public class BaseValues {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
     public static final Runnable EMPTY_RUNNABLE = () -> {};
     public static final String HTTP_GET = "GET";
+    public static final String HTTP_POST = "POST";
+    public static final String HTTP_HEADER = "HEADER";
     public static final String[] FETCH_CAT_VOD_API_CONFIG_HTTP_HEADERS = new String[]{
             HttpHeaders.USER_AGENT, "okhttp/3.15",
             HttpHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"

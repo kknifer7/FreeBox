@@ -3,6 +3,7 @@ package io.knifer.freebox.controller;
 import com.google.common.base.Charsets;
 import io.knifer.freebox.component.factory.SourceBeanCheckListCellFactory;
 import io.knifer.freebox.component.factory.SourceBeanProblemListCellFactory;
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.SourceAuditResult;
 import io.knifer.freebox.constant.SourceAuditStatus;
@@ -21,6 +22,7 @@ import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditExecutor;
 import io.knifer.freebox.service.sourceaudit.auditor.impl.SourceAuditExecutorImpl;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CastUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -34,6 +36,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.CheckListView;
@@ -53,6 +56,7 @@ import java.util.stream.Collectors;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class SourceAuditController implements Destroyable {
 
     @FXML
@@ -91,17 +95,19 @@ public class SourceAuditController implements Destroyable {
     private Button stopAuditingSourceBeanBtn;
 
     private SpiderTemplate template;
-    private ClientManager clientManager;
     private SourceAuditExecutor sourceAuditExecutor;
     private final SimpleBooleanProperty interruptAuditFlag = new SimpleBooleanProperty(true);
     private final SimpleObjectProperty<SourceBean> nowSourceBeanProperty = new SimpleObjectProperty<>();
     private final BooleanProperty loadingProperty = new SimpleBooleanProperty(true);
     private final Map<String, ObservableList<SourceAuditItem>> sourceKeyAndAuditItemsMap = new HashMap<>();
 
+    private final ClientManager clientManager;
+    private final Context context;
+    private final Router router;
+
     @FXML
     private void initialize() {
-        template = Context.INSTANCE.getSpiderTemplate();
-        clientManager = Context.INSTANCE.getClientManager();
+        template = context.getSpiderTemplate();
         sourceAuditExecutor = new SourceAuditExecutorImpl(template);
 
         nowSourceBeanProperty.addListener((ob, oldVal, newVal) -> {
@@ -154,7 +160,7 @@ public class SourceAuditController implements Destroyable {
             }
             stage.setOnCloseRequest(evt -> {
                 destroy();
-                Context.INSTANCE.popAndShowLastStage();
+                router.back();
             });
             template.init(success -> {
                 if (!success) {

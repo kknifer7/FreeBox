@@ -1,11 +1,14 @@
 package io.knifer.freebox.net.websocket.core;
 
-import io.knifer.freebox.context.Context;
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.helper.LoadingHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.ClientInfo;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javafx.application.Platform;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 
@@ -21,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
+@Singleton
 public class ClientManager {
 
     private final Map<String, ClientInfo> clients = new ConcurrentHashMap<>();
@@ -28,6 +33,8 @@ public class ClientManager {
     private final AtomicReference<ClientInfo> currentClient = new AtomicReference<>();
 
     private final CyclicBarrier currentClientBarrier = new CyclicBarrier(2);
+
+    private final Router router;
 
     private ThreadPoolExecutor connectingExecutor = null;
 
@@ -96,9 +103,10 @@ public class ClientManager {
                     ClientInfo clientInfo = getCurrentClientImmediately();
 
                     if (clientInfo != null && clientInfo.isOpen()) {
+
                         return clientInfo;
                     }
-                    Platform.runLater(() -> LoadingHelper.showWaitingReconnecting(Context.INSTANCE.getCurrentStage()));
+                    Platform.runLater(() -> LoadingHelper.showWaitingReconnecting(router.getCurrent()));
                     log.info("client disconnected, waiting for reconnecting");
                     try {
                         // 等待重连

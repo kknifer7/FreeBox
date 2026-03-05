@@ -133,6 +133,8 @@ public class I18nKeys {
     public static final String SETTINGS_SELECT_PLAYER_DIRECTORY = "settings.select-player-directory";
     public static final String SETTINGS_PLAYER_STATUS_OK = "settings.player-status-ok";
     public static final String SETTINGS_PLAYER_STATUS_NOT_FOUND = "settings.player-status-not-found";
+    public static final String SETTINGS_DEBUGGING_LOG_EXPORT = "settings.debugging.log-export";
+    public static final String SETTINGS_DEBUGGING_LOG_CONSOLE = "settings.debugging.log-console";
 
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";
@@ -203,4 +205,6 @@ public class I18nKeys {
     public static final String LIVE_MESSAGE_INVALID_LIVE_URL = "live.message.invalid-live-url";
     public static final String LIVE_MESSAGE_INVALID_LIVE = "live.message.invalid-live";
     public static final String LIVE_MESSAGE_LIVE_NOT_FOUND = "live.message.live-not-found";
+
+    public static final String LOG_CONSOLE_TIP = "log-console.tip";
 }

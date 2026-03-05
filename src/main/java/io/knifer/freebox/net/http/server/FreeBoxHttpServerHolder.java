@@ -3,14 +3,17 @@ package io.knifer.freebox.net.http.server;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.server.SimpleServer;
+import io.knifer.freebox.context.Context;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.net.http.handler.*;
 import io.knifer.freebox.service.ShutdownHttpServerService;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import lombok.extern.slf4j.Slf4j;
@@ -24,18 +27,35 @@ import java.util.List;
  * @author Knifer
  */
 @Slf4j
+@Singleton
 public class FreeBoxHttpServerHolder {
 
     private volatile SimpleServer server;
 
-    private static final List<HttpHandler> HANDLERS = List.of(
-            new TVBoxPairingInfoHandler(),
-            new MsgHandler(),
-            new ProxyCkHandler(),
-            new ProxyHandler(),
-            new ProxyCacheHandler(),
-            new ProxyTsHandler()
-    );
+    // 通过Provider注入，避免循环依赖
+    private final Provider<Context> contextProvider;
+    private final List<HttpHandler> handlers;
+
+    @Inject
+    public FreeBoxHttpServerHolder(
+            Provider<Context> contextProvider,
+            TVBoxPairingInfoHandler tvBoxPairingInfoHandler,
+            MsgHandler msgHandler,
+            ProxyCkHandler proxyCkHandler,
+            ProxyHandler proxyHandler,
+            ProxyCacheHandler proxyCacheHandler,
+            ProxyTsHandler proxyTsHandler
+    ) {
+        this.contextProvider = contextProvider;
+        this.handlers = List.of(
+                tvBoxPairingInfoHandler,
+                msgHandler,
+                proxyCkHandler,
+                proxyHandler,
+                proxyCacheHandler,
+                proxyTsHandler
+        );
+    }
 
     public synchronized boolean start(String hostname, int port) {
         try {
@@ -45,7 +65,7 @@ public class FreeBoxHttpServerHolder {
                 server = new SimpleServer(hostname, port);
             }
             server.addHandler("/", exchange ->
-                HANDLERS.forEach(handler -> {
+                handlers.forEach(handler -> {
                     if (handler.support(exchange)) {
                         handler.handle(exchange);
                     }
@@ -53,7 +73,7 @@ public class FreeBoxHttpServerHolder {
             );
             server.start();
             log.info("http service start successfully");
-            Context.INSTANCE.postEvent(AppEvents.HTTP_SERVER_STARTED);
+            contextProvider.get().postEvent(AppEvents.HTTP_SERVER_STARTED);
 
             return true;
         } catch (IORuntimeException e) {

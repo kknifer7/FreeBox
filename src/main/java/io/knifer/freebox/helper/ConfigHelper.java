@@ -8,7 +8,9 @@ import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import javafx.scene.text.Font;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.tinylog.Level;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +31,8 @@ public class ConfigHelper {
     private volatile static Config config;
 
     private static final AtomicBoolean updateFlag = new AtomicBoolean(false);
+
+    private static final String PROXY_URL_F = "http://%s:%d/proxy";
 
     public synchronized void setServiceIPv4(String serviceIPv4) {
         assertIfConfigLoaded();
@@ -206,10 +210,40 @@ public class ConfigHelper {
         config.setVideoPlaybackTrigger(videoPlaybackTrigger);
     }
 
+    public Level getLogLevel() {
+        assertIfConfigLoaded();
+
+        return config.getLogLevel();
+    }
+
+    public synchronized void setLogLevel(Level logLevel) {
+        assertIfConfigLoaded();
+        config.setLogLevel(logLevel);
+    }
+
+    public String getProxyUrl(boolean local) {
+        String ip;
+
+        if (local) {
+            ip = "127.0.0.1";
+        } else {
+            ip = getServiceIPv4();
+            if (StringUtils.isBlank(ip) || BaseValues.ANY_LOCAL_IP.equals(ip)) {
+                ip = "127.0.0.1";
+            }
+        }
+
+        return String.format(PROXY_URL_F, ip, getHttpPort());
+    }
+
     private void assertIfConfigLoaded() {
         if (config == null) {
             throw new IllegalStateException("config is not loaded");
         }
+    }
+
+    public boolean isLoaded() {
+        return config != null;
     }
 
     public synchronized void loadConfig() {
@@ -248,6 +282,7 @@ public class ConfigHelper {
                 configLoaded.setAdFilterDynamicThresholdFactor(-1D);
                 configLoaded.setPlayerType(PlayerType.VLC);
                 configLoaded.setVideoPlaybackTrigger(VideoPlaybackTrigger.SINGLE_CLICK);
+                configLoaded.setLogLevel(BaseValues.DEFAULT_LOG_LEVEL);
                 Files.createDirectories(CONFIG_PATH.getParent());
                 Files.writeString(CONFIG_PATH, GsonUtil.toJson(configLoaded));
             }
@@ -284,6 +319,10 @@ public class ConfigHelper {
         }
         if (config.getVideoPlaybackTrigger() == null) {
             config.setVideoPlaybackTrigger(VideoPlaybackTrigger.SINGLE_CLICK);
+            needSave = true;
+        }
+        if (config.getLogLevel() == null) {
+            config.setLogLevel(BaseValues.DEFAULT_LOG_LEVEL);
             needSave = true;
         }
         if (needSave) {

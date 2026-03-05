@@ -1,8 +1,8 @@
 package io.knifer.freebox.net.websocket.server;
 
+import io.knifer.freebox.context.Context;
 import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.domain.ClientInfo;
@@ -30,12 +30,20 @@ public class KebSocketServer extends WebSocketServer {
 
     private final ClientManager clientManager;
 
+	private final Context context;
+
 	private final KebSocketMessageDispatcher messageDispatcher;
 
-	public KebSocketServer(InetSocketAddress address, ClientManager clientManager) {
+	public KebSocketServer(
+			InetSocketAddress address,
+			ClientManager clientManager,
+			KebSocketMessageDispatcher messageDispatcher,
+			Context context
+	) {
 		super(address);
 		this.clientManager = clientManager;
-		this.messageDispatcher = new KebSocketMessageDispatcher(clientManager);
+		this.messageDispatcher = messageDispatcher;
+		this.context = context;
 	}
 
     @Override
@@ -55,7 +63,7 @@ public class KebSocketServer extends WebSocketServer {
 			return;
 		}
 		Platform.runLater(() -> {
-			Context.INSTANCE.postEvent(new AppEvents.ClientUnregisteredEvent(clientInfo));
+			context.postEvent(new AppEvents.ClientUnregisteredEvent(clientInfo));
 			ToastHelper.showInfoI18n(
 					I18nKeys.MESSAGE_CLIENT_UNREGISTERED,
 					conn.getRemoteSocketAddress().getHostString()
@@ -91,6 +99,6 @@ public class KebSocketServer extends WebSocketServer {
 	@Override
 	public void onStart() {
 		log.info("websocket service start successfully");
-		Platform.runLater(() -> Context.INSTANCE.postEvent(new AppEvents.WsServerStartedEvent(this)));
+		Platform.runLater(() -> context.postEvent(new AppEvents.WsServerStartedEvent(this)));
 	}
 }

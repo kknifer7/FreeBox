@@ -2,6 +2,7 @@ package io.knifer.freebox.util.catvod;
 
 import cn.hutool.core.codec.Base64;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -9,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Knifer
  */
+@Slf4j
 @UtilityClass
 public class ApiConfigUtil {
 
@@ -31,6 +33,13 @@ public class ApiConfigUtil {
             return content;
         }
 
-        return Base64.decodeStr(contentSplits[1]);
+        try {
+
+            return Base64.decodeStr(contentSplits[1]);
+        } catch (Exception e) {
+            log.info("base64 decode failed", e);
+
+            return StringUtils.EMPTY;
+        }
     }
 }

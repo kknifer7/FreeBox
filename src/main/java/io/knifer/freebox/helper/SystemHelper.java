@@ -1,26 +1,28 @@
 package io.knifer.freebox.helper;
 
 import cn.hutool.core.util.RuntimeUtil;
+import cn.hutool.system.SystemUtil;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
-import io.knifer.freebox.constant.Architecture;
-import io.knifer.freebox.constant.BaseResources;
-import io.knifer.freebox.constant.BaseValues;
-import io.knifer.freebox.constant.Platform;
+import io.knifer.freebox.constant.*;
 import io.knifer.freebox.exception.FBException;
+import io.knifer.freebox.log.provider.ReconfigurableLoggingProvider;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArchUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.arch.Processor;
 
 import javax.swing.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 系统相关
  *
  * @author Knifer
  */
+@Slf4j
 @UtilityClass
 public class SystemHelper {
 
@@ -29,7 +31,16 @@ public class SystemHelper {
 
     private final static io.knifer.freebox.constant.Platform CURRENT_PLATFORM;
     private final static Architecture CURRENT_ARCHITECTURE;
-    private final static boolean DEBUG_FLAG = "true".equals(BaseResources.X_PROPERTIES.getProperty(BaseValues.X_DEBUG));
+    private final static EnvProfile ENV_PROFILE = EnvProfile.valueOf(System.getProperty("freebox.profile"));
+    private final static AtomicBoolean DEBUG_FLAG = new AtomicBoolean(
+            "true".equals(BaseResources.X_PROPERTIES.getProperty(BaseValues.X_DEBUG))
+    );
+    private final static String SYSTEM_SUMMARY = "FreeBox Version: " +
+            BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION) + "\n" +
+            SystemUtil.getOsInfo() +
+            SystemUtil.getUserInfo() +
+            SystemUtil.getRuntimeInfo() +
+            SystemUtil.getHostInfo();
 
     static {
         String exeResult;
@@ -105,6 +116,22 @@ public class SystemHelper {
     }
 
     public boolean isDebug() {
-        return DEBUG_FLAG;
+        return DEBUG_FLAG.get();
+    }
+
+    public String getSystemSummary() {
+        return SYSTEM_SUMMARY;
+    }
+
+    public EnvProfile getEnvProfile() {
+        return ENV_PROFILE;
+    }
+
+    public void reloadLogging() {
+        try {
+            ReconfigurableLoggingProvider.reload();
+        } catch (InterruptedException | ReflectiveOperationException e) {
+            javafx.application.Platform.runLater(() -> ToastHelper.showException(e));
+        }
     }
 }

@@ -3,6 +3,7 @@ package io.knifer.freebox.component.node;
 import io.knifer.freebox.component.validator.URLValidator;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.*;
+import io.knifer.freebox.ioc.IOC;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.ActionEvent;
@@ -46,7 +47,7 @@ public abstract class ImportUrlApiDialog extends TextInputDialog {
         contentVBox.setSpacing(10d);
         dialogPane.setContent(contentVBox);
         dialogPane.setPrefWidth(500);
-        setOnShowing(evt -> validationSupport.registerValidator(editor, URLValidator.getInstance()));
+        setOnShowing(evt -> validationSupport.registerValidator(editor, IOC.getBean(URLValidator.class)));
         editor.textProperty().addListener(
                 (ob, oldVal, newVal) ->
                         ValidationHelper.validate(validationSupport, editor)

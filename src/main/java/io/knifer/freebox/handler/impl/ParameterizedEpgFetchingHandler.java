@@ -5,6 +5,7 @@ import io.knifer.freebox.handler.EpgFetchingHandler;
 import io.knifer.freebox.model.common.diyp.EPG;
 import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
@@ -15,9 +16,8 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author Knifer
  */
+@Singleton
 public class ParameterizedEpgFetchingHandler implements EpgFetchingHandler {
-
-    private static final ParameterizedEpgFetchingHandler INSTANCE = new ParameterizedEpgFetchingHandler();
 
     @Override
     public CompletableFuture<EPG> handle(String epgServiceUrl, String channelName, LocalDate date) {
@@ -33,9 +33,5 @@ public class ParameterizedEpgFetchingHandler implements EpgFetchingHandler {
 
                     return GsonUtil.fromJson(jsonContent, EPG.class);
                 });
-    }
-
-    public static ParameterizedEpgFetchingHandler getInstance() {
-        return INSTANCE;
     }
 }

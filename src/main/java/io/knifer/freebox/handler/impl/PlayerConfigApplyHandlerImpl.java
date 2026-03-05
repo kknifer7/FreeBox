@@ -9,6 +9,7 @@ import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.service.CommandExecService;
 import io.knifer.freebox.util.AsyncUtil;
+import jakarta.inject.Singleton;
 import javafx.application.Platform;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -30,16 +31,11 @@ import java.util.function.Function;
  * @author Knifer
  */
 @Slf4j
+@Singleton
 public class PlayerConfigApplyHandlerImpl implements PlayerConfigApplyHandler {
 
-    private Function<String, Boolean> mpvResultChecker;
+    private Function<String, Boolean> resultChecker;
     private CommandExecService externalPlayerCmdExecService;
-
-    private static final PlayerConfigApplyHandlerImpl INSTANCE = new PlayerConfigApplyHandlerImpl();
-
-    public static PlayerConfigApplyHandler getInstance() {
-        return INSTANCE;
-    }
 
     @Override
     public void handle(PlayerType playerType, Stage stage, Consumer<Pair<Boolean, String>> callback) {
@@ -82,15 +78,15 @@ public class PlayerConfigApplyHandlerImpl implements PlayerConfigApplyHandler {
                 }
             });
             case MPV_EXTERNAL -> {
-                if (mpvResultChecker == null) {
-                    mpvResultChecker = execResult ->
+                if (resultChecker == null) {
+                    resultChecker = execResult ->
                             StringUtils.isNotBlank(execResult) &&
                                     execResult.contains("Copyright") &&
                                     execResult.contains("mpv");
                 }
                 checkExternalPlayer(
                         new String[]{ "mpv", "--version" },
-                        mpvResultChecker,
+                        resultChecker,
                         () -> {
                             // 自动检测成功
                             log.info("apply player, success=true, path=mpv");
@@ -110,7 +106,7 @@ public class PlayerConfigApplyHandlerImpl implements PlayerConfigApplyHandler {
                                 // 手动选择后，再次检测以确定播放器是可用的
                                 checkExternalPlayer(
                                         new String[]{ mpvPath, "--version" },
-                                        mpvResultChecker,
+                                        resultChecker,
                                         () -> {
                                             log.info("apply player, success=true, path={}", mpvPath);
                                             callback.accept(Pair.of(true, mpvPath));

@@ -10,6 +10,7 @@ import io.knifer.freebox.model.common.catvod.Class;
 import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.util.CollectionUtil;
+import jakarta.inject.Singleton;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RegExUtils;
@@ -26,13 +27,8 @@ import java.util.stream.Collectors;
  *
  * @author Knifer
  */
+@Singleton
 public class CatVodBeanConverter {
-
-    private final static CatVodBeanConverter INSTANCE = new CatVodBeanConverter();
-
-    public static CatVodBeanConverter getInstance() {
-        return INSTANCE;
-    }
 
     public MovieSort classesToMovieSort(List<Class> classes, Map<String, List<Filter>> filters) {
         MovieSort movieSort = new MovieSort();

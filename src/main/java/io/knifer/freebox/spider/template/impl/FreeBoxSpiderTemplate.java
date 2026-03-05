@@ -2,7 +2,7 @@ package io.knifer.freebox.spider.template.impl;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.crypto.digest.DigestUtil;
-import com.github.catvod.spider.Spider;
+import com.github.catvod.crawler.spider.Spider;
 import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -28,6 +28,7 @@ import io.knifer.freebox.util.ValidationUtil;
 import io.knifer.freebox.util.catvod.ApiConfigUtil;
 import io.knifer.freebox.util.catvod.SpiderInvokeUtil;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -70,11 +71,14 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             }
     );
 
-    public FreeBoxSpiderTemplate(ClientManager clientManager) {
+    @Inject
+    public FreeBoxSpiderTemplate(
+            ClientManager clientManager, SpiderJarLoader spiderJarLoader, CatVodBeanConverter catVodBeanConverter
+    ) {
         this.clientManager = clientManager;
-        this.spiderJarLoader = SpiderJarLoader.getInstance();
+        this.spiderJarLoader = spiderJarLoader;
+        this.beanConverter = catVodBeanConverter;
         this.sourceBeans = List.of();
-        beanConverter = CatVodBeanConverter.getInstance();
     }
 
     @Override
@@ -464,7 +468,7 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
             log.error("load site custom spider error, spider url invalid");
 
-            return new Spider();
+            return Spider.getEmpty();
         }
 
         return spiderJarLoader.getSpider(
@@ -478,5 +482,10 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
     @Override
     public void getLives(Consumer<List<FreeBoxLive>> callback) {
         callback.accept(ObjectUtils.defaultIfNull(apiConfig.getLives(), List.of()));
+    }
+
+    @Override
+    public void proxy(Consumer<Object[]> callback, Map<String, String> params) {
+        EXECUTOR.execute(() -> SpiderTemplate.super.proxy(callback, params));
     }
 }

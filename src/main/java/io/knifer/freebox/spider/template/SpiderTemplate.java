@@ -1,11 +1,17 @@
 package io.knifer.freebox.spider.template;
 
 import com.google.gson.JsonObject;
-import io.knifer.freebox.model.common.tvbox.*;
+import io.knifer.freebox.ioc.IOC;
 import io.knifer.freebox.model.c2s.FreeBoxLive;
+import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.s2c.*;
+import io.knifer.freebox.spider.SpiderJarLoader;
+import io.knifer.freebox.spider.js.JSSpider;
+import io.knifer.freebox.util.catvod.SpiderInvokeUtil;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -118,4 +124,25 @@ public interface SpiderTemplate {
      * 获取直播配置列表
      */
     void getLives(Consumer<List<FreeBoxLive>> callback);
+
+    /**
+     * 代理播放请求
+     * @param callback 回调
+     * @param params 参数
+     */
+    default void proxy(Consumer<Object[]> callback, Map<String, String> params) {
+        Object spider = IOC.getBean(SpiderJarLoader.class).getSpider();
+
+        if (spider == null) {
+            callback.accept(ArrayUtils.EMPTY_OBJECT_ARRAY);
+        } else if (spider instanceof JSSpider jsSpider){
+            try {
+                callback.accept(jsSpider.proxy(params));
+            } catch (Exception ignored) {
+                callback.accept(ArrayUtils.EMPTY_OBJECT_ARRAY);
+            }
+        } else {
+            callback.accept(SpiderInvokeUtil.proxyLocal(spider, params));
+        }
+    }
 }

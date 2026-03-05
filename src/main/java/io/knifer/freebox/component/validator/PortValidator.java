@@ -3,6 +3,7 @@ package io.knifer.freebox.component.validator;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.util.ValidationUtil;
+import jakarta.inject.Singleton;
 import javafx.scene.control.Control;
 import org.controlsfx.validation.ValidationResult;
 import org.controlsfx.validation.Validator;
@@ -12,15 +13,8 @@ import org.controlsfx.validation.Validator;
  *
  * @author Knifer
  */
+@Singleton
 public class PortValidator implements Validator<String> {
-
-    private final static PortValidator INSTANCE = new PortValidator();
-
-    private PortValidator() {}
-
-    public static PortValidator getInstance() {
-        return INSTANCE;
-    }
 
     @Override
     public ValidationResult apply(Control control, String s) {

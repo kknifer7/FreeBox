@@ -2,7 +2,8 @@ package io.knifer.freebox.component.node;
 
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.exception.FBException;
-import javafx.animation.*;
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
@@ -15,9 +16,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class SplashScreen {
 
     private StackPane root;

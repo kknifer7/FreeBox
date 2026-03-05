@@ -1,6 +1,7 @@
 package io.knifer.freebox.service;
 
 import io.knifer.freebox.context.Context;
+import io.knifer.freebox.ioc.IOC;
 import io.knifer.freebox.model.common.tvbox.AbsXml;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.s2c.GetSearchContentDTO;
@@ -75,8 +76,7 @@ public class MovieSearchService extends Service<Void> {
                     if (isCancelled()) {
                         return;
                     }
-
-                    Context.INSTANCE.getSpiderTemplate().getSearchContent(
+                    IOC.getBean(Context.class).getSpiderTemplate().getSearchContent(
                             GetSearchContentDTO.of(sourceKey, keyword),
                             searchContent -> {
                                 if (isCancelled()) {

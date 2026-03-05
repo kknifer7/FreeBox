@@ -1,6 +1,7 @@
 package io.knifer.freebox.service;
 
 import io.knifer.freebox.handler.impl.SingleInstanceApplicationHandler;
+import io.knifer.freebox.ioc.IOC;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
@@ -16,7 +17,7 @@ public class SingleInstanceApplicationService extends Service<Void> {
         return new Task<>() {
             @Override
             protected Void call() {
-                SingleInstanceApplicationHandler.getInstance().handle();
+                IOC.getBean(SingleInstanceApplicationHandler.class).handle();
 
                 return null;
             }

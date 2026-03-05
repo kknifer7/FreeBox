@@ -3,6 +3,7 @@ package io.knifer.freebox.net.websocket.core;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.common.tvbox.Message;
 import io.knifer.freebox.net.websocket.exception.ForbiddenException;
@@ -12,6 +13,7 @@ import io.knifer.freebox.net.websocket.handler.impl.CommonTopicHandler;
 import io.knifer.freebox.net.websocket.handler.impl.ValidationHandler;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.json.GsonUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
@@ -28,11 +30,14 @@ public class KebSocketMessageDispatcher {
 
     private final List<KebSocketMessageHandler<?>> handlers;
 
-    public KebSocketMessageDispatcher(ClientManager clientManager) {
+    @Inject
+    public KebSocketMessageDispatcher(
+            ClientManager clientManager, Context context, KebSocketTopicKeeper kebSocketTopicKeeper
+    ) {
         handlers = ImmutableList.of(
                 new ValidationHandler(clientManager),
-                new ClientRegisterHandler(clientManager),
-                new CommonTopicHandler(KebSocketTopicKeeper.getInstance())
+                new ClientRegisterHandler(clientManager, context),
+                new CommonTopicHandler(kebSocketTopicKeeper)
         );
     }
 

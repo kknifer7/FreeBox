@@ -3,8 +3,7 @@ plugins {
     id 'application'
     id 'org.javamodularity.moduleplugin' version '1.8.12'
     id 'org.openjfx.javafxplugin' version '0.1.0'
-    id 'org.beryx.jlink' version '2.25.0'
-    id 'com.gluonhq.gluonfx-gradle-plugin' version '1.0.23'
+    id 'org.beryx.jlink' version '3.1.5'
     id 'org.gradlex.extra-java-module-info' version '1.12'
 }
 
@@ -56,14 +55,14 @@ ext {
             guava: '33.2.1-jre',
             lang3: '3.16.0',
             javaWebSocket: '1.6.0',
-            slf4jSimple: '2.1.0-alpha1',
+            tinylog: '2.7.0',
             blockingMap: '0.91',
             vlcjJavaFX: '1.2.0',
             vlcj: '4.8.3',
             filelize: '0.9.5',
             m3uParser: '1.4.0',
             okhttp: '5.0.0-alpha.14',
-            hutoolAll: '5.8.27',
+            hutool: '5.8.43',
             jsoup: '1.15.3',
             jsoupXpath: '2.5.1',
             json: '20250517',
@@ -71,6 +70,9 @@ ext {
             twelvemonkeys: '3.12.0',
             emojiJava: '5.1.1',
             mpv: '0.1.3',
+            graal: '24.2.2',
+            kotlinxCoroutines: '1.8.1',
+            guice: '7.0.0',
             lombok: '1.18.34',
             junit: '5.9.2'
     ]
@@ -84,14 +86,19 @@ dependencies {
     implementation "com.google.guava:guava:${dv.guava}"
     implementation "org.apache.commons:commons-lang3:${dv.lang3}"
     implementation "org.java-websocket:Java-WebSocket:${dv.javaWebSocket}"
-    implementation "org.slf4j:slf4j-simple:${dv.slf4jSimple}"
+    implementation "org.tinylog:slf4j-tinylog:${dv.tinylog}"
+    implementation "org.tinylog:tinylog-impl:${dv.tinylog}"
     implementation "com.github.sarveswaran-m:util.concurrent.blockingMap:${dv.blockingMap}"
     implementation "uk.co.caprica:vlcj:${dv.vlcj}"
     implementation "uk.co.caprica:vlcj-javafx:${dv.vlcjJavaFX}"
     implementation "io.github.filelize:filelize-java:${dv.filelize}"
     implementation "com.github.bjoernpetersen:m3u-parser:${dv.m3uParser}"
     implementation "com.squareup.okhttp3:okhttp:${dv.okhttp}"
-    implementation "cn.hutool:hutool-all:${dv.hutoolAll}"
+    implementation "cn.hutool:hutool-core:${dv.hutool}"
+    implementation "cn.hutool:hutool-crypto:${dv.hutool}"
+    implementation "cn.hutool:hutool-http:${dv.hutool}"
+    implementation "cn.hutool:hutool-json:${dv.hutool}"
+    implementation "cn.hutool:hutool-system:${dv.hutool}"
     implementation "org.jsoup:jsoup:${dv.jsoup}"
     implementation "cn.wanghaomiao:JsoupXpath:${dv.jsoupXpath}"
     implementation "org.json:json:${dv.json}"
@@ -102,7 +109,13 @@ dependencies {
     implementation("io.github.kknifer7:mpv:${dv.mpv}") {
         // vlcj依赖中已包含模块化的高版本jna，所以这里排除
         exclude group: 'net.java.dev.jna'
+        // 排除日志依赖，统一使用tinylog
+        exclude module: 'slf4j-simple'
     }
+    implementation "org.graalvm.polyglot:polyglot:${dv.graal}"
+    implementation "org.graalvm.js:js-language:${dv.graal}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${dv.kotlinxCoroutines}"
+    implementation "com.google.inject:guice:${dv.guice}"
 
     compileOnly "org.projectlombok:lombok:${dv.lombok}"
     annotationProcessor "org.projectlombok:lombok:${dv.lombok}"
@@ -120,8 +133,12 @@ extraJavaModuleInfo {
         patchRealModule()
         exportAllPackages()
     }
-    // okhttp
+    // okhttp、kotlin
     module('org.jetbrains.kotlin:kotlin-stdlib', 'kotlin.stdlib') {
+        patchRealModule()
+        exportAllPackages()
+    }
+    module('org.jetbrains:annotations', 'annotations') {
         patchRealModule()
         exportAllPackages()
     }
@@ -144,24 +161,28 @@ extraJavaModuleInfo {
     // 解决google guava相关的编译错误
     automaticModule('com.google.guava:listenablefuture', 'listenablefutureAvoidConflict')
     automaticModule('com.google.code.findbugs:jsr305', 'jsr305')
-    // okhttp
-    automaticModule('org.jetbrains:annotations', 'annotations')
     // JsoupXpath
     automaticModule('cn.wanghaomiao:JsoupXpath', 'jsoupXpath')
     // mpv
     automaticModule('io.github.kknifer7:mpv', 'mpv')
     // emoji-java
     automaticModule('com.vdurmont:emoji-java', 'emojiJava')
+    // guice
+    automaticModule('aopalliance:aopalliance', 'aopalliance')
 }
 
 test {
     useJUnitPlatform()
 }
 
+def isPackaging = gradle.startParameter.taskNames.contains('jpackage')
 sourceSets {
     main {
         resources {
             srcDirs = ['src/main/resources']
+            if (isPackaging) {
+                exclude 'tinylog-dev.properties'
+            }
         }
     }
 }
@@ -183,18 +204,23 @@ run {
             '--add-exports=javafx.base/com.sun.javafx.event=org.controlsfx.controls',
             '--add-opens=org.controlsfx.controls/org.controlsfx.control=io.knifer.freebox',
             '--add-opens=javafx.graphics/javafx.scene=org.controlsfx.controls',
-            '--add-opens=javafx.graphics/javafx.scene.text=cn.hutool',
-            '--add-opens=javafx.graphics/javafx.scene.text=io.knifer.merged.module'
+            '--add-opens=javafx.graphics/javafx.scene.text=cn.hutool.core',
+            '--add-opens=org.tinylog.api/org.tinylog.configuration=io.knifer.freebox',
+            '-Dpolyglot.engine.WarnInterpreterOnly=false'
     ]
-}
-
-gluonfx {
-    graalvmHome = 'E:\\StudyTools\\graalvm-ce-java17-22.3.2'
+    if (isPackaging) {
+        jvmArgs += [
+                '--add-opens=javafx.graphics/javafx.scene.text=io.knifer.merged.module',
+                '-Dfreebox.profile=PROD'
+        ]
+    } else {
+        jvmArgs += '-Dfreebox.profile=DEV'
+    }
 }
 
 def appDisplayName = 'FreeBox'
 jlink {
-    imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
+    imageZip = project.file(resolveBuildDir("/distributions/app-${javafx.platform.classifier}.zip"))
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
     launcher {
         name = appDisplayName
@@ -212,7 +238,17 @@ jlink {
         requires 'org.json'
         requires 'com.google.gson'
         requires 'ipcsocket'
+        requires 'kotlin.stdlib'
+        requires 'jakarta.inject'
         uses 'cn.hutool.core.convert.Converter'
+    }
+    tasks.named('jlink') {
+        doLast {
+            copy {
+                from "${projectDir}/resources/app-assets"
+                into imageDir
+            }
+        }
     }
     tasks.named('jpackage') {
         doFirst {
@@ -229,7 +265,7 @@ jlink {
         vendor = 'knifer'
         installerOptions = [
                 '--verbose',
-                '--temp', 'jpackage_temp',
+                '--temp', 'jpackage_temp'
         ]
         if (org.gradle.internal.os.OperatingSystem.current().windows) {
             icon = "${projectDir}/resources/logo/FreeBox.ico"
@@ -269,7 +305,12 @@ jlinkZip {
     group = 'distribution'
 }
 
-static def getCurrentArch() {
+
+private String resolveBuildDir(String dir) {
+    return layout.buildDirectory.get().dir(dir)
+}
+
+private static def getCurrentArch() {
     String arch = System.getProperty("os.arch")
 
     switch (arch) {

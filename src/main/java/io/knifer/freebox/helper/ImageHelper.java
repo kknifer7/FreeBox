@@ -9,6 +9,7 @@ import com.google.common.net.HttpHeaders;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.model.domain.ImageLoadingResult;
+import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.ValidationUtil;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelBuffer;
@@ -45,8 +46,11 @@ public class ImageHelper {
     private static final String PROXY_CDN_URL = "https://wsrv.nl/?output=png&url=";
     private static final ImageLoadingResult DEFAULT_RESULT =
             ImageLoadingResult.of(BaseResources.PICTURE_PLACEHOLDER_IMG, false);
-    private static final OkHttpClient CLIENT = new OkHttpClient.Builder()
+    private static final OkHttpClient CLIENT = HttpUtil.getClient()
+            .newBuilder()
             .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .writeTimeout(5, TimeUnit.SECONDS)
             .build();
     private static final Map<String, String> DEFAULT_HEADERS = Map.of(
             HttpHeaders.USER_AGENT, BaseValues.USER_AGENT
@@ -80,7 +84,7 @@ public class ImageHelper {
         Pair<String, Map<String, String>> fixedImageUrlAndHeaderMap;
         Request request;
 
-        if (!ValidationUtil.isURL(imageUrl)) {
+        if (imageUrl.contains(StrPool.AT)) {
             if (isRetrying) {
                 future.complete(DEFAULT_RESULT);
 
@@ -138,7 +142,7 @@ public class ImageHelper {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException e) {
                         log.warn("download image failed: {}", imageUrl, e);
-                        handleLoadImageFail(future, imageUrl, true);
+                        handleLoadImageFail(future, imageUrl, isRetrying);
                     }
                 });
     }
@@ -241,5 +245,6 @@ public class ImageHelper {
 
     public void clearCache() {
         CACHE.invalidateAll();
+        CACHE.cleanUp();
     }
 }

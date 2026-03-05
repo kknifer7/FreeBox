@@ -6,6 +6,9 @@ import com.google.common.net.HttpHeaders;
 import com.sun.net.httpserver.HttpExchange;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.spider.SpiderJarLoader;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 import org.apache.commons.lang3.ArrayUtils;
@@ -24,7 +27,11 @@ import java.util.stream.Collectors;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
+@Singleton
 public class ProxyHandler implements HttpHandler {
+
+    private final SpiderJarLoader spiderJarLoader;
 
     @Override
     public boolean support(HttpExchange httpExchange) {
@@ -36,7 +43,7 @@ public class ProxyHandler implements HttpHandler {
     public void handle(HttpExchange httpExchange) {
         try (httpExchange) {
             Map<String, String> parameterMap = parseParameterMap(httpExchange);
-            Object[] proxyInvokeResult = SpiderJarLoader.getInstance().proxyInvoke(parameterMap);
+            Object[] proxyInvokeResult = spiderJarLoader.proxyInvoke(parameterMap);
             int code;
 
             log.info("parameters: {}, spider proxyInvoke result: {}", parameterMap, proxyInvokeResult);

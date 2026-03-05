@@ -17,6 +17,9 @@ import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -31,22 +34,16 @@ import java.util.function.Consumer;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor_ = @__(@Inject))
+@Singleton
 public class KebSocketSpiderTemplate implements SpiderTemplate {
 
     private final KebSocketRunner runner;
-
     private final ClientManager clientManager;
+    private final CatVodBeanConverter beanConverter;
 
     private final Set<Class<? extends Throwable>> ignoringToastThrowableClassesInMovieSearching =
             Set.of(TimeoutException.class);
-
-    private final CatVodBeanConverter beanConverter;
-
-    public KebSocketSpiderTemplate(KebSocketRunner runner, ClientManager clientManager) {
-        this.runner = runner;
-        this.clientManager = clientManager;
-        this.beanConverter = CatVodBeanConverter.getInstance();
-    }
 
     @Override
     public void getSourceBeanList(Consumer<List<SourceBean>> callback) {

@@ -2,6 +2,7 @@ package io.knifer.freebox.constant;
 
 import com.google.common.io.Resources;
 import io.knifer.freebox.FreeBoxApplication;
+import io.knifer.freebox.helper.SystemHelper;
 import javafx.scene.image.Image;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 /**
@@ -55,6 +58,11 @@ public class BaseResources {
     public static final URL LOADING_DIALOG_CSS =
             FreeBoxApplication.class.getResource("css/dialog/loading-dialog.css");
 
+    public static final Path JS_SPIDER_WORKING_DIRECTORY = switch (SystemHelper.getEnvProfile()) {
+        case DEV -> Path.of("resources/app-assets/spider-js").toAbsolutePath();
+        case PROD -> Path.of(System.getProperty("java.home"), "spider-js");
+    };
+
     static {
         if (PLAYER_CSS == null) {
             log.error("player.css not found");
@@ -62,6 +70,10 @@ public class BaseResources {
         }
         if (LOADING_DIALOG_CSS == null) {
             log.error("loading-dialog.css not found");
+            System.exit(-1);
+        }
+        if (!Files.exists(JS_SPIDER_WORKING_DIRECTORY)) {
+            log.error("spider-js not found");
             System.exit(-1);
         }
     }

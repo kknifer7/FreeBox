@@ -1,5 +1,8 @@
-package com.github.catvod.spider;
+package com.github.catvod.crawler.spider;
 
+import io.knifer.freebox.util.HttpUtil;
+import lombok.Getter;
+import lombok.Setter;
 import okhttp3.Dns;
 import okhttp3.OkHttpClient;
 
@@ -7,7 +10,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Setter
+@Getter
 public class Spider {
+
+    protected String siteKey;
+
+    private final static Spider EMPTY = new Spider();
+
+    public static Spider getEmpty() {
+        return EMPTY;
+    }
+
     public void init() throws Exception {
 
     }
@@ -65,6 +79,6 @@ public class Spider {
     }
 
     public OkHttpClient client() {
-        return null;
+        return HttpUtil.getClient();
     }
 }

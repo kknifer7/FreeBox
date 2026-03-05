@@ -39,7 +39,7 @@ public class SpiderJarLoaderTest {
         Object spider;
 
         spiderJarLoader.setApiConfig(apiConfig);
-        spiderJarLoader.loadJar("Zxzj", apiConfig.getSpider());
+        spiderJarLoader.loadJar("Zxzj", apiConfig.getSpider(), false);
         spider = spiderJarLoader.getSpider("Zxzj", "csp_Zxzj", null, apiConfig.getSpider());
         try {
             System.out.println("homeContent: " + SpiderInvokeUtil.homeContent(spider, false));

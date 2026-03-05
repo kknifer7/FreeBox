@@ -3,6 +3,7 @@ package io.knifer.freebox.controller;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import io.knifer.freebox.component.node.player.BasePlayer;
+import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.ClientType;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.context.Context;
@@ -14,10 +15,12 @@ import io.knifer.freebox.model.c2s.FreeBoxLive;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.ClientLiveProperties;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.service.LoadLiveChannelGroupService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CollectionUtil;
+import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
@@ -30,6 +33,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
@@ -43,6 +47,7 @@ import java.util.List;
  * @author Knifer
  */
 @Slf4j
+@RequiredArgsConstructor(onConstructor_ = @__(@Inject))
 public class LiveController implements Destroyable {
 
     @FXML
@@ -67,6 +72,10 @@ public class LiveController implements Destroyable {
     private ClientLiveProperties clientLiveProperties;
     private ClientLiveProperties clientLivePropertiesBackup;
 
+    private final Context context;
+    private final ClientManager clientManager;
+    private final Router router;
+
     private final static Path LIVE_CONFIG_CACHE_PATH = StorageHelper.getLiveConfigCachePath();
 
     @FXML
@@ -83,7 +92,7 @@ public class LiveController implements Destroyable {
         loadingLabel.visibleProperty().bind(loadingProperty);
         playerHBox.visibleProperty().bind(loadingProperty.not());
         switchLiveSourceMenu.disableProperty().bind(loadingProperty);
-        Context.INSTANCE.getClientManager().getCurrentClient().thenAccept(clientInfo ->
+        clientManager.getCurrentClient().thenAccept(clientInfo ->
             Platform.runLater(() -> {
                 ClientType clientType;
 
@@ -117,7 +126,7 @@ public class LiveController implements Destroyable {
     private void catVodOrTVBoxKClientTypeInitialize(
             ReadOnlyDoubleProperty rootHeightProp, DoubleBinding playerHBoxHeightProp
     ) {
-        SpiderTemplate template = Context.INSTANCE.getSpiderTemplate();
+        SpiderTemplate template = context.getSpiderTemplate();
 
         template.init(callback -> {
             if (!callback) {
@@ -242,14 +251,14 @@ public class LiveController implements Destroyable {
             });
         }
         ImageHelper.clearCache();
-        Context.INSTANCE.popAndShowLastStage();
+        router.back();
     }
 
     private void saveClientProperties() {
         Toggle toggle;
         String liveSourceName;
         Triple<String, String, String> triple;
-        ClientInfo clientInfo = Context.INSTANCE.getClientManager().getCurrentClientImmediately();
+        ClientInfo clientInfo = clientManager.getCurrentClientImmediately();
 
         if (clientInfo == null) {
 

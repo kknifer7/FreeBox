@@ -1,12 +1,14 @@
 package io.knifer.freebox.util.json;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * JSON工具类
@@ -56,4 +58,86 @@ public class GsonUtil {
         return prettyGson.toJson(object);
     }
 
+    /**
+     * 将 JsonElement 转换为 Map<String, String>
+     */
+    public static Map<String, String> toStringMap(JsonElement element) {
+        Map<String, String> map = new HashMap<>();
+        JsonObject jsonObject;
+        String key;
+        JsonElement value;
+
+        if (element == null || !element.isJsonObject()) {
+
+            return map;
+        }
+        jsonObject = element.getAsJsonObject();
+        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+            key = entry.getKey();
+            value = entry.getValue();
+            map.put(key, getStringValue(value));
+        }
+
+        return map;
+    }
+
+    /**
+     * 将 JSON 字符串转换为 Map<String, String>
+     */
+    public static Map<String, String> toStringMap(String json) {
+        JsonElement element;
+
+        if (json == null || json.trim().isEmpty()) {
+
+            return new HashMap<>();
+        }
+
+        try {
+            element = JsonParser.parseString(json);
+
+            return toStringMap(element);
+        } catch (Exception e) {
+
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * 获取 JsonElement 的字符串值
+     */
+    private static String getStringValue(JsonElement element) {
+        JsonPrimitive primitive;
+
+        if (element == null || element.isJsonNull()) {
+            return "";
+        }
+
+        if (element.isJsonPrimitive()) {
+            primitive = element.getAsJsonPrimitive();
+            if (primitive.isString()) {
+
+                return primitive.getAsString().trim();
+            }
+
+            return primitive.getAsString();
+        }
+
+        return element.toString();
+    }
+
+    public boolean isJson(String text) {
+        try {
+            if (StringUtils.isBlank(text)) {
+
+                return false;
+            }
+
+            new JSONObject(text);
+
+            return true;
+        } catch (Exception e) {
+
+            return false;
+        }
+    }
 }

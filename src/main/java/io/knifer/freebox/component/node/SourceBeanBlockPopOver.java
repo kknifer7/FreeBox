@@ -4,12 +4,13 @@ import cn.hutool.core.collection.CollUtil;
 import com.google.common.collect.Sets;
 import io.knifer.freebox.component.factory.SourceBeanCheckListCellFactory;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.StorageHelper;
+import io.knifer.freebox.ioc.IOC;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.SourceBeanBlockList;
+import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.util.CastUtil;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -49,7 +50,7 @@ public class SourceBeanBlockPopOver extends PopOver {
 
         setTitle(I18nHelper.get(I18nKeys.TV_SOURCE_BEAN_BLOCK));
         setOnShowing(evt -> setDetached(true));
-        clientInfo = Context.INSTANCE.getClientManager().getCurrentClientImmediately();
+        clientInfo = IOC.getBean(ClientManager.class).getCurrentClientImmediately();
         if (clientInfo == null) {
             throw new IllegalStateException();
         }

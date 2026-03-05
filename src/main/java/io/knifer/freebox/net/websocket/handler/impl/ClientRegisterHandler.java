@@ -12,7 +12,7 @@ import io.knifer.freebox.net.websocket.exception.ForbiddenException;
 import io.knifer.freebox.net.websocket.handler.KebSocketMessageHandler;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.java_websocket.WebSocket;
@@ -22,10 +22,11 @@ import org.java_websocket.WebSocket;
  *
  * @author Knifer
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterInfo> {
 
     private final ClientManager clientManager;
+    private final Context context;
 
     private final static int SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE;
 
@@ -64,7 +65,7 @@ public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterIn
                     I18nKeys.MESSAGE_CLIENT_REGISTERED,
                     clientInfo.getName()
             );
-            Context.INSTANCE.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
+            context.postEvent(new AppEvents.ClientRegisteredEvent(clientInfo));
         });
     }
 

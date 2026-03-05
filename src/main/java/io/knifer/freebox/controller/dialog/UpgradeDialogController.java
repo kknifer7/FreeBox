@@ -6,7 +6,6 @@ import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ButtonTypes;
 import io.knifer.freebox.constant.I18nKeys;
-import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.BaseController;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.helper.*;
@@ -208,7 +207,7 @@ public class UpgradeDialogController extends BaseController {
                     WindowHelper.getStage(root),
                     I18nKeys.MESSAGE_UPGRADE_QUIT_LOADING
             );
-            Context.INSTANCE.destroy();
+            Platform.exit();
         });
     }
 }

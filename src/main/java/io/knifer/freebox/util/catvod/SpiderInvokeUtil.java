@@ -23,12 +23,25 @@ import java.util.Optional;
 @UtilityClass
 public class SpiderInvokeUtil {
 
-    public void init(Object spider, @Nullable String extend) {
-        if (extend == null) {
-            getMethod(spider, "init").ifPresent(method -> invoke(spider, method));
-        } else {
-            getMethod(spider, "init", String.class)
-                    .ifPresent(method -> invoke(spider, method, extend));
+    public boolean init(Object spider, @Nullable String extend) {
+        Class<?> clazz = spider.getClass();
+        Method method;
+
+        try {
+            if (extend == null) {
+                method = clazz.getMethod("init");
+                method.invoke(spider);
+            } else {
+                method = clazz.getMethod("init", String.class);
+                method.invoke(spider, extend);
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("FreeBox spider exception", e);
+            Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.ERROR_SPIDER_INVOKE_FAILED));
+
+            return false;
         }
     }
 

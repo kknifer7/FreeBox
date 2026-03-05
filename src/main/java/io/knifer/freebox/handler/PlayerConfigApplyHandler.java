@@ -1,6 +1,8 @@
 package io.knifer.freebox.handler;
 
+import com.google.inject.ImplementedBy;
 import io.knifer.freebox.constant.PlayerType;
+import io.knifer.freebox.handler.impl.PlayerConfigApplyHandlerImpl;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -9,6 +11,7 @@ import java.util.function.Consumer;
 /**
  * 播放器配置应用处理器
  */
+@ImplementedBy(PlayerConfigApplyHandlerImpl.class)
 public interface PlayerConfigApplyHandler {
 
     /**

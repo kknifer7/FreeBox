@@ -8,8 +8,11 @@ import io.knifer.freebox.net.http.server.FreeBoxHttpServerHolder;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.net.websocket.server.KebSocketServerHolder;
 import io.knifer.freebox.service.LoadNetworkInterfaceDataService;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import javafx.concurrent.Service;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,18 +28,15 @@ import java.util.Collection;
  */
 @Getter
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
+@Singleton
 public class ServiceManager {
 
-    private final FreeBoxHttpServerHolder httpServer = new FreeBoxHttpServerHolder();
+    private final FreeBoxHttpServerHolder httpServer;
 
     private final KebSocketServerHolder wsServer;
 
     private final ClientManager clientManager;
-
-    public ServiceManager(ClientManager clientManager) {
-        this.clientManager = clientManager;
-        this.wsServer = new KebSocketServerHolder(clientManager);
-    }
 
     public void init(Runnable callback) {
         String ip = ConfigHelper.getServiceIPv4();

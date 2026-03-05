@@ -1,21 +1,21 @@
 package io.knifer.freebox.service;
 
+import cn.hutool.core.io.IoUtil;
 import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.model.domain.UpgradeConfig;
-import io.knifer.freebox.util.HttpUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.io.IOException;
+import java.net.URL;
 
 /**
  * 更新检查服务
@@ -37,17 +37,13 @@ public class UpgradeCheckService extends Service<UpgradeCheckResultBO> {
                 UpgradeCheckResultBO result;
 
                 try {
-                    jsonContent = HttpUtil.getAsync(PROPS_URL).get(10, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    Platform.runLater(() -> ToastHelper.showException(e));
-
-                    return null;
-                } catch (TimeoutException | ExecutionException e) {
+                    jsonContent = fetchUpgradeConfig();
+                    upgradeConfig = GsonUtil.fromJson(jsonContent, UpgradeConfig.class);
+                } catch (Exception e) {
                     Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.MESSAGE_AUTO_CHECK_UPGRADE_FAILED));
 
                     return null;
                 }
-                upgradeConfig = GsonUtil.fromJson(jsonContent, UpgradeConfig.class);
                 result = UpgradeCheckResultBO.from(upgradeConfig);
 
                 log.info("upgrade check result: {}", result);
@@ -55,5 +51,14 @@ public class UpgradeCheckService extends Service<UpgradeCheckResultBO> {
                 return result;
             }
         };
+    }
+
+    private String fetchUpgradeConfig() {
+        try {
+            // 以系统原生方式请求，用框架的话会触发SourceForge的反爬
+            return IoUtil.readUtf8(new URL(PROPS_URL).openStream());
+        } catch (IOException ignored) {}
+
+        return StringUtils.EMPTY;
     }
 }

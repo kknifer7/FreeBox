@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<HBox fx:id="root" prefHeight="400.0" prefWidth="600.0" stylesheets="@css/view/video-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.VideoController">
+<HBox fx:id="root" stylesheets="@css/view/video-view.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.VideoController">
    <children>
       <VBox spacing="15.0" BorderPane.alignment="TOP_LEFT" HBox.hgrow="ALWAYS">
          <children>

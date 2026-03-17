@@ -54,6 +54,7 @@ public class ProxyLiveM3uHandler implements HttpHandler {
             String[] otherHeaders;
             String[] headerKV;
             Request req;
+            String originUrl;
 
             if (StringUtils.isNotBlank(ua)) {
                 reqBuilder.header(HttpHeaders.USER_AGENT, ua);
@@ -79,14 +80,13 @@ public class ProxyLiveM3uHandler implements HttpHandler {
             }
             req = reqBuilder.build();
             try (Response response = httpClient.newCall(req).execute()) {
-                if (response.isSuccessful()) {
-                    httpExchange.getResponseHeaders()
-                            .put(HttpHeaders.LOCATION, List.of(response.request().url().toString()));
-                    httpExchange.sendResponseHeaders(HttpStatus.HTTP_MOVED_TEMP, -1);
-                } else {
-                    httpExchange.sendResponseHeaders(HttpStatus.HTTP_BAD_REQUEST, -1);
-                }
+                originUrl = response.request().url().toString();
+                log.info("process url : {}, origin live url: {}", url, originUrl);
+                httpExchange.getResponseHeaders()
+                        .put(HttpHeaders.LOCATION, List.of(originUrl));
+                httpExchange.sendResponseHeaders(HttpStatus.HTTP_MOVED_TEMP, -1);
             } catch (IOException ignored) {} catch (Exception e) {
+                log.warn("proxy live m3u failed", e);
                 try {
                     httpExchange.sendResponseHeaders(HttpStatus.HTTP_INTERNAL_ERROR, -1);
                 } catch (IOException ignored) {}

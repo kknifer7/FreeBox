@@ -1,5 +1,6 @@
 package io.knifer.freebox.misc;
 
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.model.domain.LiveChannel;
@@ -44,7 +45,7 @@ public class M3u8ParserTest {
             String title;
             List<LiveChannel> groupChannels;
 
-            groupTitle = m3uEntry.getMetadata().get("group-title");
+            groupTitle = m3uEntry.getMetadata().get(BaseValues.LIVE_M3U_ATTR_GROUP_TITLE);
             if (StringUtils.isBlank(groupTitle)) {
                 groupTitle = I18nHelper.get(I18nKeys.LIVE_UNGROUPED);
             }

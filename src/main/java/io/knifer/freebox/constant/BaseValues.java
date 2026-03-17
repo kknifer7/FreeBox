@@ -55,6 +55,15 @@ public class BaseValues {
     public static final String X_DEBUG = "debug";
 
     /**
+     * live m3u 扩展属性名
+     */
+    public static final String LIVE_M3U_ATTR_HTTP_USER_AGENT = "http-user-agent";
+    public static final String LIVE_M3U_ATTR_HTTP_REFERER = "http-referer";
+    public static final String LIVE_M3U_ATTR_HTTP_HEADER = "http-header";
+    public static final String LIVE_M3U_ATTR_GROUP_TITLE = "group-title";
+    public static final String LIVE_M3U_ATTR_TVG_LOGO = "tvg-logo";
+
+    /**
      * FXML相关默认值
      */
     public static final double DEFAULT_WINDOW_WIDTH = 960;

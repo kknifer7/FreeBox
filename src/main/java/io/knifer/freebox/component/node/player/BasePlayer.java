@@ -649,6 +649,7 @@ public abstract class BasePlayer<T extends Node> {
                                 liveChannelGroups, playingLive.getLiveChannel(), epgServiceUrlProperty.get()
                         ));
                 epgStage = stageAndController.getLeft();
+                epgStage.setTitle(I18nHelper.get(I18nKeys.LIVE_PLAYER_EPG));
                 epgStage.show();
             });
             epgOpenLabel.disableProperty().bind(epgServiceUrlProperty.isEmpty());

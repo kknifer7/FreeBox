@@ -20,11 +20,7 @@ import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
-import javafx.animation.KeyFrame;
-import javafx.animation.PauseTransition;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.property.*;
@@ -48,7 +44,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import javafx.util.Duration;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -64,6 +59,7 @@ import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import javax.annotation.Nullable;
+import javax.swing.*;
 import java.io.File;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -98,7 +94,7 @@ public abstract class BasePlayer<T extends Node> {
     private final AnchorPane toastAnchorPane;
     private final PlayerToastPane toastPane;
     private final AnchorPane controlPane;
-    private final PauseTransition controlPaneHideTimer = createControlPaneHideTimer();
+    private final Timer controlPaneHideTimer = new Timer(2000, evt -> setControlsVisible(false));
     private final ProgressIndicator loadingProgressIndicator;
     private final Label loadingProgressLabel;
     private final ImageView pausedPlayButtonImageView;
@@ -129,8 +125,6 @@ public abstract class BasePlayer<T extends Node> {
     private final Label videoProgressLengthLabel;
     private final Label fullScreenLabel;
     private final Label videoTitleLabel;
-    private final Label topRightTimeLabel;
-    private final Timeline controlTopTimeLabelUpdateTimer = createControlTopTimeLabelUpdateTimer();
     private final Label epgOpenLabel;
     private final LiveChannelBanner liveChannelBanner;
     private final LiveDrawer liveChannelDrawer;
@@ -157,6 +151,7 @@ public abstract class BasePlayer<T extends Node> {
     protected volatile boolean destroyFlag = false;
 
     private List<LiveChannelGroup> liveChannelGroups = null;
+    private LiveInfoBO selectedLive = null;
     private LiveInfoBO playingLive = null;
 
     private Stage epgStage;
@@ -174,8 +169,7 @@ public abstract class BasePlayer<T extends Node> {
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
         URL stylesheetUrl;
         List<Node> paneChildren;
-        HBox controlTopLeftHBox;
-        BorderPane controlTopInnerBorderPane;
+        HBox controlTopHBox;
         VBox volumePopOverInnerVBox;
         Label rateSettingTitleLabel;
         HBox rateSettingRadioButtonHBox;
@@ -195,8 +189,6 @@ public abstract class BasePlayer<T extends Node> {
         AnchorPane controlBottomAnchorPane;
         StackPane progressMiddleStackPane;
         AnchorPane controlTopAnchorPane;
-        LiveInfoBO selectedLive;
-        PauseTransition singleClickTimer;
 
         this.parent = parent;
         this.config = config;
@@ -316,7 +308,6 @@ public abstract class BasePlayer<T extends Node> {
             subtitleAndDanMaKuHBox = null;
         } else {
             epgFetchingHandler = null;
-            selectedLive = null;
             stepBackwardLabel.setOnMouseClicked(evt -> {
                 if (evt.getButton() == MouseButton.PRIMARY) {
                     stepBackwardRunnable.run();
@@ -568,24 +559,18 @@ public abstract class BasePlayer<T extends Node> {
         AnchorPane.setRightAnchor(rightToolBarHbox, 20.0);
         AnchorPane.setTopAnchor(rightToolBarHbox, 10.0);
         AnchorPane.setBottomAnchor(rightToolBarHbox, 10.0);
-        // 顶端标题、时间
+        // 顶端标题
         videoTitleLabel = new Label();
         videoTitleLabel.getStyleClass().add("player-title");
-        controlTopLeftHBox = new HBox(videoTitleLabel);
-        controlTopLeftHBox.setSpacing(10);
-        topRightTimeLabel = new Label();
-        topRightTimeLabel.getStyleClass().add("player-title");
-        controlTopTimeLabelUpdateTimer.playFromStart();
-        controlTopInnerBorderPane = new BorderPane();
-        controlTopInnerBorderPane.setLeft(controlTopLeftHBox);
-        controlTopInnerBorderPane.setRight(topRightTimeLabel);
-        controlTopAnchorPane = new AnchorPane(controlTopInnerBorderPane);
+        controlTopHBox = new HBox(videoTitleLabel);
+        controlTopHBox.setSpacing(10);
+        controlTopAnchorPane = new AnchorPane(controlTopHBox);
         controlTopAnchorPane.getStyleClass().add("player-anchor-pane");
         controlTopAnchorPane.setOnMouseClicked(Event::consume);
-        AnchorPane.setLeftAnchor(controlTopInnerBorderPane, 10.0);
-        AnchorPane.setRightAnchor(controlTopInnerBorderPane, 10.0);
-        AnchorPane.setTopAnchor(controlTopInnerBorderPane, 10.0);
-        AnchorPane.setBottomAnchor(controlTopInnerBorderPane, 10.0);
+        AnchorPane.setLeftAnchor(controlTopHBox, 10.0);
+        AnchorPane.setRightAnchor(controlTopHBox, 10.0);
+        AnchorPane.setTopAnchor(controlTopHBox, 10.0);
+        AnchorPane.setBottomAnchor(controlTopHBox, 10.0);
         controlPane = new AnchorPane(controlBottomAnchorPane, controlTopAnchorPane);
         AnchorPane.setLeftAnchor(controlBottomAnchorPane, 0.0);
         AnchorPane.setRightAnchor(controlBottomAnchorPane, 0.0);
@@ -619,7 +604,7 @@ public abstract class BasePlayer<T extends Node> {
                 epgStage.show();
             });
             epgOpenLabel.disableProperty().bind(epgServiceUrlProperty.isEmpty());
-            controlTopLeftHBox.getChildren().add(epgOpenLabel);
+            controlTopHBox.getChildren().add(epgOpenLabel);
             liveChannelBanner = new LiveChannelBanner();
             StackPane.setMargin(liveChannelBanner, new Insets(0, 0, 50, 0));
             StackPane.setAlignment(liveChannelBanner, Pos.BOTTOM_CENTER);
@@ -645,23 +630,19 @@ public abstract class BasePlayer<T extends Node> {
             liveChannelDrawer = null;
         }
         playerPane.getStyleClass().add("player");
-        paneWidthProp = liveMode ?
-                Bindings.createDoubleBinding(parentWidthProp::get, parentWidthProp) : parentWidthProp.multiply(0.8);
+        paneWidthProp = liveMode ? parentWidthProp.multiply(1) : parentWidthProp.multiply(0.8);
         bindPlayerPaneWidth(paneWidthProp);
         playerPane.prefHeightProperty().bind(parentHeightProp);
         playerPane.minHeightProperty().bind(parentHeightProp);
         playerPane.maxHeightProperty().bind(parentHeightProp);
-        singleClickTimer = new PauseTransition(Duration.millis(200));
-        singleClickTimer.setOnFinished(e -> togglePause());
         playerPane.setOnMouseClicked(evt -> {
             if (evt.getButton() != MouseButton.PRIMARY) {
                 return;
             }
             if (evt.getClickCount() == 1) {
-                singleClickTimer.playFromStart();
+                togglePause();
             } else {
-                // 双击时，取消单击的暂停操作，仅切换全屏
-                singleClickTimer.stop();
+                togglePause();
                 toggleFullScreen();
             }
         });
@@ -714,10 +695,6 @@ public abstract class BasePlayer<T extends Node> {
         setLoading(true);
     }
 
-    private void updateTopRightTimeLabel() {
-        Platform.runLater(() -> topRightTimeLabel.setText(LOCAL_TIME_FORMATTER.format(LocalTime.now())));
-    }
-
     protected void setControlsVisible(boolean flag) {
         Cursor cursor = playerPane.getCursor();
 
@@ -728,7 +705,7 @@ public abstract class BasePlayer<T extends Node> {
             liveChannelDrawer.setVisible(flag);
         }
         if (flag) {
-            controlPaneHideTimer.playFromStart();
+            controlPaneHideTimer.restart();
             if (cursor == Cursor.NONE) {
                 playerPane.setCursor(Cursor.DEFAULT);
             }
@@ -741,7 +718,7 @@ public abstract class BasePlayer<T extends Node> {
 
     protected void setControlsAutoHide(boolean flag) {
         if (flag) {
-            controlPaneHideTimer.playFromStart();
+            controlPaneHideTimer.restart();
         } else {
             setControlsVisible(true);
             controlPaneHideTimer.stop();
@@ -1211,22 +1188,6 @@ public abstract class BasePlayer<T extends Node> {
      */
     public void stop() {}
 
-    private PauseTransition createControlPaneHideTimer() {
-        PauseTransition transition = new PauseTransition(Duration.millis(2000));
-        transition.setOnFinished(evt -> setControlsVisible(false));
-        return transition;
-    }
-
-    private Timeline createControlTopTimeLabelUpdateTimer() {
-        Timeline timeline = new Timeline(
-                new KeyFrame(Duration.millis(1000), evt -> updateTopRightTimeLabel())
-        );
-
-        timeline.setCycleCount(Timeline.INDEFINITE);
-
-        return timeline;
-    }
-
     /**
      * 销毁播放器
      * 此类中的方法不会阻塞，但子类（比如VLC播放器）中覆盖的方法可能会阻塞
@@ -1237,7 +1198,6 @@ public abstract class BasePlayer<T extends Node> {
             return;
         }
         destroyFlag = true;
-        controlTopTimeLabelUpdateTimer.stop();
         controlPaneHideTimer.stop();
         settingsPopOverLabel.destroy();
         volumePopOverLabel.destroy();
@@ -1344,12 +1304,10 @@ public abstract class BasePlayer<T extends Node> {
         private final Label programTimeLabel = new Label();
         private final Label nextProgramLabel = new Label();
         private final Label nextProgramTimeLabel = new Label();
-        private final PauseTransition hideTimer;
+        private final Timer hideTimer = new Timer(6000, evt -> setVisible(false));
 
         public LiveChannelBanner() {
             super();
-            this.hideTimer = new PauseTransition(Duration.millis(6000));
-            this.hideTimer.setOnFinished(evt -> setVisible(false));
 
             HBox epgInfoHBox;
             VBox currentProgramVBox;
@@ -1380,7 +1338,7 @@ public abstract class BasePlayer<T extends Node> {
 
         public void show() {
             setVisible(true);
-            hideTimer.playFromStart();
+            hideTimer.restart();
         }
 
         /**

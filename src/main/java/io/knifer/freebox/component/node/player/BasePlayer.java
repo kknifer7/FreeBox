@@ -20,6 +20,7 @@ import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.DoubleExpression;
@@ -41,6 +42,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.util.Duration;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -145,6 +147,8 @@ public abstract class BasePlayer<T extends Node> {
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
     private final BooleanProperty isError = new SimpleBooleanProperty(false);
     private final SimpleStringProperty epgServiceUrlProperty = new SimpleStringProperty();
+
+    private final PauseTransition delayedPauseTransition = new PauseTransition(Duration.millis(200));
 
     private final DoubleBinding paneWidthProp;
 
@@ -367,11 +371,15 @@ public abstract class BasePlayer<T extends Node> {
             subtitleAndDanMaKuHBox.setSpacing(15);
             subtitleAndDanMaKuHBox.setAlignment(Pos.CENTER_LEFT);
         }
+        controlsOnMouseEnteredEventHandler = evt -> setControlsAutoHide(false);
+        controlsOnMouseExitedEventHandler = evt -> setControlsAutoHide(true);
         // 音量设置
         volumeSlider = new Slider(0, 100, 100);
         volumeSlider.setOrientation(Orientation.VERTICAL);
         volumePopOverInnerVBox = new VBox(volumeSlider);
         volumePopOverInnerVBox.setAlignment(Pos.CENTER);
+        volumePopOverInnerVBox.setOnMouseEntered(controlsOnMouseEnteredEventHandler);
+        volumePopOverInnerVBox.setOnMouseExited(controlsOnMouseExitedEventHandler);
         volumePopOverLabel = new PlayerPopOverControlLabel(volumeOnIcon, volumePopOverInnerVBox);
         volumePopOverLabel.setGraphic(volumeOnIcon);
         volumePopOverLabel.setOnMouseClicked(evt -> {
@@ -443,8 +451,6 @@ public abstract class BasePlayer<T extends Node> {
         reloadSettingsHBox.setSpacing(15);
         reloadSettingsHBox.setAlignment(Pos.CENTER_LEFT);
         // 设置弹出框
-        controlsOnMouseEnteredEventHandler = evt -> setControlsAutoHide(false);
-        controlsOnMouseExitedEventHandler = evt -> setControlsAutoHide(true);
         settingsPopOverInnerVBox = liveMode ?
                 new VBox(reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox) :
                 new VBox(subtitleAndDanMaKuHBox, reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox);
@@ -635,14 +641,18 @@ public abstract class BasePlayer<T extends Node> {
         playerPane.prefHeightProperty().bind(parentHeightProp);
         playerPane.minHeightProperty().bind(parentHeightProp);
         playerPane.maxHeightProperty().bind(parentHeightProp);
+        delayedPauseTransition.setOnFinished(event -> togglePause());
         playerPane.setOnMouseClicked(evt -> {
             if (evt.getButton() != MouseButton.PRIMARY) {
                 return;
             }
             if (evt.getClickCount() == 1) {
-                togglePause();
+                // 单击：延迟200ms后暂停
+                delayedPauseTransition.stop();
+                delayedPauseTransition.playFromStart();
             } else {
-                togglePause();
+                // 双击：取消延迟暂停，直接全屏
+                delayedPauseTransition.stop();
                 toggleFullScreen();
             }
         });
@@ -1199,6 +1209,7 @@ public abstract class BasePlayer<T extends Node> {
         }
         destroyFlag = true;
         controlPaneHideTimer.stop();
+        delayedPauseTransition.stop();
         settingsPopOverLabel.destroy();
         volumePopOverLabel.destroy();
         Platform.runLater(() -> {

@@ -3,10 +3,13 @@ package io.knifer.freebox.service;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.map.multi.RowKeyTable;
 import cn.hutool.core.map.multi.Table;
+import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
+import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.c2s.FreeBoxLive;
@@ -142,9 +145,13 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                     List<LiveChannel> groupChannels;
                     String logoUrl;
                     List<LiveChannel.Line> lines;
+                    String location;
+                    String metadataUA;
+                    String metadataReferer;
+                    String metadataHeader;
 
                     metadata = m3uEntry.getMetadata();
-                    groupTitle = metadata.get("group-title");
+                    groupTitle = metadata.get(BaseValues.LIVE_M3U_ATTR_GROUP_TITLE);
                     if (StringUtils.isBlank(groupTitle)) {
                         groupTitle = I18nHelper.get(I18nKeys.LIVE_UNGROUPED);
                     }
@@ -164,7 +171,7 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                         groupTitleAndTitleAndLiveChannelMap.put(groupTitle, title, channel);
                         groupChannels.add(channel);
                     }
-                    logoUrl = metadata.get("tvg-logo");
+                    logoUrl = metadata.get(BaseValues.LIVE_M3U_ATTR_TVG_LOGO);
                     lines = channel.getLines();
                     if (StringUtils.isBlank(logoUrl)) {
                         // 如果logoUrl为空，则尝试使用相同频道的不同线路的logoUrl
@@ -174,10 +181,35 @@ public class LoadLiveChannelGroupService extends Service<List<LiveChannelGroup>>
                                 .findFirst()
                                 .orElse(null);
                     }
+                    // 当m3u扩展属性包含请求头时，用本地代理链接替换原链接
+                    location = m3uEntry.getLocation().toString();
+                    metadataUA = metadata.get(BaseValues.LIVE_M3U_ATTR_HTTP_USER_AGENT);
+                    metadataReferer = metadata.get(BaseValues.LIVE_M3U_ATTR_HTTP_REFERER);
+                    metadataHeader = metadata.get(BaseValues.LIVE_M3U_ATTR_HTTP_HEADER);
+                    if (
+                            StringUtils.isNotBlank(metadataUA) ||
+                            StringUtils.isNotBlank(metadataReferer) ||
+                            StringUtils.isNotBlank(metadataHeader)
+                    ) {
+                        location = ConfigHelper.getProxyUrl(true) + "-live/" + UrlBuilder.of(location)
+                                .addQuery(
+                                        StringUtils.isBlank(metadataUA) ?
+                                                null : BaseValues.LIVE_M3U_ATTR_HTTP_USER_AGENT, metadataUA
+                                )
+                                .addQuery(
+                                        StringUtils.isBlank(metadataReferer) ?
+                                                null : BaseValues.LIVE_M3U_ATTR_HTTP_REFERER, metadataReferer
+                                )
+                                .addQuery(
+                                        StringUtils.isBlank(metadataHeader) ?
+                                                null : BaseValues.LIVE_M3U_ATTR_HTTP_HEADER, metadataHeader
+                                )
+                                .build();
+                    }
                     channel.getLines().add(LiveChannel.Line.of(
                             I18nHelper.get(I18nKeys.LIVE_LINE) + (lines.size() + 1),
                             logoUrl,
-                            m3uEntry.getLocation().toString()
+                            location
                     ));
                 });
 

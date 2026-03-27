@@ -231,3 +231,22 @@
     -fx-text-fill: white;
     -fx-font-size: 20px;
 }
+
+.player-help-title-label {
+    -fx-text-fill: #212121;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.player-shortcut-key-label {
+    -fx-text-fill: #212121;
+    -fx-font-size: 14px;
+    -fx-border-color: rgba(0,0,0,0.4);
+    -fx-border-radius: 3;
+    -fx-padding: 1 5 1 5;
+}
+
+.player-shortcut-desc-label {
+    -fx-text-fill: #424242;
+    -fx-font-size: 14px;
+}

@@ -65,6 +65,7 @@ module io.knifer.freebox {
     exports io.knifer.freebox.component.factory;
     exports io.knifer.freebox.net.websocket.core;
     exports io.knifer.freebox.component.router;
+    exports io.knifer.freebox.component.node;
     exports io.knifer.freebox.context;
     exports io.knifer.freebox.spider.template;
     exports io.knifer.freebox.net;

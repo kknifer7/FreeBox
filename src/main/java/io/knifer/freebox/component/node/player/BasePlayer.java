@@ -20,6 +20,7 @@ import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.DoubleExpression;
@@ -37,10 +38,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
+import org.controlsfx.control.PopOver;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.util.Duration;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -125,6 +128,7 @@ public abstract class BasePlayer<T extends Node> {
     private final Label videoProgressLengthLabel;
     private final Label fullScreenLabel;
     private final Label videoTitleLabel;
+    private final Label helpLabel;
     private final Label epgOpenLabel;
     private final LiveChannelBanner liveChannelBanner;
     private final LiveDrawer liveChannelDrawer;
@@ -139,12 +143,15 @@ public abstract class BasePlayer<T extends Node> {
     private final FontIcon fullScreenIcon = FontIcon.of(FontAwesome.ARROWS_ALT, 32, Color.WHITE);
     private final FontIcon reloadIcon = FontIcon.of(FontAwesome.REFRESH, 16);
     private final FontIcon settingsIcon = FontIcon.of(FontAwesome.SLIDERS, 32, Color.WHITE);
+    private final FontIcon helpIcon = FontIcon.of(FontAwesome.QUESTION_CIRCLE, 28, Color.WHITE);
     private final AtomicLong videoLength = new AtomicLong(-1);
     private final AtomicLong initProgress = new AtomicLong(-1);
     private final AtomicBoolean isVideoProgressBarUsing = new AtomicBoolean(false);
     private final BooleanProperty isLoading = new SimpleBooleanProperty(false);
     private final BooleanProperty isError = new SimpleBooleanProperty(false);
     private final SimpleStringProperty epgServiceUrlProperty = new SimpleStringProperty();
+
+    private final PauseTransition delayedPauseTransition = new PauseTransition(Duration.millis(200));
 
     private final DoubleBinding paneWidthProp;
 
@@ -170,6 +177,7 @@ public abstract class BasePlayer<T extends Node> {
         URL stylesheetUrl;
         List<Node> paneChildren;
         HBox controlTopHBox;
+        List<Node> controlTopHBoxChildren;
         VBox volumePopOverInnerVBox;
         Label rateSettingTitleLabel;
         HBox rateSettingRadioButtonHBox;
@@ -189,6 +197,10 @@ public abstract class BasePlayer<T extends Node> {
         AnchorPane controlBottomAnchorPane;
         StackPane progressMiddleStackPane;
         AnchorPane controlTopAnchorPane;
+        Label helpTitleLabel;
+        GridPane helpShortcutGridPane;
+        VBox helpPopOverContentVBox;
+        PopOver helpPopOver;
 
         this.parent = parent;
         this.config = config;
@@ -367,11 +379,15 @@ public abstract class BasePlayer<T extends Node> {
             subtitleAndDanMaKuHBox.setSpacing(15);
             subtitleAndDanMaKuHBox.setAlignment(Pos.CENTER_LEFT);
         }
+        controlsOnMouseEnteredEventHandler = evt -> setControlsAutoHide(false);
+        controlsOnMouseExitedEventHandler = evt -> setControlsAutoHide(true);
         // 音量设置
         volumeSlider = new Slider(0, 100, 100);
         volumeSlider.setOrientation(Orientation.VERTICAL);
         volumePopOverInnerVBox = new VBox(volumeSlider);
         volumePopOverInnerVBox.setAlignment(Pos.CENTER);
+        volumePopOverInnerVBox.setOnMouseEntered(controlsOnMouseEnteredEventHandler);
+        volumePopOverInnerVBox.setOnMouseExited(controlsOnMouseExitedEventHandler);
         volumePopOverLabel = new PlayerPopOverControlLabel(volumeOnIcon, volumePopOverInnerVBox);
         volumePopOverLabel.setGraphic(volumeOnIcon);
         volumePopOverLabel.setOnMouseClicked(evt -> {
@@ -443,8 +459,6 @@ public abstract class BasePlayer<T extends Node> {
         reloadSettingsHBox.setSpacing(15);
         reloadSettingsHBox.setAlignment(Pos.CENTER_LEFT);
         // 设置弹出框
-        controlsOnMouseEnteredEventHandler = evt -> setControlsAutoHide(false);
-        controlsOnMouseExitedEventHandler = evt -> setControlsAutoHide(true);
         settingsPopOverInnerVBox = liveMode ?
                 new VBox(reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox) :
                 new VBox(subtitleAndDanMaKuHBox, reloadSettingsHBox, fillWindowToggleSwitch, rateSettingHBox);
@@ -562,8 +576,42 @@ public abstract class BasePlayer<T extends Node> {
         // 顶端标题
         videoTitleLabel = new Label();
         videoTitleLabel.getStyleClass().add("player-title");
-        controlTopHBox = new HBox(videoTitleLabel);
+        // 帮助信息
+        helpTitleLabel = new Label(I18nHelper.get(I18nKeys.VIDEO_PLAYER_HELP));
+        helpTitleLabel.getStyleClass().add("player-help-title-label");
+        helpShortcutGridPane = new GridPane();
+        helpShortcutGridPane.setHgap(20);
+        helpShortcutGridPane.setVgap(6);
+        addShortcutRow(helpShortcutGridPane, 0, "Space", I18nHelper.get(I18nKeys.VIDEO_PLAYER_SHORTCUT_PAUSE));
+        addShortcutRow(helpShortcutGridPane, 1, "F", I18nHelper.get(I18nKeys.VIDEO_PLAYER_SHORTCUT_FULLSCREEN));
+        addShortcutRow(helpShortcutGridPane, 2, "ESC", I18nHelper.get(I18nKeys.VIDEO_PLAYER_SHORTCUT_EXIT_FULLSCREEN));
+        addShortcutRow(helpShortcutGridPane, 3, "Z", I18nHelper.get(I18nKeys.VIDEO_PLAYER_SHORTCUT_FILL_WINDOW));
+        addShortcutRow(helpShortcutGridPane, 4, "↑ / ↓", I18nHelper.get(I18nKeys.VIDEO_PLAYER_SHORTCUT_VOLUME));
+        addShortcutRow(helpShortcutGridPane, 5, "- / =", I18nHelper.get(I18nKeys.VIDEO_PLAYER_SHORTCUT_RATE));
+        if (!liveMode) {
+            addShortcutRow(helpShortcutGridPane, 6, "→ / ←", I18nHelper.get(I18nKeys.VIDEO_PLAYER_SHORTCUT_POSITION));
+        }
+        helpPopOverContentVBox = new VBox(helpTitleLabel, helpShortcutGridPane);
+        helpPopOverContentVBox.setSpacing(8);
+        helpPopOverContentVBox.setPadding(new Insets(5, 10, 5, 10));
+        helpPopOver = new PopOver(helpPopOverContentVBox);
+        helpPopOver.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+        helpPopOver.getStyleClass().add("player-pop-over");
+        helpPopOver.setDetachable(false);
+        helpLabel = new Label();
+        helpLabel.setCursor(Cursor.HAND);
+        helpLabel.setGraphic(helpIcon);
+        helpLabel.setOnMouseClicked(evt -> {
+            if (helpPopOver.isShowing()) {
+                helpPopOver.hide();
+
+                return;
+            }
+            helpPopOver.show(helpLabel);
+        });
+        controlTopHBox = new HBox(videoTitleLabel, helpLabel);
         controlTopHBox.setSpacing(10);
+        controlTopHBox.setAlignment(Pos.CENTER_LEFT);
         controlTopAnchorPane = new AnchorPane(controlTopHBox);
         controlTopAnchorPane.getStyleClass().add("player-anchor-pane");
         controlTopAnchorPane.setOnMouseClicked(Event::consume);
@@ -601,10 +649,12 @@ public abstract class BasePlayer<T extends Node> {
                                 liveChannelGroups, playingLive.getLiveChannel(), epgServiceUrlProperty.get()
                         ));
                 epgStage = stageAndController.getLeft();
+                epgStage.setTitle(I18nHelper.get(I18nKeys.LIVE_PLAYER_EPG));
                 epgStage.show();
             });
             epgOpenLabel.disableProperty().bind(epgServiceUrlProperty.isEmpty());
-            controlTopHBox.getChildren().add(epgOpenLabel);
+            controlTopHBoxChildren = controlTopHBox.getChildren();
+            controlTopHBoxChildren.add(controlTopHBoxChildren.indexOf(helpLabel), epgOpenLabel);
             liveChannelBanner = new LiveChannelBanner();
             StackPane.setMargin(liveChannelBanner, new Insets(0, 0, 50, 0));
             StackPane.setAlignment(liveChannelBanner, Pos.BOTTOM_CENTER);
@@ -635,14 +685,18 @@ public abstract class BasePlayer<T extends Node> {
         playerPane.prefHeightProperty().bind(parentHeightProp);
         playerPane.minHeightProperty().bind(parentHeightProp);
         playerPane.maxHeightProperty().bind(parentHeightProp);
+        delayedPauseTransition.setOnFinished(event -> togglePause());
         playerPane.setOnMouseClicked(evt -> {
             if (evt.getButton() != MouseButton.PRIMARY) {
                 return;
             }
             if (evt.getClickCount() == 1) {
-                togglePause();
+                // 单击：延迟200ms后暂停
+                delayedPauseTransition.stop();
+                delayedPauseTransition.playFromStart();
             } else {
-                togglePause();
+                // 双击：取消延迟暂停，直接全屏
+                delayedPauseTransition.stop();
                 toggleFullScreen();
             }
         });
@@ -665,7 +719,7 @@ public abstract class BasePlayer<T extends Node> {
             }
         } else {
             // 使用内嵌播放器，键盘快捷键事件绑定
-            parent.addEventFilter(KeyEvent.KEY_PRESSED, evt -> {
+            scene.addEventFilter(KeyEvent.KEY_PRESSED, evt -> {
                 switch (evt.getCode()) {
                     case SPACE -> togglePause();
                     case ESCAPE -> {
@@ -679,6 +733,8 @@ public abstract class BasePlayer<T extends Node> {
                     case LEFT -> movePosition(false);
                     case UP -> moveVolume(true);
                     case DOWN -> moveVolume(false);
+                    case MINUS -> adjustRate(false);
+                    case EQUALS -> adjustRate(true);
                 }
             });
         }
@@ -877,7 +933,45 @@ public abstract class BasePlayer<T extends Node> {
     protected void postMovedPosition() {}
 
     protected void postMovedVolume(double newVolume) {
+        if (volumeSlider.getValue() == newVolume) {
+
+            return;
+        }
         volumeSlider.setValue(newVolume);
+        showToast(String.format(
+                I18nHelper.get(I18nKeys.VIDEO_SETTINGS_VOLUME) + ": %.0f%%", newVolume
+        ));
+    }
+
+    private void addShortcutRow(GridPane gridPane, int rowIdx, String keyText, String descText) {
+        Label keyLabel = new Label(keyText);
+        Label descLabel = new Label(descText);
+
+        keyLabel.getStyleClass().add("player-shortcut-key-label");
+        descLabel.getStyleClass().add("player-shortcut-desc-label");
+        gridPane.add(keyLabel, 0, rowIdx);
+        gridPane.add(descLabel, 1, rowIdx);
+    }
+
+    private void adjustRate(boolean increase) {
+        Toggle currentSelectedButton = rateSettingToggleGroup.getSelectedToggle();
+        ObservableList<Toggle> toggles = rateSettingToggleGroup.getToggles();
+        int currentIdx = toggles.indexOf(currentSelectedButton);
+        int nextIdx = increase ? currentIdx + 1 : currentIdx - 1;
+        Toggle nextToggle;
+        float nextRate;
+
+        if (nextIdx < 0 || nextIdx >= toggles.size()) {
+
+            return;
+        }
+        nextToggle = toggles.get(nextIdx);
+        rateSettingToggleGroup.selectToggle(nextToggle);
+        nextRate = (float) nextToggle.getUserData();
+        setRate(nextRate);
+        showToast(String.format(
+                I18nHelper.get(I18nKeys.VIDEO_SETTINGS_RATE) + ": %.2fx", nextRate
+        ));
     }
 
     protected void postMuted() {
@@ -1199,6 +1293,7 @@ public abstract class BasePlayer<T extends Node> {
         }
         destroyFlag = true;
         controlPaneHideTimer.stop();
+        delayedPauseTransition.stop();
         settingsPopOverLabel.destroy();
         volumePopOverLabel.destroy();
         Platform.runLater(() -> {
@@ -1608,8 +1703,6 @@ public abstract class BasePlayer<T extends Node> {
             ObservableList<LiveChannel> items = liveChannelListView.getItems();
             LiveChannel lastSelectedLiveChannel;
             HBox lastLiveChannelTitleHBox;
-            Label lastLiveChannelTitleLabel;
-            List<String> lastLiveChannelTitleLabelStyleClass;
 
             items.clear();
             items.addAll(liveChannels);
@@ -1623,18 +1716,7 @@ public abstract class BasePlayer<T extends Node> {
                 return;
             }
             lastLiveChannelTitleHBox = liveChannelAndTitleHBoxMap.get(lastSelectedLiveChannel);
-            if (lastLiveChannelTitleHBox == null) {
-
-                return;
-            }
-            lastLiveChannelTitleLabel = CastUtil.cast(CollectionUtil.getFirst(lastLiveChannelTitleHBox.getChildren()));
-            if (lastLiveChannelTitleLabel == null) {
-
-                return;
-            }
-            lastLiveChannelTitleLabelStyleClass = lastLiveChannelTitleLabel.getStyleClass();
-            lastLiveChannelTitleLabelStyleClass.remove("player-live-channel-list-view-title-label-focused");
-            lastLiveChannelTitleLabelStyleClass.add("player-live-channel-list-view-title-label");
+            LiveChannelListViewCellFactory.trySelectLastTitleLabel(lastLiveChannelTitleHBox);
         }
     }
 
@@ -1756,8 +1838,6 @@ public abstract class BasePlayer<T extends Node> {
             List<String> titleLabelStyleClass;
             List<Node> titleHBoxChildren;
             HBox lastSelectedTitleHBox;
-            Label lastSelectedTitleLabel;
-            List<String> lastSelectedTitleLabelStyleClass;
             List<Node> lastSelectedTitleHBoxChildren;
 
             lastLiveChannel = selectedLive.getLiveChannel();
@@ -1783,24 +1863,35 @@ public abstract class BasePlayer<T extends Node> {
                 titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
                 titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
                 lastSelectedTitleHBox = liveChannelAndTitleHBoxMap.get(lastLiveChannel);
-                lastSelectedTitleLabel = CastUtil.cast(CollectionUtil.getFirst(lastSelectedTitleHBox.getChildren()));
-                if (lastSelectedTitleLabel == null) {
+                if (lastSelectedTitleHBox == null || !trySelectLastTitleLabel(lastSelectedTitleHBox)) {
 
                     return;
                 }
-                lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
-                lastSelectedTitleLabelStyleClass.remove(
-                        "player-live-channel-list-view-title-label-focused"
-                );
-                lastSelectedTitleLabelStyleClass.add(
-                        "player-live-channel-list-view-title-label"
-                );
                 lastSelectedTitleHBoxChildren = lastSelectedTitleHBox.getChildren();
                 lastSelectedTitleHBoxChildren.remove(PLAYING_GIF_IMAGE_VIEW);
                 if (!titleHBoxChildren.contains(PLAYING_GIF_IMAGE_VIEW)) {
                     titleHBoxChildren.add(1, PLAYING_GIF_IMAGE_VIEW);
                 }
             }
+        }
+
+        private static boolean trySelectLastTitleLabel(HBox lastSelectedTitleHBox) {
+            Label lastSelectedTitleLabel = CastUtil.cast(CollectionUtil.getFirst(lastSelectedTitleHBox.getChildren()));
+            List<String> lastSelectedTitleLabelStyleClass;
+
+            if (lastSelectedTitleLabel == null) {
+
+                return true;
+            }
+            lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
+            lastSelectedTitleLabelStyleClass.remove(
+                    "player-live-channel-list-view-title-label-focused"
+            );
+            lastSelectedTitleLabelStyleClass.add(
+                    "player-live-channel-list-view-title-label"
+            );
+
+            return false;
         }
     }
 

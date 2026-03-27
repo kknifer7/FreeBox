@@ -78,6 +78,15 @@ public class I18nKeys {
     public static final String VIDEO_INFO_NO_MORE_EP = "video.info.no-more-ep";
     public static final String VIDEO_INFO_AD_FILTERED = "video.info.ad-filtered";
     public static final String VIDEO_SETTINGS_RATE = "video.settings.rate";
+    public static final String VIDEO_SETTINGS_VOLUME = "video.settings.volume";
+    public static final String VIDEO_PLAYER_HELP = "video.player.help";
+    public static final String VIDEO_PLAYER_SHORTCUT_PAUSE = "video.player.shortcut.pause";
+    public static final String VIDEO_PLAYER_SHORTCUT_FULLSCREEN = "video.player.shortcut.fullscreen";
+    public static final String VIDEO_PLAYER_SHORTCUT_EXIT_FULLSCREEN = "video.player.shortcut.exit-fullscreen";
+    public static final String VIDEO_PLAYER_SHORTCUT_FILL_WINDOW = "video.player.shortcut.fill-window";
+    public static final String VIDEO_PLAYER_SHORTCUT_VOLUME = "video.player.shortcut.volume";
+    public static final String VIDEO_PLAYER_SHORTCUT_POSITION = "video.player.shortcut.position";
+    public static final String VIDEO_PLAYER_SHORTCUT_RATE = "video.player.shortcut.rate";
     public static final String VIDEO_SETTINGS_FILL_WINDOW = "video.settings.fill-window";
     public static final String VIDEO_SETTINGS_RELOAD = "video.settings.reload";
     public static final String VIDEO_SETTINGS_EXTERNAL = "video.settings.external";

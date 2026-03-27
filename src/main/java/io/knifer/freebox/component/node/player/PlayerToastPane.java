@@ -39,58 +39,50 @@ public class PlayerToastPane extends StackPane {
     }
 
     /**
-     * 安全显示提示信息 - 修复动画冲突版本
+     * 显示提示信息
      */
     public void showToast(String message) {
         showToast(message, duration.get());
     }
 
     public void showToast(String message, double displayDuration) {
-        // 停止当前运行的任何动画
         stopCurrentAnimationSafely();
-
-        // 设置消息和初始状态
         messageLabel.setText(message);
         setVisible(true);
-
         // 重置可能正在进行的隐藏动画状态
         isHiding.set(false);
         isShowing.set(true);
-
-        // 创建新的时间线动画，避免使用SequentialTransition
         createAndPlayTimeline(displayDuration);
     }
 
     /**
-     * 安全停止当前动画
+     * 停止当前提示动画
      */
     private void stopCurrentAnimationSafely() {
+        Animation.Status status;
+
         if (currentTimeline != null) {
-            // 检查动画状态而不是直接停止[citation:1]
-            Animation.Status status = currentTimeline.getStatus();
+            status = currentTimeline.getStatus();
             if (status == Animation.Status.RUNNING) {
-                // 使用更安全的方式停止动画
                 currentTimeline.stop();
             }
             currentTimeline = null;
         }
-
         // 重置所有可能的内嵌动画属性
         setOpacity(1.0);
         setTranslateY(0);
     }
 
     /**
-     * 创建并播放时间线动画（替代SequentialTransition方案）
+     * 创建并播放时间线动画
      */
     private void createAndPlayTimeline(double displayDuration) {
         // 清除任何可能冲突的过渡
         setOpacity(0.0);
         setTranslateY(10);
 
-        // 创建单一时间线管理所有动画阶段
         currentTimeline = new Timeline(
-                // 第一阶段：淡入动画
+                // 淡入动画
                 new KeyFrame(Duration.ZERO,
                         new KeyValue(opacityProperty(), 0.0),
                         new KeyValue(translateYProperty(), 10)
@@ -99,23 +91,19 @@ public class PlayerToastPane extends StackPane {
                         new KeyValue(opacityProperty(), 1.0),
                         new KeyValue(translateYProperty(), 0)
                 ),
-
-                // 第二阶段：保持显示
+                // 保持显示
                 new KeyFrame(Duration.seconds(displayDuration - fadeDuration.get())),
-
-                // 第三阶段：淡出动画
+                // 淡出动画
                 new KeyFrame(Duration.seconds(displayDuration),
                         new KeyValue(opacityProperty(), 0.0)
                 )
         );
-
         currentTimeline.setOnFinished(e -> {
             setVisible(false);
             isShowing.set(false);
             isHiding.set(false);
             currentTimeline = null;
         });
-
         currentTimeline.play();
     }
 

@@ -251,6 +251,7 @@ public class VideoController extends BaseController implements Destroyable {
 
                 children.add(btn);
                 btn.setTooltip(new Tooltip(name));
+                btn.setFocusTraversable(false);
                 btn.setOnAction(evt -> {
                     if (btn == selectedEpBtn) {
                         return;

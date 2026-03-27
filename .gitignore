@@ -12,6 +12,7 @@ build/
 .idea/jpa-buddy.xml
 .idea/uiDesigner.xml
 .idea/material_theme_project_new.xml
+.idea/claudeCodeTabState.xml
 *.iws
 *.iml
 *.ipr

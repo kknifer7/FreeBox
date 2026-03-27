@@ -271,13 +271,13 @@ public class VideoController extends BaseController implements Destroyable {
                 FXCollections.reverse(children);
             });
             tab.setContextMenu(new ContextMenu(reverseMenuItem));
+            tabs.add(tab);
+            tab.getTabPane().setPadding(new Insets(0, 0, 90, 0));
             if (hasPlayInfo && playFlag.equals(urlFlag)) {
                 // 存在历史记录，且历史记录的选集标签页与当前播放的选集标签页相同，因此要赋予当前选集标签页历史记录中的相关属性
                 reverseMenuItem.setSelected(playInfo.isReverseSort());
+                resourceTabPane.getSelectionModel().selectLast();
             }
-            // 添加标签页
-            tabs.add(tab);
-            tab.getTabPane().setPadding(new Insets(0, 0, 90, 0));
         });
     }
 
@@ -287,6 +287,46 @@ public class VideoController extends BaseController implements Destroyable {
         }
         selectedEpBtn = newSelectedEpBtn;
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
+    }
+
+    /**
+     * 滚动 ScrollPane 到选中的按钮位置
+     */
+    private void scrollToSelectedButton() {
+        Tab selectedTab;
+        ScrollPane scrollPane;
+        FlowPane flowPane;
+        ObservableList<Node> children;
+        int buttonIndex;
+        int itemCount;
+        double targetVvalue;
+
+        selectedTab = resourceTabPane.getSelectionModel().getSelectedItem();
+        if (selectedTab == null) {
+
+            return;
+        }
+        scrollPane = (ScrollPane) selectedTab.getContent();
+        flowPane = (FlowPane) scrollPane.getContent();
+        if (selectedEpBtn == null) {
+
+            return;
+        }
+        children = flowPane.getChildren();
+        buttonIndex = children.indexOf(selectedEpBtn);
+        itemCount = children.size();
+        if (buttonIndex < 0) {
+
+            return;
+        }
+        targetVvalue = (double) buttonIndex / (double) itemCount * 0.9;
+        if (targetVvalue > 1.0) {
+            targetVvalue = 1.0;
+        }
+        if (targetVvalue < 0.0) {
+            targetVvalue = 0.0;
+        }
+        scrollPane.setVvalue(targetVvalue);
     }
 
     private void addMovieDetailsIfExists(
@@ -421,6 +461,9 @@ public class VideoController extends BaseController implements Destroyable {
             progress = playInfo.getProgress();
         }
         selectedEpBtn.getStyleClass().add("video-details-ep-btn-selected");
+        if (playInfo != null) {
+            scrollToSelectedButton();
+        }
         playVideo(video, urlInfo, infoBean, progress);
     }
 

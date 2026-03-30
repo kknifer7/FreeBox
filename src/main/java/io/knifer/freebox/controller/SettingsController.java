@@ -830,22 +830,7 @@ public class SettingsController {
 
     @FXML
     private void onOpenLogConsoleButtonAction() {
-        Stage stage;
-        Pair<Stage, LogConsoleDialogController> logConsoleStageAndController =
-                router.getSecondary(Views.LOG_CONSOLE_DIALOG);
-
-        if (logConsoleStageAndController != null) {
-            logConsoleStageAndController.getLeft().toFront();
-
-            return;
-        }
-        logConsoleStageAndController = FXMLUtil.loadDialog(
-                Views.LOG_CONSOLE_DIALOG, StageStyle.DECORATED, Modality.NONE
-        );
-        router.putSecondary(Views.LOG_CONSOLE_DIALOG, logConsoleStageAndController);
-        stage = logConsoleStageAndController.getLeft();
-        stage.setTitle(I18nHelper.get(I18nKeys.SETTINGS_DEBUGGING_LOG_CONSOLE));
-        stage.show();
+        router.openSecondary(Views.LOG_CONSOLE_DIALOG, I18nKeys.SETTINGS_DEBUGGING_LOG_CONSOLE);
     }
 
     @FXML

@@ -1,0 +1,7 @@
+@import "../common.css";
+
+.movie-list-scroll-pane {
+    -fx-background-color:transparent;
+    -fx-pref-height: 305;
+    -fx-max-height: 305;
+}

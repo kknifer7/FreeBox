@@ -119,8 +119,6 @@ public class TVController implements Destroyable {
 
     private final MovieSuggestionHandler movieSuggestionHandler = new IQiYiMovieSuggestionHandler();
 
-    private final String HOME_SORT_DATA_ID = "ztx*1RcW6%Ep";
-
     private final Map<String, MutablePair<Movie, List<Movie.Video>>> MOVIE_CACHE = new HashMap<>();
 
     @FXML
@@ -633,8 +631,8 @@ public class TVController implements Destroyable {
                 sortList = classes.getSortList();
                 if (movie != null && CollectionUtil.isNotEmpty(list = movie.getVideoList())) {
                     // 该源带有首页推荐影片，新增一个首页推荐类别，并且将影片数据缓存起来
-                    items.add(new MovieSort.SortData(HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)));
-                    MOVIE_CACHE.put(HOME_SORT_DATA_ID, MutablePair.of(movie, list));
+                    items.add(new MovieSort.SortData(BaseValues.HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)));
+                    MOVIE_CACHE.put(BaseValues.HOME_SORT_DATA_ID, MutablePair.of(movie, list));
                 }
                 items.addAll(sortList);
                 sortsLoadingProperty.set(false);

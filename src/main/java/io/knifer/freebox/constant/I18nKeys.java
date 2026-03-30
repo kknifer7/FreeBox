@@ -145,6 +145,12 @@ public class I18nKeys {
     public static final String SETTINGS_DEBUGGING_LOG_EXPORT = "settings.debugging.log-export";
     public static final String SETTINGS_DEBUGGING_LOG_CONSOLE = "settings.debugging.log-console";
 
+    public static final String SPIDER_DEBUGGING = "spider-debugging";
+    public static final String SPIDER_DEBUGGING_SPIDER_MONITORING_ERROR = "spider-debugging.spider-monitoring-error";
+    public static final String SPIDER_DEBUGGING_SPIDER_MONITORING = "spider-debugging.spider-monitoring";
+    public static final String SPIDER_DEBUGGING_SPIDER_FILE_NOT_EXISTS = "spider-debugging.spider-file-not-exists";
+    public static final String SPIDER_DEBUGGING_HOME_INVOKE_ERROR = "spider-debugging.home.invoke-error";
+
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";
     public static final String ERROR_CONFIRM = "error.confirm";

@@ -56,6 +56,8 @@ public class HomeController {
     @FXML
     private Button settingsBtn;
     @FXML
+    private Button spiderDebuggingBtn;
+    @FXML
     private Text settingsInfoText;
     @FXML
     public Text serviceNotStartWarningText;
@@ -153,6 +155,7 @@ public class HomeController {
             openUpgradeDialogIfNeeded();
             initProgressIndicator.setVisible(false);
             settingsBtn.setDisable(false);
+            spiderDebuggingBtn.setDisable(false);
             root.setDisable(false);
         });
         context.registerEventListener(
@@ -237,7 +240,7 @@ public class HomeController {
     }
 
     @FXML
-    private void onSettingsBtnClick() {
+    private void onSettingsBtnAction() {
         Stage stage = FXMLUtil.load(Views.SETTINGS).getLeft();
 
         stage.initModality(Modality.WINDOW_MODAL);
@@ -301,6 +304,15 @@ public class HomeController {
         hasServiceNotStarted = !isHttpServiceRunning || !isWsServiceRunning;
         serviceNotStartWarningText.setVisible(hasServiceNotStarted);
         serviceNotStartWarningText.setManaged(hasServiceNotStarted);
+    }
+
+    @FXML
+    private void onSpiderDebuggingBtnAction() {
+        Pair<Stage, SpiderDebuggingController> stageAndController = FXMLUtil.load(Views.SPIDER_DEBUGGING);
+        Stage stage = stageAndController.getLeft();
+
+        stage.setTitle(I18nHelper.get(I18nKeys.SPIDER_DEBUGGING));
+        router.route(WindowHelper.getStage(root), stage);
     }
 
     @FXML

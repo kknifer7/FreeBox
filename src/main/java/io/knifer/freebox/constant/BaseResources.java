@@ -42,6 +42,10 @@ public class BaseResources {
             FreeBoxApplication.class.getResourceAsStream("image/play_button.png")
     );
 
+    public static final Image JAVASCRIPT_LOGO_IMG = new Image(
+            FreeBoxApplication.class.getResourceAsStream("image/javascript_logo.png")
+    );
+
     public static final Properties X_PROPERTIES = new Properties() {
         {
             try (InputStream in = Resources.getResource("x.properties").openStream()) {

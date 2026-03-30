@@ -86,4 +86,5 @@ public class BaseValues {
             HttpHeaders.USER_AGENT, "okhttp/3.15",
             HttpHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
     };
+    public final static String HOME_SORT_DATA_ID = "ztx*1RcW6%Ep";
 }

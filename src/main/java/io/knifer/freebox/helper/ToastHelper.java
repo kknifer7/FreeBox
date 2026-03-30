@@ -1,6 +1,7 @@
 package io.knifer.freebox.helper;
 
 import cn.hutool.core.collection.CollUtil;
+import io.knifer.freebox.component.node.MouseToast;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ButtonTypes;
 import io.knifer.freebox.constant.I18nKeys;
@@ -108,6 +109,14 @@ public class ToastHelper {
                             .show();
                     postProcessNotification(Pos.TOP_CENTER);
                 });
+    }
+
+    public void showMouseToastI18n(String textI18n) {
+        showMouseToast(I18nHelper.get(textI18n));
+    }
+
+    public void showMouseToast(String text) {
+        MouseToast.show(text);
     }
 
     private Optional<Notifications> createNotification(String message) {

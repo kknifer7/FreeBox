@@ -13,3 +13,7 @@
 .gray {
     -fx-text-fill: #808080;
 }
+
+.dark-orange {
+    -fx-text-fill: #FF8C00;
+}

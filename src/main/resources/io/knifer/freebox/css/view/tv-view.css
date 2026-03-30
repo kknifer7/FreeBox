@@ -16,11 +16,6 @@
     -fx-label-padding: 2px;
 }
 
-.movie-info-overlay {
-    -fx-font-weight: bold;
-    -fx-font-size: 14px;
-}
-
 .movie-progress-indicator {
     -fx-progress-color: #32CD32;
     -fx-background-color: transparent;

@@ -271,6 +271,7 @@ public class JSSpider extends Spider {
     public void destroy() {
         try {
             context.close(true);
+            log.info("destroyed, siteKey={}, jar={}", siteKey, jar);
         } catch (Exception e) {
             log.error("destroy failed", e);
         }

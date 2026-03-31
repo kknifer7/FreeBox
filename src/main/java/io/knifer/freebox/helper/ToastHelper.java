@@ -1,6 +1,7 @@
 package io.knifer.freebox.helper;
 
 import cn.hutool.core.collection.CollUtil;
+import io.knifer.freebox.component.node.ConfirmDialog;
 import io.knifer.freebox.component.node.MouseToast;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ButtonTypes;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * 提示
@@ -220,6 +222,10 @@ public class ToastHelper {
         }
         WindowHelper.setFontFamily(alert.getDialogPane(), ConfigHelper.getUsageFontFamily());
         alert.show();
+    }
+
+    public void showConfirmI18n(String titleI18n, String contentI18n, Consumer<Boolean> onResult) {
+        ConfirmDialog.showI18n(titleI18n, contentI18n, onResult);
     }
 
     public void enableErrorShow() {

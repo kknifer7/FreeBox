@@ -150,6 +150,7 @@ public class I18nKeys {
     public static final String SPIDER_DEBUGGING_SPIDER_MONITORING = "spider-debugging.spider-monitoring";
     public static final String SPIDER_DEBUGGING_SPIDER_FILE_NOT_EXISTS = "spider-debugging.spider-file-not-exists";
     public static final String SPIDER_DEBUGGING_HOME_INVOKE_ERROR = "spider-debugging.home.invoke-error";
+    public static final String SPIDER_DEBUGGING_DELETE_CONFIRM = "spider-debugging.delete-confirm";
 
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";
@@ -171,6 +172,7 @@ public class I18nKeys {
     public static final String COMMON_ON = "common.on";
     public static final String COMMON_OFF = "common.off";
     public static final String COMMON_CLOSE = "common.close";
+    public static final String COMMON_HINT = "common.hint";
 
     public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
     public static final String SOURCE_AUDIT_NOW = "source-audit.now";

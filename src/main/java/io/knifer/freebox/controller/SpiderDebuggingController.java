@@ -22,6 +22,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -31,7 +32,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
@@ -252,16 +252,23 @@ public class SpiderDebuggingController {
      * @param successFlag 是否监控成功（null=未监控，true=成功，false=失败）
      */
     private void setSpiderMonitoringStatus(@Nullable Boolean successFlag) {
+        ObservableList<String> styleClasses = spiderMonitoringStatusLabel.getStyleClass();
+
         if (successFlag == null) {
             spiderMonitoringStatusLabel.setText(StringUtils.EMPTY);
+            styleClasses.remove("danger");
+            styleClasses.remove("success");
         } else if (successFlag) {
             spiderMonitoringStatusLabel.setText(I18nHelper.get(I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING));
-            spiderMonitoringStatusLabel.setTextFill(Color.GREEN);
+            styleClasses.remove("danger");
+            styleClasses.add("success");
         } else {
             spiderMonitoringStatusLabel.setText(I18nHelper.get(
                     I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING_ERROR
             ));
-            spiderMonitoringStatusLabel.setTextFill(Color.RED);
+            styleClasses = spiderMonitoringStatusLabel.getStyleClass();
+            styleClasses.remove("success");
+            styleClasses.add("danger");
         }
     }
 
@@ -475,16 +482,26 @@ public class SpiderDebuggingController {
 
             return;
         }
-        spiderSelectComboBox.getSelectionModel().clearSelection();
-        spiderSelectComboBox.getItems().remove(spiderDebugging);
-        spiderLoadingProperty.set(false);
-        homeTabLoadingProperty.set(false);
-        ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
-        AsyncUtil.execute(() -> {
-            StorageHelper.delete(spiderDebugging);
-            cancelSpiderPreviewTask();
-            destroySpiderIfExists();
-        });
+        ToastHelper.showConfirmI18n(
+                I18nKeys.COMMON_HINT, I18nKeys.SPIDER_DEBUGGING_DELETE_CONFIRM, flag -> {
+                    if (!flag) {
+
+                        return;
+                    }
+                    spiderSelectComboBox.getSelectionModel().clearSelection();
+                    spiderSelectComboBox.getItems().remove(spiderDebugging);
+                    setSpiderMonitoringStatus(null);
+                    spiderLoadingProperty.set(false);
+                    homeTabLoadingProperty.set(false);
+                    ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+                    AsyncUtil.execute(() -> {
+                        log.info("delete spider debugging: {}", spiderDebugging);
+                        StorageHelper.delete(spiderDebugging);
+                        cancelSpiderPreviewTask();
+                        destroySpiderIfExists();
+                    });
+                }
+        );
     }
 
     @FXML

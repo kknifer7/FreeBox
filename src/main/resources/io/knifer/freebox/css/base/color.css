@@ -17,3 +17,11 @@
 .dark-orange {
     -fx-text-fill: #FF8C00;
 }
+
+.danger {
+    -fx-text-fill: red;
+}
+
+.success {
+    -fx-text-fill: green;
+}

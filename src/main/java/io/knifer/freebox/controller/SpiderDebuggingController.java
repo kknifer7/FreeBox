@@ -1,9 +1,13 @@
 package io.knifer.freebox.controller;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
+import cn.hutool.core.io.watch.SimpleWatcher;
+import cn.hutool.core.io.watch.WatchMonitor;
+import cn.hutool.core.io.watch.watchers.DelayWatcher;
 import io.knifer.freebox.component.node.MovieSortFilterCheckBoxTreeItem;
 import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.*;
+import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.common.catvod.Result;
 import io.knifer.freebox.model.common.tvbox.AbsSortXml;
@@ -44,10 +48,12 @@ import org.graalvm.polyglot.PolyglotException;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InterruptedIOException;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 爬虫调试
@@ -98,15 +104,23 @@ public class SpiderDebuggingController {
     private TextField moviePictureUrlTextField;
 
     private Stage stage;
-    private FileChooser sourceCodeFileChooser;
+    private FileChooser spiderFileChooser;
     private InfoOverlay lastSelectedMovieInfoOverlay;
     private BooleanProperty spiderLoadingProperty;
     private BooleanProperty homeTabLoadingProperty;
 
-    private volatile JSSpider spider;
     private ExecutorService spiderPreviewExecutor;
     private Set<SourceAuditType> tabTypeUpdateSet;
-    private volatile Future<?> spiderPreviewTask;
+
+    /***
+     * 上锁资源
+     ***/
+    private JSSpider spider;
+    private Future<?> spiderPreviewTask;
+    private WatchMonitor spiderFileMonitor;
+
+    private final ReentrantLock spiderLock = new ReentrantLock();
+    private final AtomicBoolean spiderInitializing = new AtomicBoolean(false);
 
     private final CatVodBeanConverter beanConverter;
     private final Router router;
@@ -179,8 +193,6 @@ public class SpiderDebuggingController {
         previewTabPane.getSelectionModel().selectFirst();
         tabTypeUpdateSet.addAll(Arrays.asList(SourceAuditType.values()));
         // 爬虫初始化
-        cancelSpiderPreviewTask();
-        destroySpiderIfExists();
         spiderDebugging = SpiderDebugging.from(spiderFile);
         AsyncUtil.execute(() -> {
             if (StorageHelper.find(spiderDebugging.getId(), SpiderDebugging.class).isEmpty()) {
@@ -188,7 +200,7 @@ public class SpiderDebuggingController {
                 StorageHelper.save(spiderDebugging);
                 initSpider(spiderFile, spiderDebugging);
             } else {
-                // 如果爬虫被导入过，直接选中
+                // 如果爬虫被导入过，直接选中（initSpider方法会在选中事件触发后调用）
                 Platform.runLater(() -> {
                     setSpiderMonitoringStatus(null);
                     updateSpiderDebugging(spiderDebugging);
@@ -201,49 +213,66 @@ public class SpiderDebuggingController {
     private File selectSpiderFile() {
         File result;
 
-        if (sourceCodeFileChooser == null) {
-            sourceCodeFileChooser = new FileChooser();
-            sourceCodeFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+        if (spiderFileChooser == null) {
+            spiderFileChooser = new FileChooser();
+            spiderFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
                     "Javascript", "*.js"
             ));
         }
-        result = sourceCodeFileChooser.showOpenDialog(stage);
+        result = spiderFileChooser.showOpenDialog(stage);
         log.info("select source code file: {}", result == null ? "null" : result.getAbsolutePath());
 
         return result;
     }
 
-    private void cancelSpiderPreviewTask() {
-        if (spiderPreviewTask != null && !spiderPreviewTask.isDone()) {
-            spiderPreviewTask.cancel(true);
-            spiderPreviewTask = null;
-        }
-    }
-
     private void initSpider(File spiderFile, SpiderDebugging spiderDebugging) {
         AsyncUtil.execute(() -> {
-            spider = new JSSpider(StringUtils.EMPTY, spiderFile.toPath());
-            try {
-                spider.init(StringUtils.EMPTY);
-            } catch (Exception e) {
-                if (!tryHandleExecutionInterrupt(e)) {
-                    log.error("spider init exception", e);
-                    Platform.runLater(() -> {
-                        setSpiderMonitoringStatus(false);
-                        ToastHelper.showErrorI18n(I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING_ERROR);
-                        spiderLoadingProperty.set(false);
-                    });
-                    destroySpiderIfExists();
-                }
+            JSSpider newSpider;
+            WatchMonitor newMonitor;
+
+            if (!spiderInitializing.compareAndSet(false, true)) {
+                // 有其他线程在初始化爬虫，取消当前初始化动作
+                log.warn("Another init in progress, cancelling");
+                Platform.runLater(() -> spiderLoadingProperty.set(false));
 
                 return;
             }
-            updateHomeTab();
-            Platform.runLater(() -> {
-                setSpiderMonitoringStatus(true);
-                updateSpiderDebugging(spiderDebugging);
-                spiderLoadingProperty.set(false);
-            });
+            try {
+                destroySpiderIfExists();
+                newSpider = new JSSpider(StringUtils.EMPTY, spiderFile.toPath());
+                try {
+                    newSpider.init(StringUtils.EMPTY);
+                    newMonitor = createSpiderFileMonitor(spiderFile);
+                } catch (Exception e) {
+                    if (!tryHandleExecutionInterrupt(e)) {
+                        log.error("spider init exception", e);
+                        Platform.runLater(() -> {
+                            setSpiderMonitoringStatus(false);
+                            ToastHelper.showErrorI18n(I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING_ERROR);
+                            spiderLoadingProperty.set(false);
+                        });
+                        destroySpiderIfExists();
+                    }
+
+                    return;
+                }
+                spiderLock.lock();
+                try {
+                    spider = newSpider;
+                    spiderFileMonitor = newMonitor;
+                    spiderFileMonitor.start();
+                } finally {
+                    spiderLock.unlock();
+                }
+                Platform.runLater(() -> {
+                    setSpiderMonitoringStatus(true);
+                    updateSpiderDebugging(spiderDebugging);
+                    spiderLoadingProperty.set(false);
+                });
+                updateHomeTab();
+            } finally {
+                spiderInitializing.set(false);
+            }
         });
     }
 
@@ -272,6 +301,26 @@ public class SpiderDebuggingController {
         }
     }
 
+    private WatchMonitor createSpiderFileMonitor(File spiderFile) {
+        WatchMonitor newMonitor = WatchMonitor.create(spiderFile, WatchMonitor.ENTRY_MODIFY, WatchMonitor.ENTRY_DELETE)
+
+                .setWatcher(new DelayWatcher(new SimpleWatcher() {
+                    @Override
+                    public void onModify(WatchEvent<?> event, Path currentPath) {
+                        log.info("spider file modified: {} - {}", currentPath, event);
+                    }
+
+                    @Override
+                    public void onDelete(WatchEvent<?> event, Path currentPath) {
+                        log.info("spider file deleted: {} - {}", currentPath, event);
+                    }
+                }, 500));
+        newMonitor.setUncaughtExceptionHandler(GlobalExceptionHandler.getInstance());
+        newMonitor.setName("Spider File Monitor Thread");
+
+        return newMonitor;
+    }
+
     /**
      * 选中对应的调试爬虫。如果传入的爬虫不存在，则在ComboBox中新建。
      * @param spiderDebugging 调试爬虫数据
@@ -292,35 +341,70 @@ public class SpiderDebuggingController {
     }
 
     private void destroySpiderIfExists() {
-        if (spider != null) {
-            spider.destroy();
-            spider = null;
+        WatchMonitor localMonitor;
+        Future<?> localTask;
+        JSSpider localSpider;
+
+        spiderLock.lock();
+        try {
+            localMonitor = spiderFileMonitor;
+            if (localMonitor != null) {
+                localMonitor.close();
+                spiderFileMonitor = null;
+            }
+            localTask = spiderPreviewTask;
+            if (localTask != null && !localTask.isDone()) {
+                localTask.cancel(true);
+                spiderPreviewTask = null;
+            }
+            localSpider = spider;
+            if (localSpider != null) {
+                localSpider.destroy();
+                spider = null;
+            }
+        } finally {
+            spiderLock.unlock();
         }
     }
 
     private void updateHomeTab() {
-        homeTabLoadingProperty.set(true);
         ImageHelper.clearCache();
-        cancelSpiderPreviewTask();
+        Platform.runLater(() -> homeTabLoadingProperty.set(true));
         spiderPreviewTask = spiderPreviewExecutor.submit(() -> {
+            JSSpider localSpider;
             Result result;
             AbsSortXml absSortXml;
             List<MovieSort.SortData> sortDataList;
             Movie movieDataInfo;
             List<Movie.Video> movies;
 
+            // 加锁取spider
+            spiderLock.lock();
             try {
-                result = GsonUtil.fromJson(spider.homeContent(false), Result.class);
-            } catch (Exception e) {
-                if (tryHandleExecutionInterrupt(e)) {
+                localSpider = spider;
+                if (localSpider == null) {
+                    Platform.runLater(() -> homeTabLoadingProperty.set(false));
 
                     return;
                 }
-                handleException(homeTabLoadingProperty, I18nKeys.SPIDER_DEBUGGING_HOME_INVOKE_ERROR, e);
+            } finally {
+                spiderLock.unlock();
+            }
+            // 调用spider
+            try {
+                result = GsonUtil.fromJson(localSpider.homeContent(false), Result.class);
+                log.debug("load homeContent result: {}", result);
+            } catch (Exception e) {
+                // 爬虫在被调用时销毁，原因可能是用户删除或切换了爬虫，要正确处理这种情况
+                if (!tryHandleExecutionInterrupt(e)) {
+                    handleException(homeTabLoadingProperty, I18nKeys.SPIDER_DEBUGGING_HOME_INVOKE_ERROR, e);
+                }
+                Platform.runLater(() -> homeTabLoadingProperty.set(false));
 
                 return;
             }
             if (result == null) {
+                Platform.runLater(() -> homeTabLoadingProperty.set(false));
 
                 return;
             }
@@ -382,7 +466,7 @@ public class SpiderDebuggingController {
                 e instanceof PolyglotException && "Context execution was cancelled.".equals(message)
         ) {
             log.debug("user cancelled execution", e);
-            homeTabLoadingProperty.set(false);
+            Platform.runLater(() -> homeTabLoadingProperty.set(false));
 
             return true;
         }
@@ -488,20 +572,31 @@ public class SpiderDebuggingController {
 
                         return;
                     }
-                    spiderSelectComboBox.getSelectionModel().clearSelection();
                     spiderSelectComboBox.getItems().remove(spiderDebugging);
-                    setSpiderMonitoringStatus(null);
-                    spiderLoadingProperty.set(false);
-                    homeTabLoadingProperty.set(false);
+                    clearUI();
                     ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
                     AsyncUtil.execute(() -> {
                         log.info("delete spider debugging: {}", spiderDebugging);
                         StorageHelper.delete(spiderDebugging);
-                        cancelSpiderPreviewTask();
                         destroySpiderIfExists();
                     });
                 }
         );
+    }
+
+    private void clearUI() {
+        spiderSelectComboBox.getSelectionModel().clearSelection();
+        movieSortFilterCheckTreeView.getCheckModel().clearChecks();
+        movieListHBox.getChildren().clear();
+        movieNameLabel.setText(null);
+        movieIdTextField.setText(null);
+        moviePictureUrlTextField.setText(null);
+        movieClassNameLabel.setText(null);
+        movieClassIdTextField.setText(null);
+        movieSortFilterCheckTreeView.getRoot().getChildren().clear();
+        setSpiderMonitoringStatus(null);
+        spiderLoadingProperty.set(false);
+        homeTabLoadingProperty.set(false);
     }
 
     @FXML

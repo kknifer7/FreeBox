@@ -79,7 +79,7 @@ public class SpiderDebuggingController {
     @FXML
     private ProgressIndicator spiderLoadingProgressIndicator;
     @FXML
-    private Label spiderMonitoringStatusLabel;
+    private Label spiderStatusLabel;
     @FXML
     private TabPane previewTabPane;
     @FXML
@@ -115,12 +115,15 @@ public class SpiderDebuggingController {
     /***
      * 上锁资源
      ***/
-    private JSSpider spider;
+    private volatile JSSpider spider;
+    private volatile boolean spiderAvailableFlag;
     private Future<?> spiderPreviewTask;
-    private WatchMonitor spiderFileMonitor;
+    private volatile WatchMonitor fileMonitor;
 
     private final ReentrantLock spiderLock = new ReentrantLock();
     private final AtomicBoolean spiderInitializing = new AtomicBoolean(false);
+    private final ReentrantLock fileMonitorLock = new ReentrantLock();
+    private final AtomicBoolean fileMonitorInitializing = new AtomicBoolean(false);
 
     private final CatVodBeanConverter beanConverter;
     private final Router router;
@@ -143,7 +146,7 @@ public class SpiderDebuggingController {
         homeTabLoadingProperty = new SimpleBooleanProperty(false);
         emptyDataPlaceholder.visibleProperty().bind(spiderSelectValueIsNull);
         tabPaneVBox.visibleProperty().bind(spiderSelectValueIsNotNull);
-        spiderMonitoringStatusLabel.visibleProperty().bind(spiderSelectValueIsNotNull);
+        spiderStatusLabel.visibleProperty().bind(spiderSelectValueIsNotNull);
         spiderLoadingProgressIndicator.visibleProperty().bind(spiderLoadingProperty);
         homeTabLoadingProgressIndicator.visibleProperty().bind(homeTabLoadingProperty.or(spiderLoadingProperty));
         homeTabContentBorderPane.visibleProperty().bind(homeTabLoadingProperty.not().and(spiderLoadingProperty.not()));
@@ -159,6 +162,7 @@ public class SpiderDebuggingController {
             stage.setOnHidden(evt -> {
                 AsyncUtil.execute(() -> {
                     spiderPreviewExecutor.shutdownNow();
+                    destroyFileMonitorIfExists();
                     destroySpiderIfExists();
                 });
                 router.back();
@@ -198,11 +202,12 @@ public class SpiderDebuggingController {
             if (StorageHelper.find(spiderDebugging.getId(), SpiderDebugging.class).isEmpty()) {
                 // 如果爬虫未被导入过，保存爬虫数据并初始化
                 StorageHelper.save(spiderDebugging);
-                initSpider(spiderFile, spiderDebugging);
+                initFileMonitor(spiderDebugging);
+                initSpider(spiderDebugging);
             } else {
                 // 如果爬虫被导入过，直接选中（initSpider方法会在选中事件触发后调用）
                 Platform.runLater(() -> {
-                    setSpiderMonitoringStatus(null);
+                    clearUI(true);
                     updateSpiderDebugging(spiderDebugging);
                 });
             }
@@ -225,94 +230,127 @@ public class SpiderDebuggingController {
         return result;
     }
 
-    private void initSpider(File spiderFile, SpiderDebugging spiderDebugging) {
-        AsyncUtil.execute(() -> {
-            JSSpider newSpider;
-            WatchMonitor newMonitor;
+    private void initFileMonitor(SpiderDebugging spiderDebugging) {
+        WatchMonitor newMonitor;
 
-            if (!spiderInitializing.compareAndSet(false, true)) {
-                // 有其他线程在初始化爬虫，取消当前初始化动作
-                log.warn("Another init in progress, cancelling");
-                Platform.runLater(() -> spiderLoadingProperty.set(false));
+        if (!fileMonitorInitializing.compareAndSet(false, true)) {
+            // 有其他线程在初始化文件监控，取消当前初始化动作
+            log.warn("Another file monitor init in progress, cancelling");
 
-                return;
-            }
-            try {
-                destroySpiderIfExists();
-                newSpider = new JSSpider(StringUtils.EMPTY, spiderFile.toPath());
-                try {
-                    newSpider.init(StringUtils.EMPTY);
-                    newMonitor = createSpiderFileMonitor(spiderFile);
-                } catch (Exception e) {
-                    if (!tryHandleExecutionInterrupt(e)) {
-                        log.error("spider init exception", e);
-                        Platform.runLater(() -> {
-                            setSpiderMonitoringStatus(false);
-                            ToastHelper.showErrorI18n(I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING_ERROR);
-                            spiderLoadingProperty.set(false);
-                        });
-                        destroySpiderIfExists();
-                    }
-
-                    return;
-                }
-                spiderLock.lock();
-                try {
-                    spider = newSpider;
-                    spiderFileMonitor = newMonitor;
-                    spiderFileMonitor.start();
-                } finally {
-                    spiderLock.unlock();
-                }
-                Platform.runLater(() -> {
-                    setSpiderMonitoringStatus(true);
-                    updateSpiderDebugging(spiderDebugging);
-                    spiderLoadingProperty.set(false);
-                });
-                updateHomeTab();
-            } finally {
-                spiderInitializing.set(false);
-            }
-        });
-    }
-
-    /**
-     * 设置爬虫监控状态UI
-     * @param successFlag 是否监控成功（null=未监控，true=成功，false=失败）
-     */
-    private void setSpiderMonitoringStatus(@Nullable Boolean successFlag) {
-        ObservableList<String> styleClasses = spiderMonitoringStatusLabel.getStyleClass();
-
-        if (successFlag == null) {
-            spiderMonitoringStatusLabel.setText(StringUtils.EMPTY);
-            styleClasses.remove("danger");
-            styleClasses.remove("success");
-        } else if (successFlag) {
-            spiderMonitoringStatusLabel.setText(I18nHelper.get(I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING));
-            styleClasses.remove("danger");
-            styleClasses.add("success");
-        } else {
-            spiderMonitoringStatusLabel.setText(I18nHelper.get(
-                    I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING_ERROR
-            ));
-            styleClasses = spiderMonitoringStatusLabel.getStyleClass();
-            styleClasses.remove("success");
-            styleClasses.add("danger");
+            return;
+        }
+        try {
+            destroyFileMonitorIfExists();
+            newMonitor = createSpiderFileMonitor(spiderDebugging);
+        } finally {
+            fileMonitorInitializing.set(false);
+        }
+        fileMonitorLock.lock();
+        try {
+            fileMonitor = newMonitor;
+            fileMonitor.start();
+        } finally {
+            fileMonitorLock.unlock();
+            log.info("file monitor started");
         }
     }
 
-    private WatchMonitor createSpiderFileMonitor(File spiderFile) {
-        WatchMonitor newMonitor = WatchMonitor.create(spiderFile, WatchMonitor.ENTRY_MODIFY, WatchMonitor.ENTRY_DELETE)
+    private void initSpider(SpiderDebugging spiderDebugging) {
+        JSSpider newSpider;
+        boolean spiderInitSuccess;
 
-                .setWatcher(new DelayWatcher(new SimpleWatcher() {
+        if (!spiderInitializing.compareAndSet(false, true)) {
+            // 有其他线程在初始化爬虫，取消当前初始化动作
+            log.warn("Another spider init in progress, cancelling");
+            Platform.runLater(() -> spiderLoadingProperty.set(false));
+
+            return;
+        }
+        try {
+            destroySpiderIfExists();
+            newSpider = new JSSpider(StringUtils.EMPTY, Path.of(spiderDebugging.getSourceFilePath()));
+            try {
+                newSpider.init(StringUtils.EMPTY);
+                spiderInitSuccess = true;
+            } catch (Exception e) {
+                if (tryHandleExecutionInterrupt(e)) {
+
+                    return;
+                }
+                log.error("spider init exception", e);
+                spiderInitSuccess = false;
+            }
+            spiderLock.lock();
+            try {
+                spiderAvailableFlag = spiderInitSuccess;
+                spider = newSpider;
+            } finally {
+                spiderLock.unlock();
+            }
+            Platform.runLater(() -> {
+                if (spiderAvailableFlag) {
+                    setSpiderStatus(true, I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING);
+                    updateSpiderDebugging(spiderDebugging);
+                    spiderLoadingProperty.set(false);
+                } else {
+                    clearUI(false);
+                    setSpiderStatus(
+                            false, I18nKeys.SPIDER_DEBUGGING_SPIDER_RUNNING_ERROR
+                    );
+                }
+            });
+            updateHomeTab();
+        } finally {
+            spiderInitializing.set(false);
+        }
+    }
+
+    /**
+     * 移除爬虫监控状态（UI）
+     */
+    private void clearSpiderStatus() {
+        ObservableList<String> styleClasses = spiderStatusLabel.getStyleClass();
+
+        spiderStatusLabel.setText(StringUtils.EMPTY);
+        styleClasses.remove("danger");
+        styleClasses.remove("success");
+    }
+
+    /**
+     * 设置爬虫状态（UI）
+     * @param successFlag 是否初始化成功
+     */
+    private void setSpiderStatus(boolean successFlag, String textI18n) {
+        ObservableList<String> styleClasses = spiderStatusLabel.getStyleClass();
+
+        if (successFlag) {
+            styleClasses.remove("danger");
+            styleClasses.add("success");
+        } else {
+            styleClasses.remove("success");
+            styleClasses.add("danger");
+        }
+        spiderStatusLabel.setText(I18nHelper.get(textI18n));
+    }
+
+    private WatchMonitor createSpiderFileMonitor(SpiderDebugging spiderDebugging) {
+        WatchMonitor newMonitor = WatchMonitor.create(
+                spiderDebugging.getSourceFilePath(), WatchMonitor.ENTRY_MODIFY, WatchMonitor.ENTRY_DELETE
+                ).setWatcher(new DelayWatcher(new SimpleWatcher() {
+
                     @Override
                     public void onModify(WatchEvent<?> event, Path currentPath) {
-                        log.info("spider file modified: {} - {}", currentPath, event);
+                        log.debug("spider file modified: {}", currentPath);
+                        initSpider(spiderDebugging);
                     }
 
                     @Override
                     public void onDelete(WatchEvent<?> event, Path currentPath) {
-                        log.info("spider file deleted: {} - {}", currentPath, event);
+                        log.info("spider file deleted: {}", currentPath);
+                        Platform.runLater(() -> {
+                            ToastHelper.showErrorI18n(I18nKeys.SPIDER_DEBUGGING_SPIDER_FILE_NOT_EXISTS);
+                            clearUI(false);
+                        });
                     }
                 }, 500));
         newMonitor.setUncaughtExceptionHandler(GlobalExceptionHandler.getInstance());
@@ -338,24 +376,24 @@ public class SpiderDebuggingController {
         } else {
             spiderSelectComboBox.getSelectionModel().selectLast();
         }
+        stage.setTitle(String.format(
+                "%s - %s", I18nHelper.get(I18nKeys.SPIDER_DEBUGGING), spiderDebugging.getSourceFilePath()
+        ));
     }
 
+    /**
+     * 销毁爬虫
+     */
     private void destroySpiderIfExists() {
-        WatchMonitor localMonitor;
         Future<?> localTask;
         JSSpider localSpider;
 
         spiderLock.lock();
         try {
-            localMonitor = spiderFileMonitor;
-            if (localMonitor != null) {
-                localMonitor.close();
-                spiderFileMonitor = null;
-            }
             localTask = spiderPreviewTask;
+            spiderPreviewTask = null;
             if (localTask != null && !localTask.isDone()) {
                 localTask.cancel(true);
-                spiderPreviewTask = null;
             }
             localSpider = spider;
             if (localSpider != null) {
@@ -364,91 +402,118 @@ public class SpiderDebuggingController {
             }
         } finally {
             spiderLock.unlock();
+            log.info("spider destroyed");
+        }
+    }
+
+    /**
+     * 销毁爬虫文件监视器
+     */
+    private void destroyFileMonitorIfExists() {
+        WatchMonitor localMonitor;
+
+        fileMonitorLock.lock();
+        try {
+            localMonitor = fileMonitor;
+            fileMonitor = null;
+        } finally {
+            fileMonitorLock.unlock();
+        }
+        if (localMonitor != null) {
+            localMonitor.close();
+            log.info("file monitor destroyed");
         }
     }
 
     private void updateHomeTab() {
         ImageHelper.clearCache();
         Platform.runLater(() -> homeTabLoadingProperty.set(true));
-        spiderPreviewTask = spiderPreviewExecutor.submit(() -> {
-            JSSpider localSpider;
-            Result result;
-            AbsSortXml absSortXml;
-            List<MovieSort.SortData> sortDataList;
-            Movie movieDataInfo;
-            List<Movie.Video> movies;
+        spiderLock.lock();
+        try {
+            if (spiderPreviewTask != null && !spiderPreviewTask.isDone()) {
+                spiderPreviewTask.cancel(true);
+            }
+            // TODO 这个task需要超时时间、日志控制台打开时要滚动到底部
+            spiderPreviewTask = spiderPreviewExecutor.submit(() -> {
+                JSSpider localSpider;
+                Result result;
+                AbsSortXml absSortXml;
+                List<MovieSort.SortData> sortDataList;
+                Movie movieDataInfo;
+                List<Movie.Video> movies;
 
-            // 加锁取spider
-            spiderLock.lock();
-            try {
-                localSpider = spider;
-                if (localSpider == null) {
+                spiderLock.lock();
+                try {
+                    localSpider = spider;
+                    if (localSpider == null) {
+                        Platform.runLater(() -> homeTabLoadingProperty.set(false));
+
+                        return;
+                    }
+                } finally {
+                    spiderLock.unlock();
+                }
+                try {
+                    result = GsonUtil.fromJson(localSpider.homeContent(false), Result.class);
+                    log.debug("load homeContent result: {}", result);
+                } catch (Exception e) {
+                    // 要排除用户删除、切换爬虫，或者爬虫热更新，导致当前爬虫实例调用中就被销毁的情况，这种属于正常情况
+                    if (!tryHandleExecutionInterrupt(e)) {
+                        log.error("homeContent exception", e);
+                    }
                     Platform.runLater(() -> homeTabLoadingProperty.set(false));
 
                     return;
                 }
-            } finally {
-                spiderLock.unlock();
-            }
-            // 调用spider
-            try {
-                result = GsonUtil.fromJson(localSpider.homeContent(false), Result.class);
-                log.debug("load homeContent result: {}", result);
-            } catch (Exception e) {
-                // 爬虫在被调用时销毁，原因可能是用户删除或切换了爬虫，要正确处理这种情况
-                if (!tryHandleExecutionInterrupt(e)) {
-                    handleException(homeTabLoadingProperty, I18nKeys.SPIDER_DEBUGGING_HOME_INVOKE_ERROR, e);
+                if (result == null) {
+                    Platform.runLater(() -> homeTabLoadingProperty.set(false));
+
+                    return;
                 }
-                Platform.runLater(() -> homeTabLoadingProperty.set(false));
+                absSortXml = beanConverter.resultToAbsSortXml(result, SOURCE_KEY);
+                sortDataList = absSortXml.getClasses().getSortList();
+                movieDataInfo = absSortXml.getList();
+                movies = movieDataInfo.getVideoList();
+                Platform.runLater(() -> {
+                    List<MovieSort.SortData> classItems = classesListView.getItems();
+                    List<Node> movieListNodes = movieListHBox.getChildren();
 
-                return;
-            }
-            if (result == null) {
-                Platform.runLater(() -> homeTabLoadingProperty.set(false));
+                    classItems.clear();
+                    movieListNodes.clear();
+                    if (!movies.isEmpty()) {
+                        for (Movie.Video movie : movies) {
+                            ImageView moviePicImageView = new ImageView();
+                            String picUrl = movie.getPic();
+                            InfoOverlay movieInfoOverlay;
 
-                return;
-            }
-            absSortXml = beanConverter.resultToAbsSortXml(result, SOURCE_KEY);
-            sortDataList = absSortXml.getClasses().getSortList();
-            movieDataInfo = absSortXml.getList();
-            movies = movieDataInfo.getVideoList();
-            Platform.runLater(() -> {
-                List<MovieSort.SortData> classItems = classesListView.getItems();
-                List<Node> movieListNodes = movieListHBox.getChildren();
-
-                classItems.clear();
-                movieListNodes.clear();
-                if (!movies.isEmpty()) {
-                    for (Movie.Video movie : movies) {
-                        ImageView moviePicImageView = new ImageView();
-                        String picUrl = movie.getPic();
-                        InfoOverlay movieInfoOverlay;
-
-                        moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                        moviePicImageView.setFitWidth(MOVIE_CELL_WIDTH);
-                        moviePicImageView.setFitHeight(MOVIE_CELL_HEIGHT);
-                        ImageHelper.loadAsync(picUrl)
-                                .thenAccept(imgResult -> {
-                                    if (imgResult.isSuccess()) {
-                                        Platform.runLater(
-                                                () -> moviePicImageView.setImage(imgResult.getImage())
-                                        );
-                                    }
-                                });
-                        movieInfoOverlay = new InfoOverlay(moviePicImageView, movie.getName());
-                        movieInfoOverlay.getStyleClass().add("movie-info-overlay");
-                        movieInfoOverlay.setOnMouseClicked(
-                                evt -> selectHomeMovie(evt, movieInfoOverlay, movie)
-                        );
-                        movieListNodes.add(movieInfoOverlay);
+                            moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
+                            moviePicImageView.setFitWidth(MOVIE_CELL_WIDTH);
+                            moviePicImageView.setFitHeight(MOVIE_CELL_HEIGHT);
+                            ImageHelper.loadAsync(picUrl)
+                                    .thenAccept(imgResult -> {
+                                        if (imgResult.isSuccess()) {
+                                            Platform.runLater(
+                                                    () -> moviePicImageView.setImage(imgResult.getImage())
+                                            );
+                                        }
+                                    });
+                            movieInfoOverlay = new InfoOverlay(moviePicImageView, movie.getName());
+                            movieInfoOverlay.getStyleClass().add("movie-info-overlay");
+                            movieInfoOverlay.setOnMouseClicked(
+                                    evt -> selectHomeMovie(evt, movieInfoOverlay, movie)
+                            );
+                            movieListNodes.add(movieInfoOverlay);
+                        }
                     }
-                }
-                if (!sortDataList.isEmpty()) {
-                    classItems.addAll(sortDataList);
-                }
-                homeTabLoadingProperty.set(false);
+                    if (!sortDataList.isEmpty()) {
+                        classItems.addAll(sortDataList);
+                    }
+                    homeTabLoadingProperty.set(false);
+                });
             });
-        });
+        } finally {
+            spiderLock.unlock();
+        }
     }
 
     /**
@@ -472,16 +537,6 @@ public class SpiderDebuggingController {
         }
 
         return false;
-    }
-
-    private void handleException(BooleanProperty loadingProperty, String messageI18n, @Nullable Exception e) {
-        if (e != null) {
-            log.error("exception", e);
-        }
-        Platform.runLater(() -> {
-            loadingProperty.set(false);
-            ToastHelper.showErrorI18n(messageI18n);
-        });
     }
 
     private void selectHomeMovie(MouseEvent mouseEvent, InfoOverlay node, Movie.Video movie) {
@@ -551,11 +606,15 @@ public class SpiderDebuggingController {
         spiderFile = new File(spiderDebugging.getSourceFilePath());
         if (!spiderFile.exists()) {
             ToastHelper.showErrorI18n(I18nKeys.SPIDER_DEBUGGING_SPIDER_FILE_NOT_EXISTS);
+            clearUI(false);
 
             return;
         }
         spiderSelectComboBox.getProperties().put(SPIDER_SELECT_COMBOBOX_ACTION_FLAG, true);
-        initSpider(spiderFile, spiderDebugging);
+        AsyncUtil.execute(() -> {
+            initFileMonitor(spiderDebugging);
+            initSpider(spiderDebugging);
+        });
     }
 
     @FXML
@@ -573,7 +632,7 @@ public class SpiderDebuggingController {
                         return;
                     }
                     spiderSelectComboBox.getItems().remove(spiderDebugging);
-                    clearUI();
+                    clearUI(true);
                     ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
                     AsyncUtil.execute(() -> {
                         log.info("delete spider debugging: {}", spiderDebugging);
@@ -584,19 +643,27 @@ public class SpiderDebuggingController {
         );
     }
 
-    private void clearUI() {
-        spiderSelectComboBox.getSelectionModel().clearSelection();
+    /**
+     * 清空UI
+     * @param clearSpiderSelection 是否清空已选择的爬虫
+     */
+    private void clearUI(boolean clearSpiderSelection) {
+        if (clearSpiderSelection) {
+            spiderSelectComboBox.getSelectionModel().clearSelection();
+        }
         movieSortFilterCheckTreeView.getCheckModel().clearChecks();
+        movieSortFilterCheckTreeView.getRoot().getChildren().clear();
         movieListHBox.getChildren().clear();
         movieNameLabel.setText(null);
         movieIdTextField.setText(null);
         moviePictureUrlTextField.setText(null);
+        classesListView.getItems().clear();
         movieClassNameLabel.setText(null);
         movieClassIdTextField.setText(null);
-        movieSortFilterCheckTreeView.getRoot().getChildren().clear();
-        setSpiderMonitoringStatus(null);
+        clearSpiderStatus();
         spiderLoadingProperty.set(false);
         homeTabLoadingProperty.set(false);
+        stage.setTitle(I18nHelper.get(I18nKeys.SPIDER_DEBUGGING));
     }
 
     @FXML

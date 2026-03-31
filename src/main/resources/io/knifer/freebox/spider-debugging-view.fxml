@@ -38,7 +38,7 @@
                         <ComboBox fx:id="spiderSelectComboBox" onAction="#onSpiderSelectComboBoxAction" cellFactory="$spiderDebuggingCellFactory" buttonCell="$spiderDebuggingListCell" promptText="%spider-debugging.select-file-prompt" />
                         <VBox alignment="CENTER" HBox.hgrow="NEVER">
                             <children>
-                                <Label fx:id="spiderMonitoringStatusLabel" VBox.vgrow="ALWAYS" />
+                                <Label fx:id="spiderStatusLabel" VBox.vgrow="ALWAYS" />
                             </children>
                         </VBox>
                         <ProgressIndicator prefWidth="24.0" prefHeight="24.0" fx:id="spiderLoadingProgressIndicator"/>

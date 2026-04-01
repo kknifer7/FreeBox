@@ -433,7 +433,6 @@ public class SpiderDebuggingController {
             if (spiderPreviewTask != null && !spiderPreviewTask.isDone()) {
                 spiderPreviewTask.cancel(true);
             }
-            // TODO 这个task需要超时时间、日志控制台打开时要滚动到底部
             spiderPreviewTask = spiderPreviewExecutor.submit(() -> {
                 JSSpider localSpider;
                 Result result;

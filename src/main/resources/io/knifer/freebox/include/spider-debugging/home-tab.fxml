@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<?import io.knifer.freebox.component.factory.ClassListCellFactory?>
+<?import org.controlsfx.control.CheckTreeView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import io.knifer.freebox.component.factory.MovieSortFilterTreeCellFactory?>
+<StackPane stylesheets="@../../css/view/spider-debugging-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.spiderDebugging.HomeTabController">
+    <fx:define>
+        <ClassListCellFactory fx:id="classListCellFactory" />
+        <MovieSortFilterTreeCellFactory fx:id="movieSortFilterTreeCellFactory" />
+    </fx:define>
+
+    <ProgressIndicator fx:id="homeTabLoadingProgressIndicator"/>
+    <BorderPane fx:id="homeTabBorderPane">
+        <left>
+            <ListView fx:id="classesListView" cellFactory="$classListCellFactory" onMouseClicked="#onClassesListViewClick" focusTraversable="false" BorderPane.alignment="CENTER" />
+        </left>
+        <center>
+            <VBox spacing="5.0">
+                <padding>
+                    <Insets top="5.0" left="5.0" bottom="5.0" right="5.0" />
+                </padding>
+
+                <Label styleClass="fs-big, bold" text="%tv.home"/>
+                <ScrollPane styleClass="movie-list-scroll-pane">
+                    <HBox fx:id="movieListHBox" spacing="7.0" />
+                </ScrollPane>
+
+                <HBox spacing="10.0">
+                    <VBox spacing="5.0">
+                        <HBox spacing="5.0">
+                            <Label styleClass="fs-big, bold" text="%spider-debugging.home.sort-data"/>
+                            <Label fx:id="movieClassNameLabel" styleClass="fs-big, bold, dark-orange"/>
+                        </HBox>
+                        <GridPane vgap="5.0" hgap="5.0">
+                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="homeMovieClassIdTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <VBox GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-filters"/>
+                            </VBox>
+                            <VBox GridPane.rowIndex="1" GridPane.columnIndex="1">
+                                <CheckTreeView fx:id="homeMovieSortFilterCheckTreeView"
+                                               focusTraversable="false" showRoot="false"
+                                               cellFactory="$movieSortFilterTreeCellFactory"
+                                >
+                                    <CheckBoxTreeItem expanded="true"/>
+                                </CheckTreeView>
+                                <HBox alignment="BOTTOM_RIGHT">
+                                    <Button onAction="#onMovieSortFilterResetButtonAction" text="%common.reset"/>
+                                    <Button text="%spider-debugging.home.send-to-movie-explore" onAction="#onSendToMovieExploreButtonAction">
+                                        <graphic>
+                                            <FontIcon iconLiteral="fa-flag:16:red" />
+                                        </graphic>
+                                    </Button>
+                                </HBox>
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+                    <VBox spacing="5.0">
+                        <HBox spacing="5.0">
+                            <Label styleClass="fs-big, bold" text="%spider-debugging.home.movie-data"/>
+                            <Label fx:id="movieNameLabel" styleClass="fs-big, bold, dark-orange"/>
+                        </HBox>
+                        <GridPane vgap="5.0" hgap="5.0">
+                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.movie-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="movieIdTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Button mnemonicParsing="false" focusTraversable="false" onAction="#onMovieIdCopyButtonAction" text="%common.copy" GridPane.rowIndex="0" GridPane.columnIndex="2" />
+
+                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.movie-picture-url" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="moviePictureUrlTextField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Button mnemonicParsing="false" focusTraversable="false" onAction="#onMoviePictureUrlCopyButtonAction" text="%common.copy" GridPane.rowIndex="1" GridPane.columnIndex="2" />
+
+                            <Button mnemonicParsing="false" focusTraversable="false" onAction="#onSendToMovieDetailButtonAction" text="%spider-debugging.home.send-to-movie-detail" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                                <graphic>
+                                    <FontIcon iconLiteral="fa-flag:16:red" />
+                                </graphic>
+                            </Button>
+                        </GridPane>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </center>
+    </BorderPane>
+</StackPane>

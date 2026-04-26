@@ -1,7 +1,9 @@
 package io.knifer.freebox.model.domain;
 
 import io.knifer.freebox.model.common.tvbox.MovieSort;
+import javafx.scene.control.TreeItem;
 import lombok.Data;
+import org.controlsfx.control.CheckTreeView;
 
 import java.util.Map;
 
@@ -32,10 +34,11 @@ public class MovieSortFilterTreeNode {
         return item;
     }
 
-    public static MovieSortFilterTreeNode from(Map.Entry<String, String> filterValueNameAndValue) {
+    public static MovieSortFilterTreeNode from(String filterKey, Map.Entry<String, String> filterValueNameAndValue) {
         MovieSortFilterTreeNode item = new MovieSortFilterTreeNode();
 
         item.setFilterValueFlag(true);
+        item.setFilterKey(filterKey);
         item.setFilterValueName(filterValueNameAndValue.getKey());
         item.setFilterValue(filterValueNameAndValue.getValue());
 

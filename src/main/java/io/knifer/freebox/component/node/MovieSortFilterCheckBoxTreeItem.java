@@ -27,7 +27,7 @@ public class MovieSortFilterCheckBoxTreeItem extends CheckBoxTreeItem<MovieSortF
         result.setExpanded(true);
         sortDataFilter.getValues().entrySet().forEach(filterValueNameAndValue -> {
             CheckBoxTreeItem<MovieSortFilterTreeNode> childItem = new CheckBoxTreeItem<>(
-                    MovieSortFilterTreeNode.from(filterValueNameAndValue)
+                    MovieSortFilterTreeNode.from(sortDataFilter.getKey(), filterValueNameAndValue)
             );
 
             itemChildren.add(childItem);

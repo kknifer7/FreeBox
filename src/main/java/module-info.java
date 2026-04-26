@@ -71,6 +71,7 @@ module io.knifer.freebox {
     exports io.knifer.freebox.net;
     exports io.knifer.freebox.handler.impl;
     exports io.knifer.freebox.model.common.diyp;
+    exports io.knifer.freebox.spider.js;
 
     opens io.knifer.freebox to javafx.fxml;
     opens io.knifer.freebox.controller to javafx.fxml;
@@ -93,6 +94,7 @@ module io.knifer.freebox {
     opens io.knifer.freebox.handler;
     opens io.knifer.freebox.handler.impl;
     opens io.knifer.freebox.component.validator;
+    opens io.knifer.freebox.controller.spiderDebugging;
 
     opens io.knifer.freebox.log.provider to org.tinylog.api;
     opens io.knifer.freebox.log.writer to org.tinylog.api;

@@ -1,0 +1,81 @@
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import org.controlsfx.control.GridView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import org.controlsfx.control.SearchableComboBox?>
+<?import javafx.scene.control.TextField?>
+<?import org.controlsfx.control.CheckTreeView?>
+<?import javafx.scene.control.CheckBoxTreeItem?>
+<?import javafx.scene.control.Button?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<?import io.knifer.freebox.component.factory.MovieSortFilterTreeCellFactory?>
+<StackPane stylesheets="@../../css/view/spider-debugging-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.spiderDebugging.MovieExploreTabController" >
+    <fx:define>
+        <MovieSortFilterTreeCellFactory fx:id="movieSortFilterTreeCellFactory" />
+    </fx:define>
+
+    <ProgressIndicator fx:id="movieExploreTabLoadingProgressIndicator"/>
+    <BorderPane fx:id="movieExploreTabBorderPane">
+        <center>
+            <StackPane>
+                <ProgressIndicator fx:id="movieExploreListLoadingProgressIndicator"/>
+                <GridView fx:id="movieExploreGridView" horizontalCellSpacing="47" verticalCellSpacing="75" />
+            </StackPane>
+        </center>
+        <left>
+            <HBox alignment="CENTER" spacing="5.0">
+                <padding>
+                    <Insets top="5.0" left="10.0" bottom="5.0" right="5.0" />
+                </padding>
+                <VBox spacing="5.0">
+                    <CheckBox fx:id="movieExploreAutoRefreshCheckBox" text="%spider-debugging.common.auto-refresh" focusTraversable="false" />
+                    <Label styleClass="fs-big, bold" text="%spider-debugging.common.parameter-form"/>
+                    <GridPane vgap="5.0" hgap="5.0">
+                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <SearchableComboBox fx:id="movieExploreClassComboBox" onAction="#onMovieExploreClassComboBoxAction" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.page-no" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <TextField fx:id="movieExplorePageNoTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                        <VBox GridPane.rowIndex="2" GridPane.columnIndex="0">
+                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-filters"/>
+                        </VBox>
+                        <VBox GridPane.rowIndex="2" GridPane.columnIndex="1">
+                            <CheckTreeView fx:id="movieExploreSortFilterCheckTreeView"
+                                           focusTraversable="false" showRoot="false"
+                                           cellFactory="$movieSortFilterTreeCellFactory"
+                            >
+                                <CheckBoxTreeItem expanded="true"/>
+                            </CheckTreeView>
+                            <HBox alignment="BOTTOM_RIGHT">
+                                <Button onAction="#onMovieSortFilterResetButtonAction" text="%common.reset"/>
+                                <Button text="%spider-debugging.movie-explore.search" onAction="#onMovieExploreSearchButtonAction">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-search:16" />
+                                    </graphic>
+                                </Button>
+                            </HBox>
+                        </VBox>
+                    </GridPane>
+
+                    <Label styleClass="fs-big, bold" text="%spider-debugging.movie-explore.pagination" />
+                    <GridPane vgap="5.0" hgap="5.0">
+                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.page-count" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label fx:id="pageCountLabel" styleClass="bold" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.total" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <Label fx:id="totalLabel" styleClass="bold" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.limit" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                        <Label fx:id="limitLabel" styleClass="bold" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.has-next" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                        <Label fx:id="hasNextLabel" styleClass="bold" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                    </GridPane>
+                </VBox>
+            </HBox>
+        </left>
+    </BorderPane>
+</StackPane>

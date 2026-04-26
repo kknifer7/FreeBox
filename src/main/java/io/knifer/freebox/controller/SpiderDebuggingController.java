@@ -4,22 +4,18 @@ import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.core.io.watch.SimpleWatcher;
 import cn.hutool.core.io.watch.WatchMonitor;
 import cn.hutool.core.io.watch.watchers.DelayWatcher;
-import io.knifer.freebox.component.node.MovieSortFilterCheckBoxTreeItem;
 import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.*;
+import io.knifer.freebox.context.Context;
+import io.knifer.freebox.controller.spiderDebugging.HomeTabController;
+import io.knifer.freebox.controller.spiderDebugging.MovieExploreTabController;
+import io.knifer.freebox.controller.spiderDebugging.SpiderDebuggingTabController;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.helper.*;
-import io.knifer.freebox.model.common.catvod.Result;
-import io.knifer.freebox.model.common.tvbox.AbsSortXml;
-import io.knifer.freebox.model.common.tvbox.Movie;
-import io.knifer.freebox.model.common.tvbox.MovieSort;
 import io.knifer.freebox.model.domain.MovieSortFilterTreeNode;
 import io.knifer.freebox.model.domain.SpiderDebugging;
-import io.knifer.freebox.net.websocket.converter.CatVodBeanConverter;
 import io.knifer.freebox.spider.js.JSSpider;
 import io.knifer.freebox.util.AsyncUtil;
-import io.knifer.freebox.util.CastUtil;
-import io.knifer.freebox.util.json.GsonUtil;
 import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
@@ -28,21 +24,17 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.CheckTreeView;
-import org.controlsfx.control.InfoOverlay;
+import org.controlsfx.control.*;
 import org.graalvm.polyglot.PolyglotException;
 
 import javax.annotation.Nullable;
@@ -81,34 +73,22 @@ public class SpiderDebuggingController {
     @FXML
     private Label spiderStatusLabel;
     @FXML
+    @Getter
     private TabPane previewTabPane;
-    @FXML
-    private BorderPane homeTabContentBorderPane;
-    @FXML
-    private ProgressIndicator homeTabLoadingProgressIndicator;
-    @FXML
-    private ListView<MovieSort.SortData> classesListView;
-    @FXML
-    private HBox movieListHBox;
-    @FXML
-    private TextField movieClassIdTextField;
-    @FXML
-    private Label movieClassNameLabel;
-    @FXML
-    private CheckTreeView<MovieSortFilterTreeNode> movieSortFilterCheckTreeView;
-    @FXML
-    private Label movieNameLabel;
-    @FXML
-    private TextField movieIdTextField;
-    @FXML
-    private TextField moviePictureUrlTextField;
+
+    @Setter
+    @Getter
+    private HomeTabController homeTabController;
+    @Setter
+    @Getter
+    private MovieExploreTabController movieExploreTabController;
 
     private Stage stage;
     private FileChooser spiderFileChooser;
-    private InfoOverlay lastSelectedMovieInfoOverlay;
+    @Getter
     private BooleanProperty spiderLoadingProperty;
-    private BooleanProperty homeTabLoadingProperty;
 
+    @Getter
     private ExecutorService spiderPreviewExecutor;
     private Set<SourceAuditType> tabTypeUpdateSet;
 
@@ -117,7 +97,8 @@ public class SpiderDebuggingController {
      ***/
     private volatile JSSpider spider;
     private volatile boolean spiderAvailableFlag;
-    private Future<?> spiderPreviewTask;
+    @Getter
+    private Map<SourceAuditType, Future<?>> spiderPreviewTaskMap;
     private volatile WatchMonitor fileMonitor;
 
     private final ReentrantLock spiderLock = new ReentrantLock();
@@ -125,12 +106,9 @@ public class SpiderDebuggingController {
     private final ReentrantLock fileMonitorLock = new ReentrantLock();
     private final AtomicBoolean fileMonitorInitializing = new AtomicBoolean(false);
 
-    private final CatVodBeanConverter beanConverter;
     private final Router router;
+    private final Context context;
 
-    private final static String SOURCE_KEY = "freebox_debugging";
-    private final static double MOVIE_CELL_WIDTH = 150;
-    private final static double MOVIE_CELL_HEIGHT = 200;
     private final static String SPIDER_SELECT_COMBOBOX_ACTION_FLAG = "actionFlag";
 
     @FXML
@@ -139,21 +117,33 @@ public class SpiderDebuggingController {
         BooleanBinding spiderSelectValueIsNull = spiderSelectValueProperty.isNull();
         BooleanBinding spiderSelectValueIsNotNull = spiderSelectValueProperty.isNotNull();
 
-        spiderPreviewExecutor = Executors.newSingleThreadExecutor();
+        spiderPreviewExecutor = new ThreadPoolExecutor(
+                1, 1, 0L,
+                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+                r -> {
+                    Thread t = new Thread(r);
+
+                    t.setName("Spider-Preview-Thread");
+                    t.setUncaughtExceptionHandler(GlobalExceptionHandler.getInstance());
+
+                    return t;
+                }
+        );
+        spiderPreviewTaskMap = new ConcurrentHashMap<>();
         tabTypeUpdateSet = new ConcurrentHashSet<>();
 
         spiderLoadingProperty = new SimpleBooleanProperty(false);
-        homeTabLoadingProperty = new SimpleBooleanProperty(false);
+
         emptyDataPlaceholder.visibleProperty().bind(spiderSelectValueIsNull);
         tabPaneVBox.visibleProperty().bind(spiderSelectValueIsNotNull);
         spiderStatusLabel.visibleProperty().bind(spiderSelectValueIsNotNull);
         spiderLoadingProgressIndicator.visibleProperty().bind(spiderLoadingProperty);
-        homeTabLoadingProgressIndicator.visibleProperty().bind(homeTabLoadingProperty.or(spiderLoadingProperty));
-        homeTabContentBorderPane.visibleProperty().bind(homeTabLoadingProperty.not().and(spiderLoadingProperty.not()));
         importButton.disableProperty().bind(spiderLoadingProperty);
         deleteButton.disableProperty().bind(spiderSelectValueIsNull);
         spiderSelectComboBox.disableProperty().bind(spiderLoadingProperty);
         previewTabPane.disableProperty().bind(spiderLoadingProperty);
+
+        context.postEvent(new AppEvents.SpiderDebuggingViewInitialized(this));
 
         loadData();
 
@@ -194,7 +184,7 @@ public class SpiderDebuggingController {
             return;
         }
         spiderLoadingProperty.set(true);
-        previewTabPane.getSelectionModel().selectFirst();
+        previewTabPane.getSelectionModel().select(SpiderDebuggingTabController.HOME_TAB_IDX);
         tabTypeUpdateSet.addAll(Arrays.asList(SourceAuditType.values()));
         // 爬虫初始化
         spiderDebugging = SpiderDebugging.from(spiderFile);
@@ -298,8 +288,9 @@ public class SpiderDebuggingController {
                             false, I18nKeys.SPIDER_DEBUGGING_SPIDER_RUNNING_ERROR
                     );
                 }
+                // 刷新home tab（其他tab的自动刷新由 HomeTab reload 完成后触发）
+                homeTabController.reload();
             });
-            updateHomeTab();
         } finally {
             spiderInitializing.set(false);
         }
@@ -385,24 +376,25 @@ public class SpiderDebuggingController {
      * 销毁爬虫
      */
     private void destroySpiderIfExists() {
-        Future<?> localTask;
+        Collection<Future<?>> tasks = spiderPreviewTaskMap.values();
         JSSpider localSpider;
 
+        spiderPreviewTaskMap.clear();
+        if (!tasks.isEmpty()) {
+            tasks.stream()
+                    .filter(t -> !t.isDone())
+                    .forEach(t -> t.cancel(true));
+        }
         spiderLock.lock();
         try {
-            localTask = spiderPreviewTask;
-            spiderPreviewTask = null;
-            if (localTask != null && !localTask.isDone()) {
-                localTask.cancel(true);
-            }
             localSpider = spider;
             if (localSpider != null) {
                 localSpider.destroy();
                 spider = null;
+                log.info("spider destroyed");
             }
         } finally {
             spiderLock.unlock();
-            log.info("spider destroyed");
         }
     }
 
@@ -425,166 +417,29 @@ public class SpiderDebuggingController {
         }
     }
 
-    private void updateHomeTab() {
-        ImageHelper.clearCache();
-        Platform.runLater(() -> homeTabLoadingProperty.set(true));
-        spiderLock.lock();
-        try {
-            if (spiderPreviewTask != null && !spiderPreviewTask.isDone()) {
-                spiderPreviewTask.cancel(true);
-            }
-            spiderPreviewTask = spiderPreviewExecutor.submit(() -> {
-                JSSpider localSpider;
-                Result result;
-                AbsSortXml absSortXml;
-                List<MovieSort.SortData> sortDataList;
-                Movie movieDataInfo;
-                List<Movie.Video> movies;
-
-                spiderLock.lock();
-                try {
-                    localSpider = spider;
-                    if (localSpider == null) {
-                        Platform.runLater(() -> homeTabLoadingProperty.set(false));
-
-                        return;
-                    }
-                } finally {
-                    spiderLock.unlock();
-                }
-                try {
-                    result = GsonUtil.fromJson(localSpider.homeContent(false), Result.class);
-                    log.debug("load homeContent result: {}", result);
-                } catch (Exception e) {
-                    // 要排除用户删除、切换爬虫，或者爬虫热更新，导致当前爬虫实例调用中就被销毁的情况，这种属于正常情况
-                    if (!tryHandleExecutionInterrupt(e)) {
-                        log.error("homeContent exception", e);
-                    }
-                    Platform.runLater(() -> homeTabLoadingProperty.set(false));
-
-                    return;
-                }
-                if (result == null) {
-                    Platform.runLater(() -> homeTabLoadingProperty.set(false));
-
-                    return;
-                }
-                absSortXml = beanConverter.resultToAbsSortXml(result, SOURCE_KEY);
-                sortDataList = absSortXml.getClasses().getSortList();
-                movieDataInfo = absSortXml.getList();
-                movies = movieDataInfo.getVideoList();
-                Platform.runLater(() -> {
-                    List<MovieSort.SortData> classItems = classesListView.getItems();
-                    List<Node> movieListNodes = movieListHBox.getChildren();
-
-                    classItems.clear();
-                    movieListNodes.clear();
-                    if (!movies.isEmpty()) {
-                        for (Movie.Video movie : movies) {
-                            ImageView moviePicImageView = new ImageView();
-                            String picUrl = movie.getPic();
-                            InfoOverlay movieInfoOverlay;
-
-                            moviePicImageView.setImage(BaseResources.PICTURE_PLACEHOLDER_IMG);
-                            moviePicImageView.setFitWidth(MOVIE_CELL_WIDTH);
-                            moviePicImageView.setFitHeight(MOVIE_CELL_HEIGHT);
-                            ImageHelper.loadAsync(picUrl)
-                                    .thenAccept(imgResult -> {
-                                        if (imgResult.isSuccess()) {
-                                            Platform.runLater(
-                                                    () -> moviePicImageView.setImage(imgResult.getImage())
-                                            );
-                                        }
-                                    });
-                            movieInfoOverlay = new InfoOverlay(moviePicImageView, movie.getName());
-                            movieInfoOverlay.getStyleClass().add("movie-info-overlay");
-                            movieInfoOverlay.setOnMouseClicked(
-                                    evt -> selectHomeMovie(evt, movieInfoOverlay, movie)
-                            );
-                            movieListNodes.add(movieInfoOverlay);
-                        }
-                    }
-                    if (!sortDataList.isEmpty()) {
-                        classItems.addAll(sortDataList);
-                    }
-                    homeTabLoadingProperty.set(false);
-                });
-            });
-        } finally {
-            spiderLock.unlock();
-        }
-    }
-
     /**
      * 如果可以，处理爬虫中断异常。
      * 爬虫中断是预期场景，当用户切换、删除爬虫脚本时，就会发生爬虫中断。
      * @param e 异常
      * @return 是否为爬虫中断异常
      */
-    private boolean tryHandleExecutionInterrupt(Exception e) {
+    public boolean tryHandleExecutionInterrupt(Exception e) {
         String message = e.getMessage();
 
         if (
                 e instanceof InterruptedException ||
                 e instanceof InterruptedIOException ||
-                e instanceof PolyglotException && "Context execution was cancelled.".equals(message)
+                e instanceof PolyglotException && (
+                        "Context execution was cancelled.".equals(message) ||
+                        "Execution got interrupted.".equals(message)
+                )
         ) {
             log.debug("user cancelled execution", e);
-            Platform.runLater(() -> homeTabLoadingProperty.set(false));
 
             return true;
         }
 
         return false;
-    }
-
-    private void selectHomeMovie(MouseEvent mouseEvent, InfoOverlay node, Movie.Video movie) {
-        List<String> styleClasses;
-
-        if (mouseEvent.getButton() != MouseButton.PRIMARY || lastSelectedMovieInfoOverlay == node) {
-
-            return;
-        }
-        styleClasses = node.getStyleClass();
-        styleClasses.remove("movie-info-overlay");
-        styleClasses.add("movie-info-overlay-selected");
-        if (lastSelectedMovieInfoOverlay != null) {
-            styleClasses = lastSelectedMovieInfoOverlay.getStyleClass();
-            styleClasses.remove("movie-info-overlay-selected");
-            styleClasses.add("movie-info-overlay");
-        }
-        lastSelectedMovieInfoOverlay = node;
-        movieNameLabel.setText(movie.getName());
-        movieIdTextField.setText(movie.getId());
-        moviePictureUrlTextField.setText(movie.getPic());
-    }
-
-    @FXML
-    private void onClassesListViewClick(MouseEvent mouseEvent) {
-        MovieSort.SortData sortData;
-        String sortDataId;
-        List<TreeItem<MovieSortFilterTreeNode>> movieSortFilterTreeItems;
-
-        if (mouseEvent.getTarget() instanceof ListCell<?> listCell) {
-            sortData = CastUtil.cast(listCell.getItem());
-            if (sortData == null || Objects.equals(sortDataId = sortData.getId(), movieClassIdTextField.getText())) {
-
-                return;
-            }
-            movieClassNameLabel.setText(sortData.getName());
-            movieClassIdTextField.setText(sortDataId);
-            movieSortFilterCheckTreeView.getCheckModel().clearChecks();
-            movieSortFilterTreeItems = movieSortFilterCheckTreeView.getRoot().getChildren();
-            movieSortFilterTreeItems.clear();
-            for (MovieSort.SortFilter filter : sortData.getFilters()) {
-                movieSortFilterTreeItems.add(MovieSortFilterCheckBoxTreeItem.from(filter));
-            }
-        }
-    }
-
-    @FXML
-    private void onMovieSortFilterResetButtonAction() {
-        movieSortFilterCheckTreeView.getCheckModel().clearChecks();
     }
 
     @FXML
@@ -650,47 +505,78 @@ public class SpiderDebuggingController {
         if (clearSpiderSelection) {
             spiderSelectComboBox.getSelectionModel().clearSelection();
         }
-        movieSortFilterCheckTreeView.getCheckModel().clearChecks();
-        movieSortFilterCheckTreeView.getRoot().getChildren().clear();
-        movieListHBox.getChildren().clear();
-        movieNameLabel.setText(null);
-        movieIdTextField.setText(null);
-        moviePictureUrlTextField.setText(null);
-        classesListView.getItems().clear();
-        movieClassNameLabel.setText(null);
-        movieClassIdTextField.setText(null);
+        homeTabController.clear();
+        movieExploreTabController.clear();
         clearSpiderStatus();
         spiderLoadingProperty.set(false);
-        homeTabLoadingProperty.set(false);
         stage.setTitle(I18nHelper.get(I18nKeys.SPIDER_DEBUGGING));
     }
 
-    @FXML
-    private void onMovieIdCopyButtonAction() {
-        String text = movieIdTextField.getText();
+    public void cancelSpiderTaskIfNeeded(Future<?> task) {
+        JSSpider spider;
 
-        if (text == null) {
-
-            return;
-        }
-        ClipboardHelper.setContent(text);
-        ToastHelper.showMouseToastI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
-    }
-
-    @FXML
-    private void onMoviePictureUrlCopyButtonAction() {
-        String text = moviePictureUrlTextField.getText();
-
-        if (text == null) {
+        if (task.isDone()) {
 
             return;
         }
-        ClipboardHelper.setContent(text);
-        ToastHelper.showMouseToastI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
+        task.cancel(true);
+        spider = requireSpider();
+        if (spider == null) {
+
+            return;
+        }
+        spider.interrupt();
     }
 
-    @FXML
-    private void onSendToMovieDetailButtonAction() {
-        // TODO 发送到影视详情
+    @Nullable
+    public JSSpider requireSpider() {
+        JSSpider localSpider;
+
+        spiderLock.lock();
+        try {
+            localSpider = spider;
+        } finally {
+            spiderLock.unlock();
+        }
+
+        return localSpider;
+    }
+
+    /**
+     * 将一棵影视参数筛选树的筛选数据复制到另一棵上
+     * @param sourceTreeView 源
+     * @param targetTreeView 目标
+     */
+    public void copyMovieSortFilterCheckTreeViewChecks(
+            CheckTreeView<MovieSortFilterTreeNode> sourceTreeView,
+            CheckTreeView<MovieSortFilterTreeNode> targetTreeView
+    ) {
+        CheckModel<TreeItem<MovieSortFilterTreeNode>> targetCheckModel = targetTreeView.getCheckModel();
+        CheckModel<TreeItem<MovieSortFilterTreeNode>> sourceCheckModel = sourceTreeView.getCheckModel();
+        ObservableList<TreeItem<MovieSortFilterTreeNode>> checkedItems = sourceCheckModel.getCheckedItems();
+        ObservableList<TreeItem<MovieSortFilterTreeNode>> targetTreeParentItems;
+        MovieSortFilterTreeNode sourceFilter;
+        MovieSortFilterTreeNode targetFilterParent;
+
+        targetCheckModel.clearChecks();
+        if (checkedItems.isEmpty() || (targetTreeParentItems = targetTreeView.getRoot().getChildren()).isEmpty()) {
+
+            return;
+        }
+        for (TreeItem<MovieSortFilterTreeNode> item : checkedItems) {
+            sourceFilter = item.getValue();
+            for (TreeItem<MovieSortFilterTreeNode> targetFilterParentItem : targetTreeParentItems) {
+                targetFilterParent = targetFilterParentItem.getValue();
+                if (!Objects.equals(sourceFilter.getFilterKey(), targetFilterParent.getFilterKey())) {
+                    continue;
+                }
+                for (TreeItem<MovieSortFilterTreeNode> targetFilterItem : targetFilterParentItem.getChildren()) {
+                    if (Objects.equals(sourceFilter.getFilterValue(), targetFilterItem.getValue().getFilterValue())) {
+                        targetCheckModel.check(targetFilterItem);
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

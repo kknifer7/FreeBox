@@ -172,6 +172,8 @@ public class I18nKeys {
     public static final String COMMON_OFF = "common.off";
     public static final String COMMON_CLOSE = "common.close";
     public static final String COMMON_HINT = "common.hint";
+    public static final String COMMON_YES = "common.yes";
+    public static final String COMMON_NO = "common.no";
 
     public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
     public static final String SOURCE_AUDIT_NOW = "source-audit.now";

@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import io.knifer.freebox.component.factory.ClassListCellFactory?>
-<?import io.knifer.freebox.component.factory.MovieSortFilterTreeCellFactory?>
 <?import io.knifer.freebox.component.factory.SpiderDebuggingCellFactory?>
 <?import io.knifer.freebox.component.factory.SpiderDebuggingListCell?>
 <?import io.knifer.freebox.constant.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import org.controlsfx.control.CheckTreeView?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane fx:id="root" stylesheets="@css/view/spider-debugging-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SpiderDebuggingController">
     <fx:define>
-        <ClassListCellFactory fx:id="classListCellFactory" />
         <SpiderDebuggingCellFactory fx:id="spiderDebuggingCellFactory" />
         <SpiderDebuggingListCell fx:id="spiderDebuggingListCell" />
-        <MovieSortFilterTreeCellFactory fx:id="movieSortFilterTreeCellFactory" />
     </fx:define>
 
     <top>
@@ -63,118 +58,49 @@
           <fx:include fx:id="emptyDataPlaceholder" source="include/empty-data-placeholder.fxml" />
           <VBox fx:id="tabPaneVBox" visible="false" BorderPane.alignment="CENTER">
               <children>
-                  <TabPane fx:id="previewTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-                      <tabs>
-                          <Tab text="%source-audit.audit-table-item.home">
-                              <properties>
-                                  <type>
-                                      <SourceAuditType fx:value="HOME" />
-                                  </type>
-                              </properties>
-                              <StackPane>
-                                  <ProgressIndicator fx:id="homeTabLoadingProgressIndicator" />
-                                  <BorderPane fx:id="homeTabContentBorderPane">
-                                      <left>
-                                          <ListView fx:id="classesListView" cellFactory="$classListCellFactory" onMouseClicked="#onClassesListViewClick" focusTraversable="false" BorderPane.alignment="CENTER" />
-                                      </left>
-                                      <center>
-                                          <VBox spacing="5.0">
-                                              <padding>
-                                                  <Insets top="5.0" left="5.0" bottom="5.0" right="5.0" />
-                                              </padding>
-
-                                              <Label styleClass="fs-big, bold" text="%tv.home"/>
-                                              <ScrollPane styleClass="movie-list-scroll-pane">
-                                                  <HBox fx:id="movieListHBox" spacing="7.0" />
-                                              </ScrollPane>
-
-                                              <HBox spacing="10.0">
-                                                  <VBox spacing="5.0">
-                                                      <HBox spacing="5.0">
-                                                          <Label styleClass="fs-big, bold" text="%spider-debugging.home.sort-data"/>
-                                                          <Label fx:id="movieClassNameLabel" styleClass="fs-big, bold, dark-orange"/>
-                                                      </HBox>
-                                                      <GridPane vgap="5.0" hgap="5.0">
-                                                          <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                                          <TextField fx:id="movieClassIdTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                                                          <VBox GridPane.rowIndex="1" GridPane.columnIndex="0">
-                                                              <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-filters"/>
-                                                          </VBox>
-                                                          <VBox GridPane.rowIndex="1" GridPane.columnIndex="1">
-                                                              <CheckTreeView fx:id="movieSortFilterCheckTreeView"
-                                                                             focusTraversable="false" showRoot="false"
-                                                                             cellFactory="$movieSortFilterTreeCellFactory"
-                                                              >
-                                                                  <CheckBoxTreeItem expanded="true"/>
-                                                              </CheckTreeView>
-                                                              <HBox alignment="BOTTOM_RIGHT">
-                                                                  <Button onAction="#onMovieSortFilterResetButtonAction" text="%common.reset"/>
-                                                                  <Button text="%spider-debugging.home.send-to-movie-explore">
-                                                                      <graphic>
-                                                                          <FontIcon iconLiteral="fa-flag:16:red" />
-                                                                      </graphic>
-                                                                  </Button>
-                                                              </HBox>
-                                                          </VBox>
-                                                      </GridPane>
-                                                  </VBox>
-                                                  <VBox spacing="5.0">
-                                                      <HBox spacing="5.0">
-                                                          <Label styleClass="fs-big, bold" text="%spider-debugging.home.movie-data"/>
-                                                          <Label fx:id="movieNameLabel" styleClass="fs-big, bold, dark-orange"/>
-                                                      </HBox>
-                                                      <GridPane vgap="5.0" hgap="5.0">
-                                                          <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.movie-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                                          <TextField fx:id="movieIdTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                                                          <Button mnemonicParsing="false" focusTraversable="false" onAction="#onMovieIdCopyButtonAction" text="%common.copy" GridPane.rowIndex="0" GridPane.columnIndex="2" />
-
-                                                          <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.movie-picture-url" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                                          <TextField fx:id="moviePictureUrlTextField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                                                          <Button mnemonicParsing="false" focusTraversable="false" onAction="#onMoviePictureUrlCopyButtonAction" text="%common.copy" GridPane.rowIndex="1" GridPane.columnIndex="2" />
-
-                                                          <Button mnemonicParsing="false" focusTraversable="false" onAction="#onSendToMovieDetailButtonAction" text="%spider-debugging.home.send-to-movie-detail" GridPane.rowIndex="2" GridPane.columnIndex="1">
-                                                              <graphic>
-                                                                  <FontIcon iconLiteral="fa-flag:16:red" />
-                                                              </graphic>
-                                                          </Button>
-                                                      </GridPane>
-                                                  </VBox>
-                                              </HBox>
-                                          </VBox>
-                                      </center>
-                                  </BorderPane>
-                              </StackPane>
-                          </Tab>
-                          <Tab text="%source-audit.audit-table-item.movie-explore">
-                              <properties>
-                                  <type>
-                                      <SourceAuditType fx:value="MOVIE_EXPLORE" />
-                                  </type>
-                              </properties>
-                          </Tab>
-                          <Tab text="%source-audit.audit-table-item.movie-detail">
-                              <properties>
-                                  <type>
-                                      <SourceAuditType fx:value="MOVIE_DETAIL" />
-                                  </type>
-                              </properties>
-                          </Tab>
-                          <Tab text="%source-audit.audit-table-item.movie-play">
-                              <properties>
-                                  <type>
-                                      <SourceAuditType fx:value="MOVIE_PLAY" />
-                                  </type>
-                              </properties>
-                          </Tab>
-                          <Tab text="%source-audit.audit-table-item.movie-search">
-                              <properties>
-                                  <type>
-                                      <SourceAuditType fx:value="MOVIE_SEARCH" />
-                                  </type>
-                              </properties>
-                          </Tab>
-                      </tabs>
-                  </TabPane>
+                  <StackPane>
+                      <TabPane fx:id="previewTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+                          <tabs>
+                              <Tab text="%source-audit.audit-table-item.home">
+                                  <properties>
+                                      <type>
+                                          <SourceAuditType fx:value="HOME" />
+                                      </type>
+                                  </properties>
+                                  <fx:include source="include/spider-debugging/home-tab.fxml" />
+                              </Tab>
+                              <Tab text="%source-audit.audit-table-item.movie-explore">
+                                  <properties>
+                                      <type>
+                                          <SourceAuditType fx:value="MOVIE_EXPLORE" />
+                                      </type>
+                                  </properties>
+                                  <fx:include source="include/spider-debugging/movie-explore-tab.fxml" />
+                              </Tab>
+                              <Tab text="%source-audit.audit-table-item.movie-detail">
+                                  <properties>
+                                      <type>
+                                          <SourceAuditType fx:value="MOVIE_DETAIL" />
+                                      </type>
+                                  </properties>
+                              </Tab>
+                              <Tab text="%source-audit.audit-table-item.movie-play">
+                                  <properties>
+                                      <type>
+                                          <SourceAuditType fx:value="MOVIE_PLAY" />
+                                      </type>
+                                  </properties>
+                              </Tab>
+                              <Tab text="%source-audit.audit-table-item.movie-search">
+                                  <properties>
+                                      <type>
+                                          <SourceAuditType fx:value="MOVIE_SEARCH" />
+                                      </type>
+                                  </properties>
+                              </Tab>
+                          </tabs>
+                      </TabPane>
+                  </StackPane>
               </children>
           </VBox>
 

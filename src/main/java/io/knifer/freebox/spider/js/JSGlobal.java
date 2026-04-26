@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.lang.reflect.Method;
 import java.security.SecureRandom;
 import java.util.List;
@@ -181,6 +182,7 @@ public class JSGlobal {
         return null;
     }
 
+    @Nullable
     @HostAccess.Export
     public Value req(String url, Value options) {
         Req req;
@@ -191,6 +193,11 @@ public class JSGlobal {
             res = newCall(url, req).execute();
 
             return createSuccessResponse(context, req, res);
+        } catch (InterruptedIOException e) {
+            log.debug("req interrupted", e);
+            IoUtil.close(res);
+
+            return null;
         } catch (Exception e) {
             log.error("req error", e);
             IoUtil.close(res);

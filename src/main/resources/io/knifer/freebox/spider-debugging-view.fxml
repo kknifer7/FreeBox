@@ -61,7 +61,7 @@
                   <StackPane>
                       <TabPane fx:id="previewTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
                           <tabs>
-                              <Tab text="%source-audit.audit-table-item.home">
+                              <Tab onSelectionChanged="#onPreviewTabSelectionChanged" text="%source-audit.audit-table-item.home">
                                   <properties>
                                       <type>
                                           <SourceAuditType fx:value="HOME" />
@@ -83,6 +83,7 @@
                                           <SourceAuditType fx:value="MOVIE_DETAIL" />
                                       </type>
                                   </properties>
+                                  <fx:include source="include/spider-debugging/movie-detail-tab.fxml" />
                               </Tab>
                               <Tab text="%source-audit.audit-table-item.movie-play">
                                   <properties>

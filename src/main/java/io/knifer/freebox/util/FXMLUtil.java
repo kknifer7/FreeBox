@@ -6,9 +6,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.helper.ConfigHelper;
 import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.ioc.IOC;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -98,18 +96,5 @@ public class FXMLUtil {
     private void postProcess(Stage stage) {
         // 字体处理
         WindowHelper.setFontFamily(stage, ConfigHelper.getUsageFontFamily());
-    }
-
-    /**
-     * 以class新值替换组件的某个旧值
-     * @param node 组件
-     * @param oldClass 旧值
-     * @param newClass 新值
-     */
-    public void replaceStyleClass(Node node, String oldClass, String newClass) {
-        ObservableList<String> classes = node.getStyleClass();
-
-        classes.remove(oldClass);
-        classes.add(newClass);
     }
 }

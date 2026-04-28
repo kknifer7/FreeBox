@@ -150,6 +150,8 @@ public class I18nKeys {
     public static final String SPIDER_DEBUGGING_SPIDER_MONITORING = "spider-debugging.spider-monitoring";
     public static final String SPIDER_DEBUGGING_SPIDER_FILE_NOT_EXISTS = "spider-debugging.spider-file-not-exists";
     public static final String SPIDER_DEBUGGING_DELETE_CONFIRM = "spider-debugging.delete-confirm";
+    public static final String SPIDER_DEBUGGING_COMMON_SORT_ID_REQUIRED = "spider-debugging.home.sort-id-required";
+    public static final String SPIDER_DEBUGGING_COMMON_MOVIE_ID_REQUIRED = "spider-debugging.home.movie-id-required";
 
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";

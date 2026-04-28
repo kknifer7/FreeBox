@@ -347,7 +347,7 @@ public class VideoController extends BaseController implements Destroyable {
             children.add(new Text("\n"));
         }
         propNameText = new Text(I18nHelper.get(propNameI18nKey));
-        propNameText.getStyleClass().add("video-details-prop-name");
+        propNameText.getStyleClass().add("royal-blue");
         if (propValue.length() > 50) {
             propValueText = new Text(propValue.substring(0, 30) + ".....");
             tooltip = new Tooltip(propValue);

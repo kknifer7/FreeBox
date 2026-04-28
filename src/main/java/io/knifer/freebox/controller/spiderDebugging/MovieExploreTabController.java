@@ -8,7 +8,10 @@ import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.SourceAuditType;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.SpiderDebuggingController;
+import io.knifer.freebox.helper.ClipboardHelper;
 import io.knifer.freebox.helper.I18nHelper;
+import io.knifer.freebox.helper.ToastHelper;
+import io.knifer.freebox.helper.WindowHelper;
 import io.knifer.freebox.model.common.catvod.Result;
 import io.knifer.freebox.model.common.tvbox.AbsXml;
 import io.knifer.freebox.model.common.tvbox.Movie;
@@ -16,24 +19,29 @@ import io.knifer.freebox.model.common.tvbox.MovieSort;
 import io.knifer.freebox.model.domain.MovieSortFilterTreeNode;
 import io.knifer.freebox.net.websocket.converter.CatVodBeanConverter;
 import io.knifer.freebox.spider.js.JSSpider;
+import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
-import io.knifer.freebox.util.FXMLUtil;
+import io.knifer.freebox.util.NodeUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.GridView;
+import org.controlsfx.control.InfoOverlay;
 import org.controlsfx.control.SearchableComboBox;
 
 import java.util.HashMap;
@@ -71,17 +79,24 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
     @Getter
     private TextField movieExplorePageNoTextField;
     @FXML
-    private Label pageCountLabel;
+    private TextField pageCountTextField;
     @FXML
-    private Label totalLabel;
+    private TextField totalTextField;
     @FXML
-    private Label limitLabel;
+    private TextField limitTextField;
     @FXML
     public Label hasNextLabel;
+    @FXML
+    private TextField movieIdTextField;
+    @FXML
+    private TextField moviePictureUrlTextField;
 
     private BooleanProperty movieExploreLoadingProperty;
     private BooleanProperty movieExploreListLoadingProperty;
 
+    private VideoGridCellFactory videoGridCellFactory;
+
+    private InfoOverlay lastSelectedExploreMovieInfoOverlay;
     private ParameterForm stashedParameterForm;
 
     private final Context context;
@@ -91,13 +106,9 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
     private void initialize() {
         movieExploreLoadingProperty = new SimpleBooleanProperty(false);
         movieExploreListLoadingProperty = new SimpleBooleanProperty(false);
+        videoGridCellFactory = new VideoGridCellFactory(this::selectExploreMovie, cell -> {});
 
-        movieExploreGridView.setCellFactory(new VideoGridCellFactory(
-                movie -> {
-                    // TODO 点击影视
-                },
-                cell -> {}
-        ));
+        movieExploreGridView.setCellFactory(videoGridCellFactory);
         movieExploreClassComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(MovieSort.SortData sortData) {
@@ -147,6 +158,32 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                 }
         );
         stashedParameterForm = new ParameterForm();
+        Platform.runLater(() -> {
+            Stage stage = WindowHelper.getStage(movieExploreAutoRefreshCheckBox);
+
+            stage.setOnHidden(evt -> videoGridCellFactory.destroy());
+        });
+    }
+
+    private void selectExploreMovie(Movie.Video movie) {
+        String movieId = movie.getId();
+        InfoOverlay node = videoGridCellFactory.getMovieInfoOverlayByItemId(movieId);
+
+        if (node == null) {
+
+            return;
+        }
+        NodeUtil.replaceStyleClass(node, "movie-info-overlay", "movie-info-overlay-selected");
+        if (lastSelectedExploreMovieInfoOverlay != null) {
+            NodeUtil.replaceStyleClass(
+                    lastSelectedExploreMovieInfoOverlay,
+                    "movie-info-overlay-selected",
+                    "movie-info-overlay"
+            );
+        }
+        lastSelectedExploreMovieInfoOverlay = node;
+        movieIdTextField.setText(movieId);
+        moviePictureUrlTextField.setText(movie.getPic());
     }
 
     @Override
@@ -156,16 +193,20 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
         movieExploreSortFilterCheckTreeView.getCheckModel().clearChecks();
         movieExploreSortFilterCheckTreeView.getRoot().getChildren().clear();
         movieExploreSortFilterCheckTreeView.getProperties().remove("sortId");
-        pageCountLabel.setText(null);
-        totalLabel.setText(null);
-        limitLabel.setText(null);
+        pageCountTextField.setText(null);
+        totalTextField.setText(null);
+        limitTextField.setText(null);
         hasNextLabel.setText(null);
+        movieIdTextField.setText(null);
+        moviePictureUrlTextField.setText(null);
         movieExploreGridView.getItems().clear();
+        movieExploreLoadingProperty.set(false);
+        movieExploreListLoadingProperty.set(false);
     }
 
     @FXML
     private void onSendToMovieDetailButtonAction() {
-        // TODO 发送到影视详情：影视ID不能为空，添加表单校验
+        parentController.sendToMovieDetailTab(movieIdTextField.getText());
     }
 
     @FXML
@@ -206,6 +247,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
         if (sortData == null) {
             sortId = stashedParameterForm.getSortId();
             if (sortId == null) {
+                completeReloading();
 
                 return;
             }
@@ -217,6 +259,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                 }
             }
             if (!useStashedParameterForm) {
+                completeReloading();
 
                 return;
             }
@@ -231,7 +274,18 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
             stashedParameterForm.clear();
         }
         movieExploreGridView.getItems().clear();
+        pageCountTextField.setText(null);
+        totalTextField.setText(null);
+        limitTextField.setText(null);
+        hasNextLabel.setText(null);
+        movieIdTextField.setText(null);
+        moviePictureUrlTextField.setText(null);
         doMovieExploreSearch();
+    }
+
+    private void completeReloading() {
+        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.MOVIE_EXPLORE));
+        movieExploreListLoadingProperty.set(false);
     }
 
     private void doMovieExploreSearch() {
@@ -254,7 +308,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
 
                 localSpider = parentController.requireSpider();
                 if (localSpider == null) {
-                    Platform.runLater(() -> movieExploreListLoadingProperty.set(false));
+                    Platform.runLater(this::completeReloading);
 
                     return;
                 }
@@ -268,14 +322,13 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                 } catch (Exception e) {
                     if (!parentController.tryHandleExecutionInterrupt(e)) {
                         log.error("result exception", e);
-                        Platform.runLater(() -> movieExploreListLoadingProperty.set(false));
-
+                        Platform.runLater(this::completeReloading);
                     }
 
                     return;
                 }
                 if (result == null) {
-                    Platform.runLater(() -> movieExploreListLoadingProperty.set(false));
+                    Platform.runLater(this::completeReloading);
 
                     return;
                 }
@@ -283,7 +336,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                 movieInfo = categoryContent.getMovie();
                 movies = movieInfo.getVideoList();
                 if (movies.isEmpty()) {
-                    Platform.runLater(() -> movieExploreListLoadingProperty.set(false));
+                    Platform.runLater(this::completeReloading);
 
                     return;
                 }
@@ -297,18 +350,18 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                     String hasNextStr;
 
                     items.setAll(movies);
-                    pageCountLabel.setText(String.valueOf(pageCount));
-                    totalLabel.setText(String.valueOf(recordCount));
-                    limitLabel.setText(String.valueOf(pageSize));
+                    pageCountTextField.setText(String.valueOf(pageCount));
+                    totalTextField.setText(String.valueOf(recordCount));
+                    limitTextField.setText(String.valueOf(pageSize));
                     if (hasNext) {
                         hasNextStr = I18nHelper.get(I18nKeys.COMMON_YES);
-                        FXMLUtil.replaceStyleClass(hasNextLabel, "danger", "success");
+                        NodeUtil.replaceStyleClass(hasNextLabel, "danger", "success");
                     } else {
                         hasNextStr = I18nHelper.get(I18nKeys.COMMON_NO);
-                        FXMLUtil.replaceStyleClass(hasNextLabel, "success", "danger");
+                        NodeUtil.replaceStyleClass(hasNextLabel, "success", "danger");
                     }
                     hasNextLabel.setText(hasNextStr);
-                    movieExploreListLoadingProperty.set(false);
+                    completeReloading();
                 });
             });
         });
@@ -324,6 +377,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
         return movieExploreLoadingProperty;
     }
 
+    @Override
     public boolean isAutoRefreshOn() {
         return movieExploreAutoRefreshCheckBox.isSelected();
     }
@@ -377,6 +431,20 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                 }
             }
         }
+    }
+
+    @FXML
+    private void onCopyButtonAction(ActionEvent actionEvent) {
+        Button copyButton = CastUtil.cast(actionEvent.getSource());
+        TextField textField = (TextField) copyButton.getUserData();
+        String text = textField.getText();
+
+        if (StringUtils.isEmpty(text)) {
+
+            return;
+        }
+        ClipboardHelper.setContent(text);
+        ToastHelper.showMouseToastI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
     }
 
     @Data

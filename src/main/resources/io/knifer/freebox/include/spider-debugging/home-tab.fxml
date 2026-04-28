@@ -22,7 +22,7 @@
         <center>
             <VBox spacing="5.0">
                 <padding>
-                    <Insets top="5.0" left="5.0" bottom="5.0" right="5.0" />
+                    <Insets top="10.0" left="10.0" bottom="10.0" right="10.0" />
                 </padding>
 
                 <Label styleClass="fs-big, bold" text="%tv.home"/>
@@ -37,10 +37,10 @@
                             <Label fx:id="movieClassNameLabel" styleClass="fs-big, bold, dark-orange"/>
                         </HBox>
                         <GridPane vgap="5.0" hgap="5.0">
-                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.home.sort-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                             <TextField fx:id="homeMovieClassIdTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                             <VBox GridPane.rowIndex="1" GridPane.columnIndex="0">
-                                <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-filters"/>
+                                <Label styleClass="royal-blue, bold" text="%spider-debugging.home.sort-filters"/>
                             </VBox>
                             <VBox GridPane.rowIndex="1" GridPane.columnIndex="1">
                                 <CheckTreeView fx:id="homeMovieSortFilterCheckTreeView"
@@ -62,19 +62,19 @@
                     </VBox>
                     <VBox spacing="5.0">
                         <HBox spacing="5.0">
-                            <Label styleClass="fs-big, bold" text="%spider-debugging.home.movie-data"/>
+                            <Label styleClass="fs-big, bold" text="%spider-debugging.common.movie-data"/>
                             <Label fx:id="movieNameLabel" styleClass="fs-big, bold, dark-orange"/>
                         </HBox>
                         <GridPane vgap="5.0" hgap="5.0">
-                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.movie-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.common.movie-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                             <TextField fx:id="movieIdTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                             <Button mnemonicParsing="false" focusTraversable="false" onAction="#onMovieIdCopyButtonAction" text="%common.copy" GridPane.rowIndex="0" GridPane.columnIndex="2" />
 
-                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.movie-picture-url" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.common.movie-picture-url" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                             <TextField fx:id="moviePictureUrlTextField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
                             <Button mnemonicParsing="false" focusTraversable="false" onAction="#onMoviePictureUrlCopyButtonAction" text="%common.copy" GridPane.rowIndex="1" GridPane.columnIndex="2" />
 
-                            <Button mnemonicParsing="false" focusTraversable="false" onAction="#onSendToMovieDetailButtonAction" text="%spider-debugging.home.send-to-movie-detail" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                            <Button mnemonicParsing="false" focusTraversable="false" onAction="#onSendToMovieDetailButtonAction" text="%spider-debugging.common.send-to-movie-detail" GridPane.rowIndex="2" GridPane.columnIndex="1">
                                 <graphic>
                                     <FontIcon iconLiteral="fa-flag:16:red" />
                                 </graphic>

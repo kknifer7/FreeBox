@@ -16,6 +16,7 @@ import io.knifer.freebox.net.websocket.converter.CatVodBeanConverter;
 import io.knifer.freebox.spider.js.JSSpider;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
+import io.knifer.freebox.util.NodeUtil;
 import io.knifer.freebox.util.json.GsonUtil;
 import jakarta.inject.Inject;
 import javafx.application.Platform;
@@ -33,6 +34,7 @@ import javafx.scene.layout.HBox;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.InfoOverlay;
 import org.controlsfx.control.SearchableComboBox;
@@ -133,7 +135,7 @@ public class HomeTabController extends SpiderDebuggingTabController {
 
                 localSpider = parentController.requireSpider();
                 if (localSpider == null) {
-                    Platform.runLater(() -> homeTabLoadingProperty.set(false));
+                    Platform.runLater(this::completeReloading);
 
                     return;
                 }
@@ -146,12 +148,12 @@ public class HomeTabController extends SpiderDebuggingTabController {
                     if (!parentController.tryHandleExecutionInterrupt(e)) {
                         log.error("homeContent exception", e);
                     }
-                    Platform.runLater(() -> homeTabLoadingProperty.set(false));
+                    Platform.runLater(this::completeReloading);
 
                     return;
                 }
                 if (result == null) {
-                    Platform.runLater(() -> homeTabLoadingProperty.set(false));
+                    Platform.runLater(this::completeReloading);
 
                     return;
                 }
@@ -164,6 +166,8 @@ public class HomeTabController extends SpiderDebuggingTabController {
                     List<Node> movieListNodes = movieListHBox.getChildren();
                     MovieExploreTabController movieExploreTabController =
                             parentController.getMovieExploreTabController();
+                    Tab currentTab;
+                    SourceAuditType currentTabType;
 
                     movieExploreTabController.stashParameterForm();
                     movieExploreTabController.clear();
@@ -195,8 +199,13 @@ public class HomeTabController extends SpiderDebuggingTabController {
                             movieListNodes.add(movieInfoOverlay);
                         }
                     }
-                    homeTabLoadingProperty.set(false);
-                    if (movieExploreTabController.isAutoRefreshOn()) {
+                    completeReloading();
+                    currentTab = previewTabPane.getSelectionModel().getSelectedItem();
+                    currentTabType = CastUtil.cast(currentTab.getProperties().get("type"));
+                    if (
+                            currentTabType == SourceAuditType.MOVIE_EXPLORE &&
+                            movieExploreTabController.isAutoRefreshOn()
+                    ) {
                         movieExploreTabController.reload();
                     }
                 });
@@ -204,20 +213,23 @@ public class HomeTabController extends SpiderDebuggingTabController {
         });
     }
 
-    private void selectHomeMovie(MouseEvent mouseEvent, InfoOverlay node, Movie.Video movie) {
-        List<String> styleClasses;
+    private void completeReloading() {
+        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.HOME));
+        homeTabLoadingProperty.set(false);
+    }
 
+    private void selectHomeMovie(MouseEvent mouseEvent, InfoOverlay node, Movie.Video movie) {
         if (mouseEvent.getButton() != MouseButton.PRIMARY || lastSelectedHomeMovieInfoOverlay == node) {
 
             return;
         }
-        styleClasses = node.getStyleClass();
-        styleClasses.remove("movie-info-overlay");
-        styleClasses.add("movie-info-overlay-selected");
+        NodeUtil.replaceStyleClass(node, "movie-info-overlay", "movie-info-overlay-selected");
         if (lastSelectedHomeMovieInfoOverlay != null) {
-            styleClasses = lastSelectedHomeMovieInfoOverlay.getStyleClass();
-            styleClasses.remove("movie-info-overlay-selected");
-            styleClasses.add("movie-info-overlay");
+            NodeUtil.replaceStyleClass(
+                    lastSelectedHomeMovieInfoOverlay,
+                    "movie-info-overlay-selected",
+                    "movie-info-overlay"
+            );
         }
         lastSelectedHomeMovieInfoOverlay = node;
         movieNameLabel.setText(movie.getName());
@@ -275,7 +287,6 @@ public class HomeTabController extends SpiderDebuggingTabController {
 
     @FXML
     private void onSendToMovieExploreButtonAction() {
-        // TODO 发送到影视浏览：添加表单校验
         MovieExploreTabController movieExploreTabController = parentController.getMovieExploreTabController();
         CheckTreeView<MovieSortFilterTreeNode> movieExploreSortFilterCheckTreeView =
                 movieExploreTabController.getMovieExploreSortFilterCheckTreeView();
@@ -284,10 +295,17 @@ public class HomeTabController extends SpiderDebuggingTabController {
         TextField movieExplorePageNoTextField = movieExploreTabController.getMovieExplorePageNoTextField();
         String sortId = homeMovieClassIdTextField.getText();
 
+        if (StringUtils.isEmpty(sortId)) {
+            ToastHelper.showWarningI18n(I18nKeys.SPIDER_DEBUGGING_COMMON_SORT_ID_REQUIRED);
+
+            return;
+        }
         CollectionUtil.findFirst(
                 movieExploreClassComboBox.getItems(), sortData -> Objects.equals(sortData.getId(), sortId)
         ).ifPresent(movieExploreClassComboBox::setValue);
-        parentController.copyMovieSortFilterCheckTreeViewChecks(homeMovieSortFilterCheckTreeView, movieExploreSortFilterCheckTreeView);
+        parentController.copyMovieSortFilterCheckTreeViewChecks(
+                homeMovieSortFilterCheckTreeView, movieExploreSortFilterCheckTreeView
+        );
         movieExplorePageNoTextField.setText("1");
         previewTabPane.getSelectionModel().select(MOVIE_EXPLORE_TAB_IDX);
         movieExploreTabController.reload();
@@ -300,11 +318,16 @@ public class HomeTabController extends SpiderDebuggingTabController {
 
     @FXML
     private void onSendToMovieDetailButtonAction() {
-        // TODO 发送到影视详情：影视ID不能为空，添加表单校验
+        parentController.sendToMovieDetailTab(movieIdTextField.getText());
     }
 
     @Override
     public BooleanProperty getLoadingProperty() {
         return homeTabLoadingProperty;
+    }
+
+    @Override
+    public boolean isAutoRefreshOn() {
+        return true;
     }
 }

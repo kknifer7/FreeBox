@@ -62,3 +62,8 @@
 .link-label:pressed {
     -fx-translate-y: 1;
 }
+
+.video-details-ep-btn-selected {
+    -fx-background-color: #007BFF;
+    -fx-text-fill: white;
+}

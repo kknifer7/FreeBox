@@ -37,4 +37,5 @@ public class AppEvents {
      * 系统级事件
      ***/
     public record SpiderDebuggingViewInitialized(SpiderDebuggingController controller) implements Event {}
+    public record SpiderDebuggingViewTabLoaded(SourceAuditType tabType) implements Event {}
 }

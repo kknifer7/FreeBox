@@ -31,6 +31,7 @@ import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +77,29 @@ public class VideoGridCellFactory implements Callback<GridView<Movie.Video>, Gri
 
     public void setShowSourceName(boolean flag) {
         showSourceName.set(flag);
+    }
+
+    /**
+     * 根据itemId（影视ID）获取影视InfoOverlay对象
+     * @param itemId 影视id
+     * @return InfoOverlay
+     */
+    @Nullable
+    public InfoOverlay getMovieInfoOverlayByItemId(String itemId) {
+        StackPane container = ITEM_ID_AND_CONTAINER_MAP.get(itemId);
+
+        if (container == null) {
+
+            return null;
+        }
+        for (Node child : container.getChildren()) {
+            if (child instanceof InfoOverlay result) {
+
+                return result;
+            }
+        }
+
+        return null;
     }
 
     @Override

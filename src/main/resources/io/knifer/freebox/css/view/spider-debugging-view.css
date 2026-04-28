@@ -5,3 +5,9 @@
     -fx-pref-height: 305;
     -fx-max-height: 305;
 }
+
+.movie-remark-label {
+    -fx-background-color: #4AAF5A;
+    -fx-text-fill: white;
+    -fx-label-padding: 1px;
+}

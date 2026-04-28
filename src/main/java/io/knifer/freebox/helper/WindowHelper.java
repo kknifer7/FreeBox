@@ -42,10 +42,6 @@ public class WindowHelper {
         getStage(node).hide();
     }
 
-    public <T> T getUserData(Node node) {
-        return CastUtil.cast(getStage(node).getUserData());
-    }
-
     public Stage getStage(Node node) {
         return CastUtil.cast(node.getScene().getWindow());
     }

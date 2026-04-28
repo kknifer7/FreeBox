@@ -8,6 +8,7 @@ import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.controller.spiderDebugging.HomeTabController;
+import io.knifer.freebox.controller.spiderDebugging.MovieDetailTabController;
 import io.knifer.freebox.controller.spiderDebugging.MovieExploreTabController;
 import io.knifer.freebox.controller.spiderDebugging.SpiderDebuggingTabController;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
@@ -16,6 +17,7 @@ import io.knifer.freebox.model.domain.MovieSortFilterTreeNode;
 import io.knifer.freebox.model.domain.SpiderDebugging;
 import io.knifer.freebox.spider.js.JSSpider;
 import io.knifer.freebox.util.AsyncUtil;
+import io.knifer.freebox.util.CastUtil;
 import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
@@ -23,6 +25,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -82,6 +85,9 @@ public class SpiderDebuggingController {
     @Setter
     @Getter
     private MovieExploreTabController movieExploreTabController;
+    @Setter
+    @Getter
+    private MovieDetailTabController movieDetailTabController;
 
     private Stage stage;
     private FileChooser spiderFileChooser;
@@ -90,7 +96,7 @@ public class SpiderDebuggingController {
 
     @Getter
     private ExecutorService spiderPreviewExecutor;
-    private Set<SourceAuditType> tabTypeUpdateSet;
+    private Set<SourceAuditType> tabTypeUpdatedSet;
 
     /***
      * 上锁资源
@@ -130,7 +136,7 @@ public class SpiderDebuggingController {
                 }
         );
         spiderPreviewTaskMap = new ConcurrentHashMap<>();
-        tabTypeUpdateSet = new ConcurrentHashSet<>();
+        tabTypeUpdatedSet = new ConcurrentHashSet<>();
 
         spiderLoadingProperty = new SimpleBooleanProperty(false);
 
@@ -143,6 +149,10 @@ public class SpiderDebuggingController {
         spiderSelectComboBox.disableProperty().bind(spiderLoadingProperty);
         previewTabPane.disableProperty().bind(spiderLoadingProperty);
 
+        context.registerEventListener(
+                AppEvents.SpiderDebuggingViewTabLoaded.class,
+                evt -> tabTypeUpdatedSet.add(evt.tabType())
+        );
         context.postEvent(new AppEvents.SpiderDebuggingViewInitialized(this));
 
         loadData();
@@ -185,7 +195,7 @@ public class SpiderDebuggingController {
         }
         spiderLoadingProperty.set(true);
         previewTabPane.getSelectionModel().select(SpiderDebuggingTabController.HOME_TAB_IDX);
-        tabTypeUpdateSet.addAll(Arrays.asList(SourceAuditType.values()));
+        tabTypeUpdatedSet.addAll(Arrays.asList(SourceAuditType.values()));
         // 爬虫初始化
         spiderDebugging = SpiderDebugging.from(spiderFile);
         AsyncUtil.execute(() -> {
@@ -278,6 +288,9 @@ public class SpiderDebuggingController {
                 spiderLock.unlock();
             }
             Platform.runLater(() -> {
+                Tab currentTab;
+                SourceAuditType currentTabType;
+
                 if (spiderAvailableFlag) {
                     setSpiderStatus(true, I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING);
                     updateSpiderDebugging(spiderDebugging);
@@ -288,8 +301,26 @@ public class SpiderDebuggingController {
                             false, I18nKeys.SPIDER_DEBUGGING_SPIDER_RUNNING_ERROR
                     );
                 }
-                // 刷新home tab（其他tab的自动刷新由 HomeTab reload 完成后触发）
-                homeTabController.reload();
+                // 根据用户所处的tab页，刷新对应tab的数据
+                tabTypeUpdatedSet.clear();
+                currentTab = previewTabPane.getSelectionModel().getSelectedItem();
+                currentTabType = CastUtil.cast(currentTab.getProperties().get("type"));
+                if (
+                        currentTabType == SourceAuditType.HOME ||
+                        (
+                                currentTabType == SourceAuditType.MOVIE_EXPLORE &&
+                                movieExploreTabController.isAutoRefreshOn()
+                        )
+                ) {
+                    // 因为movie explore tab依赖于home tab的影视分类数据，所以刷新home tab即可
+                    // home tab 的controller将会对movie explore tab进行判断和刷新
+                    homeTabController.reload();
+                } else if (
+                        currentTabType == SourceAuditType.MOVIE_DETAIL &&
+                        movieDetailTabController.isAutoRefreshOn()
+                ) {
+                    movieDetailTabController.reload();
+                }
             });
         } finally {
             spiderInitializing.set(false);
@@ -507,6 +538,7 @@ public class SpiderDebuggingController {
         }
         homeTabController.clear();
         movieExploreTabController.clear();
+        movieDetailTabController.clear();
         clearSpiderStatus();
         spiderLoadingProperty.set(false);
         stage.setTitle(I18nHelper.get(I18nKeys.SPIDER_DEBUGGING));
@@ -578,5 +610,54 @@ public class SpiderDebuggingController {
                 }
             }
         }
+    }
+
+    /**
+     * 将指定影视ID发送到影视详情tab
+     * @param movieId 影视ID
+     */
+    public void sendToMovieDetailTab(String movieId) {
+        if (StringUtils.isEmpty(movieId)) {
+            ToastHelper.showWarningI18n(I18nKeys.SPIDER_DEBUGGING_COMMON_MOVIE_ID_REQUIRED);
+
+            return;
+        }
+        movieDetailTabController.getMovieIdTextField().setText(movieId);
+        movieDetailTabController.reload();
+        previewTabPane.getSelectionModel().select(SpiderDebuggingTabController.MOVIE_DETAIL_TAB_IDX);
+    }
+
+    @FXML
+    private void onPreviewTabSelectionChanged(Event event) {
+        Tab tab;
+        SourceAuditType tabType;
+        SpiderDebuggingTabController childController;
+
+        if (tabTypeUpdatedSet == null) {
+            // 还没进行过initialize，忽略事件
+
+            return;
+        }
+        tab = CastUtil.cast(event.getSource());
+        if (!tab.isSelected()) {
+
+            return;
+        }
+        tabType = CastUtil.cast(tab.getProperties().get("type"));
+        if (tabTypeUpdatedSet.contains(tabType)) {
+
+            return;
+        }
+        switch (tabType) {
+            case HOME -> childController = homeTabController;
+            case MOVIE_EXPLORE -> childController = movieExploreTabController;
+            case MOVIE_DETAIL -> childController = movieDetailTabController;
+            default -> childController = null;
+        }
+        if (childController == null || !childController.isAutoRefreshOn()) {
+
+            return;
+        }
+        childController.reload();
     }
 }

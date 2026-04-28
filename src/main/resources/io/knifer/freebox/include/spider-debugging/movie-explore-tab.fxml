@@ -32,18 +32,18 @@
         <left>
             <HBox alignment="CENTER" spacing="5.0">
                 <padding>
-                    <Insets top="5.0" left="10.0" bottom="5.0" right="5.0" />
+                    <Insets top="10.0" left="15.0" bottom="10.0" right="10.0" />
                 </padding>
                 <VBox spacing="5.0">
                     <CheckBox fx:id="movieExploreAutoRefreshCheckBox" text="%spider-debugging.common.auto-refresh" focusTraversable="false" />
                     <Label styleClass="fs-big, bold" text="%spider-debugging.common.parameter-form"/>
                     <GridPane vgap="5.0" hgap="5.0">
-                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                        <Label styleClass="royal-blue, bold" text="%spider-debugging.home.sort-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
                         <SearchableComboBox fx:id="movieExploreClassComboBox" onAction="#onMovieExploreClassComboBoxAction" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.page-no" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                        <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-explore.page-no" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                         <TextField fx:id="movieExplorePageNoTextField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
                         <VBox GridPane.rowIndex="2" GridPane.columnIndex="0">
-                            <Label styleClass="dodge-blue, bold" text="%spider-debugging.home.sort-filters"/>
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.home.sort-filters"/>
                         </VBox>
                         <VBox GridPane.rowIndex="2" GridPane.columnIndex="1">
                             <CheckTreeView fx:id="movieExploreSortFilterCheckTreeView"
@@ -63,17 +63,38 @@
                         </VBox>
                     </GridPane>
 
-                    <Label styleClass="fs-big, bold" text="%spider-debugging.movie-explore.pagination" />
-                    <GridPane vgap="5.0" hgap="5.0">
-                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.page-count" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                        <Label fx:id="pageCountLabel" styleClass="bold" GridPane.rowIndex="0" GridPane.columnIndex="1" />
-                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.total" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                        <Label fx:id="totalLabel" styleClass="bold" GridPane.rowIndex="1" GridPane.columnIndex="1" />
-                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.limit" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                        <Label fx:id="limitLabel" styleClass="bold" GridPane.rowIndex="2" GridPane.columnIndex="1" />
-                        <Label styleClass="dodge-blue, bold" text="%spider-debugging.movie-explore.pagination.has-next" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                        <Label fx:id="hasNextLabel" styleClass="bold" GridPane.rowIndex="3" GridPane.columnIndex="1" />
-                    </GridPane>
+                    <VBox spacing="10.0">
+                        <Label styleClass="fs-big, bold" text="%spider-debugging.movie-explore.pagination" />
+                        <GridPane vgap="5.0" hgap="5.0">
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-explore.pagination.page-count" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="pageCountTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                            <Button userData="$pageCountTextField" text="%common.copy" onAction="#onCopyButtonAction" GridPane.rowIndex="0" GridPane.columnIndex="2" />
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-explore.pagination.total" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="totalTextField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                            <Button userData="$totalTextField" text="%common.copy" onAction="#onCopyButtonAction" GridPane.rowIndex="1" GridPane.columnIndex="2" />
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-explore.pagination.limit" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <TextField fx:id="limitTextField" editable="false" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                            <Button userData="$limitTextField" text="%common.copy" onAction="#onCopyButtonAction" GridPane.rowIndex="2" GridPane.columnIndex="2" />
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-explore.pagination.has-next" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <Label fx:id="hasNextLabel" styleClass="bold" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                        </GridPane>
+
+                        <Label styleClass="fs-big, bold" text="%spider-debugging.common.movie-data" />
+                        <GridPane vgap="5.0" hgap="5.0">
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.common.movie-id" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="movieIdTextField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                            <Button userData="$movieIdTextField" text="%common.copy" onAction="#onCopyButtonAction" GridPane.rowIndex="0" GridPane.columnIndex="2" />
+                            <Label styleClass="royal-blue, bold" text="%spider-debugging.common.movie-picture-url" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="moviePictureUrlTextField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                            <Button userData="$moviePictureUrlTextField" text="%common.copy" onAction="#onCopyButtonAction" GridPane.rowIndex="1" GridPane.columnIndex="2" />
+                        </GridPane>
+
+                        <Button text="%spider-debugging.common.send-to-movie-detail" onAction="#onSendToMovieDetailButtonAction" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                            <graphic>
+                                <FontIcon iconLiteral="fa-flag:16:red" />
+                            </graphic>
+                        </Button>
+                    </VBox>
                 </VBox>
             </HBox>
         </left>

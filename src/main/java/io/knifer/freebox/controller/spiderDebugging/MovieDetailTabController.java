@@ -65,6 +65,8 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
     @FXML
     private TextField introTextField;
     @FXML
+    private TextField vodIdTextField;
+    @FXML
     private ProgressIndicator movieDetailTabMovieLoadingProgressIndicator;
     @FXML
     private TabPane episodesTabPane;
@@ -198,8 +200,9 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
 
                                     return;
                                 }
-                                // 选集按钮被点击，更新样式
+                                // 选集按钮被点击，更新样式、设置剧集ID
                                 updateSelectedEpBtn(btn);
+                                vodIdTextField.setText(infoBean.getUrl());
                             });
                         });
                         tab.setContent(scrollPane);
@@ -239,6 +242,7 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
         directorsTextField.setText(null);
         actorsTextField.setText(null);
         introTextField.setText(null);
+        vodIdTextField.setText(null);
         episodesTabPane.getTabs().clear();
     }
 
@@ -258,6 +262,18 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
         }
         ClipboardHelper.setContent(text);
         ToastHelper.showMouseToastI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
+    }
+
+    @FXML
+    private void onSendToMoviePlayAction() {
+        // TODO 发送到影视播放
+        String vodId = vodIdTextField.getText();
+
+        if (StringUtils.isEmpty(vodId)) {
+            ToastHelper.showWarningI18n(I18nKeys.SPIDER_DEBUGGING_MOVIE_DETAIL_VOD_ID_REQUIRED);
+
+            return;
+        }
     }
 
     @Override

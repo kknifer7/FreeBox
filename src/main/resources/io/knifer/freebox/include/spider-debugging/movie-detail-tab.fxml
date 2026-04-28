@@ -41,6 +41,16 @@
                 <Label styleClass="royal-blue, bold" text="%video.movie-details.intro" GridPane.columnIndex="0" GridPane.rowIndex="8" />
                 <TextField fx:id="introTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                 <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$introTextField" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+                <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-detail.vod-id" GridPane.columnIndex="0" GridPane.rowIndex="9" />
+                <TextField fx:id="vodIdTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                <HBox GridPane.columnIndex="2" GridPane.rowIndex="9">
+                    <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$vodIdTextField" />
+                    <Button onAction="#onSendToMoviePlayAction" text="%spider-debugging.movie-detail.send-to-movie-play">
+                        <graphic>
+                            <FontIcon iconLiteral="fa-flag:16:red" />
+                        </graphic>
+                    </Button>
+                </HBox>
             </GridPane>
             <StackPane>
                 <ProgressIndicator fx:id="movieDetailTabMovieLoadingProgressIndicator" />

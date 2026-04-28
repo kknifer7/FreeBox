@@ -33,6 +33,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
 import lombok.Data;
 import lombok.Getter;
@@ -161,7 +162,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
         Platform.runLater(() -> {
             Stage stage = WindowHelper.getStage(movieExploreAutoRefreshCheckBox);
 
-            stage.setOnHidden(evt -> videoGridCellFactory.destroy());
+            stage.addEventFilter(WindowEvent.WINDOW_HIDDEN, evt -> videoGridCellFactory.destroy());
         });
     }
 

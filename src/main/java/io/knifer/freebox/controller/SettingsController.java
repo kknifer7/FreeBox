@@ -472,6 +472,9 @@ public class SettingsController {
         Integer httpPort = ConfigHelper.getHttpPort();
         String ip = ConfigHelper.getServiceIPv4();
 
+        if (!ValidationHelper.validate(validationSupport, httpPortTextField)) {
+            return;
+        }
         disableHttpServiceBtn();
         disableHttpServiceForm();
         showServiceStatus(
@@ -550,8 +553,12 @@ public class SettingsController {
     private void onWsServiceStartBtnAction() {
         Integer wsPort = ConfigHelper.getWsPort();
         String ip = ConfigHelper.getServiceIPv4();
-        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(wsPort);
+        CheckPortUsingService checkPortUsingService;
 
+        if (!ValidationHelper.validate(validationSupport, wsPortTextField)) {
+            return;
+        }
+        checkPortUsingService = new CheckPortUsingService(wsPort);
         disableWsServiceBtn();
         disableWsServiceForm();
         showServiceStatus(

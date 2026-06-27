@@ -116,7 +116,7 @@
                         </children>
                     </VBox>
                 </StackPane>
-                <StackPane fx:id="dataPanel" prefHeight="200.0" maxHeight="200.0" StackPane.alignment="BOTTOM_CENTER">
+                <StackPane fx:id="dataPanel" prefHeight="200.0" maxHeight="200.0" visible="false" managed="false" StackPane.alignment="BOTTOM_CENTER">
                     <children>
                         <VBox>
                             <children>

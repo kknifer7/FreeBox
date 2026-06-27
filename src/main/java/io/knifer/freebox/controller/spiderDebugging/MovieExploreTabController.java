@@ -45,6 +45,7 @@ import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 import org.controlsfx.control.SearchableComboBox;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +95,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
 
     private BooleanProperty movieExploreLoadingProperty;
     private BooleanProperty movieExploreListLoadingProperty;
+    private int movieExploreReloadSerial;
 
     private VideoGridCellFactory videoGridCellFactory;
 
@@ -244,6 +246,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
         MovieSort.SortData sortData = movieExploreClassComboBox.getValue();
         String sortId;
         boolean useStashedParameterForm = false;
+        int currentSerial;
 
         if (sortData == null) {
             sortId = stashedParameterForm.getSortId();
@@ -281,15 +284,29 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
         hasNextLabel.setText(null);
         movieIdTextField.setText(null);
         moviePictureUrlTextField.setText(null);
-        doMovieExploreSearch();
+        currentSerial = ++movieExploreReloadSerial;
+        doMovieExploreSearch(currentSerial);
     }
 
     private void completeReloading() {
-        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.MOVIE_EXPLORE));
+        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.MOVIE_EXPLORE, null));
         movieExploreListLoadingProperty.set(false);
     }
 
-    private void doMovieExploreSearch() {
+    private void completeReloading(int serial) {
+        completeReloading(serial, null);
+    }
+
+    private void completeReloading(int serial, @Nullable String loadedData) {
+        if (serial != movieExploreReloadSerial) {
+
+            return;
+        }
+        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.MOVIE_EXPLORE, loadedData));
+        movieExploreListLoadingProperty.set(false);
+    }
+
+    private void doMovieExploreSearch(int serial) {
         String sortId = movieExploreClassComboBox.getValue().getId();
         String pageNo = movieExplorePageNoTextField.getText();
         HashMap<String, String> filters = getCategoryContentFiltersParam();
@@ -302,6 +319,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
 
             return spiderPreviewExecutor.submit(() -> {
                 JSSpider localSpider;
+                String resultJson;
                 Result result;
                 AbsXml categoryContent;
                 Movie movieInfo;
@@ -309,27 +327,25 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
 
                 localSpider = parentController.requireSpider();
                 if (localSpider == null) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(serial));
 
                     return;
                 }
                 try {
                     log.debug("categoryContent params, sortId={}, pageNo={}, filters={}", sortId, pageNo, filters);
-                    result = GsonUtil.fromJson(
-                            localSpider.categoryContent(sortId, pageNo, !filters.isEmpty(), filters),
-                            Result.class
-                    );
+                    resultJson = localSpider.categoryContent(sortId, pageNo, !filters.isEmpty(), filters);
+                    result = GsonUtil.fromJson(resultJson, Result.class);
                     log.debug("load categoryContent result: {}", result);
                 } catch (Exception e) {
                     if (!parentController.tryHandleExecutionInterrupt(e)) {
                         log.error("result exception", e);
-                        Platform.runLater(this::completeReloading);
+                        Platform.runLater(() -> completeReloading(serial));
                     }
 
                     return;
                 }
                 if (result == null) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(serial));
 
                     return;
                 }
@@ -337,7 +353,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                 movieInfo = categoryContent.getMovie();
                 movies = movieInfo.getVideoList();
                 if (movies.isEmpty()) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(serial));
 
                     return;
                 }
@@ -362,7 +378,7 @@ public class MovieExploreTabController extends SpiderDebuggingTabController {
                         NodeUtil.replaceStyleClass(hasNextLabel, "success", "danger");
                     }
                     hasNextLabel.setText(hasNextStr);
-                    completeReloading();
+                    completeReloading(serial, GsonUtil.toPrettyJson(result));
                 });
             });
         });

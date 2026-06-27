@@ -1,0 +1,43 @@
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.CheckBox?>
+<StackPane stylesheets="@../../css/view/spider-debugging-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.spiderDebugging.MoviePlayTabController">
+    <VBox fx:id="root" spacing="10.0">
+        <VBox spacing="5.0">
+            <CheckBox fx:id="moviePlayTabAutoRefreshCheckBox" text="%spider-debugging.common.auto-refresh" focusTraversable="false" />
+            <GridPane vgap="5.0" hgap="5.0">
+                <Label text="%spider-debugging.movie-detail.vod-id" styleClass="royal-blue" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                <TextField fx:id="vodIdTextField" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                <HBox GridPane.rowIndex="0" GridPane.columnIndex="2">
+                    <Button userData="$vodIdTextField" text="%common.copy" onAction="#onCopyButtonAction" />
+                    <Button fx:id="loadPlayerContentButton" onAction="#onLoaderPlayerContentButtonAction" text="%spider-debugging.movie-detail.fetch">
+                        <graphic>
+                            <FontIcon iconLiteral="fa-bullseye:16:gray" />
+                        </graphic>
+                    </Button>
+                </HBox>
+                <ProgressIndicator fx:id="moviePlayTabLoadingProgressIndicator" prefWidth="20.0" prefHeight="20.0" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                <Label text="%spider-debugging.movie-play.play-url" styleClass="dark-orange" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                <TextField fx:id="playUrlTextField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                <HBox GridPane.rowIndex="1" GridPane.columnIndex="2">
+                    <Button userData="$playUrlTextField" text="%common.copy" onAction="#onCopyButtonAction" />
+                    <Button VBox.vgrow="ALWAYS" fx:id="playButton" text="%spider-debugging.movie-play.play" onAction="#onPlayButtonAction">
+                        <graphic>
+                            <FontIcon iconLiteral="fa-play:16:green" />
+                        </graphic>
+                    </Button>
+                </HBox>
+            </GridPane>
+        </VBox>
+        <HBox fx:id="playerPane" />
+    </VBox>
+</StackPane>

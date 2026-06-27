@@ -11,3 +11,69 @@
     -fx-text-fill: white;
     -fx-label-padding: 1px;
 }
+
+.movie-search-form {
+    -fx-background-color: #f8f9fa;
+    -fx-background-radius: 5;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 5;
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+}
+
+.movie-search-separator .line {
+    -fx-border-color: #d0d0d0;
+    -fx-border-width: 1 0 0 0;
+}
+
+.movie-search-grid-container {
+    -fx-padding: 5px 0 0 0;
+}
+
+.debug-panel-toolbar {
+    -fx-background-color: #e8e8e8;
+    -fx-background-radius: 0 0 0 4;
+    -fx-padding: 0 8px 0 4px;
+    -fx-alignment: center-right;
+}
+
+.debug-panel-text-area {
+    -fx-text-fill: #4a5568;
+    -fx-background-color: #fafafa;
+}
+
+.debug-panel-tool-bar-button {
+    -fx-background-color: transparent;
+    -fx-padding: 6px 10px;
+    -fx-font-size: 14px;
+}
+
+.debug-panel-tool-bar-button:hover {
+    -fx-background-color: #e0e0e0;
+    -fx-background-radius: 3;
+}
+
+.debug-panel-tool-bar-button:pressed {
+    -fx-background-color: #d0d0d0;
+    -fx-background-radius: 3;
+}
+
+.debug-panel-drag-handle {
+    -fx-background-color: #e0e0e0;
+    -fx-cursor: n-resize;
+    -fx-padding: 0;
+    -fx-pref-height: 6px;
+    -fx-min-height: 6px;
+    -fx-max-height: 6px;
+}
+
+.debug-panel-drag-handle:hover {
+    -fx-background-color: #c0c0c0;
+}
+
+.debug-panel-drag-handle-grip {
+    -fx-background-color: #a0a0a0;
+    -fx-background-radius: 2;
+    -fx-pref-width: 40px;
+    -fx-pref-height: 4px;
+}

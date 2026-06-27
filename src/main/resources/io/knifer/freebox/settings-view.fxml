@@ -384,7 +384,7 @@
                                      </Button>
 
                                     <Label styleClass="fs-big, bold" text="%settings.debugging.log-console" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                                    <Button onAction="#onOpenLogConsoleButtonAction" text="%settings.debugging.open-log-console" mnemonicParsing="false" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                                    <Button onAction="#onOpenLogConsoleButtonAction" text="%settings.debugging.log-console" mnemonicParsing="false" GridPane.rowIndex="3" GridPane.columnIndex="1">
                                        <graphic>
                                           <FontIcon iconLiteral="fa-terminal:16" />
                                        </graphic>

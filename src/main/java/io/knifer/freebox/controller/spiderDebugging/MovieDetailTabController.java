@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -74,6 +75,7 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
     private Button selectedEpBtn;
 
     private BooleanProperty movieDetailLoadingProperty;
+    private int movieDetailReloadSerial;
 
     private final Context context;
     private final CatVodBeanConverter beanConverter;
@@ -101,12 +103,14 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
     @Override
     public void reload() {
         String movieId = movieIdTextField.getText();
+        int currentSerial;
 
         if (StringUtils.isEmpty(movieId)) {
             completeReloading();
 
             return;
         }
+        currentSerial = ++movieDetailReloadSerial;
         movieDetailLoadingProperty.set(true);
         clearMovieDetails();
         spiderPreviewTaskMap.compute(SourceAuditType.MOVIE_DETAIL, (k, spiderPreviewTask) -> {
@@ -116,6 +120,7 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
 
             return spiderPreviewExecutor.submit(() -> {
                 JSSpider localSpider = parentController.requireSpider();
+                String resultJson;
                 Result result;
                 AbsXml detailContent;
                 Movie movie;
@@ -124,27 +129,25 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
                 List<Movie.Video.UrlBean.UrlInfo> urlInfoList;
 
                 if (localSpider == null) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(currentSerial));
 
                     return;
                 }
                 try {
                     log.debug("detailContent params, movieId={}", movieId);
-                    result = GsonUtil.fromJson(
-                            localSpider.detailContent(List.of(movieId)),
-                            Result.class
-                    );
+                    resultJson = localSpider.detailContent(List.of(movieId));
+                    result = GsonUtil.fromJson(resultJson, Result.class);
                     log.debug("load categoryContent result: {}", result);
                 } catch (Exception e) {
                     if (!parentController.tryHandleExecutionInterrupt(e)) {
                         log.error("result exception", e);
-                        Platform.runLater(this::completeReloading);
+                        Platform.runLater(() -> completeReloading(currentSerial));
                     }
 
                     return;
                 }
                 if (result == null) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(currentSerial));
 
                     return;
                 }
@@ -156,7 +159,7 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
                         (urlBean = videoInfo.getUrlBean()) == null ||
                         CollectionUtil.isEmpty(urlInfoList = urlBean.getInfoList())
                 ) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(currentSerial));
 
                     return;
                 }
@@ -208,7 +211,7 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
                         tab.setContent(scrollPane);
                         tabs.add(tab);
                     });
-                    completeReloading();
+                    completeReloading(currentSerial, GsonUtil.toPrettyJson(result));
                 });
             });
         });
@@ -223,7 +226,20 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
     }
 
     private void completeReloading() {
-        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.MOVIE_DETAIL));
+        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.MOVIE_DETAIL, null));
+        movieDetailLoadingProperty.set(false);
+    }
+
+    private void completeReloading(int serial) {
+        completeReloading(serial, null);
+    }
+
+    private void completeReloading(int serial, @Nullable String loadedData) {
+        if (serial != movieDetailReloadSerial) {
+
+            return;
+        }
+        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.MOVIE_DETAIL, loadedData));
         movieDetailLoadingProperty.set(false);
     }
 
@@ -266,14 +282,7 @@ public class MovieDetailTabController extends SpiderDebuggingTabController {
 
     @FXML
     private void onSendToMoviePlayAction() {
-        // TODO 发送到影视播放
-        String vodId = vodIdTextField.getText();
-
-        if (StringUtils.isEmpty(vodId)) {
-            ToastHelper.showWarningI18n(I18nKeys.SPIDER_DEBUGGING_MOVIE_DETAIL_VOD_ID_REQUIRED);
-
-            return;
-        }
+        parentController.sendToMoviePlayTab(vodIdTextField.getText());
     }
 
     @Override

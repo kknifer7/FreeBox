@@ -55,4 +55,5 @@ public abstract class SpiderDebuggingTabController {
     public static int HOME_TAB_IDX = 0;
     public static int MOVIE_EXPLORE_TAB_IDX = 1;
     public static int MOVIE_DETAIL_TAB_IDX = 2;
+    public static int MOVIE_PLAY_TAB_IDX = 3;
 }

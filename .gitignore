@@ -45,6 +45,9 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### DeepSeek-Resonix
+.reasonix
+
 ### jpackage ###
 jpackage_temp/
 ### app data ###

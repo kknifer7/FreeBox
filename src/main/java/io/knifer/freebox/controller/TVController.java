@@ -258,7 +258,7 @@ public class TVController implements Destroyable {
             searchLoadingProgressIndicator.visibleProperty().bind(searchLoadingProperty);
 
             template.init(success -> {
-                if (!success) {
+                if (!success || !stage.isShowing()) {
                     return;
                 }
                 clientManager.getCurrentClient()
@@ -883,6 +883,7 @@ public class TVController implements Destroyable {
         if (StringUtils.isBlank(searchKeyword)) {
             return;
         }
+        log.debug("do searching, keyword={}", searchKeyword);
         sourceBeanKeyIterator = sourceBeanComboBox.getItems()
                 .stream()
                 .filter(SourceBean::isSearchable)

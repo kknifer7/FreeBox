@@ -5,6 +5,8 @@ import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.net.websocket.server.KebSocketServer;
 import lombok.experimental.UtilityClass;
 
+import javax.annotation.Nullable;
+
 /**
  * FreeBox事件
  * 对于无需传参的事件类型，在post时可以直接使用AppEvents下的静态实例或类模板
@@ -37,5 +39,5 @@ public class AppEvents {
      * 系统级事件
      ***/
     public record SpiderDebuggingViewInitialized(SpiderDebuggingController controller) implements Event {}
-    public record SpiderDebuggingViewTabLoaded(SourceAuditType tabType) implements Event {}
+    public record SpiderDebuggingViewTabLoaded(SourceAuditType tabType, @Nullable String loadedData) implements Event {}
 }

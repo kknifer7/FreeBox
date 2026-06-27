@@ -7,10 +7,7 @@ import cn.hutool.core.io.watch.watchers.DelayWatcher;
 import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.*;
 import io.knifer.freebox.context.Context;
-import io.knifer.freebox.controller.spiderDebugging.HomeTabController;
-import io.knifer.freebox.controller.spiderDebugging.MovieDetailTabController;
-import io.knifer.freebox.controller.spiderDebugging.MovieExploreTabController;
-import io.knifer.freebox.controller.spiderDebugging.SpiderDebuggingTabController;
+import io.knifer.freebox.controller.spiderDebugging.*;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.helper.*;
 import io.knifer.freebox.model.domain.MovieSortFilterTreeNode;
@@ -19,6 +16,7 @@ import io.knifer.freebox.spider.js.JSSpider;
 import io.knifer.freebox.util.AsyncUtil;
 import io.knifer.freebox.util.CastUtil;
 import jakarta.inject.Inject;
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
@@ -29,13 +27,17 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.*;
 import org.graalvm.polyglot.PolyglotException;
@@ -78,6 +80,16 @@ public class SpiderDebuggingController {
     @FXML
     @Getter
     private TabPane previewTabPane;
+    @FXML
+    private HBox dataPanelToolBar;
+    @FXML
+    private StackPane dataPanel;
+    @FXML
+    private HBox dataPanelDragHandle;
+    @FXML
+    private StackPane previewStackPane;
+    @FXML
+    private TextArea debugDataTextArea;
 
     @Setter
     @Getter
@@ -88,6 +100,12 @@ public class SpiderDebuggingController {
     @Setter
     @Getter
     private MovieDetailTabController movieDetailTabController;
+    @Setter
+    @Getter
+    private MoviePlayTabController moviePlayTabController;
+    @Setter
+    @Getter
+    private MovieSearchTabController movieSearchTabController;
 
     private Stage stage;
     private FileChooser spiderFileChooser;
@@ -98,6 +116,10 @@ public class SpiderDebuggingController {
     private ExecutorService spiderPreviewExecutor;
     private Set<SourceAuditType> tabTypeUpdatedSet;
 
+    private double dataPanelHeight = 200.0;
+    private double dataPanelDragStartY;
+    private double dataPanelDragStartHeight;
+
     /***
      * 上锁资源
      ***/
@@ -105,6 +127,8 @@ public class SpiderDebuggingController {
     private volatile boolean spiderAvailableFlag;
     @Getter
     private Map<SourceAuditType, Future<?>> spiderPreviewTaskMap;
+    private Map<SourceAuditType, String> debugDataMap;
+
     private volatile WatchMonitor fileMonitor;
 
     private final ReentrantLock spiderLock = new ReentrantLock();
@@ -116,6 +140,8 @@ public class SpiderDebuggingController {
     private final Context context;
 
     private final static String SPIDER_SELECT_COMBOBOX_ACTION_FLAG = "actionFlag";
+    private final static double DEBUG_PANEL_MIN_HEIGHT = 100.0;
+    private final static double DEBUG_PANEL_MAX_RATIO = 0.8;
 
     @FXML
     private void initialize() {
@@ -136,6 +162,7 @@ public class SpiderDebuggingController {
                 }
         );
         spiderPreviewTaskMap = new ConcurrentHashMap<>();
+        debugDataMap = new ConcurrentHashMap<>();
         tabTypeUpdatedSet = new ConcurrentHashSet<>();
 
         spiderLoadingProperty = new SimpleBooleanProperty(false);
@@ -149,9 +176,30 @@ public class SpiderDebuggingController {
         spiderSelectComboBox.disableProperty().bind(spiderLoadingProperty);
         previewTabPane.disableProperty().bind(spiderLoadingProperty);
 
+        initDebugPanelHoverEffect();
+        initDebugPanelResizeHandler();
+        previewStackPane.heightProperty().addListener((obs, oldH, newH) -> {
+            double maxHeight = newH.doubleValue() * DEBUG_PANEL_MAX_RATIO;
+
+            if (dataPanel.isVisible() && dataPanel.getHeight() > maxHeight) {
+                dataPanel.setPrefHeight(maxHeight);
+                dataPanel.setMaxHeight(maxHeight);
+                dataPanelHeight = maxHeight;
+            }
+        });
+
         context.registerEventListener(
                 AppEvents.SpiderDebuggingViewTabLoaded.class,
-                evt -> tabTypeUpdatedSet.add(evt.tabType())
+                evt -> {
+                    SourceAuditType type = evt.tabType();
+                    String loadedData = evt.loadedData();
+
+                    tabTypeUpdatedSet.add(type);
+                    debugDataMap.put(type, ObjectUtils.defaultIfNull(loadedData, StringUtils.EMPTY));
+                    if (getCurrentTabType() == type) {
+                        setDebugData(loadedData);
+                    }
+                }
         );
         context.postEvent(new AppEvents.SpiderDebuggingViewInitialized(this));
 
@@ -255,6 +303,10 @@ public class SpiderDebuggingController {
         }
     }
 
+    /**
+     * 初始化spider
+     * @param spiderDebugging spider信息
+     */
     private void initSpider(SpiderDebugging spiderDebugging) {
         JSSpider newSpider;
         boolean spiderInitSuccess;
@@ -288,8 +340,8 @@ public class SpiderDebuggingController {
                 spiderLock.unlock();
             }
             Platform.runLater(() -> {
-                Tab currentTab;
                 SourceAuditType currentTabType;
+                SpiderDebuggingTabController childController;
 
                 if (spiderAvailableFlag) {
                     setSpiderStatus(true, I18nKeys.SPIDER_DEBUGGING_SPIDER_MONITORING);
@@ -303,8 +355,7 @@ public class SpiderDebuggingController {
                 }
                 // 根据用户所处的tab页，刷新对应tab的数据
                 tabTypeUpdatedSet.clear();
-                currentTab = previewTabPane.getSelectionModel().getSelectedItem();
-                currentTabType = CastUtil.cast(currentTab.getProperties().get("type"));
+                currentTabType = getCurrentTabType();
                 if (
                         currentTabType == SourceAuditType.HOME ||
                         (
@@ -315,16 +366,19 @@ public class SpiderDebuggingController {
                     // 因为movie explore tab依赖于home tab的影视分类数据，所以刷新home tab即可
                     // home tab 的controller将会对movie explore tab进行判断和刷新
                     homeTabController.reload();
-                } else if (
-                        currentTabType == SourceAuditType.MOVIE_DETAIL &&
-                        movieDetailTabController.isAutoRefreshOn()
-                ) {
-                    movieDetailTabController.reload();
+                } else if ((childController = getTabControllerByType(currentTabType)).isAutoRefreshOn()) {
+                    childController.reload();
                 }
             });
         } finally {
             spiderInitializing.set(false);
         }
+    }
+
+    private SourceAuditType getCurrentTabType() {
+        Tab currentTab = previewTabPane.getSelectionModel().getSelectedItem();
+
+        return CastUtil.cast(currentTab.getProperties().get("type"));
     }
 
     /**
@@ -396,7 +450,7 @@ public class SpiderDebuggingController {
         if (properties.containsKey(SPIDER_SELECT_COMBOBOX_ACTION_FLAG)) {
             properties.remove(SPIDER_SELECT_COMBOBOX_ACTION_FLAG);
         } else {
-            spiderSelectComboBox.getSelectionModel().selectLast();
+            spiderSelectComboBox.getSelectionModel().select(spiderDebugging);
         }
         stage.setTitle(String.format(
                 "%s - %s", I18nHelper.get(I18nKeys.SPIDER_DEBUGGING), spiderDebugging.getSourceFilePath()
@@ -476,6 +530,82 @@ public class SpiderDebuggingController {
     @FXML
     private void onOpenLogConsoleButtonAction() {
         router.openSecondary(Views.LOG_CONSOLE_DIALOG, I18nKeys.SETTINGS_DEBUGGING_LOG_CONSOLE);
+    }
+
+    @FXML
+    private void onCloseDebugPanelButtonAction() {
+        dataPanel.setVisible(false);
+        dataPanel.setManaged(false);
+    }
+
+    @FXML
+    private void onCopyDataPanelButtonAction() {
+        String text = debugDataTextArea.getText();
+
+        if (StringUtils.isNotEmpty(text)) {
+            ClipboardHelper.setContent(text);
+            ToastHelper.showMouseToastI18n(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
+        }
+    }
+
+    @FXML
+    private void onToggleDebugPanelButtonAction() {
+        boolean showing = dataPanel.isVisible();
+
+        if (showing) {
+            dataPanel.setVisible(false);
+            dataPanel.setManaged(false);
+        } else {
+            dataPanel.setManaged(true);
+            dataPanel.setVisible(true);
+            dataPanel.setPrefHeight(dataPanelHeight);
+            dataPanel.setMaxHeight(dataPanelHeight);
+        }
+    }
+
+    private void initDebugPanelHoverEffect() {
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), dataPanelToolBar);
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(200), dataPanelToolBar);
+
+        fadeIn.setToValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(evt -> dataPanelToolBar.setMouseTransparent(true));
+
+        dataPanelToolBar.setOpacity(0);
+        dataPanelToolBar.setMouseTransparent(true);
+
+        dataPanel.setOnMouseEntered(evt -> {
+            dataPanelToolBar.setMouseTransparent(false);
+            fadeOut.stop();
+            fadeIn.playFromStart();
+        });
+        dataPanel.setOnMouseExited(evt -> {
+            fadeIn.stop();
+            fadeOut.playFromStart();
+        });
+    }
+
+    private void initDebugPanelResizeHandler() {
+        dataPanelDragHandle.setOnMousePressed(evt -> {
+            dataPanelDragStartY = evt.getSceneY();
+            dataPanelDragStartHeight = dataPanel.getHeight();
+            evt.consume();
+        });
+        dataPanelDragHandle.setOnMouseDragged(evt -> {
+            double deltaY = dataPanelDragStartY - evt.getSceneY();
+            double newHeight = dataPanelDragStartHeight + deltaY;
+            double maxHeight = previewStackPane.getHeight() * DEBUG_PANEL_MAX_RATIO;
+
+            newHeight = Math.max(DEBUG_PANEL_MIN_HEIGHT, Math.min(maxHeight, newHeight));
+            dataPanel.setPrefHeight(newHeight);
+            dataPanel.setMaxHeight(newHeight);
+            dataPanelHeight = newHeight;
+            evt.consume();
+        });
+    }
+
+    private void setDebugData(String text) {
+        debugDataTextArea.setText(text);
     }
 
     @FXML
@@ -627,11 +757,27 @@ public class SpiderDebuggingController {
         previewTabPane.getSelectionModel().select(SpiderDebuggingTabController.MOVIE_DETAIL_TAB_IDX);
     }
 
+    /**
+     * 将指定剧集ID发送到影视播放tab
+     * @param vodId 剧集ID
+     */
+    public void sendToMoviePlayTab(String vodId) {
+        if (StringUtils.isEmpty(vodId)) {
+            ToastHelper.showWarningI18n(I18nKeys.SPIDER_DEBUGGING_MOVIE_DETAIL_VOD_ID_REQUIRED);
+
+            return;
+        }
+        moviePlayTabController.getVodIdTextField().setText(vodId);
+        moviePlayTabController.reload();
+        previewTabPane.getSelectionModel().select(SpiderDebuggingTabController.MOVIE_PLAY_TAB_IDX);
+    }
+
     @FXML
     private void onPreviewTabSelectionChanged(Event event) {
         Tab tab;
         SourceAuditType tabType;
         SpiderDebuggingTabController childController;
+        Future<?> runningTask;
 
         if (tabTypeUpdatedSet == null) {
             // 还没进行过initialize，忽略事件
@@ -644,20 +790,29 @@ public class SpiderDebuggingController {
             return;
         }
         tabType = CastUtil.cast(tab.getProperties().get("type"));
+        setDebugData(debugDataMap.get(tabType));
         if (tabTypeUpdatedSet.contains(tabType)) {
 
             return;
         }
-        switch (tabType) {
-            case HOME -> childController = homeTabController;
-            case MOVIE_EXPLORE -> childController = movieExploreTabController;
-            case MOVIE_DETAIL -> childController = movieDetailTabController;
-            default -> childController = null;
-        }
-        if (childController == null || !childController.isAutoRefreshOn()) {
+        childController = getTabControllerByType(tabType);
+        runningTask = spiderPreviewTaskMap.get(tabType);
+        if (runningTask != null && !runningTask.isDone()) {
 
             return;
         }
-        childController.reload();
+        if (childController.isAutoRefreshOn()) {
+            childController.reload();
+        }
+    }
+
+    private SpiderDebuggingTabController getTabControllerByType(SourceAuditType type) {
+        return switch (type) {
+            case HOME -> homeTabController;
+            case MOVIE_EXPLORE -> movieExploreTabController;
+            case MOVIE_DETAIL -> movieDetailTabController;
+            case MOVIE_PLAY -> moviePlayTabController;
+            case MOVIE_SEARCH -> movieSearchTabController;
+        };
     }
 }

@@ -153,6 +153,8 @@ public class I18nKeys {
     public static final String SPIDER_DEBUGGING_COMMON_SORT_ID_REQUIRED = "spider-debugging.home.sort-id-required";
     public static final String SPIDER_DEBUGGING_COMMON_MOVIE_ID_REQUIRED = "spider-debugging.home.movie-id-required";
     public static final String SPIDER_DEBUGGING_MOVIE_DETAIL_VOD_ID_REQUIRED = "spider-debugging.movie-detail.vod-id-required";
+    public static final String SPIDER_DEBUGGING_MOVIE_PLAY_VIDEO_TITLE = "spider-debugging.movie-play.video-title";
+    public static final String SPIDER_DEBUGGING_MOVIE_PLAY_NO_VIDEO_DATA = "spider-debugging.movie-play.no-video-data";
 
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";

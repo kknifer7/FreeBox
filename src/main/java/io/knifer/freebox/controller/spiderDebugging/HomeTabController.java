@@ -39,6 +39,7 @@ import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.InfoOverlay;
 import org.controlsfx.control.SearchableComboBox;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,6 +78,7 @@ public class HomeTabController extends SpiderDebuggingTabController {
     private InfoOverlay lastSelectedHomeMovieInfoOverlay;
 
     private BooleanProperty homeTabLoadingProperty;
+    private int homeReloadSerial;
 
     private final Context context;
     private final CatVodBeanConverter beanConverter;
@@ -118,6 +120,8 @@ public class HomeTabController extends SpiderDebuggingTabController {
 
     @Override
     public void reload() {
+        int currentSerial = ++homeReloadSerial;
+
         ImageHelper.clearCache();
         homeTabLoadingProperty.set(true);
         spiderPreviewTaskMap.compute(SourceAuditType.HOME, (k, spiderPreviewTask) -> {
@@ -127,6 +131,7 @@ public class HomeTabController extends SpiderDebuggingTabController {
 
             return spiderPreviewExecutor.submit(() -> {
                 JSSpider localSpider;
+                String resultJson;
                 Result result;
                 AbsSortXml absSortXml;
                 List<MovieSort.SortData> sortDataList;
@@ -135,32 +140,37 @@ public class HomeTabController extends SpiderDebuggingTabController {
 
                 localSpider = parentController.requireSpider();
                 if (localSpider == null) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(currentSerial));
 
                     return;
                 }
                 try {
                     log.debug("loading homeContent, filter=false");
-                    result = GsonUtil.fromJson(localSpider.homeContent(false), Result.class);
+                    resultJson = localSpider.homeContent(false);
+                    result = GsonUtil.fromJson(resultJson, Result.class);
                     log.debug("load homeContent result: {}", result);
                 } catch (Exception e) {
                     // 要排除用户删除、切换爬虫，或者爬虫热更新，导致当前爬虫实例调用中就被销毁的情况，这种属于正常情况
                     if (!parentController.tryHandleExecutionInterrupt(e)) {
                         log.error("homeContent exception", e);
                     }
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(currentSerial));
 
                     return;
                 }
                 if (result == null) {
-                    Platform.runLater(this::completeReloading);
+                    Platform.runLater(() -> completeReloading(currentSerial));
 
                     return;
                 }
                 absSortXml = beanConverter.resultToAbsSortXml(result, BaseValues.DEBUGGING_SOURCE_KEY);
                 sortDataList = absSortXml.getClasses().getSortList();
                 movieDataInfo = absSortXml.getList();
-                movies = movieDataInfo.getVideoList();
+                if (movieDataInfo == null || CollectionUtil.isEmpty(movieDataInfo.getVideoList())) {
+                    movies = List.of();
+                } else {
+                    movies = movieDataInfo.getVideoList();
+                }
                 Platform.runLater(() -> {
                     ObservableList<MovieSort.SortData> classItems = classesListView.getItems();
                     List<Node> movieListNodes = movieListHBox.getChildren();
@@ -199,7 +209,7 @@ public class HomeTabController extends SpiderDebuggingTabController {
                             movieListNodes.add(movieInfoOverlay);
                         }
                     }
-                    completeReloading();
+                    completeReloading(currentSerial, GsonUtil.toPrettyJson(result));
                     currentTab = previewTabPane.getSelectionModel().getSelectedItem();
                     currentTabType = CastUtil.cast(currentTab.getProperties().get("type"));
                     if (
@@ -213,8 +223,16 @@ public class HomeTabController extends SpiderDebuggingTabController {
         });
     }
 
-    private void completeReloading() {
-        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.HOME));
+    private void completeReloading(int serial) {
+        completeReloading(serial, null);
+    }
+
+    private void completeReloading(int serial, @Nullable String loadedData) {
+        if (serial != homeReloadSerial) {
+
+            return;
+        }
+        context.postEvent(new AppEvents.SpiderDebuggingViewTabLoaded(SourceAuditType.HOME, loadedData));
         homeTabLoadingProperty.set(false);
     }
 

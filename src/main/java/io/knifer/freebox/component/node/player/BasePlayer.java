@@ -16,10 +16,7 @@ import io.knifer.freebox.model.bo.TVPlayBO;
 import io.knifer.freebox.model.common.diyp.EPG;
 import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
-import io.knifer.freebox.util.AsyncUtil;
-import io.knifer.freebox.util.CastUtil;
-import io.knifer.freebox.util.CollectionUtil;
-import io.knifer.freebox.util.FXMLUtil;
+import io.knifer.freebox.util.*;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
@@ -1679,9 +1676,7 @@ public abstract class BasePlayer<T extends Node> {
         private void select(LiveChannelGroup liveChannelGroup, boolean isPlaying) {
             Label titleLabel = liveChannelGroupAndTitleLabelMap.get(liveChannelGroup);
             LiveChannelGroup lastLiveChannelGroup;
-            List<String> titleLabelStyleClass;
             Label lastSelectedTitleLabel;
-            List<String> lastSelectedTitleLabelStyleClass;
 
             lastLiveChannelGroup = selectedLive.getLiveChannelGroup();
             selectedLive.setLiveChannelGroup(liveChannelGroup);
@@ -1689,21 +1684,24 @@ public abstract class BasePlayer<T extends Node> {
 
                 return;
             }
-            titleLabelStyleClass = titleLabel.getStyleClass();
             if (lastLiveChannelGroup == null) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 setLiveChannels(liveChannelGroup.getChannels(), false);
             } else if (lastLiveChannelGroup != liveChannelGroup) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 lastSelectedTitleLabel = liveChannelGroupAndTitleLabelMap.get(lastLiveChannelGroup);
                 if (lastSelectedTitleLabel != null) {
-                    lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
-                    lastSelectedTitleLabelStyleClass.remove(
-                            "player-live-channel-list-view-title-label-focused"
-                    );
-                    lastSelectedTitleLabelStyleClass.add(
+                    NodeUtil.replaceStyleClass(
+                            lastSelectedTitleLabel,
+                            "player-live-channel-list-view-title-label-focused",
                             "player-live-channel-list-view-title-label"
                     );
                 }
@@ -1852,7 +1850,6 @@ public abstract class BasePlayer<T extends Node> {
             HBox titleHBox = liveChannelAndTitleHBoxMap.get(liveChannel);
             Label titleLabel;
             LiveChannel lastLiveChannel;
-            List<String> titleLabelStyleClass;
             List<Node> titleHBoxChildren;
             HBox lastSelectedTitleHBox;
             List<Node> lastSelectedTitleHBoxChildren;
@@ -1868,19 +1865,24 @@ public abstract class BasePlayer<T extends Node> {
 
                 return;
             }
-            titleLabelStyleClass = titleLabel.getStyleClass();
             titleHBoxChildren = titleHBox.getChildren();
             if (lastLiveChannel == null) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 if (!titleHBoxChildren.contains(PLAYING_GIF_IMAGE_VIEW)) {
                     titleHBoxChildren.add(1, PLAYING_GIF_IMAGE_VIEW);
                 }
             } else if (lastLiveChannel != liveChannel) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 lastSelectedTitleHBox = liveChannelAndTitleHBoxMap.get(lastLiveChannel);
-                if (lastSelectedTitleHBox == null || !trySelectLastTitleLabel(lastSelectedTitleHBox)) {
+                if (lastSelectedTitleHBox == null || trySelectLastTitleLabel(lastSelectedTitleHBox)) {
 
                     return;
                 }
@@ -1894,17 +1896,14 @@ public abstract class BasePlayer<T extends Node> {
 
         private static boolean trySelectLastTitleLabel(HBox lastSelectedTitleHBox) {
             Label lastSelectedTitleLabel = CastUtil.cast(CollectionUtil.getFirst(lastSelectedTitleHBox.getChildren()));
-            List<String> lastSelectedTitleLabelStyleClass;
 
             if (lastSelectedTitleLabel == null) {
 
                 return true;
             }
-            lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
-            lastSelectedTitleLabelStyleClass.remove(
-                    "player-live-channel-list-view-title-label-focused"
-            );
-            lastSelectedTitleLabelStyleClass.add(
+            NodeUtil.replaceStyleClass(
+                    lastSelectedTitleLabel,
+                    "player-live-channel-list-view-title-label-focused",
                     "player-live-channel-list-view-title-label"
             );
 

@@ -121,18 +121,26 @@
             <padding>
                 <Insets left="5.0" right="5.0" top="5.0" bottom="5.0" />
             </padding>
-            <Button fx:id="settingsBtn" disable="true" focusTraversable="false" mnemonicParsing="false" onAction="#onSettingsBtnAction" prefHeight="30" prefWidth="30">
+            <Button fx:id="settingsBtn" disable="true" focusTraversable="false" mnemonicParsing="false" onAction="#onSettingsBtnAction" prefHeight="36" prefWidth="36" styleClass="tool-bar-btn">
                 <graphic>
-                    <FontIcon iconLiteral="fa-gears:16" />
+                    <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                        <image>
+                            <Image url="@image/settings.png" />
+                        </image>
+                    </ImageView>
                 </graphic>
                 <tooltip>
                     <Tooltip showDelay="500ms" showDuration="1m"
                              text="%home.tool-bar.settings" styleClass="fs-big"/>
                 </tooltip>
             </Button>
-            <Button fx:id="spiderDebuggingBtn" disable="true" focusTraversable="false" mnemonicParsing="false" onAction="#onSpiderDebuggingBtnAction" prefHeight="30" prefWidth="30">
+            <Button fx:id="spiderDebuggingBtn" disable="true" focusTraversable="false" mnemonicParsing="false" onAction="#onSpiderDebuggingBtnAction" prefHeight="36" prefWidth="36" styleClass="tool-bar-btn">
                 <graphic>
-                    <FontIcon iconLiteral="fa-briefcase:16" />
+                    <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                        <image>
+                            <Image url="@image/toolbox.png" />
+                        </image>
+                    </ImageView>
                 </graphic>
                 <tooltip>
                     <Tooltip showDelay="500ms" showDuration="1m"

@@ -93,11 +93,13 @@ public class HomeController {
     @FXML
     private void initialize() {
         ObservableList<ClientInfo> clientItems = clientListView.getItems();
+        BooleanProperty serviceNotStartProperty = serviceNotStartWarningText.visibleProperty();
 
         checkPlayerInstalledAndUpdateUI();
-        vodButton.disableProperty().bind(allowVodOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
-        liveButton.disableProperty().bind(allowLiveOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
-        sourceAuditButton.disableProperty().bind(allowSourceAuditOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
+        vodButton.disableProperty().bind(allowVodOpProperty.not().or(serviceNotStartProperty));
+        liveButton.disableProperty().bind(allowLiveOpProperty.not().or(serviceNotStartProperty));
+        sourceAuditButton.disableProperty().bind(allowSourceAuditOpProperty.not().or(serviceNotStartProperty));
+
         clientListView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((ob, oldVal, newVal) -> {
@@ -155,7 +157,6 @@ public class HomeController {
             openUpgradeDialogIfNeeded();
             initProgressIndicator.setVisible(false);
             settingsBtn.setDisable(false);
-            spiderDebuggingBtn.setDisable(false);
             root.setDisable(false);
         });
         context.registerEventListener(
@@ -203,6 +204,7 @@ public class HomeController {
         playerNotFoundLabel.setText(I18nHelper.getFormatted(
                 I18nKeys.HOME_PLAYER_NOT_FOUND, ConfigHelper.getPlayerType().getName()
         ));
+        spiderDebuggingBtn.setDisable(playerNotFound);
     }
 
     private void openLicenseDialogIfNeeded() {

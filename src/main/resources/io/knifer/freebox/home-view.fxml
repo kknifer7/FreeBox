@@ -123,7 +123,7 @@
             </padding>
             <Button fx:id="settingsBtn" disable="true" focusTraversable="false" mnemonicParsing="false" onAction="#onSettingsBtnAction" prefHeight="36" prefWidth="36" styleClass="tool-bar-btn">
                 <graphic>
-                    <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                    <ImageView fitHeight="28.0" fitWidth="28.0" pickOnBounds="true" preserveRatio="true">
                         <image>
                             <Image url="@image/settings.png" />
                         </image>
@@ -131,12 +131,12 @@
                 </graphic>
                 <tooltip>
                     <Tooltip showDelay="500ms" showDuration="1m"
-                             text="%home.tool-bar.settings" styleClass="fs-big"/>
+                             text="%home.tool-bar.settings" />
                 </tooltip>
             </Button>
             <Button fx:id="spiderDebuggingBtn" disable="true" focusTraversable="false" mnemonicParsing="false" onAction="#onSpiderDebuggingBtnAction" prefHeight="36" prefWidth="36" styleClass="tool-bar-btn">
                 <graphic>
-                    <ImageView fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true">
+                    <ImageView fitHeight="28.0" fitWidth="28.0" pickOnBounds="true" preserveRatio="true">
                         <image>
                             <Image url="@image/toolbox.png" />
                         </image>
@@ -144,7 +144,7 @@
                 </graphic>
                 <tooltip>
                     <Tooltip showDelay="500ms" showDuration="1m"
-                             text="%home.tool-bar.spider-debugging" styleClass="fs-big"/>
+                             text="%home.tool-bar.spider-debugging" />
                 </tooltip>
             </Button>
         </HBox>

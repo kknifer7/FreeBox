@@ -704,7 +704,7 @@ public class SettingsController {
     private void onUsageFontFamilyComboBoxAction() {
         Label fontFamily = usageFontFamilyExampleLabel;
 
-        fontFamily.setStyle("-fx-font-family:" + usageFontFamilyComboBox.getValue() + ";-fx-text-fill: blue;");
+        fontFamily.setStyle("-fx-font-family:\"" + usageFontFamilyComboBox.getValue() + "\";-fx-text-fill: blue;");
         ConfigHelper.setUsageFontFamily(usageFontFamilyComboBox.getValue());
         ConfigHelper.markToUpdate();
     }

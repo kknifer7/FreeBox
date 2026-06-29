@@ -47,6 +47,8 @@ public class I18nKeys {
     public static final String TV_HOME = "tv.home";
     public static final String TV_LOAD_MORE = "tv.load-more";
     public static final String TV_SOURCE_BEAN_BLOCK = "tv.source-bean-block";
+    public static final String TV_SOURCE_FILTER_SEARCHING = "tv.source-filter.searching";
+    public static final String TV_SOURCE_FILTER_SEARCHING_FINISHED = "tv.source-filter.searching-finished";
     public static final String TV_BLOCK = "tv.block";
     public static final String TV_HISTORY = "tv.history";
     public static final String TV_COLLECTION = "tv.collection";
@@ -166,6 +168,7 @@ public class I18nKeys {
 
     public static final String COMMON_DELETE = "common.delete";
     public static final String COMMON_OK = "common.ok";
+    public static final String COMMON_SELECT_ALL = "common.select-all";
     public static final String COMMON_CANCEL = "common.cancel";
     public static final String COMMON_CANCEL_AND_BACK_TO_HOME = "common.cancel-and-back-to-home";
     public static final String COMMON_RESET = "common.reset";

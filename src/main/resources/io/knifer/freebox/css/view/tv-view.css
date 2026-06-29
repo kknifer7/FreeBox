@@ -39,3 +39,12 @@
     -fx-stroke: #32CD32;
     -fx-stroke-width: 3px;
 }
+
+.source-filter-slide-sidebar {
+    -fx-background-color: rgba(255, 255, 255, 0.82);
+    -fx-background-radius: 12 0 0 12;
+    -fx-border-color: rgba(255, 255, 255, 0.6);
+    -fx-border-width: 0 0 0 1px;
+    -fx-border-radius: 12 0 0 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.22), 18, 0, -4, 0);
+}

@@ -7,6 +7,7 @@ import io.knifer.freebox.component.node.MovieInfoListPopOver;
 import io.knifer.freebox.component.node.MovieRankPopOver;
 import io.knifer.freebox.component.node.MovieSortFilterPopOver;
 import io.knifer.freebox.component.node.SourceBeanBlockPopOver;
+import io.knifer.freebox.component.node.SourceFilterSlideSidebar;
 import io.knifer.freebox.component.node.player.BasePlayer;
 import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.AppEvents;
@@ -32,8 +33,10 @@ import io.knifer.freebox.util.CollectionUtil;
 import io.knifer.freebox.util.FXMLUtil;
 import jakarta.inject.Inject;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.fxml.FXML;
@@ -44,6 +47,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +71,7 @@ import java.util.*;
 public class TVController implements Destroyable {
 
     @FXML
-    private BorderPane root;
+    private BorderPane contentPane;
     @FXML
     private ComboBox<SourceBean> sourceBeanComboBox;
     @FXML
@@ -89,6 +93,8 @@ public class TVController implements Destroyable {
     @FXML
     private Button searchButton;
     @FXML
+    private Button sourceFilterButton;
+    @FXML
     private TextField searchTextField;
     @FXML
     private ProgressIndicator searchLoadingProgressIndicator;
@@ -101,6 +107,7 @@ public class TVController implements Destroyable {
     private MovieInfoListPopOver movieCollectionPopOver;
     private MovieSortFilterPopOver movieSortFilterPopOver;
     private MovieRankPopOver movieRankPopOver;
+    private SourceFilterSlideSidebar sourceFilterSlideSidebar;
 
     private AutoCompletionBinding<String> searchTextFieldAutoCompletionBinding;
 
@@ -120,6 +127,7 @@ public class TVController implements Destroyable {
     private final MovieSuggestionHandler movieSuggestionHandler = new IQiYiMovieSuggestionHandler();
 
     private final Map<String, MutablePair<Movie, List<Movie.Video>>> MOVIE_CACHE = new HashMap<>();
+    private final ObservableList<Movie.Video> allSearchResults = FXCollections.observableArrayList();
 
     @FXML
     private void initialize() {
@@ -132,7 +140,7 @@ public class TVController implements Destroyable {
                 evt -> LoadingHelper.hideLoading()
         );
         Platform.runLater(() -> {
-            stage = WindowHelper.getStage(root);
+            stage = WindowHelper.getStage(contentPane);
             stage.setOnCloseRequest(evt -> {
                 destroy();
                 router.back();
@@ -141,20 +149,44 @@ public class TVController implements Destroyable {
                 Platform.runLater(() -> {
                     String keyword = keywordAndSearchContent.getLeft();
                     AbsXml searchContent;
+                    List<Movie.Video> videos;
+                    String sourceKey;
+                    boolean emptyFlag;
 
                     if (
                             movieSearchService.getState() != Service.State.SUCCEEDED ||
-                                    !keyword.equals(movieSearchService.getKeyword())
+                            !keyword.equals(movieSearchService.getKeyword())
                     ) {
                         // 任务已取消
 
                         return;
                     }
                     searchContent = keywordAndSearchContent.getRight();
-                    putVideosInView(
-                            MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
-                            false
-                    );
+                    videos = searchContent.getMovie().getVideoList();
+                    if (CollectionUtil.isEmpty(videos)) {
+
+                        return;
+                    }
+                    sourceKey = videos.get(0).getSourceKey();
+                    if (sourceKey == null) {
+
+                        return;
+                    }
+                    // 收集搜索结果以便按源筛选
+                    allSearchResults.addAll(videos);
+                    // 显示搜索结果
+                    if (sourceFilterSlideSidebar.hasCheckedKey(sourceKey)) {
+                        putVideosInView(
+                                MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
+                                false
+                        );
+                    }
+                    // 弹出源筛选侧边栏
+                    emptyFlag = sourceFilterSlideSidebar.isEmpty();
+                    sourceFilterSlideSidebar.addSourceBean(getSourceBean(sourceKey));
+                    if (emptyFlag && !sourceFilterSlideSidebar.isSidebarShowing()) {
+                        sourceFilterSlideSidebar.show(contentPane.getWidth(), contentPane.getHeight());
+                    }
                 }), () -> searchLoadingProperty.set(false));
 
             // 源选择框字符串转换设置
@@ -168,6 +200,17 @@ public class TVController implements Destroyable {
                 videosGridView.getItems().clear();
                 updateSourceBeanData(sourceBeans);
             });
+            // 源筛选侧边栏
+            sourceFilterSlideSidebar = new SourceFilterSlideSidebar(
+                    searchLoadingProperty,
+                    this::filterVideosBySourceKeys,
+                    sourceBean -> {
+                        if (searchLoadingProperty.get() && sourceBean != null) {
+                            filterVideosBySourceKey(sourceBean.getKey());
+                        }
+                    }
+            );
+            sourceFilterSlideSidebar.attachTo((StackPane) contentPane.getParent());
             // 历史记录弹出框
             movieHistoryPopOver = new MovieInfoListPopOver(
                     I18nKeys.TV_HISTORY,
@@ -256,6 +299,7 @@ public class TVController implements Destroyable {
             sourceBeanComboBox.disableProperty().bind(sortsLoadingProperty);
             searchButton.disableProperty().bind(movieLoadingProperty);
             searchLoadingProgressIndicator.visibleProperty().bind(searchLoadingProperty);
+            sourceFilterButton.disableProperty().bind(Bindings.isEmpty(allSearchResults));
 
             template.init(success -> {
                 if (!success || !stage.isShowing()) {
@@ -414,7 +458,7 @@ public class TVController implements Destroyable {
         SourceBean sourceBean = getSourceBean(sourceKey);
 
         Platform.runLater(
-                () -> LoadingHelper.showLoading(WindowHelper.getStage(root))
+                () -> LoadingHelper.showLoading(WindowHelper.getStage(contentPane))
         );
         template.getDetailContent(
                 GetDetailContentDTO.of(sourceBean.getKey(), videoId),
@@ -450,7 +494,7 @@ public class TVController implements Destroyable {
                             video.setId(videoId);
                         }
                         stageAndController = FXMLUtil.load(Views.VIDEO);
-                        tvStage = WindowHelper.getStage(root);
+                        tvStage = WindowHelper.getStage(contentPane);
                         videoStage = stageAndController.getLeft();
                         videoStage.setTitle(videoName);
                         stageAndController.getRight().setData(VideoDetailsBO.of(
@@ -688,13 +732,14 @@ public class TVController implements Destroyable {
         MutablePair<Movie, List<Movie.Video>> movieAndVideosCached;
         HashMap<String, String> filterSelectMap;
 
-        resetMovieSearchService();
+        resetMovieSearching();
         movieLoadingProperty.set(true);
         items = videosGridView.getItems();
         if (!items.isEmpty()) {
             items.clear();
         }
         setVideoGridShowSourceName(false);
+
         movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
         filterSelectMap = sortData.getFilterSelect();
         if (movieAndVideosCached == null) {
@@ -735,9 +780,12 @@ public class TVController implements Destroyable {
         }
     }
 
-    private void resetMovieSearchService() {
+    private void resetMovieSearching() {
         movieSearchService.cancel();
         movieSearchService.reset();
+        allSearchResults.clear();
+        sourceFilterSlideSidebar.clearSourceBeans();
+        sourceFilterSlideSidebar.hide();
         searchLoadingProperty.set(false);
     }
 
@@ -832,7 +880,7 @@ public class TVController implements Destroyable {
     private void clearMovieData() {
         videosGridView.getItems().clear();
         MOVIE_CACHE.clear();
-        resetMovieSearchService();
+        resetMovieSearching();
     }
 
     @FXML
@@ -878,17 +926,19 @@ public class TVController implements Destroyable {
     @FXML
     private void onSearchBtnAction() {
         String searchKeyword = searchTextField.getText();
+        List<SourceBean> searchableSourceBeans;
         Iterator<String> sourceBeanKeyIterator;
 
         if (StringUtils.isBlank(searchKeyword)) {
             return;
         }
         log.debug("do searching, keyword={}", searchKeyword);
-        sourceBeanKeyIterator = sourceBeanComboBox.getItems()
+        searchableSourceBeans = sourceBeanComboBox.getItems()
                 .stream()
                 .filter(SourceBean::isSearchable)
+                .toList();
+        sourceBeanKeyIterator = searchableSourceBeans.stream()
                 .map(SourceBean::getKey)
-                .toList()
                 .iterator();
         if (!sourceBeanKeyIterator.hasNext()) {
             return;
@@ -904,5 +954,62 @@ public class TVController implements Destroyable {
     @FXML
     private void onClassFilterBtnAction() {
         movieSortFilterPopOver.show(classFilterButton);
+    }
+
+    @FXML
+    private void onSourceFilterButtonAction() {
+        sourceFilterSlideSidebar.show(contentPane.getWidth(), contentPane.getHeight());
+    }
+
+    /**
+     * 根据源站点key过滤搜索结果
+     *
+     * @param key 需要显示的源站点key
+     */
+    private void filterVideosBySourceKey(String key) {
+        ObservableList<Movie.Video> items = videosGridView.getItems();
+        List<Movie.Video> filteredVideos;
+
+        if (allSearchResults.isEmpty()) {
+
+            return;
+        }
+        items.clear();
+        if (SourceFilterSlideSidebar.SELECT_ALL_SOURCE_KEY.equals(key)) {
+            items.addAll(allSearchResults);
+
+            return;
+        }
+        filteredVideos = allSearchResults.stream()
+                .filter(v -> v.getSourceKey() == null || v.getSourceKey().equals(key))
+                .toList();
+        items.addAll(filteredVideos);
+        setVideoGridShowSourceName(true);
+    }
+
+    /**
+     * 根据源站点key过滤搜索结果
+     *
+     * @param keys 需要显示的源站点key集合
+     */
+    private void filterVideosBySourceKeys(Set<String> keys) {
+        ObservableList<Movie.Video> items = videosGridView.getItems();
+        List<Movie.Video> filteredVideos;
+
+        if (allSearchResults.isEmpty()) {
+
+            return;
+        }
+        items.clear();
+        if (sourceFilterSlideSidebar.isCheckedAll()) {
+            items.addAll(allSearchResults);
+
+            return;
+        }
+        filteredVideos = allSearchResults.stream()
+                .filter(v -> v.getSourceKey() == null || keys.contains(v.getSourceKey()))
+                .toList();
+        items.addAll(filteredVideos);
+        setVideoGridShowSourceName(true);
     }
 }

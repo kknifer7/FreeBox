@@ -43,6 +43,7 @@ public class SourceBeanBlockPopOver extends PopOver {
         super();
         Button okBtn = new Button(I18nHelper.get(I18nKeys.TV_BLOCK));
         Button resetBtn = new Button(I18nHelper.get(I18nKeys.COMMON_RESET));
+        Button selectAllBtn = new Button(I18nHelper.get(I18nKeys.SOURCE_AUDIT_SELECT_ALL));
         HBox btnHBox;
         VBox root;
         List<SourceBean> items;
@@ -80,7 +81,17 @@ public class SourceBeanBlockPopOver extends PopOver {
             }
             hide();
         });
-        btnHBox = new HBox(resetBtn, okBtn);
+        selectAllBtn.setFocusTraversable(false);
+
+        selectAllBtn.setOnAction(evt -> {
+            if (checkedItems.size() == items.size()) {
+                checkListView.getCheckModel().clearChecks();
+            } else {
+                checkListView.getCheckModel().checkAll();
+            }
+
+        });
+        btnHBox = new HBox(selectAllBtn,resetBtn, okBtn);
         btnHBox.setSpacing(3);
         btnHBox.setAlignment(Pos.BASELINE_RIGHT);
         root = new VBox(checkListView, btnHBox);

@@ -1,6 +1,7 @@
 package io.knifer.freebox.controller;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.net.URLEncodeUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
@@ -514,6 +515,7 @@ public class VideoController extends BaseController implements Destroyable {
                         ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
                         return;
                     }
+                    playUrl = HttpUtil.parseUrl(playUrl);
                     elm = propsObj.get("parse");
                     parse = elm == null ? 0 : elm.getAsInt();
                     elm = propsObj.get("jx");

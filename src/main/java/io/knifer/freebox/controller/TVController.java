@@ -24,6 +24,7 @@ import io.knifer.freebox.model.bo.VideoPlayInfoBO;
 import io.knifer.freebox.model.common.tvbox.*;
 import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.ClientTVProperties;
+import io.knifer.freebox.model.domain.SourceBeanCountItem;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
 import io.knifer.freebox.spider.template.SpiderTemplate;
@@ -940,7 +941,7 @@ public class TVController implements Destroyable {
         emptyFlag = sourceFilterSlideSidebar.isEmpty();
         sourceBean = getSourceBean(sourceKey);
         if (sourceBean != null) {
-            sourceFilterSlideSidebar.addSourceBean(sourceBean);
+            sourceFilterSlideSidebar.addSourceBean(new SourceBeanCountItem(sourceBean, videos.size()));
         }
         if (emptyFlag && !sourceFilterSlideSidebar.isSidebarShowing()) {
             sourceFilterSlideSidebar.show(contentPane.getWidth(), contentPane.getHeight());

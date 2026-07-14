@@ -1,9 +1,10 @@
 package io.knifer.freebox.component.node;
 
-import io.knifer.freebox.component.factory.SourceBeanCheckListCellFactory;
+import io.knifer.freebox.component.factory.SourceBeanSearchingCheckListCellFactory;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
+import io.knifer.freebox.model.domain.SourceBeanCountItem;
 import io.knifer.freebox.util.NodeUtil;
 import javafx.animation.TranslateTransition;
 import javafx.beans.binding.Bindings;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
 public class SourceFilterSlideSidebar extends StackPane {
 
     private final VBox sidebar;
-    private final CheckListView<SourceBean> checkListView;
+    private final CheckListView<SourceBeanCountItem> checkListView;
     private final TranslateTransition slideIn;
     private final TranslateTransition slideOut;
     /**
@@ -51,14 +52,16 @@ public class SourceFilterSlideSidebar extends StackPane {
 
     private static final double SIDEBAR_WIDTH = 240.0;
     private static final Duration ANIM_DURATION = Duration.millis(250);
-    private static final SourceBean SELECT_ALL_SOURCE_BEAN;
+    private static final SourceBeanCountItem SELECT_ALL_ITEM;
     public static final String SELECT_ALL_SOURCE_KEY = "SELECT_ALL@FREE_BOX";
     private static final String SKIP_CHECKED_ITEMS_LISTENER_FLAG_PROP = "skip_checked_items_listener";
 
     static {
-        SELECT_ALL_SOURCE_BEAN = new SourceBean();
-        SELECT_ALL_SOURCE_BEAN.setKey(SELECT_ALL_SOURCE_KEY);
-        SELECT_ALL_SOURCE_BEAN.setName(I18nHelper.get(I18nKeys.COMMON_SELECT_ALL));
+        SourceBean selectAllSourceBean = new SourceBean();
+
+        selectAllSourceBean.setKey(SELECT_ALL_SOURCE_KEY);
+        selectAllSourceBean.setName(I18nHelper.get(I18nKeys.COMMON_SELECT_ALL));
+        SELECT_ALL_ITEM = new SourceBeanCountItem(selectAllSourceBean, 0);
     }
 
     public SourceFilterSlideSidebar(
@@ -74,17 +77,17 @@ public class SourceFilterSlideSidebar extends StackPane {
         VBox sidebarContent;
         Label tipLabel = new Label();
         List<String> tipLabelStyleClasses;
-        CheckModel<SourceBean> checkModel;
-        SourceBeanCheckListCellFactory cellFactory;
+        CheckModel<SourceBeanCountItem> checkModel;
+        SourceBeanSearchingCheckListCellFactory cellFactory;
         ObservableMap<Object, Object> checkListViewProps;
         BooleanProperty checkableProperty;
-        ObservableList<SourceBean> checkedItems;
+        ObservableList<SourceBeanCountItem> checkedItems;
 
         // 侧边栏主体
         checkListView = new CheckListView<>();
         checkListView.setFocusTraversable(false);
         VBox.setVgrow(checkListView, Priority.ALWAYS);
-        cellFactory = new SourceBeanCheckListCellFactory(checkListView, onSelect);
+        cellFactory = new SourceBeanSearchingCheckListCellFactory(checkListView, onSelect);
         checkModel = checkListView.getCheckModel();
         checkListViewProps = checkListView.getProperties();
         checkableProperty = cellFactory.getCheckableProperty();
@@ -95,7 +98,7 @@ public class SourceFilterSlideSidebar extends StackPane {
                 checkListViewProps.put(SKIP_CHECKED_ITEMS_LISTENER_FLAG_PROP, true);
                 checkModel.clearChecks();
                 checkListViewProps.put(SKIP_CHECKED_ITEMS_LISTENER_FLAG_PROP, true);
-                checkModel.check(SELECT_ALL_SOURCE_BEAN);
+                checkModel.check(SELECT_ALL_ITEM);
             } else {
                 NodeUtil.replaceStyleClass(tipLabel, "success", "dark-orange");
             }
@@ -103,8 +106,8 @@ public class SourceFilterSlideSidebar extends StackPane {
         checkableProperty.bind(searchLoadingProperty.not());
         checkListView.setCellFactory(cellFactory);
         checkedItems = checkModel.getCheckedItems();
-        checkedItems.addListener((ListChangeListener<SourceBean>) change -> {
-            List<? extends SourceBean> addedSubList;
+        checkedItems.addListener((ListChangeListener<SourceBeanCountItem>) change -> {
+            List<? extends SourceBeanCountItem> addedSubList;
             boolean checkAllAdded = false;
             boolean otherAdded = false;
 
@@ -122,7 +125,7 @@ public class SourceFilterSlideSidebar extends StackPane {
                     continue;
                 }
                 addedSubList = change.getAddedSubList();
-                if (addedSubList.contains(SELECT_ALL_SOURCE_BEAN)) {
+                if (addedSubList.contains(SELECT_ALL_ITEM)) {
                     checkAllAdded = true;
                 } else {
                     otherAdded = true;
@@ -132,10 +135,10 @@ public class SourceFilterSlideSidebar extends StackPane {
                 checkListViewProps.put(SKIP_CHECKED_ITEMS_LISTENER_FLAG_PROP, true);
                 checkModel.clearChecks();
                 checkListViewProps.put(SKIP_CHECKED_ITEMS_LISTENER_FLAG_PROP, true);
-                checkModel.check(SELECT_ALL_SOURCE_BEAN);
-            } else if (otherAdded && checkModel.isChecked(SELECT_ALL_SOURCE_BEAN)) {
+                checkModel.check(SELECT_ALL_ITEM);
+            } else if (otherAdded && checkModel.isChecked(SELECT_ALL_ITEM)) {
                 checkListViewProps.put(SKIP_CHECKED_ITEMS_LISTENER_FLAG_PROP, true);
-                checkModel.clearCheck(SELECT_ALL_SOURCE_BEAN);
+                checkModel.clearCheck(SELECT_ALL_ITEM);
             }
         });
 
@@ -143,14 +146,14 @@ public class SourceFilterSlideSidebar extends StackPane {
         resetBtn.setOnAction(evt -> {
             checkModel.clearChecks();
             checkListView.getProperties().put(SKIP_CHECKED_ITEMS_LISTENER_FLAG_PROP, true);
-            checkModel.check(SELECT_ALL_SOURCE_BEAN);
+            checkModel.check(SELECT_ALL_ITEM);
         });
         resetBtn.disableProperty().bind(searchLoadingProperty);
         okBtn.setFocusTraversable(false);
         okBtn.setDefaultButton(true);
         okBtn.setOnAction(evt -> {
             Set<String> checkedKeys = checkModel.getCheckedItems().stream()
-                    .map(SourceBean::getKey)
+                    .map(sourceAndMovieCountPair -> sourceAndMovieCountPair.getSourceBean().getKey())
                     .collect(Collectors.toSet());
 
             onFilter.accept(checkedKeys);
@@ -209,31 +212,33 @@ public class SourceFilterSlideSidebar extends StackPane {
 
     /**
      * 添加源站点
-     * @param sourceBean 源站点
+     * @param sourceAndMovieCount 源站点
      */
-    public void addSourceBean(SourceBean sourceBean) {
-        ObservableList<SourceBean> items = checkListView.getItems();
+    public void addSourceBean(SourceBeanCountItem sourceAndMovieCount) {
+        ObservableList<SourceBeanCountItem> items = checkListView.getItems();
 
-        for (SourceBean item : items) {
-            if (item.getKey().equals(sourceBean.getKey())) {
+        for (SourceBeanCountItem item : items) {
+            if (item.getSourceBean().getKey().equals(sourceAndMovieCount.getSourceBean().getKey())) {
 
                 return;
             }
         }
-        items.add(sourceBean);
+        items.add(sourceAndMovieCount);
+        SELECT_ALL_ITEM.setMovieCount(SELECT_ALL_ITEM.getMovieCount() + sourceAndMovieCount.getMovieCount());
     }
 
     /**
      * 清空源站点列表
      */
     public void clearSourceBeans() {
-        ObservableList<SourceBean> items = checkListView.getItems();
-        IndexedCheckModel<SourceBean> checkModel = checkListView.getCheckModel();
+        ObservableList<SourceBeanCountItem> items = checkListView.getItems();
+        IndexedCheckModel<SourceBeanCountItem> checkModel = checkListView.getCheckModel();
 
         checkModel.clearChecks();
         items.clear();
-        items.add(SELECT_ALL_SOURCE_BEAN);
-        checkModel.check(SELECT_ALL_SOURCE_BEAN);
+        SELECT_ALL_ITEM.setMovieCount(0);
+        items.add(SELECT_ALL_ITEM);
+        checkModel.check(SELECT_ALL_ITEM);
     }
 
     /**
@@ -244,8 +249,8 @@ public class SourceFilterSlideSidebar extends StackPane {
 
             return true;
         }
-        for (SourceBean sourceBean : checkListView.getCheckModel().getCheckedItems()) {
-            if (sourceKey.equals(sourceBean.getKey())) {
+        for (SourceBeanCountItem sourceAndMovieCount : checkListView.getCheckModel().getCheckedItems()) {
+            if (sourceKey.equals(sourceAndMovieCount.getSourceBean().getKey())) {
 
                 return true;
             }
@@ -298,9 +303,9 @@ public class SourceFilterSlideSidebar extends StackPane {
      * @return bool
      */
     public boolean isEmpty() {
-        ObservableList<SourceBean> items = checkListView.getItems();
+        ObservableList<SourceBeanCountItem> items = checkListView.getItems();
 
-        return items.size() == 1 && items.get(0) == SELECT_ALL_SOURCE_BEAN;
+        return items.size() == 1 && items.get(0) == SELECT_ALL_ITEM;
     }
 
     /**
@@ -308,6 +313,6 @@ public class SourceFilterSlideSidebar extends StackPane {
      * @return 是否全选
      */
     public boolean isCheckedAll() {
-        return !checkListView.getItems().isEmpty() && checkListView.getCheckModel().isChecked(SELECT_ALL_SOURCE_BEAN);
+        return !checkListView.getItems().isEmpty() && checkListView.getCheckModel().isChecked(SELECT_ALL_ITEM);
     }
 }

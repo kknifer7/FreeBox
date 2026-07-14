@@ -238,7 +238,13 @@ public class EmojiableLabel extends Region {
     }
 
     public void setText(String text) {
-        this.originalText = text != null ? text : StringUtils.EMPTY;
+        String newText = text != null ? text : StringUtils.EMPTY;
+
+        if (Objects.equals(originalText, newText)) {
+
+            return;
+        }
+        this.originalText = newText;
         emojiToPlaceholders.clear();
         placeholderIds.clear();
         renderText();

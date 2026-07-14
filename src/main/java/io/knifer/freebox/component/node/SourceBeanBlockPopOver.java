@@ -82,16 +82,14 @@ public class SourceBeanBlockPopOver extends PopOver {
             hide();
         });
         selectAllBtn.setFocusTraversable(false);
-
         selectAllBtn.setOnAction(evt -> {
             if (checkedItems.size() == items.size()) {
                 checkListView.getCheckModel().clearChecks();
             } else {
                 checkListView.getCheckModel().checkAll();
             }
-
         });
-        btnHBox = new HBox(selectAllBtn,resetBtn, okBtn);
+        btnHBox = new HBox(selectAllBtn, resetBtn, okBtn);
         btnHBox.setSpacing(3);
         btnHBox.setAlignment(Pos.BASELINE_RIGHT);
         root = new VBox(checkListView, btnHBox);

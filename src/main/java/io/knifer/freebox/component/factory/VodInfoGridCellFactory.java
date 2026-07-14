@@ -29,10 +29,7 @@ import org.controlsfx.control.GridCell;
 import org.controlsfx.control.GridView;
 import org.controlsfx.control.InfoOverlay;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -92,7 +89,6 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
             Label movieRemarkLabel;
             ImageView moviePicImageView;
             String picUrl;
-            String sourceName;
             EmojiableLabel sourceNameLabel;
             AnchorPane tagContainer;
             ProgressIndicator progressIndicator;
@@ -114,10 +110,6 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 sourceNameLabel = new EmojiableLabel();
                 sourceNameLabel.getStyleClass().add("movie-source-label");
                 sourceNameLabel.setMaxWidth(CELL_WIDTH / 2);
-                sourceName = sourceKeyAndNameMap.get(item.getSourceKey());
-                if (StringUtils.isNotBlank(sourceName)) {
-                    sourceNameLabel.setText(sourceName);
-                }
                 AnchorPane.setTopAnchor(sourceNameLabel, 0d);
                 AnchorPane.setLeftAnchor(sourceNameLabel, 0d);
                 // 影片右上角备注（需要根据历史记录、收藏夹的不同性质动态更新，因此先不设置文本）
@@ -159,10 +151,12 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                 containerChildren = container.getChildren();
                 movieInfoOverlay = (InfoOverlay) containerChildren.get(0);
                 tagContainer = (AnchorPane) containerChildren.get(1);
+                sourceNameLabel = (EmojiableLabel) tagContainer.getChildren().get(0);
                 progressContainer = (StackPane) containerChildren.get(2);
                 movieRemarkLabel = (Label) tagContainer.getChildren().get(1);
             }
             setupMovieInfoOverlay(movieInfoOverlay, item);
+            setupSourceNameIfNeeded(sourceNameLabel, item);
             setupRemarkAndProgress(movieRemarkLabel, progressContainer, item);
             setupActionEventFilter(movieInfoOverlay, item);
             setupCursor();
@@ -188,6 +182,15 @@ public class VodInfoGridCellFactory implements Callback<GridView<VodInfo>, GridC
                     contextMenu.setUserData(vodInfo);
                     deleteMenuItem.setOnAction(evt -> onItemDelete.accept(vodInfo));
                 }
+            }
+        }
+
+        private void setupSourceNameIfNeeded(EmojiableLabel sourceNameLabel, VodInfo vodInfo) {
+            String sourceKey = vodInfo.getSourceKey();
+            String sourceName = sourceKeyAndNameMap.get(sourceKey);
+
+            if (StringUtils.isNotBlank(sourceName) && !Objects.equals(sourceName, sourceNameLabel.getText())) {
+                sourceNameLabel.setText(sourceName);
             }
         }
 

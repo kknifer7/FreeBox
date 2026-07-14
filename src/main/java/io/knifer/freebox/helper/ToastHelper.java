@@ -62,6 +62,12 @@ public class ToastHelper {
                 });
     }
 
+    public void showErrorI18n(String i18nKey, Object... formatArgs) {
+        showError(String.format(
+                I18nHelper.get(i18nKey), formatArgs
+        ));
+    }
+
     public void showErrorI18n(String i18nKey) {
         showError(I18nHelper.get(i18nKey));
     }

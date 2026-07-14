@@ -14,7 +14,6 @@ import io.knifer.freebox.constant.AppEvents;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
-import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.handler.MovieBatchSearchingHandler;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
 import io.knifer.freebox.handler.impl.IQiYiMovieSuggestionHandler;
@@ -408,6 +407,10 @@ public class TVController implements Destroyable {
     private void openVideo(String sourceKey, String videoId, String videoName, @Nullable VideoPlayInfoBO playInfo) {
         SourceBean sourceBean = getSourceBean(sourceKey);
 
+        if (sourceBean == null) {
+
+            return;
+        }
         Platform.runLater(
                 () -> LoadingHelper.showLoading(WindowHelper.getStage(contentPane))
         );
@@ -779,14 +782,21 @@ public class TVController implements Destroyable {
      * @param sourceKey 源ID
      * @return 源对象
      */
+    @Nullable
     private SourceBean getSourceBean(@Nullable String sourceKey) {
         if (sourceKey == null) {
+
             return getSourceBean();
         }
 
         return CollectionUtil.findFirst(
                 sourceBeanComboBox.getItems(), sourceBean -> sourceBean.getKey().equals(sourceKey)
-        ).orElseThrow(() -> new FBException("No source bean found for key: " + sourceKey));
+        ).orElseGet(() -> {
+            log.warn("source key {} not found", sourceKey);
+            ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_SOURCE_BEAN_NOT_FOUND, sourceKey);
+
+            return null;
+        });
     }
 
     /**
@@ -904,6 +914,7 @@ public class TVController implements Destroyable {
         List<Movie.Video> videos;
         String sourceKey;
         boolean emptyFlag;
+        SourceBean sourceBean;
 
         searchContent = keywordAndSearchContent.getRight();
         videos = searchContent.getMovie().getVideoList();
@@ -927,7 +938,10 @@ public class TVController implements Destroyable {
         }
         // 弹出源筛选侧边栏
         emptyFlag = sourceFilterSlideSidebar.isEmpty();
-        sourceFilterSlideSidebar.addSourceBean(getSourceBean(sourceKey));
+        sourceBean = getSourceBean(sourceKey);
+        if (sourceBean != null) {
+            sourceFilterSlideSidebar.addSourceBean(sourceBean);
+        }
         if (emptyFlag && !sourceFilterSlideSidebar.isSidebarShowing()) {
             sourceFilterSlideSidebar.show(contentPane.getWidth(), contentPane.getHeight());
         }

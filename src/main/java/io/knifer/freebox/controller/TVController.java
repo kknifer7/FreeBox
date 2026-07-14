@@ -442,7 +442,7 @@ public class TVController implements Destroyable {
 
                         return;
                     }
-                    if (video.getId() == null) {
+                    if (videoId != null) {
                         video.setId(videoId);
                     }
                     stageAndController = FXMLUtil.load(Views.VIDEO);

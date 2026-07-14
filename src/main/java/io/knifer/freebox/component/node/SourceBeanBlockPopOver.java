@@ -43,7 +43,7 @@ public class SourceBeanBlockPopOver extends PopOver {
         super();
         Button okBtn = new Button(I18nHelper.get(I18nKeys.TV_BLOCK));
         Button resetBtn = new Button(I18nHelper.get(I18nKeys.COMMON_RESET));
-        Button selectAllBtn = new Button(I18nHelper.get(I18nKeys.SOURCE_AUDIT_SELECT_ALL));
+        Button selectAllBtn = new Button(I18nHelper.get(I18nKeys.COMMON_SELECT_ALL));
         HBox btnHBox;
         VBox root;
         List<SourceBean> items;

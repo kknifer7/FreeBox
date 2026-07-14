@@ -60,7 +60,7 @@ public class SourceFilterSlideSidebar extends StackPane {
         SourceBean selectAllSourceBean = new SourceBean();
 
         selectAllSourceBean.setKey(SELECT_ALL_SOURCE_KEY);
-        selectAllSourceBean.setName(I18nHelper.get(I18nKeys.COMMON_SELECT_ALL));
+        selectAllSourceBean.setName(I18nHelper.get(I18nKeys.COMMON_ALL));
         SELECT_ALL_ITEM = new SourceBeanCountItem(selectAllSourceBean, 0);
     }
 

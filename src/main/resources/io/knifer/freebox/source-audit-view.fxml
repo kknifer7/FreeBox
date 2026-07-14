@@ -22,7 +22,7 @@
             <CheckListView fx:id="sourceBeanCheckListView" prefWidth="200.0" VBox.vgrow="ALWAYS" />
             <HBox alignment="CENTER">
                <children>
-                  <Button mnemonicParsing="false" onAction="#onSelectAllBtnAction" prefWidth="100.0" text="%source-audit.select-all" HBox.hgrow="ALWAYS" focusTraversable="false">
+                  <Button mnemonicParsing="false" onAction="#onSelectAllBtnAction" prefWidth="100.0" text="%common.select-all" HBox.hgrow="ALWAYS" focusTraversable="false">
                      <graphic>
                         <FontIcon iconLiteral="fa-list:16" />
                      </graphic>

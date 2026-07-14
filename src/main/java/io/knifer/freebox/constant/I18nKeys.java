@@ -169,7 +169,7 @@ public class I18nKeys {
 
     public static final String COMMON_DELETE = "common.delete";
     public static final String COMMON_OK = "common.ok";
-    public static final String COMMON_SELECT_ALL = "common.select-all";
+    public static final String COMMON_ALL = "common.all";
     public static final String COMMON_CANCEL = "common.cancel";
     public static final String COMMON_CANCEL_AND_BACK_TO_HOME = "common.cancel-and-back-to-home";
     public static final String COMMON_RESET = "common.reset";
@@ -183,6 +183,7 @@ public class I18nKeys {
     public static final String COMMON_HINT = "common.hint";
     public static final String COMMON_YES = "common.yes";
     public static final String COMMON_NO = "common.no";
+    public static final String COMMON_SELECT_ALL = "common.select-all";
 
     public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
     public static final String SOURCE_AUDIT_NOW = "source-audit.now";

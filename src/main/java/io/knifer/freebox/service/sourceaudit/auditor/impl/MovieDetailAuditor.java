@@ -60,9 +60,8 @@ public class MovieDetailAuditor extends SourceAuditor {
         int maxRetryCount = context.getMaxRetryCount();
 
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_DETAIL, GsonUtil.toPrettyJson(dto)));
-        spiderTemplate.getDetailContent(
-                dto,
-                detailContent -> {
+        spiderTemplate.getDetailContent(dto)
+                .thenAccept(detailContent -> {
                     boolean needSkip;
                     Movie movie;
                     List<Movie.Video> videos;
@@ -118,7 +117,6 @@ public class MovieDetailAuditor extends SourceAuditor {
                         }
                     }
                     doNext(context, needSkip);
-                }
-        );
+                });
     }
 }

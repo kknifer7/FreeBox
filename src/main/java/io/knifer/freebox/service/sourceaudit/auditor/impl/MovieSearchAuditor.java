@@ -64,35 +64,34 @@ public class MovieSearchAuditor extends SourceAuditor {
         int maxRetryCount = context.getMaxRetryCount();
 
         onRequest.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, GsonUtil.toPrettyJson(dto)));
-        spiderTemplate.getSearchContent(
-                dto,
-                content -> {
-                    Movie movieData;
+        spiderTemplate.getSearchContent(dto).thenAccept(
+            content -> {
+                Movie movieData;
 
-                    if (content == null) {
-                        if (retryCount >= maxRetryCount) {
-                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.FAILED));
-                            onFinish.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, List.of(SourceAuditResult.NO_DATA)));
-                        } else {
-                            doAudit(context, retryCount + 1);
-
-                            return;
-                        }
+                if (content == null) {
+                    if (retryCount >= maxRetryCount) {
+                        onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.FAILED));
+                        onFinish.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, List.of(SourceAuditResult.NO_DATA)));
                     } else {
-                        onResponse.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, GsonUtil.toPrettyJson(content)));
-                        movieData = content.getMovie();
-                        if (movieData == null) {
-                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.FAILED));
-                            onFinish.accept(Pair.of(
-                                    SourceAuditType.MOVIE_SEARCH, List.of(SourceAuditResult.NO_VIDEO_LIST)
-                            ));
-                        } else {
-                            onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.SUCCESS));
-                            onFinish.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, List.of()));
-                        }
+                        doAudit(context, retryCount + 1);
+
+                        return;
                     }
-                    doNext(context, false);
+                } else {
+                    onResponse.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, GsonUtil.toPrettyJson(content)));
+                    movieData = content.getMovie();
+                    if (movieData == null) {
+                        onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.FAILED));
+                        onFinish.accept(Pair.of(
+                                SourceAuditType.MOVIE_SEARCH, List.of(SourceAuditResult.NO_VIDEO_LIST)
+                        ));
+                    } else {
+                        onStatusUpdate.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, SourceAuditStatus.SUCCESS));
+                        onFinish.accept(Pair.of(SourceAuditType.MOVIE_SEARCH, List.of()));
+                    }
                 }
+                doNext(context, false);
+            }
         );
     }
 }

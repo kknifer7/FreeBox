@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 通信执行器
@@ -31,7 +31,7 @@ public class KebSocketRunner {
         send(connection, Message.oneWay(code, data, topicId));
     }
 
-    public <T, R> Future<R> sendTopic(WebSocket connection, Integer code, T data, TypeToken<R> resultData) {
+    public <T, R> CompletableFuture<R> sendTopic(WebSocket connection, Integer code, T data, TypeToken<R> resultData) {
         Message<T> topic = Message.topic(code, data);
 
         send(connection, topic);
@@ -39,7 +39,7 @@ public class KebSocketRunner {
         return topicKeeper.getTopic(topic.getTopicId(), resultData, code);
     }
 
-    public <T, R> Future<R> sendTopic(WebSocket connection, Integer code, T data, String topicId, TypeToken<R> resultData) {
+    public <T, R> CompletableFuture<R> sendTopic(WebSocket connection, Integer code, T data, String topicId, TypeToken<R> resultData) {
         Message<T> topic = Message.topic(code, data, topicId);
 
         send(connection, topic);

@@ -15,6 +15,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.exception.FBException;
+import io.knifer.freebox.handler.MovieBatchSearchingHandler;
 import io.knifer.freebox.handler.MovieSuggestionHandler;
 import io.knifer.freebox.handler.impl.IQiYiMovieSuggestionHandler;
 import io.knifer.freebox.handler.impl.Kan360MovieFetchingHandler;
@@ -26,7 +27,6 @@ import io.knifer.freebox.model.domain.ClientInfo;
 import io.knifer.freebox.model.domain.ClientTVProperties;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.core.ClientManager;
-import io.knifer.freebox.service.MovieSearchService;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CastUtil;
 import io.knifer.freebox.util.CollectionUtil;
@@ -38,7 +38,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -99,8 +98,6 @@ public class TVController implements Destroyable {
     @FXML
     private ProgressIndicator searchLoadingProgressIndicator;
 
-    private MovieSearchService movieSearchService;
-
     private Stage stage;
     private SourceBeanBlockPopOver sourceBeanBlockPopOver;
     private MovieInfoListPopOver movieHistoryPopOver;
@@ -125,6 +122,7 @@ public class TVController implements Destroyable {
     private ClientTVProperties clientTVProperties;
 
     private final MovieSuggestionHandler movieSuggestionHandler = new IQiYiMovieSuggestionHandler();
+    private final MovieBatchSearchingHandler movieBatchSearchingHandler;
 
     private final Map<String, MutablePair<Movie, List<Movie.Video>>> MOVIE_CACHE = new HashMap<>();
     private final ObservableList<Movie.Video> allSearchResults = FXCollections.observableArrayList();
@@ -145,50 +143,6 @@ public class TVController implements Destroyable {
                 destroy();
                 router.back();
             });
-            movieSearchService = new MovieSearchService(keywordAndSearchContent ->
-                Platform.runLater(() -> {
-                    String keyword = keywordAndSearchContent.getLeft();
-                    AbsXml searchContent;
-                    List<Movie.Video> videos;
-                    String sourceKey;
-                    boolean emptyFlag;
-
-                    if (
-                            movieSearchService.getState() != Service.State.SUCCEEDED ||
-                            !keyword.equals(movieSearchService.getKeyword())
-                    ) {
-                        // 任务已取消
-
-                        return;
-                    }
-                    searchContent = keywordAndSearchContent.getRight();
-                    videos = searchContent.getMovie().getVideoList();
-                    if (CollectionUtil.isEmpty(videos)) {
-
-                        return;
-                    }
-                    sourceKey = videos.get(0).getSourceKey();
-                    if (sourceKey == null) {
-
-                        return;
-                    }
-                    // 收集搜索结果以便按源筛选
-                    allSearchResults.addAll(videos);
-                    // 显示搜索结果
-                    if (sourceFilterSlideSidebar.hasCheckedKey(sourceKey)) {
-                        putVideosInView(
-                                MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
-                                false
-                        );
-                    }
-                    // 弹出源筛选侧边栏
-                    emptyFlag = sourceFilterSlideSidebar.isEmpty();
-                    sourceFilterSlideSidebar.addSourceBean(getSourceBean(sourceKey));
-                    if (emptyFlag && !sourceFilterSlideSidebar.isSidebarShowing()) {
-                        sourceFilterSlideSidebar.show(contentPane.getWidth(), contentPane.getHeight());
-                    }
-                }), () -> searchLoadingProperty.set(false));
-
             // 源选择框字符串转换设置
             sourceBeanComboBox.setButtonCell(sourceBeanComboBox.getCellFactory().call(null));
             // 手动show并hide一次，让框架正确计算出下拉框坐标
@@ -217,9 +171,8 @@ public class TVController implements Destroyable {
                     this::onVodAction,
                     vodInfoDeleting -> {
                         movieHistoryPopOver.clearVodInfoList();
-                        template.deletePlayHistory(
-                                DeletePlayHistoryDTO.of(vodInfoDeleting), this::reloadMovieHistoryPopOver
-                        );
+                        template.deletePlayHistory(DeletePlayHistoryDTO.of(vodInfoDeleting))
+                                .thenRun(this::reloadMovieHistoryPopOver);
                     }
             );
             // 收藏弹出框
@@ -228,9 +181,8 @@ public class TVController implements Destroyable {
                     this::onVodAction,
                     vodInfoDeleting -> {
                         movieCollectionPopOver.clearVodInfoList();
-                        template.deleteMovieCollection(
-                                DeleteMovieCollectionDTO.of(vodInfoDeleting), this::reloadMovieCollectionPopOver
-                        );
+                        template.deleteMovieCollection(DeleteMovieCollectionDTO.of(vodInfoDeleting))
+                                .thenRun(this::reloadMovieCollectionPopOver);
                     }
             );
             // 影片过滤条件弹出框
@@ -301,19 +253,21 @@ public class TVController implements Destroyable {
             searchLoadingProgressIndicator.visibleProperty().bind(searchLoadingProperty);
             sourceFilterButton.disableProperty().bind(Bindings.isEmpty(allSearchResults));
 
-            template.init(success -> {
-                if (!success || !stage.isShowing()) {
-                    return;
-                }
-                clientManager.getCurrentClient()
-                        .thenAccept(clientInfo -> {
-                            if (clientInfo == null) {
+            template.init()
+                    .thenAccept(success -> {
+                        if (!success || !stage.isShowing()) {
 
-                                return;
-                            }
-                            initTVByClientInfo(clientInfo);
-                        });
-            });
+                            return;
+                        }
+                        clientManager.getCurrentClient()
+                                .thenAccept(clientInfo -> {
+                                    if (clientInfo == null) {
+
+                                        return;
+                                    }
+                                    initTVByClientInfo(clientInfo);
+                                });
+                    });
         });
     }
 
@@ -321,28 +275,28 @@ public class TVController implements Destroyable {
         if (!movieHistoryPopOver.isShowing()) {
             return;
         }
-        template.getPlayHistory(GetPlayHistoryDTO.of(100), playHistory ->
-            Platform.runLater(() -> {
-                if (CollectionUtil.isNotEmpty(playHistory)) {
-                    movieHistoryPopOver.setVodInfoList(playHistory);
-                }
-                ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
-            })
-        );
+        template.getPlayHistory(GetPlayHistoryDTO.of(100))
+                .thenAccept(playHistory -> Platform.runLater(() -> {
+                    if (CollectionUtil.isNotEmpty(playHistory)) {
+                        movieHistoryPopOver.setVodInfoList(playHistory);
+                    }
+                    ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+                }));
     }
 
     private void reloadMovieCollectionPopOver() {
         if (!movieCollectionPopOver.isShowing()) {
             return;
         }
-        template.getMovieCollection(movieCollection -> Platform.runLater(() -> {
-            if (CollectionUtil.isNotEmpty(movieCollection)) {
-                movieCollectionPopOver.setVodInfoList(
-                        movieCollection.stream().map(VodInfo::from).toList()
-                );
-            }
-            ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
-        }));
+        template.getMovieCollection()
+                .thenAccept(movieCollection -> Platform.runLater(() -> {
+                    if (CollectionUtil.isNotEmpty(movieCollection)) {
+                        movieCollectionPopOver.setVodInfoList(
+                                movieCollection.stream().map(VodInfo::from).toList()
+                        );
+                    }
+                    ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS);
+                }));
     }
 
     /**
@@ -363,15 +317,13 @@ public class TVController implements Destroyable {
         if (vod.getPlayFlag() == null) {
             // 收藏夹中的影片，是不带播放历史记录的，所以先尝试获取一下历史记录信息，携带历史信息打开
             movieCollectionPopOver.hide();
-            template.getOnePlayHistory(
-                    GetOnePlayHistoryDTO.of(sourceKey, videoId),
-                    vodInfo -> openVideo(
+            template.getOnePlayHistory(GetOnePlayHistoryDTO.of(sourceKey, videoId))
+                    .thenAccept(vodInfo -> openVideo(
                             sourceKey,
                             videoId,
                             vod.getName(),
                             vodInfo == null ? null : VideoPlayInfoBO.of(vodInfo)
-                    )
-            );
+                    ));
         } else {
             movieHistoryPopOver.hide();
             openVideo(sourceKey, videoId, vod.getName(), VideoPlayInfoBO.of(vod));
@@ -408,32 +360,31 @@ public class TVController implements Destroyable {
                         !filterSelectMap.isEmpty(),
                         String.valueOf(movieCached.getPage() + 1),
                         filterSelectMap
-                ),
-                categoryContent -> {
-                    Movie movie = categoryContent.getMovie();
-                    ObservableList<Movie.Video> items = videosGridView.getItems();
-                    List<Movie.Video> videos = movie.getVideoList();
-                    int loadMoreItemIdx;
+                )
+        ).thenAccept(categoryContent -> {
+            Movie movie = categoryContent.getMovie();
+            ObservableList<Movie.Video> items = videosGridView.getItems();
+            List<Movie.Video> videos = movie.getVideoList();
+            int loadMoreItemIdx;
 
-                    if (videos.isEmpty()) {
-                        return;
-                    }
-                    loadMoreItemIdx = items.size() - 1;
-                    Platform.runLater(() -> {
-                        items.addAll(videos);
-                        if (movie.getPage() >= movie.getPagecount() || items.size() >= movie.getRecordcount()) {
-                            // 没有更多的项了，移除“获取更多”项
-                            items.remove(loadMoreItemIdx);
-                        } else {
-                            // 将“获取更多”项移动到最后
-                            Collections.swap(items, loadMoreItemIdx, items.size() - 1);
-                        }
-                        movieAndVideoCached.setLeft(movie);
-                        movieAndVideoCached.setRight(new ArrayList<>(items));
-                        loadMoreCell.setDisable(false);
-                    });
+            if (videos.isEmpty()) {
+                return;
+            }
+            loadMoreItemIdx = items.size() - 1;
+            Platform.runLater(() -> {
+                items.addAll(videos);
+                if (movie.getPage() >= movie.getPagecount() || items.size() >= movie.getRecordcount()) {
+                    // 没有更多的项了，移除“获取更多”项
+                    items.remove(loadMoreItemIdx);
+                } else {
+                    // 将“获取更多”项移动到最后
+                    Collections.swap(items, loadMoreItemIdx, items.size() - 1);
                 }
-        );
+                movieAndVideoCached.setLeft(movie);
+                movieAndVideoCached.setRight(new ArrayList<>(items));
+                loadMoreCell.setDisable(false);
+            });
+        });
     }
 
     /**
@@ -460,59 +411,56 @@ public class TVController implements Destroyable {
         Platform.runLater(
                 () -> LoadingHelper.showLoading(WindowHelper.getStage(contentPane))
         );
-        template.getDetailContent(
-                GetDetailContentDTO.of(sourceBean.getKey(), videoId),
-                detailContent ->
-                    Platform.runLater(() -> {
-                        Pair<Stage, VideoController> stageAndController;
-                        Stage tvStage;
-                        Stage videoStage;
-                        Movie movie;
-                        List<Movie.Video> videos;
-                        Movie.Video video;
-                        Movie.Video.UrlBean urlBean;
+        template.getDetailContent(GetDetailContentDTO.of(sourceBean.getKey(), videoId))
+                .thenAccept(detailContent -> Platform.runLater(() -> {
+                    Pair<Stage, VideoController> stageAndController;
+                    Stage tvStage;
+                    Stage videoStage;
+                    Movie movie;
+                    List<Movie.Video> videos;
+                    Movie.Video video;
+                    Movie.Video.UrlBean urlBean;
 
-                        if (
-                                detailContent == null ||
-                                (movie = detailContent.getMovie()) == null ||
-                                CollectionUtil.isEmpty(videos = movie.getVideoList())
-                        ) {
-                            ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_MOVIE_DETAIL_FAILED);
-                            LoadingHelper.hideLoading();
-
-                            return;
-                        }
-                        video = videos.get(0);
-                        urlBean = video.getUrlBean();
-                        if (CollectionUtil.isEmpty(urlBean.getInfoList())) {
-                            // 没有播放列表，有可能不是影片，而是源作者自行添加的广告一类的东西
-                            LoadingHelper.hideLoading();
-
-                            return;
-                        }
-                        if (video.getId() == null) {
-                            video.setId(videoId);
-                        }
-                        stageAndController = FXMLUtil.load(Views.VIDEO);
-                        tvStage = WindowHelper.getStage(contentPane);
-                        videoStage = stageAndController.getLeft();
-                        videoStage.setTitle(videoName);
-                        stageAndController.getRight().setData(VideoDetailsBO.of(
-                                detailContent,
-                                playInfo,
-                                sourceBean,
-                                BasePlayer.createPlayer((Pane) videoStage.getScene().getRoot()),
-                                template,
-                                newPlayInfo -> {
-                                    if (newPlayInfo != null) {
-                                        savePlayHistory(detailContent, newPlayInfo);
-                                    }
-                                }
-                        ));
+                    if (
+                            detailContent == null ||
+                            (movie = detailContent.getMovie()) == null ||
+                            CollectionUtil.isEmpty(videos = movie.getVideoList())
+                    ) {
+                        ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_MOVIE_DETAIL_FAILED);
                         LoadingHelper.hideLoading();
-                        router.route(tvStage, videoStage);
-                    })
-        );
+
+                        return;
+                    }
+                    video = videos.get(0);
+                    urlBean = video.getUrlBean();
+                    if (CollectionUtil.isEmpty(urlBean.getInfoList())) {
+                        // 没有播放列表，有可能不是影片，而是源作者自行添加的广告一类的东西
+                        LoadingHelper.hideLoading();
+
+                        return;
+                    }
+                    if (video.getId() == null) {
+                        video.setId(videoId);
+                    }
+                    stageAndController = FXMLUtil.load(Views.VIDEO);
+                    tvStage = WindowHelper.getStage(contentPane);
+                    videoStage = stageAndController.getLeft();
+                    videoStage.setTitle(videoName);
+                    stageAndController.getRight().setData(VideoDetailsBO.of(
+                            detailContent,
+                            playInfo,
+                            sourceBean,
+                            BasePlayer.createPlayer((Pane) videoStage.getScene().getRoot()),
+                            template,
+                            newPlayInfo -> {
+                                if (newPlayInfo != null) {
+                                    savePlayHistory(detailContent, newPlayInfo);
+                                }
+                            }
+                    ));
+                    LoadingHelper.hideLoading();
+                    router.route(tvStage, videoStage);
+                }));
     }
 
     /**
@@ -554,12 +502,13 @@ public class TVController implements Destroyable {
         vodInfo.setProgress(playInfo.getProgress());
         vodInfo.setReverseSort(playInfo.isReverseSort());
         vodInfo.setPlayNote(playInfo.getPlayNote());
-        template.savePlayHistory(
-                SavePlayHistoryDTO.of(vodInfo, infoBean, playInfo), exception -> {
+        template.savePlayHistory(SavePlayHistoryDTO.of(vodInfo, infoBean, playInfo))
+                .exceptionally(exception -> {
                     ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SAVE_HISTORY_FAILED);
                     ToastHelper.showException(exception);
-                }
-        );
+
+                    return null;
+                });
     }
 
     private void initTVByClientInfo(ClientInfo clientInfo) {
@@ -583,26 +532,27 @@ public class TVController implements Destroyable {
      * 初始化源列表数据
      */
     private void initSourceBeanData() {
-        template.getSourceBeanList(sourceBeans -> {
-            List<SourceBean> activeSourceBeans;
+        template.getSourceBeanList()
+                .thenAccept(sourceBeans -> Platform.runLater(() -> {
+                    List<SourceBean> activeSourceBeans;
 
-            if (sourceBeans == null) {
-                ToastHelper.showErrorI18n(
-                        I18nKeys.TV_ERROR_LOAD_SOURCE_BEAN_LIST_FAILED
-                );
+                    if (sourceBeans == null) {
+                        ToastHelper.showErrorI18n(
+                                I18nKeys.TV_ERROR_LOAD_SOURCE_BEAN_LIST_FAILED
+                        );
 
-                return;
-            }
-            if (sourceBeans.isEmpty()) {
-                ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_SOURCE_BEAN_LIST_EMPTY);
+                        return;
+                    }
+                    if (sourceBeans.isEmpty()) {
+                        ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_SOURCE_BEAN_LIST_EMPTY);
 
-                return;
-            }
-            activeSourceBeans = sourceBeanBlockPopOver.setSourceBeans(sourceBeans);
-            if (!activeSourceBeans.isEmpty()) {
-                updateSourceBeanData(activeSourceBeans);
-            }
-        });
+                        return;
+                    }
+                    activeSourceBeans = sourceBeanBlockPopOver.setSourceBeans(sourceBeans);
+                    if (!activeSourceBeans.isEmpty()) {
+                        updateSourceBeanData(activeSourceBeans);
+                    }
+                }));
     }
 
     /**
@@ -655,39 +605,40 @@ public class TVController implements Destroyable {
         sortsLoadingProperty.set(true);
         clearMovieData();
         videosGridView.getItems().clear();
-        template.getHomeContent(sourceBean, homeContent ->
-            Platform.runLater(() -> {
-                Movie movie;
-                List<Movie.Video> list;
-                MovieSort classes;
-                List<MovieSort.SortData> sortList;
-                MovieSort.SortData defaultSortData;
+        template.getHomeContent(sourceBean)
+                .thenAccept(homeContent -> Platform.runLater(() -> {
+                    Movie movie;
+                    List<Movie.Video> list;
+                    MovieSort classes;
+                    List<MovieSort.SortData> sortList;
+                    MovieSort.SortData defaultSortData;
 
-                items.clear();
-                if (homeContent == null) {
-                    Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SOURCE_FAILED));
+                    items.clear();
+                    if (homeContent == null) {
+                        Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SOURCE_FAILED));
+                        sortsLoadingProperty.set(false);
+
+                        return;
+                    }
+                    movie = homeContent.getList();
+                    classes = homeContent.getClasses();
+                    sortList = classes.getSortList();
+                    if (movie != null && CollectionUtil.isNotEmpty(list = movie.getVideoList())) {
+                        // 该源带有首页推荐影片，新增一个首页推荐类别，并且将影片数据缓存起来
+                        items.add(new MovieSort.SortData(
+                                BaseValues.HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)
+                        ));
+                        MOVIE_CACHE.put(BaseValues.HOME_SORT_DATA_ID, MutablePair.of(movie, list));
+                    }
+                    items.addAll(sortList);
                     sortsLoadingProperty.set(false);
-
-                    return;
-                }
-                movie = homeContent.getList();
-                classes = homeContent.getClasses();
-                sortList = classes.getSortList();
-                if (movie != null && CollectionUtil.isNotEmpty(list = movie.getVideoList())) {
-                    // 该源带有首页推荐影片，新增一个首页推荐类别，并且将影片数据缓存起来
-                    items.add(new MovieSort.SortData(BaseValues.HOME_SORT_DATA_ID, I18nHelper.get(I18nKeys.TV_HOME)));
-                    MOVIE_CACHE.put(BaseValues.HOME_SORT_DATA_ID, MutablePair.of(movie, list));
-                }
-                items.addAll(sortList);
-                sortsLoadingProperty.set(false);
-                if (!items.isEmpty()) {
-                    classesListView.getSelectionModel().selectFirst();
-                    defaultSortData = items.get(0);
-                    loadMovieBySortData(defaultSortData);
-                    putSortDataFilterListInMovieSortFilterPopOver(defaultSortData);
-                }
-            })
-        );
+                    if (!items.isEmpty()) {
+                        classesListView.getSelectionModel().selectFirst();
+                        defaultSortData = items.get(0);
+                        loadMovieBySortData(defaultSortData);
+                        putSortDataFilterListInMovieSortFilterPopOver(defaultSortData);
+                    }
+                }));
     }
 
     /**
@@ -751,28 +702,27 @@ public class TVController implements Destroyable {
                             !filterSelectMap.isEmpty(),
                             "1",
                             filterSelectMap
-                    ),
-                    categoryContent -> {
-                        Movie movie;
-                        MutablePair<Movie, List<Movie.Video>> movieAndVideos;
+                    )
+            ).thenAccept(categoryContent -> {
+                Movie movie;
+                MutablePair<Movie, List<Movie.Video>> movieAndVideos;
 
-                        if (categoryContent == null) {
-                            movieLoadingProperty.set(false);
+                if (categoryContent == null) {
+                    movieLoadingProperty.set(false);
 
-                            return;
-                        }
-                        movie = categoryContent.getMovie();
-                        if (movie == null || CollectionUtil.isEmpty(movie.getVideoList())) {
-                            movieLoadingProperty.set(false);
+                    return;
+                }
+                movie = categoryContent.getMovie();
+                if (movie == null || CollectionUtil.isEmpty(movie.getVideoList())) {
+                    movieLoadingProperty.set(false);
 
-                            return;
-                        }
-                        movieAndVideos = MutablePair.of(movie, movie.getVideoList());
-                        putVideosInView(movieAndVideos, true);
-                        MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
-                        movieLoadingProperty.set(false);
-                    }
-            );
+                    return;
+                }
+                movieAndVideos = MutablePair.of(movie, movie.getVideoList());
+                putVideosInView(movieAndVideos, true);
+                MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
+                movieLoadingProperty.set(false);
+            });
         } else {
             // 使用缓存中的影片数据
             putVideosInView(movieAndVideosCached, true);
@@ -781,8 +731,7 @@ public class TVController implements Destroyable {
     }
 
     private void resetMovieSearching() {
-        movieSearchService.cancel();
-        movieSearchService.reset();
+        movieBatchSearchingHandler.cancelSearching();
         allSearchResults.clear();
         sourceFilterSlideSidebar.clearSourceBeans();
         sourceFilterSlideSidebar.hide();
@@ -890,29 +839,28 @@ public class TVController implements Destroyable {
 
     @FXML
     private void onHistoryBtnAction() {
-        template.getPlayHistory(
-                GetPlayHistoryDTO.of(100),
-                playHistory -> Platform.runLater(() -> {
+        template.getPlayHistory(GetPlayHistoryDTO.of(100))
+                .thenAccept(playHistory -> Platform.runLater(() -> {
                     if (CollectionUtil.isNotEmpty(playHistory)) {
                         movieHistoryPopOver.setVodInfoList(playHistory);
                     }
                     movieHistoryPopOver.show(historyButton);
-                })
-        );
+                }));
     }
 
     @FXML
     private void onCollectBtnAction() {
-        template.getMovieCollection(vodCollects ->
-            Platform.runLater(() -> {
-                if (CollectionUtil.isNotEmpty(vodCollects)) {
-                    movieCollectionPopOver.setVodInfoList(
-                            vodCollects.stream().map(VodInfo::from).toList()
-                    );
-                }
-                movieCollectionPopOver.show(collectButton);
-            })
-        );
+        template.getMovieCollection()
+                .thenAccept(vodCollects ->
+                        Platform.runLater(() -> {
+                            if (CollectionUtil.isNotEmpty(vodCollects)) {
+                                movieCollectionPopOver.setVodInfoList(
+                                        vodCollects.stream().map(VodInfo::from).toList()
+                                );
+                            }
+                            movieCollectionPopOver.show(collectButton);
+                        })
+                );
     }
 
     @FXML
@@ -927,7 +875,6 @@ public class TVController implements Destroyable {
     private void onSearchBtnAction() {
         String searchKeyword = searchTextField.getText();
         List<SourceBean> searchableSourceBeans;
-        Iterator<String> sourceBeanKeyIterator;
 
         if (StringUtils.isBlank(searchKeyword)) {
             return;
@@ -937,18 +884,53 @@ public class TVController implements Destroyable {
                 .stream()
                 .filter(SourceBean::isSearchable)
                 .toList();
-        sourceBeanKeyIterator = searchableSourceBeans.stream()
-                .map(SourceBean::getKey)
-                .iterator();
-        if (!sourceBeanKeyIterator.hasNext()) {
+        if (searchableSourceBeans.isEmpty()) {
+
             return;
         }
         clearMovieData();
         setVideoGridShowSourceName(true);
         searchLoadingProperty.set(true);
-        movieSearchService.setKeyword(searchKeyword);
-        movieSearchService.setSourceKeyIterator(sourceBeanKeyIterator);
-        movieSearchService.start();
+        movieBatchSearchingHandler.handle(
+                searchableSourceBeans.stream().map(SourceBean::getKey).toList(),
+                searchKeyword,
+                this::processBatchSearchingResult,
+                () -> searchLoadingProperty.set(false)
+        );
+    }
+
+    private void processBatchSearchingResult(Pair<String, AbsXml> keywordAndSearchContent) {
+        AbsXml searchContent;
+        List<Movie.Video> videos;
+        String sourceKey;
+        boolean emptyFlag;
+
+        searchContent = keywordAndSearchContent.getRight();
+        videos = searchContent.getMovie().getVideoList();
+        if (CollectionUtil.isEmpty(videos)) {
+
+            return;
+        }
+        sourceKey = videos.get(0).getSourceKey();
+        if (sourceKey == null) {
+
+            return;
+        }
+        // 收集搜索结果以便按源筛选
+        allSearchResults.addAll(videos);
+        // 显示搜索结果
+        if (sourceFilterSlideSidebar.hasCheckedKey(sourceKey)) {
+            putVideosInView(
+                    MutablePair.of(searchContent.getMovie(), searchContent.getMovie().getVideoList()),
+                    false
+            );
+        }
+        // 弹出源筛选侧边栏
+        emptyFlag = sourceFilterSlideSidebar.isEmpty();
+        sourceFilterSlideSidebar.addSourceBean(getSourceBean(sourceKey));
+        if (emptyFlag && !sourceFilterSlideSidebar.isSidebarShowing()) {
+            sourceFilterSlideSidebar.show(contentPane.getWidth(), contentPane.getHeight());
+        }
     }
 
     @FXML

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -21,109 +22,98 @@ import java.util.function.Consumer;
  */
 public interface SpiderTemplate {
 
-    default void init(Consumer<Boolean> callback) {
-        callback.accept(true);
+    default CompletableFuture<Boolean> init() {
+        return CompletableFuture.completedFuture(true);
     }
 
     default void destroy() {}
 
     /**
      * 获取源列表
-     * @param callback 回调
      */
-    void getSourceBeanList(Consumer<List<SourceBean>> callback);
+    CompletableFuture<List<SourceBean>> getSourceBeanList();
 
     /**
      * 获取首页内容
      * @param sourceBean 源
-     * @param callback 回调
      */
-    void getHomeContent(SourceBean sourceBean, Consumer<AbsSortXml> callback);
+    CompletableFuture<AbsSortXml> getHomeContent(SourceBean sourceBean);
 
     /**
      * 获取指定分类信息
      * @param dto 参数
-     * @param callback 回调
      */
-    void getCategoryContent(GetCategoryContentDTO dto, Consumer<AbsXml> callback);
+    CompletableFuture<AbsXml> getCategoryContent(GetCategoryContentDTO dto);
 
     /**
      * 获取影视详情内容
      * @param dto 参数
-     * @param callback 回调
      */
-    void getDetailContent(GetDetailContentDTO dto, Consumer<AbsXml> callback);
+    CompletableFuture<AbsXml> getDetailContent(GetDetailContentDTO dto);
 
     /**
      * 获取播放信息
      * @param dto 参数
-     * @param callback 回调
      */
-    void getPlayerContent(GetPlayerContentDTO dto, Consumer<JsonObject> callback);
+    CompletableFuture<JsonObject> getPlayerContent(GetPlayerContentDTO dto);
 
     /**
      * 获取历史记录
      * @param dto 参数
-     * @param callback 回调
      */
-    void getPlayHistory(GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback);
+    CompletableFuture<List<VodInfo>> getPlayHistory(GetPlayHistoryDTO dto);
 
     /**
      * 获取一条历史记录
      * @param dto 参数
      */
-    void getOnePlayHistory(GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback);
+    CompletableFuture<VodInfo> getOnePlayHistory(GetOnePlayHistoryDTO dto);
 
     /**
      * 影视搜索
      * @param dto 参数
-     * @param callback 回调
      */
-    void getSearchContent(GetSearchContentDTO dto, Consumer<AbsXml> callback);
+    CompletableFuture<AbsXml> getSearchContent(GetSearchContentDTO dto);
 
     /**
      * 保存历史记录
      * @param dto 参数
      */
-    <T extends RuntimeException> void savePlayHistory(SavePlayHistoryDTO dto, Consumer<T> onError);
+    CompletableFuture<Void> savePlayHistory(SavePlayHistoryDTO dto);
 
     /**
      * 删除历史记录
      * @param dto 参数
      */
-    void deletePlayHistory(DeletePlayHistoryDTO dto, Runnable callback);
+    CompletableFuture<Void> deletePlayHistory(DeletePlayHistoryDTO dto);
 
     /**
      * 收藏影片
      * @param dto 参数
-     * @param callback 回调
      */
-    void saveMovieCollection(SaveMovieCollectionDTO dto, Runnable callback);
+    CompletableFuture<Void> saveMovieCollection(SaveMovieCollectionDTO dto);
 
     /**
      * 取消收藏
      * @param dto 参数
-     * @param callback 回调
      */
-    void deleteMovieCollection(DeleteMovieCollectionDTO dto, Runnable callback);
+    CompletableFuture<Void> deleteMovieCollection(DeleteMovieCollectionDTO dto);
 
     /**
      * 获取收藏列表
-     * @param callback 回调
      */
-    void getMovieCollection(Consumer<List<VodCollect>> callback);
+    CompletableFuture<List<VodCollect>> getMovieCollection();
 
     /**
      * 获取影视收藏状态
      * @param dto 参数
-     * @param callback 回调
      */
-    void getMovieCollectedStatus(GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback);
+    CompletableFuture<Boolean> getMovieCollectedStatus(GetMovieCollectedStatusDTO dto);
 
     /**
      * 获取直播配置列表
      */
-    void getLives(Consumer<List<FreeBoxLive>> callback);
+    CompletableFuture<List<FreeBoxLive>> getLives();
 
     /**
      * 代理播放请求

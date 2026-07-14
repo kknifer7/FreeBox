@@ -6,6 +6,7 @@ import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.MessageCodes;
 import io.knifer.freebox.exception.GlobalExceptionHandler;
 import io.knifer.freebox.model.common.tvbox.Message;
+import io.knifer.freebox.component.juc.InterruptibleCompletableFuture;
 import io.knifer.freebox.util.json.GsonUtil;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -62,28 +63,39 @@ public class KebSocketTopicKeeper {
         DATA_MAP.put(message.getTopicId(), message);
     }
 
-    public <T> Future<T> getTopic(String topicId, TypeToken<T> typeToken, Integer code) {
-        return CompletableFuture.supplyAsync(() -> {
+    public <T> CompletableFuture<T> getTopic(String topicId, TypeToken<T> typeToken, Integer code) {
+        ThreadPoolExecutor executor = code == MessageCodes.GET_SEARCH_CONTENT ? SEARCH_EXECUTOR : EXECUTOR;
+        CompletableFuture<T> future = new CompletableFuture<>();
+        Future<?> task;
+
+        task = executor.submit(() -> {
             Message<JsonElement> message;
             JsonElement jsonData;
 
             try {
                 message = DATA_MAP.take(topicId, BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
                 if (message == null) {
-                    return null;
+                    future.complete(null);
+
+                    return;
                 }
                 jsonData = message.getData();
                 if (jsonData == null) {
-                    return null;
-                }
+                    future.complete(null);
 
-                return GsonUtil.fromJson(jsonData, typeToken);
+                    return;
+                }
+                future.complete(GsonUtil.fromJson(jsonData, typeToken));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                future.completeExceptionally(new CancellationException("Topic cancelled: " + topicId));
             } catch (Exception e) {
                 log.error("getTopic error", e);
+                future.complete(null);
             }
+        });
 
-            return null;
-        }, code == MessageCodes.GET_SEARCH_CONTENT ? SEARCH_EXECUTOR : EXECUTOR);
+        return new InterruptibleCompletableFuture<>(future, task);
     }
 
     public void destroy() {

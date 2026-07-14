@@ -31,7 +31,9 @@ public class SystemHelper {
 
     private final static io.knifer.freebox.constant.Platform CURRENT_PLATFORM;
     private final static Architecture CURRENT_ARCHITECTURE;
-    private final static EnvProfile ENV_PROFILE = EnvProfile.valueOf(System.getProperty("freebox.profile"));
+    private final static EnvProfile ENV_PROFILE = EnvProfile.valueOf(System.getProperty(
+            "freebox.profile", EnvProfile.DEV.name()
+    ));
     private final static AtomicBoolean DEBUG_FLAG = new AtomicBoolean(
             "true".equals(BaseResources.X_PROPERTIES.getProperty(BaseValues.X_DEBUG))
     );

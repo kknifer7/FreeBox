@@ -57,9 +57,8 @@ public class HomeAuditor extends SourceAuditor {
         int maxRetryCount = context.getMaxRetryCount();
 
         onRequest.accept(Pair.of(SourceAuditType.HOME, GsonUtil.toPrettyJson(sourceBean)));
-        spiderTemplate.getHomeContent(
-                sourceBean,
-                content -> {
+        spiderTemplate.getHomeContent(sourceBean)
+                .thenAccept(content -> {
                     List<SourceAuditResult> results;
                     MovieSort movieSort;
                     SourceAuditStatus status = SourceAuditStatus.SUCCESS;
@@ -94,7 +93,6 @@ public class HomeAuditor extends SourceAuditor {
                         onFinish.accept(Pair.of(SourceAuditType.HOME, results));
                     }
                     doNext(context, needSkip);
-                }
-        );
+                });
     }
 }

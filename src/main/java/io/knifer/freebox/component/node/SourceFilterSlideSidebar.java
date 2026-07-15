@@ -186,6 +186,7 @@ public class SourceFilterSlideSidebar extends StackPane {
         sidebar.setMinWidth(SIDEBAR_WIDTH);
         sidebar.setMaxWidth(SIDEBAR_WIDTH);
         sidebar.getStyleClass().add("source-filter-slide-sidebar");
+        sidebar.setPickOnBounds(false);
         sidebar.getChildren().addAll(sidebarContent, new StackPane(tipLabel));
 
         getChildren().add(sidebar);

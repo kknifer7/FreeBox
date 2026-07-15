@@ -76,6 +76,11 @@ public interface SpiderTemplate {
     CompletableFuture<AbsXml> getSearchContent(GetSearchContentDTO dto);
 
     /**
+     * 取消所有搜索任务
+     */
+    CompletableFuture<Void> cancelAllSearching();
+
+    /**
      * 保存历史记录
      * @param dto 参数
      */

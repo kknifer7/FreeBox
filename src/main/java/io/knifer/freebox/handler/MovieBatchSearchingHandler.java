@@ -32,5 +32,5 @@ public interface MovieBatchSearchingHandler {
     /**
      * 取消搜索
      */
-    void cancelSearching();
+    void cancelSearching(Runnable callback);
 }

@@ -130,4 +130,12 @@ public class MessageCodes {
      * 获取直播源结果
      */
     public static final int GET_LIVES_RESULT = 230;
+    /**
+     * 取消所有搜索任务
+     */
+    public static final int CANCEL_ALL_SEARCHING = 231;
+    /**
+     * 取消所有搜索任务结果
+     */
+    public static final int CANCEL_ALL_SEARCHING_RESULT = 232;
 }

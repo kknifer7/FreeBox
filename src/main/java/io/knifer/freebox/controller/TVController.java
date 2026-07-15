@@ -149,11 +149,12 @@ public class TVController implements Destroyable {
             sourceBeanComboBox.show();
             sourceBeanComboBox.hide();
             // 源屏蔽弹出框
-            sourceBeanBlockPopOver = new SourceBeanBlockPopOver(sourceBeans -> {
-                clearMovieData();
-                videosGridView.getItems().clear();
-                updateSourceBeanData(sourceBeans);
-            });
+            sourceBeanBlockPopOver = new SourceBeanBlockPopOver(sourceBeans ->
+                clearMovieData(() -> {
+                    videosGridView.getItems().clear();
+                    updateSourceBeanData(sourceBeans);
+                })
+            );
             // 源筛选侧边栏
             sourceFilterSlideSidebar = new SourceFilterSlideSidebar(
                     searchLoadingProperty,
@@ -600,15 +601,22 @@ public class TVController implements Destroyable {
     @FXML
     private void onSourceBeanComboBoxAction() {
         SourceBean sourceBean = getSourceBean();
-        ObservableList<MovieSort.SortData> items;
 
         if (sourceBean == null) {
+
             return;
         }
-        items = classesListView.getItems();
         sortsLoadingProperty.set(true);
-        clearMovieData();
-        videosGridView.getItems().clear();
+        clearMovieData(() -> {
+            videosGridView.getItems().clear();
+            fetchHomeContent(sourceBean);
+        });
+
+    }
+
+    private void fetchHomeContent(SourceBean sourceBean) {
+        ObservableList<MovieSort.SortData> items = classesListView.getItems();
+
         template.getHomeContent(sourceBean)
                 .thenAccept(homeContent -> Platform.runLater(() -> {
                     Movie movie;
@@ -683,63 +691,65 @@ public class TVController implements Destroyable {
      * @param sortData 分类数据
      */
     private void loadMovieBySortData(MovieSort.SortData sortData) {
-        ObservableList<Movie.Video> items;
-        MutablePair<Movie, List<Movie.Video>> movieAndVideosCached;
-        HashMap<String, String> filterSelectMap;
+        resetMovieSearching(() -> {
+            ObservableList<Movie.Video> items = videosGridView.getItems();
+            MutablePair<Movie, List<Movie.Video>> movieAndVideosCached;
+            HashMap<String, String> filterSelectMap;
 
-        resetMovieSearching();
-        movieLoadingProperty.set(true);
-        items = videosGridView.getItems();
-        if (!items.isEmpty()) {
-            items.clear();
-        }
-        setVideoGridShowSourceName(false);
+            movieLoadingProperty.set(true);
+            if (!items.isEmpty()) {
+                items.clear();
+            }
+            setVideoGridShowSourceName(false);
 
-        movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
-        filterSelectMap = sortData.getFilterSelect();
-        if (movieAndVideosCached == null) {
-            // 拉取影片数据
-            template.getCategoryContent(
-                    GetCategoryContentDTO.of(
-                            getSourceBean().getKey(),
-                            sortData.getId(),
-                            !filterSelectMap.isEmpty(),
-                            "1",
-                            filterSelectMap
-                    )
-            ).thenAccept(categoryContent -> {
-                Movie movie;
-                MutablePair<Movie, List<Movie.Video>> movieAndVideos;
+            movieAndVideosCached = MOVIE_CACHE.get(sortData.getId());
+            filterSelectMap = sortData.getFilterSelect();
+            if (movieAndVideosCached == null) {
+                // 拉取影片数据
+                template.getCategoryContent(
+                        GetCategoryContentDTO.of(
+                                getSourceBean().getKey(),
+                                sortData.getId(),
+                                !filterSelectMap.isEmpty(),
+                                "1",
+                                filterSelectMap
+                        )
+                ).thenAccept(categoryContent -> {
+                    Movie movie;
+                    MutablePair<Movie, List<Movie.Video>> movieAndVideos;
 
-                if (categoryContent == null) {
+                    if (categoryContent == null) {
+                        movieLoadingProperty.set(false);
+
+                        return;
+                    }
+                    movie = categoryContent.getMovie();
+                    if (movie == null || CollectionUtil.isEmpty(movie.getVideoList())) {
+                        movieLoadingProperty.set(false);
+
+                        return;
+                    }
+                    movieAndVideos = MutablePair.of(movie, movie.getVideoList());
+                    putVideosInView(movieAndVideos, true);
+                    MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
                     movieLoadingProperty.set(false);
-
-                    return;
-                }
-                movie = categoryContent.getMovie();
-                if (movie == null || CollectionUtil.isEmpty(movie.getVideoList())) {
-                    movieLoadingProperty.set(false);
-
-                    return;
-                }
-                movieAndVideos = MutablePair.of(movie, movie.getVideoList());
-                putVideosInView(movieAndVideos, true);
-                MOVIE_CACHE.put(sortData.getId(), movieAndVideos);
+                });
+            } else {
+                // 使用缓存中的影片数据
+                putVideosInView(movieAndVideosCached, true);
                 movieLoadingProperty.set(false);
-            });
-        } else {
-            // 使用缓存中的影片数据
-            putVideosInView(movieAndVideosCached, true);
-            movieLoadingProperty.set(false);
-        }
+            }
+        });
     }
 
-    private void resetMovieSearching() {
-        movieBatchSearchingHandler.cancelSearching();
-        allSearchResults.clear();
-        sourceFilterSlideSidebar.clearSourceBeans();
-        sourceFilterSlideSidebar.hide();
-        searchLoadingProperty.set(false);
+    private void resetMovieSearching(Runnable callback) {
+        movieBatchSearchingHandler.cancelSearching(() -> Platform.runLater(() -> {
+            allSearchResults.clear();
+            sourceFilterSlideSidebar.clearSourceBeans();
+            sourceFilterSlideSidebar.hide();
+            searchLoadingProperty.set(false);
+            callback.run();
+        }));
     }
 
     /**
@@ -808,7 +818,7 @@ public class TVController implements Destroyable {
         ClientInfo clientInfo = clientManager.getCurrentClientImmediately();
 
         saveClientTVProperties();
-        clearMovieData();
+        clearMovieData(BaseValues.EMPTY_RUNNABLE);
         if (videosGridView.getCellFactory() instanceof VideoGridCellFactory factory) {
             factory.destroy();
         }
@@ -837,10 +847,10 @@ public class TVController implements Destroyable {
         }
     }
 
-    private void clearMovieData() {
+    private void clearMovieData(Runnable callback) {
         videosGridView.getItems().clear();
         MOVIE_CACHE.clear();
-        resetMovieSearching();
+        resetMovieSearching(callback);
     }
 
     @FXML
@@ -899,15 +909,16 @@ public class TVController implements Destroyable {
 
             return;
         }
-        clearMovieData();
-        setVideoGridShowSourceName(true);
-        searchLoadingProperty.set(true);
-        movieBatchSearchingHandler.handle(
-                searchableSourceBeans.stream().map(SourceBean::getKey).toList(),
-                searchKeyword,
-                this::processBatchSearchingResult,
-                () -> searchLoadingProperty.set(false)
-        );
+        clearMovieData(() -> {
+            setVideoGridShowSourceName(true);
+            searchLoadingProperty.set(true);
+            movieBatchSearchingHandler.handle(
+                    searchableSourceBeans.stream().map(SourceBean::getKey).toList(),
+                    searchKeyword,
+                    this::processBatchSearchingResult,
+                    () -> searchLoadingProperty.set(false)
+            );
+        });
     }
 
     private void processBatchSearchingResult(Pair<String, AbsXml> keywordAndSearchContent) {

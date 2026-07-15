@@ -2,9 +2,11 @@ package io.knifer.freebox.handler.impl;
 
 import io.knifer.freebox.context.Context;
 import io.knifer.freebox.handler.MovieBatchSearchingHandler;
+import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.common.tvbox.AbsXml;
 import io.knifer.freebox.model.common.tvbox.Movie;
 import io.knifer.freebox.model.s2c.GetSearchContentDTO;
+import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CollectionUtil;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -51,6 +53,7 @@ public class CommonMovieBatchSearchingHandler implements MovieBatchSearchingHand
         int totalSources;
         List<CompletableFuture<?>> jobList;
         CompletableFuture<AbsXml> searchFuture;
+        SpiderTemplate template = context.getSpiderTemplate();
 
         lock.lock();
         try {
@@ -58,8 +61,7 @@ public class CommonMovieBatchSearchingHandler implements MovieBatchSearchingHand
             totalSources = sourceKeys.size();
             jobList = new ArrayList<>(totalSources);
             for (String sourceKey : sourceKeys) {
-                searchFuture = context.getSpiderTemplate()
-                        .getSearchContent(GetSearchContentDTO.of(sourceKey, keyword));
+                searchFuture = template.getSearchContent(GetSearchContentDTO.of(sourceKey, keyword));
                 searchFuture.thenAccept(searchContent -> {
                     Movie movie;
 
@@ -94,27 +96,32 @@ public class CommonMovieBatchSearchingHandler implements MovieBatchSearchingHand
     }
 
     @Override
-    public void cancelSearching() {
+    public void cancelSearching(Runnable callback) {
         lock.lock();
         try {
-            cancelAllJobs();
+            cancelAllJobs().thenRun(callback);
         } finally {
             lock.unlock();
         }
     }
 
-    private void cancelAllJobs() {
+    private CompletableFuture<Void> cancelAllJobs() {
         List<CompletableFuture<?>> oldJobs = jobs;
+        SpiderTemplate template = context.getSpiderTemplate();
 
         jobs = null;
-        if (oldJobs == null) {
-
-            return;
-        }
-        for (CompletableFuture<?> job : oldJobs) {
-            if (!job.isDone()) {
-                job.cancel(true);
+        if (oldJobs != null) {
+            for (CompletableFuture<?> job : oldJobs) {
+                if (!job.isDone()) {
+                    job.cancel(true);
+                }
             }
         }
+
+        return template.cancelAllSearching().exceptionally(e -> {
+            Platform.runLater(() -> ToastHelper.showException(e));
+
+            return null;
+        });
     }
 }

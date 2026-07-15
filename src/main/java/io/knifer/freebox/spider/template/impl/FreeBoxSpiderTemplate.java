@@ -331,6 +331,15 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
     }
 
     @Override
+    public CompletableFuture<Void> cancelAllSearching() {
+        /* *
+         * 本方法主要目的在于取消WebSocket连接的远端app的搜索任务
+         * 至于非WebSocket环境下的影视搜索逻辑取消，每次搜索前调用的CommonMovieBatchSearchingHandler已经有所实现，无需在这里实现
+         * */
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
     public CompletableFuture<Void> savePlayHistory(SavePlayHistoryDTO dto) {
         return clientManager.getCurrentClient()
                 .thenCompose(clientInfo -> CompletableFuture.runAsync(() -> {

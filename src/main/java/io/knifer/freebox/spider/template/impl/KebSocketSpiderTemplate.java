@@ -245,6 +245,22 @@ public class KebSocketSpiderTemplate implements SpiderTemplate {
     }
 
     @Override
+    public CompletableFuture<Void> cancelAllSearching() {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> runner.sendTopic(
+                        clientInfo.getConnection(),
+                        MessageCodes.CANCEL_ALL_SEARCHING,
+                        null,
+                        new TypeToken<Void>(){}
+                ))
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return null;
+                });
+    }
+
+    @Override
     public CompletableFuture<Void> savePlayHistory(SavePlayHistoryDTO dto) {
         return clientManager.getCurrentClient()
                 .thenAccept(clientInfo -> runner.send(

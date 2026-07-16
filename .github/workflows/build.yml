@@ -178,9 +178,9 @@ jobs:
       - name: Setup Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          architecture: ${{ matrix.arch }}
+          architecture: x64
           cache: 'gradle'
 
       - name: Setup Gradle

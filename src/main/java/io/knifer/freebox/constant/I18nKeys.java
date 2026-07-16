@@ -47,6 +47,8 @@ public class I18nKeys {
     public static final String TV_HOME = "tv.home";
     public static final String TV_LOAD_MORE = "tv.load-more";
     public static final String TV_SOURCE_BEAN_BLOCK = "tv.source-bean-block";
+    public static final String TV_SOURCE_FILTER_SEARCHING = "tv.source-filter.searching";
+    public static final String TV_SOURCE_FILTER_SEARCHING_FINISHED = "tv.source-filter.searching-finished";
     public static final String TV_BLOCK = "tv.block";
     public static final String TV_HISTORY = "tv.history";
     public static final String TV_COLLECTION = "tv.collection";
@@ -59,6 +61,7 @@ public class I18nKeys {
     public static final String TV_ERROR_LOAD_SPIDER_CONFIG_FAILED = "tv.error.load-spider-config-failed";
     public static final String TV_ERROR_INVALID_SPIDER_JAR = "tv.error.invalid-spider-jar";
     public static final String TV_ERROR_LOAD_SPIDER_JAR_FAILED = "tv.error.load-spider-jar-failed";
+    public static final String TV_ERROR_SOURCE_BEAN_NOT_FOUND = "tv.error.source-bean-not-found";
 
     public static final String VIDEO_COLLECT = "video.collect";
     public static final String VIDEO_UN_COLLECT = "video.un-collect";
@@ -145,6 +148,17 @@ public class I18nKeys {
     public static final String SETTINGS_DEBUGGING_LOG_EXPORT = "settings.debugging.log-export";
     public static final String SETTINGS_DEBUGGING_LOG_CONSOLE = "settings.debugging.log-console";
 
+    public static final String SPIDER_DEBUGGING = "spider-debugging";
+    public static final String SPIDER_DEBUGGING_SPIDER_RUNNING_ERROR = "spider-debugging.spider-running-error";
+    public static final String SPIDER_DEBUGGING_SPIDER_MONITORING = "spider-debugging.spider-monitoring";
+    public static final String SPIDER_DEBUGGING_SPIDER_FILE_NOT_EXISTS = "spider-debugging.spider-file-not-exists";
+    public static final String SPIDER_DEBUGGING_DELETE_CONFIRM = "spider-debugging.delete-confirm";
+    public static final String SPIDER_DEBUGGING_COMMON_SORT_ID_REQUIRED = "spider-debugging.home.sort-id-required";
+    public static final String SPIDER_DEBUGGING_COMMON_MOVIE_ID_REQUIRED = "spider-debugging.home.movie-id-required";
+    public static final String SPIDER_DEBUGGING_MOVIE_DETAIL_VOD_ID_REQUIRED = "spider-debugging.movie-detail.vod-id-required";
+    public static final String SPIDER_DEBUGGING_MOVIE_PLAY_VIDEO_TITLE = "spider-debugging.movie-play.video-title";
+    public static final String SPIDER_DEBUGGING_MOVIE_PLAY_NO_VIDEO_DATA = "spider-debugging.movie-play.no-video-data";
+
     public static final String ERROR = "error";
     public static final String ERROR_CONTEXT_MESSAGE = "error.context-message";
     public static final String ERROR_CONFIRM = "error.confirm";
@@ -155,6 +169,7 @@ public class I18nKeys {
 
     public static final String COMMON_DELETE = "common.delete";
     public static final String COMMON_OK = "common.ok";
+    public static final String COMMON_ALL = "common.all";
     public static final String COMMON_CANCEL = "common.cancel";
     public static final String COMMON_CANCEL_AND_BACK_TO_HOME = "common.cancel-and-back-to-home";
     public static final String COMMON_RESET = "common.reset";
@@ -165,6 +180,10 @@ public class I18nKeys {
     public static final String COMMON_ON = "common.on";
     public static final String COMMON_OFF = "common.off";
     public static final String COMMON_CLOSE = "common.close";
+    public static final String COMMON_HINT = "common.hint";
+    public static final String COMMON_YES = "common.yes";
+    public static final String COMMON_NO = "common.no";
+    public static final String COMMON_SELECT_ALL = "common.select-all";
 
     public static final String SOURCE_AUDIT_WINDOW_TITLE = "source-audit.window-title";
     public static final String SOURCE_AUDIT_NOW = "source-audit.now";

@@ -8,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * 窗口
@@ -17,6 +16,12 @@ import org.apache.commons.lang3.StringUtils;
  */
 @UtilityClass
 public class WindowHelper {
+
+    private static final String FONT_FAMILY_STYLE_KEY = "-fx-font-family:";
+
+    private static String cssFontFamily(String fontFamily) {
+        return "\"" + fontFamily + "\"";
+    }
 
     public void close(Event event) {
         if (event.getTarget() instanceof Node n) {
@@ -42,10 +47,6 @@ public class WindowHelper {
         getStage(node).hide();
     }
 
-    public <T> T getUserData(Node node) {
-        return CastUtil.cast(getStage(node).getUserData());
-    }
-
     public Stage getStage(Node node) {
         return CastUtil.cast(node.getScene().getWindow());
     }
@@ -56,14 +57,41 @@ public class WindowHelper {
 
     public void setFontFamily(Window window, String fontFamily) {
         Scene scene = window.getScene();
-        Parent parent = scene.getRoot();
-        String style = parent.getStyle();
-        String oldFontFamily = StringUtils.substringBetween(style, "-fx-font-family:", ";");
 
-        if (style.isEmpty() || oldFontFamily == null) {
-            parent.setStyle(style + "-fx-font-family:" + fontFamily + ";");
-        } else if (!oldFontFamily.equals(fontFamily)) {
-            parent.setStyle(style.replace(oldFontFamily, fontFamily));
+        if (scene == null) {
+
+            return;
         }
+        applyFontFamily(scene.getRoot(), fontFamily);
+    }
+
+    private static void applyFontFamily(Parent root, String fontFamily) {
+        String existingStyle = root.getStyle();
+        String existingFontFamily = extractFontFamily(existingStyle);
+        String cssValue = cssFontFamily(fontFamily);
+
+        if (existingFontFamily == null) {
+            root.setStyle(existingStyle + FONT_FAMILY_STYLE_KEY + cssValue + ";");
+        } else if (!existingFontFamily.equals(fontFamily)) {
+            root.setStyle(existingStyle.replace(
+                    FONT_FAMILY_STYLE_KEY + cssFontFamily(existingFontFamily),
+                    FONT_FAMILY_STYLE_KEY + cssValue
+            ));
+        }
+    }
+
+    private static String extractFontFamily(String style) {
+        int prefixIdx = style.indexOf(FONT_FAMILY_STYLE_KEY);
+
+        if (prefixIdx < 0) {
+
+            return null;
+        }
+        int valueStart = prefixIdx + FONT_FAMILY_STYLE_KEY.length();
+        String rawValue = style.substring(valueStart, style.indexOf(";", valueStart));
+
+        return rawValue.startsWith("\"") && rawValue.endsWith("\"")
+                ? rawValue.substring(1, rawValue.length() - 1)
+                : rawValue;
     }
 }

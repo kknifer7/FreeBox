@@ -4,6 +4,8 @@ import com.google.common.net.HttpHeaders;
 import lombok.experimental.UtilityClass;
 import org.tinylog.Level;
 
+import java.util.function.Consumer;
+
 /**
  * 常量
  *
@@ -86,4 +88,6 @@ public class BaseValues {
             HttpHeaders.USER_AGENT, "okhttp/3.15",
             HttpHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
     };
+    public final static String HOME_SORT_DATA_ID = "ztx*1RcW6%Ep";
+    public final static String DEBUGGING_SOURCE_KEY = "freebox_debugging";
 }

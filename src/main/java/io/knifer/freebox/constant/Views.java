@@ -12,6 +12,7 @@ public class Views {
 
     public static final String HOME = "home-view.fxml";
     public static final String SETTINGS = "settings-view.fxml";
+    public static final String SPIDER_DEBUGGING = "spider-debugging-view.fxml";
     public static final String TV = "tv-view.fxml";
     public static final String VIDEO = "video-view.fxml";
     public static final String LIVE = "live-view.fxml";

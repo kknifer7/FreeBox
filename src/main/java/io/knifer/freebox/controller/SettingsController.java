@@ -472,6 +472,9 @@ public class SettingsController {
         Integer httpPort = ConfigHelper.getHttpPort();
         String ip = ConfigHelper.getServiceIPv4();
 
+        if (!ValidationHelper.validate(validationSupport, httpPortTextField)) {
+            return;
+        }
         disableHttpServiceBtn();
         disableHttpServiceForm();
         showServiceStatus(
@@ -550,8 +553,12 @@ public class SettingsController {
     private void onWsServiceStartBtnAction() {
         Integer wsPort = ConfigHelper.getWsPort();
         String ip = ConfigHelper.getServiceIPv4();
-        CheckPortUsingService checkPortUsingService = new CheckPortUsingService(wsPort);
+        CheckPortUsingService checkPortUsingService;
 
+        if (!ValidationHelper.validate(validationSupport, wsPortTextField)) {
+            return;
+        }
+        checkPortUsingService = new CheckPortUsingService(wsPort);
         disableWsServiceBtn();
         disableWsServiceForm();
         showServiceStatus(
@@ -697,7 +704,7 @@ public class SettingsController {
     private void onUsageFontFamilyComboBoxAction() {
         Label fontFamily = usageFontFamilyExampleLabel;
 
-        fontFamily.setStyle("-fx-font-family:" + usageFontFamilyComboBox.getValue() + ";-fx-text-fill: blue;");
+        fontFamily.setStyle("-fx-font-family:\"" + usageFontFamilyComboBox.getValue() + "\";-fx-text-fill: blue;");
         ConfigHelper.setUsageFontFamily(usageFontFamilyComboBox.getValue());
         ConfigHelper.markToUpdate();
     }
@@ -830,22 +837,7 @@ public class SettingsController {
 
     @FXML
     private void onOpenLogConsoleButtonAction() {
-        Stage stage;
-        Pair<Stage, LogConsoleDialogController> logConsoleStageAndController =
-                router.getSecondary(Views.LOG_CONSOLE_DIALOG);
-
-        if (logConsoleStageAndController != null) {
-            logConsoleStageAndController.getLeft().toFront();
-
-            return;
-        }
-        logConsoleStageAndController = FXMLUtil.loadDialog(
-                Views.LOG_CONSOLE_DIALOG, StageStyle.DECORATED, Modality.NONE
-        );
-        router.putSecondary(Views.LOG_CONSOLE_DIALOG, logConsoleStageAndController);
-        stage = logConsoleStageAndController.getLeft();
-        stage.setTitle(I18nHelper.get(I18nKeys.SETTINGS_DEBUGGING_LOG_CONSOLE));
-        stage.show();
+        router.openSecondary(Views.LOG_CONSOLE_DIALOG, I18nKeys.SETTINGS_DEBUGGING_LOG_CONSOLE);
     }
 
     @FXML

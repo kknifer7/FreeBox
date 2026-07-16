@@ -10,16 +10,19 @@ import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.controller.BaseController;
 import io.knifer.freebox.helper.*;
 import jakarta.inject.Inject;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseButton;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -46,16 +49,26 @@ public class LogConsoleDialogController extends BaseController {
     private ScrollPane logScrollPane;
     @FXML
     private Label statusLabel;
-
-    private Tailer logFileTailer;
+    @FXML
+    private CheckBox autoScrollCheckBox;
 
     private Stage stage;
+
+    private PauseTransition scrollToBottomTransition;
+
+    private Tailer logFileTailer;
 
     private final Router router;
 
     @FXML
     private void initialize() {
+        scrollToBottomTransition = new PauseTransition(Duration.millis(200));
+        scrollToBottomTransition.setOnFinished(evt -> {
+            logScrollPane.layout();
+            logScrollPane.setVvalue(1.0);
+        });
         logTextFlow.prefWidthProperty().bind(logScrollPane.widthProperty().subtract(20));
+
         Platform.runLater(() -> {
             stage = WindowHelper.getStage(logTextFlow);
             stage.setOnCloseRequest(evt -> {
@@ -63,6 +76,7 @@ public class LogConsoleDialogController extends BaseController {
                 router.removeSecondary(Views.LOG_CONSOLE_DIALOG);
             });
             startListeningLatestLog();
+            logTextFlow.requestFocus();
         });
         updateTip(I18nKeys.LOG_CONSOLE_TIP);
     }
@@ -76,6 +90,7 @@ public class LogConsoleDialogController extends BaseController {
             log.error("read latest.log failed");
             ToastHelper.showException(e);
         }
+        scrollToBottomIfNeeded();
         logFileTailer = new Tailer(logFile.toFile(), line -> Platform.runLater(() -> appendLog(line)));
         logFileTailer.start(true);
     }
@@ -100,7 +115,7 @@ public class LogConsoleDialogController extends BaseController {
             // exception stacktrace
             lastText = (Text) CollUtil.getLast(texts);
             lastText.setText(lastText.getText() + line + StrPool.LF);
-            logScrollPane.setVvalue(1.0);
+            scrollToBottomIfNeeded();
 
             return;
         }
@@ -125,7 +140,13 @@ public class LogConsoleDialogController extends BaseController {
             updateTip(I18nKeys.COMMON_MESSAGE_COPY_SUCCEED);
         });
         texts.add(logEntry);
-        logScrollPane.setVvalue(1.0);
+        scrollToBottomIfNeeded();
+    }
+
+    private void scrollToBottomIfNeeded() {
+        if (autoScrollCheckBox.isSelected()) {
+            scrollToBottomTransition.playFromStart();
+        }
     }
 
     /**
@@ -178,5 +199,22 @@ public class LogConsoleDialogController extends BaseController {
             return;
         }
         startListeningLatestLog();
+    }
+
+    /**
+     * 回到顶部
+     */
+    @FXML
+    private void onScrollToTopButtonAction() {
+        logScrollPane.setVvalue(0.0);
+    }
+
+    /**
+     * 回到底部
+     */
+    @FXML
+    private void onScrollToBottomButtonAction() {
+        logScrollPane.layout();
+        logScrollPane.setVvalue(1.0);
     }
 }

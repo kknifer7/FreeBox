@@ -161,11 +161,15 @@ jobs:
 
   build-windows-package:
     needs: load_version
-    name: Build Windows Package
-    runs-on: windows-latest
+    name: Build Windows Package - ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        arch: [amd64]
+        include:
+          - arch: amd64
+            runner: windows-latest
+          - arch: arm64
+            runner: windows-11-arm
 
     steps:
       - name: Checkout code
@@ -185,14 +189,16 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build packages
-        run: |          
+        run: |
           New-Item -ItemType Directory -Path "distribution" -Force
-          
+          $ARCH = "${{ matrix.arch }}"
+          $VERSION = "${{ needs.load_version.outputs.VERSION }}"
+
           .\gradlew jpackage "-Pjpackage.installerType=msi" -x check -x test
-          Move-Item "build\jpackage\FreeBox-${{ needs.load_version.outputs.VERSION }}.msi" "distribution\FreeBox_${{ needs.load_version.outputs.VERSION }}.msi"
-          
-          Compress-Archive -Path "build/jpackage/FreeBox/*" -DestinationPath "distribution/FreeBox_${{ needs.load_version.outputs.VERSION }}_win.zip" -Force
-          
+          Move-Item "build\jpackage\FreeBox-${VERSION}.msi" "distribution\FreeBox_${VERSION}_${ARCH}.msi"
+
+          Compress-Archive -Path "build/jpackage/FreeBox/*" -DestinationPath "distribution/FreeBox_${VERSION}_${ARCH}_win.zip" -Force
+
           Write-Host "Generated packages:"
           Get-ChildItem distribution/
 

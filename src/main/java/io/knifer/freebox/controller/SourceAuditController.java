@@ -22,6 +22,7 @@ import io.knifer.freebox.service.sourceaudit.auditor.SourceAuditExecutor;
 import io.knifer.freebox.service.sourceaudit.auditor.impl.SourceAuditExecutorImpl;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CastUtil;
+import io.knifer.freebox.util.CollectionUtil;
 import jakarta.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -162,18 +163,21 @@ public class SourceAuditController implements Destroyable {
                 destroy();
                 router.back();
             });
-            template.init(success -> {
-                if (!success) {
-                    return;
-                }
-                template.getSourceBeanList(sourceBeans ->
-                    Platform.runLater(() -> {
-                        fillSourceBeanData(sourceBeans);
-                        interruptAuditFlag.set(false);
-                        setLoading(false);
-                    })
-                );
-            });
+            template.init()
+                    .thenAccept(success -> {
+                        if (!success) {
+
+                            return;
+                        }
+                        template.getSourceBeanList()
+                                .thenAccept(sourceBeans ->
+                                    Platform.runLater(() -> {
+                                        fillSourceBeanData(sourceBeans);
+                                        interruptAuditFlag.set(false);
+                                        setLoading(false);
+                                    })
+                                );
+                    });
         });
     }
 
@@ -218,7 +222,8 @@ public class SourceAuditController implements Destroyable {
 
         items.clear();
         sourceKeyAndAuditItemsMap.clear();
-        if (sourceBeans.isEmpty()) {
+        if (CollectionUtil.isEmpty(sourceBeans)) {
+
             return;
         }
         items.addAll(sourceBeans);

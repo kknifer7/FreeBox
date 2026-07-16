@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<StackPane stylesheets="@../../css/view/spider-debugging-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.spiderDebugging.MovieDetailTabController">
+    <SplitPane orientation="VERTICAL">
+        <items>
+            <GridPane hgap="5.0" vgap="5.0">
+                <padding>
+                    <Insets bottom="10.0" left="15.0" right="10.0" top="10.0" />
+                </padding>
+                <CheckBox fx:id="movieDetailAutoRefreshCheckBox" focusTraversable="false" text="%spider-debugging.common.auto-refresh" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="0" />
+                <Label styleClass="dark-orange, bold" text="%spider-debugging.common.movie-id" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <TextField fx:id="movieIdTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <Button fx:id="movieDetailReloadButton" onAction="#onMovieDetailReloadButtonAction" text="%spider-debugging.movie-detail.fetch" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                    <graphic>
+                        <FontIcon iconLiteral="fa-bullseye:16:gray" />
+                    </graphic>
+                </Button>
+                <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-detail.movie-name" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <TextField fx:id="nameTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$nameTextField" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                <Label styleClass="royal-blue, bold" text="%video.movie-details.year" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                <TextField fx:id="yearTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$yearTextField" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                <Label styleClass="royal-blue, bold" text="%video.movie-details.area" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                <TextField fx:id="areaTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$areaTextField" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                <Label styleClass="royal-blue, bold" text="%video.movie-details.type" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                <TextField fx:id="typeTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$typeTextField" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                <Label styleClass="royal-blue, bold" text="%video.movie-details.directors" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                <TextField fx:id="directorsTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$directorsTextField" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+                <Label styleClass="royal-blue, bold" text="%video.movie-details.actors" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+                <TextField fx:id="actorsTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$actorsTextField" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+                <Label styleClass="royal-blue, bold" text="%video.movie-details.intro" GridPane.columnIndex="0" GridPane.rowIndex="8" />
+                <TextField fx:id="introTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$introTextField" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+                <Label styleClass="royal-blue, bold" text="%spider-debugging.movie-detail.vod-id" GridPane.columnIndex="0" GridPane.rowIndex="9" />
+                <TextField fx:id="vodIdTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                <HBox GridPane.columnIndex="2" GridPane.rowIndex="9">
+                    <Button onAction="#onCopyButtonAction" text="%common.copy" userData="$vodIdTextField" />
+                    <Button onAction="#onSendToMoviePlayAction" text="%spider-debugging.movie-detail.send-to-movie-play">
+                        <graphic>
+                            <FontIcon iconLiteral="fa-flag:16:red" />
+                        </graphic>
+                    </Button>
+                </HBox>
+            </GridPane>
+            <StackPane>
+                <ProgressIndicator fx:id="movieDetailTabMovieLoadingProgressIndicator" />
+                <VBox spacing="5.0">
+                    <TabPane fx:id="episodesTabPane" tabClosingPolicy="UNAVAILABLE" />
+                </VBox>
+            </StackPane>
+        </items>
+    </SplitPane>
+</StackPane>

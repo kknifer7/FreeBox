@@ -1,6 +1,8 @@
 package io.knifer.freebox.helper;
 
 import cn.hutool.core.collection.CollUtil;
+import io.knifer.freebox.component.node.ConfirmDialog;
+import io.knifer.freebox.component.node.MouseToast;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ButtonTypes;
 import io.knifer.freebox.constant.I18nKeys;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * 提示
@@ -57,6 +60,12 @@ public class ToastHelper {
                             .show();
                     postProcessNotification(Pos.TOP_CENTER);
                 });
+    }
+
+    public void showErrorI18n(String i18nKey, Object... formatArgs) {
+        showError(String.format(
+                I18nHelper.get(i18nKey), formatArgs
+        ));
     }
 
     public void showErrorI18n(String i18nKey) {
@@ -108,6 +117,14 @@ public class ToastHelper {
                             .show();
                     postProcessNotification(Pos.TOP_CENTER);
                 });
+    }
+
+    public void showMouseToastI18n(String textI18n) {
+        showMouseToast(I18nHelper.get(textI18n));
+    }
+
+    public void showMouseToast(String text) {
+        MouseToast.show(text);
     }
 
     private Optional<Notifications> createNotification(String message) {
@@ -211,6 +228,10 @@ public class ToastHelper {
         }
         WindowHelper.setFontFamily(alert.getDialogPane(), ConfigHelper.getUsageFontFamily());
         alert.show();
+    }
+
+    public void showConfirmI18n(String titleI18n, String contentI18n, Consumer<Boolean> onResult) {
+        ConfirmDialog.showI18n(titleI18n, contentI18n, onResult);
     }
 
     public void enableErrorShow() {

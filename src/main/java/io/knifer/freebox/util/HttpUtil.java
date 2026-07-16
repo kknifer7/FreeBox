@@ -13,7 +13,9 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.net.IDN;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * HTTP
@@ -113,30 +115,70 @@ public class HttpUtil {
     }
 
     public String parseUrl(String url) {
-        String[] protocolAndPath = url.split("://", 2);
-        String protocol = protocolAndPath[0];
-        String[] hostAndPath = protocolAndPath[1].split("/", 2);
-        String host = hostAndPath[0];
-        StringBuilder urlBuilder = new StringBuilder(protocol)
-                .append("://")
-                .append(IDN.toASCII(host))
-                .append("/");
-        String path;
-        String[] pathAndParams;
+        String[] protocolAndPath;
+        String[] hostAndPath;
+        String protocol;
+        String host;
+        StringBuilder urlBuilder;
 
+        if (StringUtils.isBlank(url)) {
+            return StringUtils.EMPTY;
+        }
+        protocolAndPath = url.split("://", 2);
+        if (protocolAndPath.length < 2) {
+            log.warn("invalid url: {}", url);
+
+            return url;
+        }
+        protocol = protocolAndPath[0];
+        hostAndPath = protocolAndPath[1].split("/", 2);
+        try {
+            host = IDN.toASCII(hostAndPath[0]);
+        } catch (Exception e) {
+            log.warn("invalid host: {}", hostAndPath[0], e);
+
+            return url;
+        }
+        urlBuilder = new StringBuilder(protocol)
+                .append("://")
+                .append(host)
+                .append("/");
         if (hostAndPath.length > 1) {
-            path = hostAndPath[1];
-            pathAndParams = path.split("\\?", 2);
-            if (pathAndParams.length > 1) {
-                urlBuilder.append(URLEncodeUtil.encode(pathAndParams[0]))
-                        .append("?")
-                        .append(URLEncodeUtil.encode(pathAndParams[1]));
-            } else {
-                urlBuilder.append(URLEncodeUtil.encode(path));
-            }
+            appendEncodedPathAndQuery(urlBuilder, hostAndPath[1]);
         }
 
         return urlBuilder.toString();
+    }
+
+    private void appendEncodedPathAndQuery(StringBuilder urlBuilder, String pathAndQuery) {
+        String[] pathAndParams;
+
+        pathAndParams = pathAndQuery.split("\\?", 2);
+        urlBuilder.append(encodePath(pathAndParams[0]));
+        if (pathAndParams.length > 1) {
+            urlBuilder.append("?").append(encodeQuery(pathAndParams[1]));
+        }
+    }
+
+    private String encodePath(String path) {
+        return Arrays.stream(path.split("/"))
+                .map(segment -> URLEncodeUtil.encode(segment).replace("+", "%20"))
+                .collect(Collectors.joining("/"));
+    }
+
+    private String encodeQuery(String query) {
+        return Arrays.stream(query.split("&"))
+                .map(pair -> {
+                    String[] kv = pair.split("=", 2);
+                    String key = URLEncodeUtil.encode(kv[0]);
+
+                    if (kv.length > 1) {
+                        return key + "=" + URLEncodeUtil.encode(kv[1]);
+                    }
+
+                    return key;
+                })
+                .collect(Collectors.joining("&"));
     }
 
     @AllArgsConstructor

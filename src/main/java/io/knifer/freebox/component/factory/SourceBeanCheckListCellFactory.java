@@ -2,6 +2,8 @@ package io.knifer.freebox.component.factory;
 
 import io.knifer.freebox.component.node.EmojiableLabel;
 import io.knifer.freebox.model.common.tvbox.SourceBean;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
@@ -12,6 +14,7 @@ import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.controlsfx.control.CheckListView;
 
@@ -28,6 +31,9 @@ public class SourceBeanCheckListCellFactory implements Callback<ListView<SourceB
 
     private final CheckListView<SourceBean> checkListView;
     private final Consumer<SourceBean> onItemSelect;
+
+    @Getter
+    private final BooleanProperty checkableProperty = new SimpleBooleanProperty(true);
 
     @Override
     public ListCell<SourceBean> call(ListView<SourceBean> param) {
@@ -59,6 +65,8 @@ public class SourceBeanCheckListCellFactory implements Callback<ListView<SourceB
                 graphic = getGraphic();
                 if (graphic instanceof CheckBox) {
                     // 初始化Graphic
+                    graphic.visibleProperty().bind(checkableProperty);
+                    graphic.managedProperty().bind(checkableProperty);
                     newGraphic = new HBox(graphic, emojiLabel);
                     newGraphic.setAlignment(Pos.CENTER_LEFT);
                     newGraphic.setSpacing(3);
@@ -74,7 +82,7 @@ public class SourceBeanCheckListCellFactory implements Callback<ListView<SourceB
         });
         cell.setOnMouseClicked(event -> {
             onItemSelect.accept(cell.getItem());
-            if (event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY) {
+            if (checkableProperty.get() && event.getClickCount() == 2 && event.getButton() == MouseButton.PRIMARY) {
                 checkListView.getCheckModel().toggleCheckState(cell.getIndex());
             }
         });

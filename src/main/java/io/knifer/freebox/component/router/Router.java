@@ -1,10 +1,15 @@
 package io.knifer.freebox.component.router;
 
 import com.google.inject.Singleton;
+import io.knifer.freebox.constant.Views;
 import io.knifer.freebox.controller.BaseController;
+import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.util.CastUtil;
+import io.knifer.freebox.util.FXMLUtil;
 import jakarta.inject.Inject;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -102,6 +107,31 @@ public class Router {
         }
 
         return stageList;
+    }
+
+    /**
+     * 打开次要窗口
+     * @param viewName view名称
+     * @see io.knifer.freebox.constant.Views
+     */
+    public Pair<Stage, ? extends BaseController> openSecondary(String viewName, String titleI18n) {
+        Stage stage;
+        Pair<Stage, ? extends BaseController> logConsoleStageAndController = getSecondary(Views.LOG_CONSOLE_DIALOG);
+
+        if (logConsoleStageAndController != null) {
+            logConsoleStageAndController.getLeft().toFront();
+
+            return logConsoleStageAndController;
+        }
+        logConsoleStageAndController = FXMLUtil.loadDialog(
+                viewName, StageStyle.DECORATED, Modality.NONE
+        );
+        putSecondary(viewName, logConsoleStageAndController);
+        stage = logConsoleStageAndController.getLeft();
+        stage.setTitle(I18nHelper.get(titleI18n));
+        stage.show();
+
+        return logConsoleStageAndController;
     }
 
     /**

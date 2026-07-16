@@ -24,23 +24,12 @@ import java.util.Properties;
 @SuppressWarnings("ConstantConditions")
 public class BaseResources {
 
-    public static final Image LOGO_IMG = new Image(FreeBoxApplication.class.getResourceAsStream("image/logo.png"));
-
-    public static final Image PICTURE_PLACEHOLDER_IMG = new Image(
-            FreeBoxApplication.class.getResourceAsStream("image/picture_placeholder.png")
-    );
-
-    public static final Image LOAD_MORE_IMG = new Image(
-            FreeBoxApplication.class.getResourceAsStream("image/load_more.png")
-    );
-
-    public static final Image PLAYING_GIF = new Image(
-            FreeBoxApplication.class.getResourceAsStream("image/playing.gif")
-    );
-
-    public static final Image PLAY_BUTTON_IMG = new Image(
-            FreeBoxApplication.class.getResourceAsStream("image/play_button.png")
-    );
+    public static final Image LOGO_IMG = loadImage("image/logo.png");
+    public static final Image PICTURE_PLACEHOLDER_IMG = loadImage("image/picture_placeholder.png");
+    public static final Image LOAD_MORE_IMG = loadImage("image/load_more.png");
+    public static final Image PLAYING_GIF = loadImage("image/playing.gif");
+    public static final Image PLAY_BUTTON_IMG = loadImage("image/play_button.png");
+    public static final Image JAVASCRIPT_LOGO_IMG = loadImage("image/javascript_logo.png");
 
     public static final Properties X_PROPERTIES = new Properties() {
         {
@@ -76,5 +65,9 @@ public class BaseResources {
             log.error("spider-js not found");
             System.exit(-1);
         }
+    }
+
+    private static Image loadImage(String path) {
+        return new Image(FreeBoxApplication.class.getResourceAsStream(path));
     }
 }

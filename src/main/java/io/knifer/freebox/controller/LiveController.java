@@ -128,71 +128,83 @@ public class LiveController implements Destroyable {
     ) {
         SpiderTemplate template = context.getSpiderTemplate();
 
-        template.init(callback -> {
-            if (!callback) {
+        template.init()
+                .thenAccept(success -> {
+                    if (!success) {
 
-                return;
-            }
-            template.getLives(lives -> {
-                if (CollectionUtil.isEmpty(lives)) {
-                    Platform.runLater(() -> {
-                        ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_LIVE_NOT_FOUND);
-                        loadingProperty.set(false);
-                    });
-
-                    return;
-                }
-                Platform.runLater(() -> {
-                    String liveSourceName;
-                    ObservableList<MenuItem> switchLiveSourceMenuItems;
-                    boolean hasLiveSource;
-
-                    setupPlayer(rootHeightProp, playerHBoxHeightProp);
-                    switchLiveSourceMenuItems = switchLiveSourceMenu.getItems();
-                    lives.forEach(live -> {
-                        RadioMenuItem menuItem = new RadioMenuItem(live.getName());
-
-                        menuItem.setToggleGroup(switchLiveSourceToggleGroup);
-                        menuItem.setUserData(live);
-                        switchLiveSourceMenuItems.add(menuItem);
-                    });
-                    hasLiveSource = !switchLiveSourceMenuItems.isEmpty();
-                    // 尝试恢复上次使用的源
-                    liveSourceName = clientLiveProperties.getLiveSourceNameLastUsed();
-                    if (StringUtils.isBlank(liveSourceName)) {
-                        bindSwitchLiveSourceToggleGroupEventListener(switchLiveSourceToggleGroup);
-                        if (hasLiveSource) {
-                            switchLiveSourceToggleGroup.selectToggle((Toggle) switchLiveSourceMenuItems.get(0));
-                        }
-                    } else {
-                        if (hasLiveSource) {
-                            CollectionUtil.findFirst(
-                                    switchLiveSourceMenuItems,
-                                    menuItem -> liveSourceName.equals(menuItem.getText())
-                            ).ifPresentOrElse(
-                                    menuItem -> {
-                                        switchLiveSourceToggleGroup.selectToggle((Toggle) menuItem);
-                                        switchLiveSource(
-                                                ((FreeBoxLive) menuItem.getUserData()), true
-                                        );
-                                        bindSwitchLiveSourceToggleGroupEventListener(switchLiveSourceToggleGroup);
-                                    },
-                                    () -> {
-                                        bindSwitchLiveSourceToggleGroupEventListener(switchLiveSourceToggleGroup);
-                                        switchLiveSource(
-                                                ((FreeBoxLive) switchLiveSourceMenuItems.get(0).getUserData()),
-                                                false
-                                        );
-                                    }
-                            );
-                        } else {
-                            bindSwitchLiveSourceToggleGroupEventListener(switchLiveSourceToggleGroup);
-                        }
+                        return;
                     }
-                    loadingProperty.set(false);
+                    template.getLives()
+                            .thenAccept(lives -> {
+                                if (CollectionUtil.isEmpty(lives)) {
+                                    Platform.runLater(() -> {
+                                        ToastHelper.showErrorI18n(I18nKeys.LIVE_MESSAGE_LIVE_NOT_FOUND);
+                                        loadingProperty.set(false);
+                                    });
+
+                                    return;
+                                }
+                                Platform.runLater(() -> {
+                                    String liveSourceName;
+                                    ObservableList<MenuItem> switchLiveSourceMenuItems;
+                                    boolean hasLiveSource;
+
+                                    setupPlayer(rootHeightProp, playerHBoxHeightProp);
+                                    switchLiveSourceMenuItems = switchLiveSourceMenu.getItems();
+                                    lives.forEach(live -> {
+                                        RadioMenuItem menuItem = new RadioMenuItem(live.getName());
+
+                                        menuItem.setToggleGroup(switchLiveSourceToggleGroup);
+                                        menuItem.setUserData(live);
+                                        switchLiveSourceMenuItems.add(menuItem);
+                                    });
+                                    hasLiveSource = !switchLiveSourceMenuItems.isEmpty();
+                                    // 尝试恢复上次使用的源
+                                    liveSourceName = clientLiveProperties.getLiveSourceNameLastUsed();
+                                    if (StringUtils.isBlank(liveSourceName)) {
+                                        bindSwitchLiveSourceToggleGroupEventListener(switchLiveSourceToggleGroup);
+                                        if (hasLiveSource) {
+                                            switchLiveSourceToggleGroup.selectToggle(
+                                                    (Toggle) switchLiveSourceMenuItems.get(0)
+                                            );
+                                        }
+                                    } else {
+                                        if (hasLiveSource) {
+                                            CollectionUtil.findFirst(
+                                                    switchLiveSourceMenuItems,
+                                                    menuItem -> liveSourceName.equals(menuItem.getText())
+                                            ).ifPresentOrElse(
+                                                    menuItem -> {
+                                                        switchLiveSourceToggleGroup.selectToggle((Toggle) menuItem);
+                                                        switchLiveSource(
+                                                                ((FreeBoxLive) menuItem.getUserData()),
+                                                                true
+                                                        );
+                                                        bindSwitchLiveSourceToggleGroupEventListener(
+                                                                switchLiveSourceToggleGroup
+                                                        );
+                                                    },
+                                                    () -> {
+                                                        bindSwitchLiveSourceToggleGroupEventListener(
+                                                                switchLiveSourceToggleGroup
+                                                        );
+                                                        switchLiveSource(
+                                                                (
+                                                                        (FreeBoxLive) switchLiveSourceMenuItems.get(0)
+                                                                                .getUserData()
+                                                                ),
+                                                                false
+                                                        );
+                                                    }
+                                            );
+                                        } else {
+                                            bindSwitchLiveSourceToggleGroupEventListener(switchLiveSourceToggleGroup);
+                                        }
+                                    }
+                                    loadingProperty.set(false);
+                                });
+                            });
                 });
-            });
-        });
     }
 
     private void bindSwitchLiveSourceToggleGroupEventListener(ToggleGroup toggleGroup) {

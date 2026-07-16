@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.control.CheckBox?>
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="io.knifer.freebox.controller.dialog.LogConsoleDialogController"
@@ -21,6 +22,9 @@
     <HBox spacing="10" alignment="CENTER_LEFT">
         <Button onAction="#onClearButtonAction" text="%log-console.clear" styleClass="log-button"/>
         <Button onAction="#onCopyAllButtonAction" text="%log-console.copy-all" styleClass="log-button"/>
+        <Button onAction="#onScrollToTopButtonAction" text="%log-console.scroll-to-top" styleClass="log-button" />
+        <Button onAction="#onScrollToBottomButtonAction" text="%log-console.scroll-to-bottom" styleClass="log-button" />
+        <CheckBox fx:id="autoScrollCheckBox" selected="true" focusTraversable="false" text="%log-console.auto-scroll" />
         <HBox HBox.hgrow="ALWAYS"/>
         <Label fx:id="statusLabel" styleClass="log-status-label"/>
     </HBox>

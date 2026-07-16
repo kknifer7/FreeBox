@@ -1,18 +1,18 @@
 package io.knifer.freebox.component.node;
 
+import io.knifer.freebox.component.factory.MovieSortFilterTreeCellFactory;
 import io.knifer.freebox.constant.I18nKeys;
 import io.knifer.freebox.helper.I18nHelper;
 import io.knifer.freebox.model.common.tvbox.MovieSort;
+import io.knifer.freebox.model.domain.MovieSortFilterTreeNode;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTreeCell;
-import javafx.scene.input.MouseButton;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBoxTreeItem;
+import javafx.scene.control.TreeItem;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-import lombok.Data;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.PopOver;
 
@@ -29,8 +29,8 @@ public class MovieSortFilterPopOver extends PopOver {
 
     private MovieSort.SortData sortData;
 
-    private final CheckTreeView<MovieSortFilterTreeItem> treeView;
-    private final CheckBoxTreeItem<MovieSortFilterTreeItem> treeRoot = new CheckBoxTreeItem<>();
+    private final CheckTreeView<MovieSortFilterTreeNode> treeView;
+    private final CheckBoxTreeItem<MovieSortFilterTreeNode> treeRoot = new CheckBoxTreeItem<>();
 
     public MovieSortFilterPopOver(Consumer<MovieSort.SortData> onFilterAction) {
         super();
@@ -44,40 +44,13 @@ public class MovieSortFilterPopOver extends PopOver {
         treeView.setFocusTraversable(false);
         treeView.setShowRoot(false);
         treeView.setRoot(treeRoot);
-        treeRoot.setExpanded( true);
-        treeView.setCellFactory(new Callback<>() {
-            @Override
-            public TreeCell<MovieSortFilterTreeItem> call(TreeView<MovieSortFilterTreeItem> view) {
-                CheckBoxTreeCell<MovieSortFilterTreeItem> cell = new CheckBoxTreeCell<>() {
-                    @Override
-                    public void updateItem(MovieSortFilterTreeItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item == null || empty) {
-                            return;
-                        }
-                        if (item.getFilterValueFlag()) {
-                            setText(item.getFilterValueName());
-                        } else {
-                            setText(item.getFilterName());
-                            setGraphic(null);
-                        }
-                    }
-                };
-
-                cell.setOnMouseClicked(evt -> {
-                    if (evt.getClickCount() == 2 && evt.getButton() == MouseButton.PRIMARY) {
-                        treeView.getCheckModel().toggleCheckState(cell.getTreeItem());
-                    }
-                });
-
-                return cell;
-            }
-        });
+        treeRoot.setExpanded(true);
+        treeView.setCellFactory(new MovieSortFilterTreeCellFactory());
         resetBtn.setFocusTraversable(false);
         resetBtn.setOnAction(evt -> treeView.getCheckModel().clearChecks());
         okBtn.setFocusTraversable(false);
         okBtn.setOnAction(evt -> {
-            ObservableList<TreeItem<MovieSortFilterTreeItem>> checkedItems = treeView.getCheckModel().getCheckedItems();
+            ObservableList<TreeItem<MovieSortFilterTreeNode>> checkedItems = treeView.getCheckModel().getCheckedItems();
             Map<String, String> checkedFilterKeyAndValueMap;
             Map<String, String> filterSelect;
 
@@ -91,9 +64,9 @@ public class MovieSortFilterPopOver extends PopOver {
             } else {
                 checkedFilterKeyAndValueMap = new HashMap<>();
                 checkedItems.forEach(item -> {
-                    MovieSortFilterTreeItem filter = item.getValue();
-                    TreeItem<MovieSortFilterTreeItem> parent;
-                    MovieSortFilterTreeItem parentFilter;
+                    MovieSortFilterTreeNode filter = item.getValue();
+                    TreeItem<MovieSortFilterTreeNode> parent;
+                    MovieSortFilterTreeNode parentFilter;
 
                     if (!filter.getFilterValueFlag()) {
                         return;
@@ -127,80 +100,24 @@ public class MovieSortFilterPopOver extends PopOver {
     }
 
     public void putSortDataFilterList(MovieSort.SortData sortData) {
-        ObservableList<TreeItem<MovieSortFilterTreeItem>> items;
+        ObservableList<TreeItem<MovieSortFilterTreeNode>> items;
+        MovieSortFilterCheckBoxTreeItem treeItem;
+        String filterVal;
 
         this.sortData = sortData;
         items = treeRoot.getChildren();
         items.clear();
         treeView.getCheckModel().clearChecks();
-        sortData.getFilters().forEach(filter -> {
-            CheckBoxTreeItem<MovieSortFilterTreeItem> treeItem = new CheckBoxTreeItem<>(convertToTreeItem(filter));
-            ObservableList<TreeItem<MovieSortFilterTreeItem>> itemChildren = treeItem.getChildren();
-
-            treeItem.setIndependent(true);
-            treeItem.setExpanded(true);
+        for (MovieSort.SortFilter filter : sortData.getFilters()) {
+            treeItem = MovieSortFilterCheckBoxTreeItem.from(filter);
             items.add(treeItem);
-            filter.getValues().entrySet().forEach(filterValueNameAndValue -> {
-                CheckBoxTreeItem<MovieSortFilterTreeItem> childItem = new CheckBoxTreeItem<>(convertToTreeItem(filterValueNameAndValue));
-                String filterVal;
-
-                itemChildren.add(childItem);
-                childItem.setIndependent(true);
+            for (TreeItem<MovieSortFilterTreeNode> child : treeItem.getChildren()) {
                 // 如果sortData中的filterSelect中包含了选中的filterValue，则选中该item
                 filterVal = sortData.getFilterSelect().get(filter.getKey());
-                if (filterVal != null && filterVal.equals(filterValueNameAndValue.getValue())) {
-                    childItem.setSelected(true);
+                if (filterVal != null && filterVal.equals(child.getValue().getFilterValue())) {
+                    ((CheckBoxTreeItem<MovieSortFilterTreeNode>) child).setSelected(true);
                 }
-                childItem.selectedProperty().addListener((ob, oldVal, newVal) -> {
-                    if (!newVal) {
-                        return;
-                    }
-                    itemChildren.forEach(i -> {
-                        CheckBoxTreeItem<?> iCheckItem;
-
-                        if (i.equals(childItem)) {
-                            return;
-                        }
-                        iCheckItem = (CheckBoxTreeItem<?>) i;
-                        if (iCheckItem.isSelected()) {
-                            iCheckItem.setSelected(false);
-                        }
-                    });
-                });
-            });
-        });
-
-    }
-
-    private MovieSortFilterTreeItem convertToTreeItem(MovieSort.SortFilter sortDataFilter) {
-        MovieSortFilterTreeItem item = new MovieSortFilterTreeItem();
-
-        item.setFilterValueFlag(false);
-        item.setFilterKey(sortDataFilter.getKey());
-        item.setFilterName(sortDataFilter.getName());
-
-        return item;
-    }
-
-    private MovieSortFilterTreeItem convertToTreeItem(Map.Entry<String, String> filterValueNameAndValue) {
-        MovieSortFilterTreeItem item = new MovieSortFilterTreeItem();
-
-        item.setFilterValueFlag(true);
-        item.setFilterValueName(filterValueNameAndValue.getKey());
-        item.setFilterValue(filterValueNameAndValue.getValue());
-
-        return item;
-    }
-
-    @Data
-    private static class MovieSortFilterTreeItem {
-        private String filterKey;
-        private String filterName;
-        private String filterValueName;
-        private String filterValue;
-        /**
-         * 是否为filter里面的value（如果不是，就是外层的filter）
-         */
-        private Boolean filterValueFlag;
+            }
+        }
     }
 }

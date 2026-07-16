@@ -8,8 +8,21 @@
 
 .royal-blue {
     -fx-text-fill: #4169E1;
+    -fx-fill: #4169E1;
 }
 
 .gray {
     -fx-text-fill: #808080;
+}
+
+.dark-orange {
+    -fx-text-fill: #FF8C00;
+}
+
+.danger {
+    -fx-text-fill: red;
+}
+
+.success {
+    -fx-text-fill: green;
 }

@@ -182,7 +182,12 @@ public class CatVodBeanConverter {
     }
 
     @Nullable
-    public JsonObject catVodPlayContentToTVBoxPlayContent(JsonObject catVodPlayContent, ClientInfo clientInfo) {
+    public JsonObject catVodPlayContentToTVBoxPlayContent(JsonObject catVodPlayContent) {
+        return catVodPlayContentToTVBoxPlayContent(catVodPlayContent, null);
+    }
+
+    @Nullable
+    public JsonObject catVodPlayContentToTVBoxPlayContent(JsonObject catVodPlayContent, @Nullable ClientInfo clientInfo) {
         JsonElement jsonElem;
         JsonObject jsonObject;
         JsonArray jsonArray;
@@ -233,11 +238,13 @@ public class CatVodBeanConverter {
 
             return null;
         }
-        url = RegExUtils.replaceAll(
-                url,
-                Ipv4Util.LOCAL_IP,
-                clientInfo.getConnection().getRemoteSocketAddress().getHostString()
-        );
+        if (clientInfo != null) {
+            url = RegExUtils.replaceAll(
+                    url,
+                    Ipv4Util.LOCAL_IP,
+                    clientInfo.getConnection().getRemoteSocketAddress().getHostString()
+            );
+        }
         result = new JsonObject();
         nameValuePairsObject = new JsonObject();
         nameValuePairsObject.addProperty("url", url);

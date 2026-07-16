@@ -19,7 +19,6 @@ import io.knifer.freebox.model.domain.*;
 import io.knifer.freebox.model.s2c.*;
 import io.knifer.freebox.net.websocket.converter.CatVodBeanConverter;
 import io.knifer.freebox.net.websocket.core.ClientManager;
-import io.knifer.freebox.service.FutureWaitingService;
 import io.knifer.freebox.spider.SpiderJarLoader;
 import io.knifer.freebox.spider.template.SpiderTemplate;
 import io.knifer.freebox.util.CollectionUtil;
@@ -35,9 +34,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
@@ -56,10 +53,10 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
     private List<SourceBean> sourceBeans;
 
     private final static ThreadPoolExecutor EXECUTOR =  new ThreadPoolExecutor(
-            1,
-            1,
-            0L,
-            TimeUnit.MILLISECONDS,
+            2,
+            Runtime.getRuntime().availableProcessors(),
+            60L,
+            TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(),
             r -> {
                 Thread t = new Thread(r);
@@ -82,21 +79,17 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
     }
 
     @Override
-    public void init(Consumer<Boolean> callback) {
+    public CompletableFuture<Boolean> init() {
         ClientInfo clientInfo = getClientInfo();
 
-        EXECUTOR.execute(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             String configUrl = clientInfo.getConfigUrl();
-            FutureWaitingService<String> service;
+            String jsonVal;
 
             if (configUrl.startsWith("http")) {
-                service = new FutureWaitingService<>(HttpUtil.getAsync(
-                        configUrl,
-                        BaseValues.FETCH_CAT_VOD_API_CONFIG_HTTP_HEADERS
-                ));
-                service.setOnSucceeded(evt -> {
-                    String jsonVal = service.getValue();
-
+                try {
+                    jsonVal = HttpUtil.getAsync(configUrl, BaseValues.FETCH_CAT_VOD_API_CONFIG_HTTP_HEADERS)
+                            .get(BaseValues.KEB_SOCKET_REQUEST_TIMEOUT, TimeUnit.SECONDS);
                     if (StringUtils.isBlank(jsonVal)) {
                         Platform.runLater(
                                 () -> ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_GET_CONFIG_FAILED)
@@ -104,23 +97,34 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
                     } else {
                         jsonVal = ApiConfigUtil.parseApiConfigJson(jsonVal.trim());
                     }
-                    doInit(configUrl, jsonVal, callback);
-                });
-                service.start();
+
+                    return doInit(configUrl, jsonVal);
+                } catch (Exception e) {
+                    handleException(e);
+
+                    return false;
+                }
             } else if (configUrl.startsWith("file:///")) {
-                doInit(
+
+                return doInit(
                         configUrl,
-                        ApiConfigUtil.parseApiConfigJson(FileUtil.readString(configUrl, Charsets.UTF_8).trim()),
-                        callback
+                        ApiConfigUtil.parseApiConfigJson(FileUtil.readString(configUrl, Charsets.UTF_8).trim())
                 );
             } else {
-                Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_INVALID_CONFIG_URL));
-                doInit(configUrl, null, callback);
+                Platform.runLater(
+                        () -> ToastHelper.showErrorI18n(I18nKeys.HOME_IMPORT_API_MESSAGE_INVALID_CONFIG_URL)
+                );
+
+                return doInit(configUrl, null);
             }
+        }, EXECUTOR).exceptionally(e -> {
+            handleException(e);
+
+            return false;
         });
     }
 
-    private void doInit(String configUrl, String jsonVal, Consumer<Boolean> callback) {
+    private boolean doInit(String configUrl, String jsonVal) {
         String spiderUrl;
 
         try {
@@ -128,16 +132,14 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         } catch (JsonSyntaxException e) {
             Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
             log.error("load api config error", e);
-            callback.accept(false);
 
-            return;
+            return false;
         }
         if (apiConfig == null) {
             Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
             log.error("api config is null");
-            callback.accept(false);
 
-            return;
+            return false;
         }
         apiConfig.setUrl(configUrl);
         spiderUrl = apiConfig.getSpider();
@@ -148,9 +150,8 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
         ) {
             Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.TV_ERROR_LOAD_SPIDER_CONFIG_FAILED));
             log.error("load api config error, spider url invalid");
-            callback.accept(false);
 
-            return;
+            return false;
         }
         spiderJarLoader.setApiConfig(apiConfig);
         sourceBeans = apiConfig.getSites()
@@ -158,7 +159,8 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
                 .map(FreeBoxSourceBean::toSourceBean)
                 .toList();
         log.info("load api config success");
-        callback.accept(true);
+
+        return true;
     }
 
     @Override
@@ -168,26 +170,34 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
     }
 
     @Override
-    public void getSourceBeanList(Consumer<List<SourceBean>> callback) {
-        callback.accept(sourceBeans);
+    public CompletableFuture<List<SourceBean>> getSourceBeanList() {
+        return CompletableFuture.completedFuture(sourceBeans)
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return List.of();
+                });
     }
 
     @Override
-    public void getHomeContent(SourceBean sourceBean, Consumer<AbsSortXml> callback) {
-        EXECUTOR.execute(() -> {
+    public CompletableFuture<AbsSortXml> getHomeContent(SourceBean sourceBean) {
+        return CompletableFuture.supplyAsync(() -> {
             Object spider = getSpider(sourceBean);
             Result result = GsonUtil.fromJson(SpiderInvokeUtil.homeContent(spider, false), Result.class);
 
             log.info("getHomeContent: {}", result);
-            callback.accept(
-                    result == null ? null : beanConverter.resultToAbsSortXml(result, sourceBean.getKey())
-            );
+
+            return result == null ? null : beanConverter.resultToAbsSortXml(result, sourceBean.getKey());
+        }, EXECUTOR).exceptionally(e -> {
+            handleException(e);
+
+            return null;
         });
     }
 
     @Override
-    public void getCategoryContent(GetCategoryContentDTO dto, Consumer<AbsXml> callback) {
-        EXECUTOR.execute(() -> {
+    public CompletableFuture<AbsXml> getCategoryContent(GetCategoryContentDTO dto) {
+        return CompletableFuture.supplyAsync(() -> {
             String sourceKey = dto.getSourceKey();
             Object spider = getSpider(sourceKey);
             HashMap<String, String> filterSelect = dto.getExtend();
@@ -200,26 +210,36 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             );
 
             log.info("getCategoryContent: {}", result);
-            callback.accept(result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey()));
+
+            return result == null ? null : beanConverter.resultToAbsXml(result, sourceKey);
+        }, EXECUTOR).exceptionally(e -> {
+            handleException(e);
+
+            return null;
         });
     }
 
     @Override
-    public void getDetailContent(GetDetailContentDTO dto, Consumer<AbsXml> callback) {
-        EXECUTOR.execute(() -> {
+    public CompletableFuture<AbsXml> getDetailContent(GetDetailContentDTO dto) {
+        return CompletableFuture.supplyAsync(() -> {
             Object spider = getSpider(dto.getSourceKey());
             Result result = GsonUtil.fromJson(
                     SpiderInvokeUtil.detailContent(spider, List.of(dto.getVodId())), Result.class
             );
 
             log.info("getDetailContent: {}", result);
-            callback.accept(result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey()));
+
+            return result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey());
+        }, EXECUTOR).exceptionally(e -> {
+            handleException(e);
+
+            return null;
         });
     }
 
     @Override
-    public void getPlayerContent(GetPlayerContentDTO dto, Consumer<JsonObject> callback) {
-        EXECUTOR.execute(() -> {
+    public CompletableFuture<JsonObject> getPlayerContent(GetPlayerContentDTO dto) {
+        return CompletableFuture.supplyAsync(() -> {
             Object spider = getSpider(dto.getSourceKey());
             JsonObject sourceResult = GsonUtil.fromJson(
                     SpiderInvokeUtil.playerContent(spider, dto.getPlayFlag(), dto.getVodId(), List.of()),
@@ -229,59 +249,75 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
 
             log.info("getPlayerContent: {}", sourceResult);
             if (sourceResult == null) {
-                callback.accept(null);
 
-                return;
+                return null;
             }
             result = new JsonObject();
             result.add("nameValuePairs", sourceResult);
-            callback.accept(result);
+
+            return result;
+        }, EXECUTOR).exceptionally(e -> {
+            handleException(e);
+
+            return null;
         });
     }
 
     @Override
-    public void getPlayHistory(GetPlayHistoryDTO dto, Consumer<List<VodInfo>> callback) {
-        ClientInfo clientInfo = getClientInfo();
+    public CompletableFuture<List<VodInfo>> getPlayHistory(GetPlayHistoryDTO dto) {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.supplyAsync(() -> {
+                    MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
+                            .orElse(null);
+                    Collection<VodInfo> result;
 
-        EXECUTOR.execute(() -> {
-            MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
-                    .orElse(null);
-            Collection<VodInfo> result;
+                    if (movieHistory == null) {
+                        log.info("getPlayHistory: null");
 
-            if (movieHistory == null) {
-                log.info("getPlayHistory: null");
-                callback.accept(List.of());
-            } else {
-                result = movieHistory.getData().values();
-                log.info("getPlayHistory: {}", result);
-                callback.accept(result.isEmpty() ? List.of() : new ArrayList<>(result));
-            }
-        });
+                        return List.<VodInfo>of();
+                    } else {
+                        result = movieHistory.getData().values();
+                        log.info("getPlayHistory: {}", result);
+
+                        return result.isEmpty() ? List.<VodInfo>of() : new ArrayList<>(result);
+                    }
+                }, EXECUTOR))
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return List.of();
+                });
     }
 
     @Override
-    public void getOnePlayHistory(GetOnePlayHistoryDTO dto, Consumer<VodInfo> callback) {
-        ClientInfo clientInfo = getClientInfo();
+    public CompletableFuture<VodInfo> getOnePlayHistory(GetOnePlayHistoryDTO dto) {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.supplyAsync(() -> {
+                    MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
+                            .orElse(null);
+                    VodInfo result;
 
-        EXECUTOR.execute(() -> {
-            MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
-                    .orElse(null);
-            VodInfo result;
+                    if (movieHistory == null) {
+                        log.info("getOnePlayHistory: null");
 
-            if (movieHistory == null) {
-                callback.accept(null);
-                log.info("getOnePlayHistory: null");
-            } else {
-                result = movieHistory.getData().get(DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId()));
-                log.info("getOnePlayHistory: {}", result);
-                callback.accept(result);
-            }
-        });
+                        return null;
+                    } else {
+                        result = movieHistory.getData().get(DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId()));
+                        log.info("getOnePlayHistory: {}", result);
+
+                        return result;
+                    }
+                }, EXECUTOR))
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return null;
+                });
     }
 
     @Override
-    public void getSearchContent(GetSearchContentDTO dto, Consumer<AbsXml> callback) {
-        EXECUTOR.execute(() -> {
+    public CompletableFuture<AbsXml> getSearchContent(GetSearchContentDTO dto) {
+        return CompletableFuture.supplyAsync(() -> {
             Object spider = getSpider(dto.getSourceKey());
             Result result = GsonUtil.fromJson(
                     SpiderInvokeUtil.searchContent(spider, dto.getKeyword(), false),
@@ -289,149 +325,174 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
             );
 
             log.info("getSearchContent: {}", result);
-            callback.accept(result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey()));
-        });
+
+            return result == null ? null : beanConverter.resultToAbsXml(result, dto.getSourceKey());
+        }, EXECUTOR);
     }
 
     @Override
-    public <T extends RuntimeException> void savePlayHistory(SavePlayHistoryDTO dto, Consumer<T> onError) {
-        ClientInfo clientInfo = getClientInfo();
-
-        EXECUTOR.execute(() -> {
-            MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
-                    .orElse(null);
-            Map<String, VodInfo> data;
-            VodInfo vodInfo;
-
-            if (movieHistory == null) {
-                data = new HashMap<>();
-                movieHistory = MovieHistory.of(clientInfo.getId(), data);
-            } else {
-                data = movieHistory.getData();
-            }
-            vodInfo = VodInfo.from(dto);
-            data.put(
-                    DigestUtil.md5Hex(vodInfo.getSourceKey() + vodInfo.getId()),
-                    vodInfo
-            );
-            StorageHelper.save(movieHistory);
-            log.info("savePlayHistory: {}", movieHistory);
-        });
+    public CompletableFuture<Void> cancelAllSearching() {
+        /* *
+         * 本方法主要目的在于取消WebSocket连接的远端app的搜索任务
+         * 至于非WebSocket环境下的影视搜索逻辑取消，每次搜索前调用的CommonMovieBatchSearchingHandler已经有所实现，无需在这里实现
+         * */
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public void deletePlayHistory(DeletePlayHistoryDTO dto, Runnable callback) {
-        ClientInfo clientInfo = getClientInfo();
+    public CompletableFuture<Void> savePlayHistory(SavePlayHistoryDTO dto) {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.runAsync(() -> {
+                    MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
+                            .orElse(null);
+                    Map<String, VodInfo> data;
+                    VodInfo vodInfo;
 
-        EXECUTOR.execute(() -> {
-            MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
-                    .orElse(null);
-            VodInfo removed;
-
-            if (movieHistory == null) {
-                callback.run();
-            } else {
-                removed = movieHistory.getData().remove(
-                        DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
-                );
-                if (removed != null) {
+                    if (movieHistory == null) {
+                        data = new HashMap<>();
+                        movieHistory = MovieHistory.of(clientInfo.getId(), data);
+                    } else {
+                        data = movieHistory.getData();
+                    }
+                    vodInfo = VodInfo.from(dto);
+                    data.put(
+                            DigestUtil.md5Hex(vodInfo.getSourceKey() + vodInfo.getId()),
+                            vodInfo
+                    );
                     StorageHelper.save(movieHistory);
-                }
-                callback.run();
-            }
-            log.info("deletePlayHistory: {}", movieHistory);
-        });
+                    log.info("savePlayHistory: {}", movieHistory);
+                }, EXECUTOR));
     }
 
     @Override
-    public void saveMovieCollection(SaveMovieCollectionDTO dto, Runnable callback) {
-        ClientInfo clientInfo = getClientInfo();
+    public CompletableFuture<Void> deletePlayHistory(DeletePlayHistoryDTO dto) {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.runAsync(() -> {
+                    MovieHistory movieHistory = StorageHelper.find(clientInfo.getId(), MovieHistory.class)
+                            .orElse(null);
+                    VodInfo removed;
 
-        EXECUTOR.execute(() -> {
-            MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
-                    .orElse(null);
-            Map<String, VodCollect> data;
+                    if (movieHistory == null) {
 
-            if (movieCollection == null) {
-                data = new HashMap<>();
-                movieCollection = MovieCollection.of(clientInfo.getId(), data);
-            } else {
-                data = movieCollection.getData();
-            }
-            data.put(
-                    DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId()),
-                    VodCollect.from(dto)
-            );
-            StorageHelper.save(movieCollection);
-            callback.run();
-            log.info("saveMovieCollection: {}", movieCollection);
-        });
+                        return;
+                    }
+                    removed = movieHistory.getData().remove(
+                            DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
+                    );
+                    if (removed != null) {
+                        StorageHelper.save(movieHistory);
+                    }
+                    log.info("deletePlayHistory: {}", movieHistory);
+                }, EXECUTOR));
     }
 
     @Override
-    public void deleteMovieCollection(DeleteMovieCollectionDTO dto, Runnable callback) {
-        ClientInfo clientInfo = getClientInfo();
+    public CompletableFuture<Void> saveMovieCollection(SaveMovieCollectionDTO dto) {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.runAsync(() -> {
+                    MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
+                            .orElse(null);
+                    Map<String, VodCollect> data;
 
-        EXECUTOR.execute(() -> {
-            MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
-                    .orElse(null);
-            VodCollect removed;
-
-            if (movieCollection == null) {
-                callback.run();
-            } else {
-                removed = movieCollection.getData().remove(
-                        DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
-                );
-                if (removed != null) {
+                    if (movieCollection == null) {
+                        data = new HashMap<>();
+                        movieCollection = MovieCollection.of(clientInfo.getId(), data);
+                    } else {
+                        data = movieCollection.getData();
+                    }
+                    data.put(
+                            DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId()),
+                            VodCollect.from(dto)
+                    );
                     StorageHelper.save(movieCollection);
-                }
-                callback.run();
-            }
-            log.info("deleteMovieCollection: {}", movieCollection);
-        });
+                    log.info("saveMovieCollection: {}", movieCollection);
+                }, EXECUTOR))
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return null;
+                });
     }
 
     @Override
-    public void getMovieCollection(Consumer<List<VodCollect>> callback) {
-        ClientInfo clientInfo = getClientInfo();
+    public CompletableFuture<Void> deleteMovieCollection(DeleteMovieCollectionDTO dto) {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.runAsync(() -> {
+                    MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
+                            .orElse(null);
+                    VodCollect removed;
 
-        EXECUTOR.execute(() -> {
-            MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
-                    .orElse(null);
-            Collection<VodCollect> result;
+                    if (movieCollection == null) {
 
-            if (movieCollection == null) {
-                log.info("getMovieCollection: null");
-                callback.accept(List.of());
-            } else {
-                result = movieCollection.getData().values();
-                log.info("getMovieCollection: {}", movieCollection);
-                callback.accept(result.isEmpty() ? List.of() : new ArrayList<>(result));
-            }
-        });
+                        return;
+                    }
+                    removed = movieCollection.getData().remove(
+                            DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
+                    );
+                    if (removed != null) {
+                        StorageHelper.save(movieCollection);
+                    }
+                    log.info("deleteMovieCollection: {}", movieCollection);
+                }, EXECUTOR))
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return null;
+                });
     }
 
     @Override
-    public void getMovieCollectedStatus(GetMovieCollectedStatusDTO dto, Consumer<Boolean> callback) {
-        ClientInfo clientInfo = getClientInfo();
+    public CompletableFuture<List<VodCollect>> getMovieCollection() {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.supplyAsync(() -> {
+                    MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
+                            .orElse(null);
+                    Collection<VodCollect> result;
 
-        EXECUTOR.execute(() -> {
-            MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
-                    .orElse(null);
-            boolean flag;
+                    if (movieCollection == null) {
+                        log.info("getMovieCollection: null");
 
-            if (movieCollection == null) {
-                log.info("getMovieCollectedStatus: false");
-                callback.accept(false);
-            } else {
-                flag = movieCollection.getData().containsKey(
-                        DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
-                );
-                log.info("getMovieCollectedStatus: {}", flag);
-                callback.accept(flag);
-            }
-        });
+                        return List.<VodCollect>of();
+                    } else {
+                        result = movieCollection.getData().values();
+                        log.info("getMovieCollection: {}", movieCollection);
+
+                        return result.isEmpty() ? List.<VodCollect>of() : new ArrayList<>(result);
+                    }
+                }, EXECUTOR))
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return List.of();
+                });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> getMovieCollectedStatus(GetMovieCollectedStatusDTO dto) {
+        return clientManager.getCurrentClient()
+                .thenCompose(clientInfo -> CompletableFuture.supplyAsync(() -> {
+                    MovieCollection movieCollection = StorageHelper.find(clientInfo.getId(), MovieCollection.class)
+                            .orElse(null);
+                    boolean flag;
+
+                    if (movieCollection == null) {
+                        log.info("getMovieCollectedStatus: false");
+
+                        return false;
+                    } else {
+                        flag = movieCollection.getData().containsKey(
+                                DigestUtil.md5Hex(dto.getSourceKey() + dto.getVodId())
+                        );
+                        log.info("getMovieCollectedStatus: {}", flag);
+
+                        return flag;
+                    }
+                }, EXECUTOR))
+                .exceptionally(e -> {
+                    handleException(e);
+
+                    return false;
+                });
     }
 
     private ClientInfo getClientInfo() {
@@ -480,12 +541,22 @@ public class FreeBoxSpiderTemplate implements SpiderTemplate {
     }
 
     @Override
-    public void getLives(Consumer<List<FreeBoxLive>> callback) {
-        callback.accept(ObjectUtils.defaultIfNull(apiConfig.getLives(), List.of()));
+    public CompletableFuture<List<FreeBoxLive>> getLives() {
+        return CompletableFuture.completedFuture(ObjectUtils.defaultIfNull(apiConfig.getLives(), List.of()));
     }
 
     @Override
     public void proxy(Consumer<Object[]> callback, Map<String, String> params) {
         EXECUTOR.execute(() -> SpiderTemplate.super.proxy(callback, params));
+    }
+
+    private void handleException(Throwable e) {
+        if (e instanceof ExecutionException || e instanceof TimeoutException) {
+            Platform.runLater(() -> ToastHelper.showErrorI18n(I18nKeys.COMMON_MESSAGE_TIMOUT_FAILED));
+        } else if (e instanceof InterruptedException) {
+            log.info("interrupted");
+        } else {
+            Platform.runLater(() -> ToastHelper.showException(e));
+        }
     }
 }

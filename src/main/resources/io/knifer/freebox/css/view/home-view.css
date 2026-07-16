@@ -1,1 +1,27 @@
 @import "../common.css";
+
+.tool-bar-btn {
+    -fx-background-color: #f5f5f5;
+    -fx-background-radius: 8;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+    -fx-content-display: graphic-only;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0.3, 0, 1);
+}
+
+.tool-bar-btn:hover {
+    -fx-background-color: #e8e8e8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0.5, 0, 2);
+    -fx-translate-y: -1;
+}
+
+.tool-bar-btn:pressed {
+    -fx-background-color: #dcdcdc;
+}
+
+.tool-bar-btn:disabled {
+    -fx-opacity: 0.4;
+}

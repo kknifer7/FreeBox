@@ -56,6 +56,8 @@ public class HomeController {
     @FXML
     private Button settingsBtn;
     @FXML
+    private Button spiderDebuggingBtn;
+    @FXML
     private Text settingsInfoText;
     @FXML
     public Text serviceNotStartWarningText;
@@ -91,11 +93,13 @@ public class HomeController {
     @FXML
     private void initialize() {
         ObservableList<ClientInfo> clientItems = clientListView.getItems();
+        BooleanProperty serviceNotStartProperty = serviceNotStartWarningText.visibleProperty();
 
         checkPlayerInstalledAndUpdateUI();
-        vodButton.disableProperty().bind(allowVodOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
-        liveButton.disableProperty().bind(allowLiveOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
-        sourceAuditButton.disableProperty().bind(allowSourceAuditOpProperty.not().or(serviceNotStartWarningText.visibleProperty()));
+        vodButton.disableProperty().bind(allowVodOpProperty.not().or(serviceNotStartProperty));
+        liveButton.disableProperty().bind(allowLiveOpProperty.not().or(serviceNotStartProperty));
+        sourceAuditButton.disableProperty().bind(allowSourceAuditOpProperty.not().or(serviceNotStartProperty));
+
         clientListView.getSelectionModel()
                 .selectedItemProperty()
                 .addListener((ob, oldVal, newVal) -> {
@@ -200,6 +204,7 @@ public class HomeController {
         playerNotFoundLabel.setText(I18nHelper.getFormatted(
                 I18nKeys.HOME_PLAYER_NOT_FOUND, ConfigHelper.getPlayerType().getName()
         ));
+        spiderDebuggingBtn.setDisable(playerNotFound);
     }
 
     private void openLicenseDialogIfNeeded() {
@@ -237,7 +242,7 @@ public class HomeController {
     }
 
     @FXML
-    private void onSettingsBtnClick() {
+    private void onSettingsBtnAction() {
         Stage stage = FXMLUtil.load(Views.SETTINGS).getLeft();
 
         stage.initModality(Modality.WINDOW_MODAL);
@@ -301,6 +306,15 @@ public class HomeController {
         hasServiceNotStarted = !isHttpServiceRunning || !isWsServiceRunning;
         serviceNotStartWarningText.setVisible(hasServiceNotStarted);
         serviceNotStartWarningText.setManaged(hasServiceNotStarted);
+    }
+
+    @FXML
+    private void onSpiderDebuggingBtnAction() {
+        Pair<Stage, SpiderDebuggingController> stageAndController = FXMLUtil.load(Views.SPIDER_DEBUGGING);
+        Stage stage = stageAndController.getLeft();
+
+        stage.setTitle(I18nHelper.get(I18nKeys.SPIDER_DEBUGGING));
+        router.route(WindowHelper.getStage(root), stage);
     }
 
     @FXML

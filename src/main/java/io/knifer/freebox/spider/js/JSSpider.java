@@ -17,11 +17,13 @@ import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * JS 爬虫
@@ -114,12 +116,12 @@ public class JSSpider extends Spider {
 
     @Override
     public boolean manualVideoCheck() throws Exception {
-        return (Boolean) call("sniffer");
+        return call("sniffer") instanceof Boolean result ? result : false;
     }
 
     @Override
     public boolean isVideoFormat(String url) throws Exception {
-        return (Boolean) call("isVideo", url);
+        return call("isVideo", url) instanceof Boolean result ? result : false;
     }
 
     public Object[] proxy(Map<String, String> params) throws Exception {
@@ -127,12 +129,17 @@ public class JSSpider extends Spider {
     }
 
     private Object[] proxy1(Map<String, String> params) {
-        Value proxyResultArray = jsonParseFunction.execute(spiderObject.invokeMember("proxy", params));
+        Value proxyResultArray;
         long resultArrayLength;
         Map<String, String> headers;
         boolean base64;
         Object[] result;
 
+        if (checkSpiderObjectNull()) {
+
+            return null;
+        }
+        proxyResultArray = jsonParseFunction.execute(spiderObject.invokeMember("proxy", params));
         if (!proxyResultArray.hasArrayElements()) {
 
             return null;
@@ -201,8 +208,13 @@ public class JSSpider extends Spider {
     }
 
     private Object call(String function, Object... args) throws Exception {
-        CompletableFuture<Object> result = new CompletableFuture<>();
+        CompletableFuture<Object> result;
 
+        if (checkSpiderObjectNull()) {
+
+            return null;
+        }
+        result = new CompletableFuture<>();
         Promise.of(spiderObject.invokeMember(function, args), String.class)
                 .then(result::complete)
                 .catchError(error -> {
@@ -211,6 +223,16 @@ public class JSSpider extends Spider {
                 });
 
         return result.get(SUBMIT_TIMEOUT, TimeUnit.SECONDS);
+    }
+
+    private boolean checkSpiderObjectNull() {
+        if (spiderObject == null) {
+            log.warn("Spider object is null, please check the initialization of the spider");
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -262,7 +284,6 @@ public class JSSpider extends Spider {
         }
         spiderObject = global.getMember(SPIDER_OBJECT_NAME);
         jsonParseFunction = context.eval("js", "JSON.parse");
-        log.info("initialize js spider succeed");
 
         return catFlag;
     }
@@ -271,8 +292,17 @@ public class JSSpider extends Spider {
     public void destroy() {
         try {
             context.close(true);
+            log.info("destroyed, siteKey={}, jar={}", siteKey, jar);
         } catch (Exception e) {
             log.error("destroy failed", e);
+        }
+    }
+
+    public void interrupt() {
+        if (context != null) {
+            try {
+                context.interrupt(Duration.ZERO);
+            } catch (TimeoutException ignored) {}
         }
     }
 }

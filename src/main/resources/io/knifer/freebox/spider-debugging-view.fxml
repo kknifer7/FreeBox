@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import io.knifer.freebox.component.factory.SpiderDebuggingCellFactory?>
+<?import io.knifer.freebox.component.factory.SpiderDebuggingListCell?>
+<?import io.knifer.freebox.constant.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<BorderPane fx:id="root" stylesheets="@css/view/spider-debugging-view.css" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.knifer.freebox.controller.SpiderDebuggingController">
+    <fx:define>
+        <SpiderDebuggingCellFactory fx:id="spiderDebuggingCellFactory" />
+        <SpiderDebuggingListCell fx:id="spiderDebuggingListCell" />
+    </fx:define>
+
+    <top>
+        <BorderPane>
+            <left>
+                <HBox alignment="CENTER" spacing="10.0">
+                    <children>
+                        <HBox spacing="5.0">
+                            <Button fx:id="importButton" mnemonicParsing="false" onAction="#onImportButtonAction" text="%spider-debugging.import">
+                                <graphic>
+                                    <FontIcon iconLiteral="fa-plus:16:green" />
+                                </graphic>
+                            </Button>
+                            <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#onDeleteButtonAction" text="%spider-debugging.delete">
+                                <graphic>
+                                    <FontIcon iconLiteral="fa-trash:16:red" />
+                                </graphic>
+                            </Button>
+                        </HBox>
+                        <ComboBox fx:id="spiderSelectComboBox" onAction="#onSpiderSelectComboBoxAction" cellFactory="$spiderDebuggingCellFactory" buttonCell="$spiderDebuggingListCell" promptText="%spider-debugging.select-file-prompt" />
+                        <VBox alignment="CENTER" HBox.hgrow="NEVER">
+                            <children>
+                                <Label fx:id="spiderStatusLabel" VBox.vgrow="ALWAYS" />
+                            </children>
+                        </VBox>
+                        <ProgressIndicator prefWidth="24.0" prefHeight="24.0" fx:id="spiderLoadingProgressIndicator"/>
+                    </children>
+                </HBox>
+            </left>
+            <right>
+                <HBox alignment="CENTER" spacing="10.0">
+                    <Button onAction="#onToggleDebugPanelButtonAction" focusTraversable="false" mnemonicParsing="false" text="%spider-debugging.debug-panel">
+                        <graphic>
+                            <FontIcon iconLiteral="fa-connectdevelop:16:purple" />
+                        </graphic>
+                    </Button>
+                    <Button onAction="#onOpenLogConsoleButtonAction" focusTraversable="false" mnemonicParsing="false" text="%settings.debugging.log-console">
+                        <graphic>
+                            <FontIcon iconLiteral="fa-terminal:16:blue" />
+                        </graphic>
+                    </Button>
+                </HBox>
+            </right>
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+        </BorderPane>
+    </top>
+
+    <center>
+        <StackPane fx:id="previewStackPane">
+            <children>
+                <StackPane>
+                    <fx:include fx:id="emptyDataPlaceholder" source="include/empty-data-placeholder.fxml" />
+                    <VBox fx:id="tabPaneVBox" visible="false" BorderPane.alignment="CENTER">
+                        <children>
+                            <StackPane>
+                                <TabPane fx:id="previewTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+                                    <tabs>
+                                        <Tab onSelectionChanged="#onPreviewTabSelectionChanged" text="%source-audit.audit-table-item.home">
+                                            <properties>
+                                                <type>
+                                                    <SourceAuditType fx:value="HOME" />
+                                                </type>
+                                            </properties>
+                                            <fx:include source="include/spider-debugging/home-tab.fxml" />
+                                        </Tab>
+                                        <Tab onSelectionChanged="#onPreviewTabSelectionChanged" text="%source-audit.audit-table-item.movie-explore">
+                                            <properties>
+                                                <type>
+                                                    <SourceAuditType fx:value="MOVIE_EXPLORE" />
+                                                </type>
+                                            </properties>
+                                            <fx:include source="include/spider-debugging/movie-explore-tab.fxml" />
+                                        </Tab>
+                                        <Tab onSelectionChanged="#onPreviewTabSelectionChanged" text="%source-audit.audit-table-item.movie-detail">
+                                            <properties>
+                                                <type>
+                                                    <SourceAuditType fx:value="MOVIE_DETAIL" />
+                                                </type>
+                                            </properties>
+                                            <fx:include source="include/spider-debugging/movie-detail-tab.fxml" />
+                                        </Tab>
+                                        <Tab onSelectionChanged="#onPreviewTabSelectionChanged" text="%source-audit.audit-table-item.movie-play">
+                                            <properties>
+                                                <type>
+                                                    <SourceAuditType fx:value="MOVIE_PLAY" />
+                                                </type>
+                                            </properties>
+                                            <fx:include source="include/spider-debugging/movie-play-tab.fxml" />
+                                        </Tab>
+                                        <Tab onSelectionChanged="#onPreviewTabSelectionChanged" text="%source-audit.audit-table-item.movie-search">
+                                            <properties>
+                                                <type>
+                                                    <SourceAuditType fx:value="MOVIE_SEARCH" />
+                                                </type>
+                                            </properties>
+                                            <fx:include source="include/spider-debugging/movie-search-tab.fxml" />
+                                        </Tab>
+                                    </tabs>
+                                </TabPane>
+                            </StackPane>
+                        </children>
+                    </VBox>
+                </StackPane>
+                <StackPane fx:id="dataPanel" prefHeight="200.0" maxHeight="200.0" visible="false" managed="false" StackPane.alignment="BOTTOM_CENTER">
+                    <children>
+                        <VBox>
+                            <children>
+                                <HBox fx:id="dataPanelDragHandle" alignment="CENTER" styleClass="debug-panel-drag-handle">
+                                    <children>
+                                        <Region styleClass="debug-panel-drag-handle-grip" />
+                                    </children>
+                                </HBox>
+                                <StackPane VBox.vgrow="ALWAYS">
+                                    <children>
+                                        <TextArea fx:id="debugDataTextArea" styleClass="debug-panel-text-area, fs-big" editable="false" wrapText="true" />
+                                        <HBox fx:id="dataPanelToolBar" alignment="CENTER_RIGHT" spacing="5.0"
+                                              prefWidth="80.0" prefHeight="32.0" maxWidth="80.0" maxHeight="32.0"
+                                              StackPane.alignment="TOP_RIGHT" styleClass="debug-panel-toolbar">
+                                            <StackPane.margin>
+                                                <Insets right="18.0" />
+                                            </StackPane.margin>
+                                            <children>
+                                                <Button mnemonicParsing="false" onAction="#onCopyDataPanelButtonAction" styleClass="debug-panel-tool-bar-button">
+                                                    <graphic>
+                                                        <FontIcon iconLiteral="fa-copy:18:blue" />
+                                                    </graphic>
+                                                </Button>
+                                                <Button mnemonicParsing="false" onAction="#onCloseDebugPanelButtonAction" styleClass="debug-panel-tool-bar-button">
+                                                    <graphic>
+                                                        <FontIcon iconLiteral="fa-times:18:red" />
+                                                    </graphic>
+                                                </Button>
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </StackPane>
+                            </children>
+                        </VBox>
+                    </children>
+                </StackPane>
+            </children>
+        </StackPane>
+    </center>
+</BorderPane>

@@ -1,6 +1,7 @@
 package io.knifer.freebox.controller;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.net.URLEncodeUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
@@ -140,9 +141,8 @@ public class VideoController extends BaseController implements Destroyable {
             // 收藏按钮
             collectBtn.disableProperty().bind(operationLoading);
             template.getMovieCollectedStatus(
-                    GetMovieCollectedStatusDTO.of(source.getKey(), videoDetail.getVideoList().get(0).getId()),
-                    this::setCollectBtnByCollectedStatus
-            );
+                    GetMovieCollectedStatusDTO.of(source.getKey(), videoDetail.getVideoList().get(0).getId())
+            ).thenAccept(this::setCollectBtnByCollectedStatus);
             // 绑定播放下一集事件
             player.setOnStepForward(this::onPlayerStepForward);
             WindowHelper.getStage(root).setOnCloseRequest(evt -> destroy());
@@ -347,7 +347,7 @@ public class VideoController extends BaseController implements Destroyable {
             children.add(new Text("\n"));
         }
         propNameText = new Text(I18nHelper.get(propNameI18nKey));
-        propNameText.getStyleClass().add("video-details-prop-name");
+        propNameText.getStyleClass().add("royal-blue");
         if (propValue.length() > 50) {
             propValueText = new Text(propValue.substring(0, 30) + ".....");
             tooltip = new Tooltip(propValue);
@@ -484,80 +484,78 @@ public class VideoController extends BaseController implements Destroyable {
         String flag = urlInfo.getFlag();
 
         Platform.runLater(() -> player.stop());
-        template.getPlayerContent(
-                GetPlayerContentDTO.of(video.getSourceKey(), flag, urlInfoBean.getUrl()),
-                playerContentJson ->
-                    Platform.runLater(() -> {
-                        JsonElement propsElm;
-                        JsonObject propsObj;
-                        JsonElement elm;
-                        String playUrl;
-                        int parse;
-                        int jx;
-                        Map<String, String> headers;
-                        String videoTitle;
+        template.getPlayerContent(GetPlayerContentDTO.of(video.getSourceKey(), flag, urlInfoBean.getUrl()))
+                .thenAccept(playerContentJson -> Platform.runLater(() -> {
+                    JsonElement propsElm;
+                    JsonObject propsObj;
+                    JsonElement elm;
+                    String playUrl;
+                    int parse;
+                    int jx;
+                    Map<String, String> headers;
+                    String videoTitle;
 
-                        if (playerContentJson == null) {
-                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                            return;
-                        }
-                        propsElm = playerContentJson.get("nameValuePairs");
-                        if (propsElm == null) {
-                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                            return;
-                        }
-                        propsObj = propsElm.getAsJsonObject();
-                        elm = propsObj.get("url");
-                        if (elm == null) {
-                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                            return;
-                        }
-                        playUrl = elm.getAsString();
-                        if (StringUtils.isBlank(playUrl)) {
-                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
-                            return;
-                        }
-                        elm = propsObj.get("parse");
-                        parse = elm == null ? 0 : elm.getAsInt();
-                        elm = propsObj.get("jx");
-                        jx = elm == null ? 0 : elm.getAsInt();
-                        elm = propsObj.get("header");
-                        headers = elm == null ? Map.of() : GsonUtil.toStringMap(elm);
-                        videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
-                        if (parse == 0) {
-                            if (ConfigHelper.getAdFilter() && playUrl.contains(".m3u8")) {
-                                // 处理m3u8广告过滤、ts代理
-                                filterAdAndProxy(playUrl, headers, isAdFilteredAndProxyUrl -> {
-                                    Boolean isAdFiltered = isAdFilteredAndProxyUrl.getLeft();
-                                    String proxyUrl = isAdFilteredAndProxyUrl.getRight();
-                                    TVPlayBO tvPlayBO = TVPlayBO.of(
-                                            proxyUrl,
-                                            headers,
-                                            videoTitle,
-                                            progress,
-                                            isAdFiltered
-                                    );
+                    if (playerContentJson == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                        return;
+                    }
+                    propsElm = playerContentJson.get("nameValuePairs");
+                    if (propsElm == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                        return;
+                    }
+                    propsObj = propsElm.getAsJsonObject();
+                    elm = propsObj.get("url");
+                    if (elm == null) {
+                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                        return;
+                    }
+                    playUrl = elm.getAsString();
+                    if (StringUtils.isBlank(playUrl)) {
+                        ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_NO_DATA);
+                        return;
+                    }
+                    playUrl = HttpUtil.parseUrl(playUrl);
+                    elm = propsObj.get("parse");
+                    parse = elm == null ? 0 : elm.getAsInt();
+                    elm = propsObj.get("jx");
+                    jx = elm == null ? 0 : elm.getAsInt();
+                    elm = propsObj.get("header");
+                    headers = elm == null ? Map.of() : GsonUtil.toStringMap(elm);
+                    videoTitle = "《" + video.getName() + "》" + flag + " - " + urlInfoBean.getName();
+                    if (parse == 0) {
+                        if (ConfigHelper.getAdFilter() && playUrl.contains(".m3u8")) {
+                            // 处理m3u8广告过滤、ts代理
+                            filterAdAndProxy(playUrl, headers, isAdFilteredAndProxyUrl -> {
+                                Boolean isAdFiltered = isAdFilteredAndProxyUrl.getLeft();
+                                String proxyUrl = isAdFilteredAndProxyUrl.getRight();
+                                TVPlayBO tvPlayBO = TVPlayBO.of(
+                                        proxyUrl,
+                                        headers,
+                                        videoTitle,
+                                        progress,
+                                        isAdFiltered
+                                );
 
-                                    Platform.runLater(() -> player.play(tvPlayBO));
-                                });
-                            } else {
-                                player.play(TVPlayBO.of(
-                                        playUrl, headers, videoTitle, progress, false
-                                ));
-                            }
+                                Platform.runLater(() -> player.play(tvPlayBO));
+                            });
                         } else {
-                            if (jx != 0) {
-                                ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SOURCE_NOT_SUPPORTED);
-                                return;
-                            }
-                            player.setVideoTitle(videoTitle + " （此为解析源，请在弹出的浏览器程序中观看）");
-                            HostServiceHelper.showDocument(playUrl);
+                            player.play(TVPlayBO.of(
+                                    playUrl, headers, videoTitle, progress, false
+                            ));
                         }
-                        playingVideo = video;
-                        playingUrlInfo = urlInfo;
-                        playingInfoBean = urlInfoBean;
-                    })
-        );
+                    } else {
+                        if (jx != 0) {
+                            ToastHelper.showErrorI18n(I18nKeys.VIDEO_ERROR_SOURCE_NOT_SUPPORTED);
+                            return;
+                        }
+                        player.setVideoTitle(videoTitle + " （此为解析源，请在弹出的浏览器程序中观看）");
+                        HostServiceHelper.showDocument(playUrl);
+                    }
+                    playingVideo = video;
+                    playingUrlInfo = urlInfo;
+                    playingInfoBean = urlInfoBean;
+                }));
     }
 
     /**
@@ -712,21 +710,17 @@ public class VideoController extends BaseController implements Destroyable {
         operationLoading.set(true);
         vodInfo = VodInfo.from(playingVideo);
         if (collectBtn.getGraphic() == COLLECTED_FONT_ICON) {
-            template.deleteMovieCollection(
-                    DeleteMovieCollectionDTO.of(vodInfo),
-                    () -> {
+            template.deleteMovieCollection(DeleteMovieCollectionDTO.of(vodInfo))
+                    .thenRun(() -> {
                         setCollectBtnByCollectedStatus(false);
                         Platform.runLater(() -> ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS));
-                    }
-            );
+                    });
         } else {
-            template.saveMovieCollection(
-                    SaveMovieCollectionDTO.of(vodInfo),
-                    () -> {
+            template.saveMovieCollection(SaveMovieCollectionDTO.of(vodInfo))
+                    .thenRun(() -> {
                         setCollectBtnByCollectedStatus(true);
                         Platform.runLater(() -> ToastHelper.showSuccessI18n(I18nKeys.COMMON_MESSAGE_SUCCESS));
-                    }
-            );
+                    });
         }
     }
 

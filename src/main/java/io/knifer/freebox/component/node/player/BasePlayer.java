@@ -16,10 +16,7 @@ import io.knifer.freebox.model.bo.TVPlayBO;
 import io.knifer.freebox.model.common.diyp.EPG;
 import io.knifer.freebox.model.domain.LiveChannel;
 import io.knifer.freebox.model.domain.LiveChannelGroup;
-import io.knifer.freebox.util.AsyncUtil;
-import io.knifer.freebox.util.CastUtil;
-import io.knifer.freebox.util.CollectionUtil;
-import io.knifer.freebox.util.FXMLUtil;
+import io.knifer.freebox.util.*;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
@@ -171,6 +168,7 @@ public abstract class BasePlayer<T extends Node> {
     public BasePlayer(Pane parent, Config config) {
         boolean liveMode = BooleanUtils.toBoolean(config.getLiveMode());
         boolean externalMode = BooleanUtils.toBoolean(config.getExternalMode());
+        boolean allowFullScreen = BooleanUtils.toBoolean(config.getAllowFullScreen());
         ObservableList<Node> parentChildren = parent.getChildren();
         ReadOnlyDoubleProperty parentWidthProp = parent.widthProperty();
         ReadOnlyDoubleProperty parentHeightProp = parent.heightProperty();
@@ -466,11 +464,16 @@ public abstract class BasePlayer<T extends Node> {
         settingsPopOverInnerVBox.setOnMouseEntered(controlsOnMouseEnteredEventHandler);
         settingsPopOverInnerVBox.setOnMouseExited(controlsOnMouseExitedEventHandler);
         settingsPopOverLabel = new PlayerPopOverControlLabel(settingsIcon, settingsPopOverInnerVBox);
-        // 铺满、全屏组件
-        fullScreenLabel = new Label();
-        fullScreenLabel.setGraphic(fullScreenIcon);
-        fullScreenLabel.setOnMouseClicked(evt -> toggleFullScreen());
-        rightToolBarHbox = new HBox(fullScreenLabel);
+        // 全屏
+        if (allowFullScreen) {
+            fullScreenLabel = new Label();
+            fullScreenLabel.setGraphic(fullScreenIcon);
+            fullScreenLabel.setOnMouseClicked(evt -> toggleFullScreen());
+            rightToolBarHbox = new HBox(fullScreenLabel);
+        } else {
+            fullScreenLabel = null;
+            rightToolBarHbox = new HBox();
+        }
         rightToolBarHbox.setSpacing(25);
         rightToolBarHbox.setAlignment(Pos.CENTER);
         if (liveMode) {
@@ -694,7 +697,7 @@ public abstract class BasePlayer<T extends Node> {
                 // 单击：延迟200ms后暂停
                 delayedPauseTransition.stop();
                 delayedPauseTransition.playFromStart();
-            } else {
+            } else if (allowFullScreen) {
                 // 双击：取消延迟暂停，直接全屏
                 delayedPauseTransition.stop();
                 toggleFullScreen();
@@ -709,8 +712,10 @@ public abstract class BasePlayer<T extends Node> {
             pauseLabel.setManaged(false);
             volumePopOverLabel.setVisible(false);
             volumePopOverLabel.setManaged(false);
-            fullScreenLabel.setVisible(false);
-            fullScreenLabel.setManaged(false);
+            if (allowFullScreen) {
+                fullScreenLabel.setVisible(false);
+                fullScreenLabel.setManaged(false);
+            }
             if (!liveMode) {
                 progressLabelHBox.setVisible(false);
                 progressLabelHBox.setManaged(false);
@@ -727,7 +732,11 @@ public abstract class BasePlayer<T extends Node> {
                             toggleFullScreen();
                         }
                     }
-                    case F -> toggleFullScreen();
+                    case F -> {
+                        if (allowFullScreen) {
+                            toggleFullScreen();
+                        }
+                    }
                     case Z -> fillWindowToggleSwitch.setSelected(!fillWindowToggleSwitch.isSelected());
                     case RIGHT -> movePosition(true);
                     case LEFT -> movePosition(false);
@@ -748,7 +757,7 @@ public abstract class BasePlayer<T extends Node> {
         parentChildren.add(0, playerPane);
         parent.requestFocus();
         setControlsAutoHide(true);
-        setLoading(true);
+        setLoading(false);
     }
 
     protected void setControlsVisible(boolean flag) {
@@ -1389,6 +1398,11 @@ public abstract class BasePlayer<T extends Node> {
          * 外部模式
          */
         private Boolean externalMode;
+
+        /**
+         * 是否允许全屏
+         */
+        private Boolean allowFullScreen;
     }
 
     private static class LiveChannelBanner extends HBox {
@@ -1662,9 +1676,7 @@ public abstract class BasePlayer<T extends Node> {
         private void select(LiveChannelGroup liveChannelGroup, boolean isPlaying) {
             Label titleLabel = liveChannelGroupAndTitleLabelMap.get(liveChannelGroup);
             LiveChannelGroup lastLiveChannelGroup;
-            List<String> titleLabelStyleClass;
             Label lastSelectedTitleLabel;
-            List<String> lastSelectedTitleLabelStyleClass;
 
             lastLiveChannelGroup = selectedLive.getLiveChannelGroup();
             selectedLive.setLiveChannelGroup(liveChannelGroup);
@@ -1672,21 +1684,24 @@ public abstract class BasePlayer<T extends Node> {
 
                 return;
             }
-            titleLabelStyleClass = titleLabel.getStyleClass();
             if (lastLiveChannelGroup == null) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 setLiveChannels(liveChannelGroup.getChannels(), false);
             } else if (lastLiveChannelGroup != liveChannelGroup) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 lastSelectedTitleLabel = liveChannelGroupAndTitleLabelMap.get(lastLiveChannelGroup);
                 if (lastSelectedTitleLabel != null) {
-                    lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
-                    lastSelectedTitleLabelStyleClass.remove(
-                            "player-live-channel-list-view-title-label-focused"
-                    );
-                    lastSelectedTitleLabelStyleClass.add(
+                    NodeUtil.replaceStyleClass(
+                            lastSelectedTitleLabel,
+                            "player-live-channel-list-view-title-label-focused",
                             "player-live-channel-list-view-title-label"
                     );
                 }
@@ -1835,7 +1850,6 @@ public abstract class BasePlayer<T extends Node> {
             HBox titleHBox = liveChannelAndTitleHBoxMap.get(liveChannel);
             Label titleLabel;
             LiveChannel lastLiveChannel;
-            List<String> titleLabelStyleClass;
             List<Node> titleHBoxChildren;
             HBox lastSelectedTitleHBox;
             List<Node> lastSelectedTitleHBoxChildren;
@@ -1851,19 +1865,24 @@ public abstract class BasePlayer<T extends Node> {
 
                 return;
             }
-            titleLabelStyleClass = titleLabel.getStyleClass();
             titleHBoxChildren = titleHBox.getChildren();
             if (lastLiveChannel == null) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 if (!titleHBoxChildren.contains(PLAYING_GIF_IMAGE_VIEW)) {
                     titleHBoxChildren.add(1, PLAYING_GIF_IMAGE_VIEW);
                 }
             } else if (lastLiveChannel != liveChannel) {
-                titleLabelStyleClass.remove("player-live-channel-list-view-title-label");
-                titleLabelStyleClass.add("player-live-channel-list-view-title-label-focused");
+                NodeUtil.replaceStyleClass(
+                        titleLabel,
+                        "player-live-channel-list-view-title-label",
+                        "player-live-channel-list-view-title-label-focused"
+                );
                 lastSelectedTitleHBox = liveChannelAndTitleHBoxMap.get(lastLiveChannel);
-                if (lastSelectedTitleHBox == null || !trySelectLastTitleLabel(lastSelectedTitleHBox)) {
+                if (lastSelectedTitleHBox == null || trySelectLastTitleLabel(lastSelectedTitleHBox)) {
 
                     return;
                 }
@@ -1877,17 +1896,14 @@ public abstract class BasePlayer<T extends Node> {
 
         private static boolean trySelectLastTitleLabel(HBox lastSelectedTitleHBox) {
             Label lastSelectedTitleLabel = CastUtil.cast(CollectionUtil.getFirst(lastSelectedTitleHBox.getChildren()));
-            List<String> lastSelectedTitleLabelStyleClass;
 
             if (lastSelectedTitleLabel == null) {
 
                 return true;
             }
-            lastSelectedTitleLabelStyleClass = lastSelectedTitleLabel.getStyleClass();
-            lastSelectedTitleLabelStyleClass.remove(
-                    "player-live-channel-list-view-title-label-focused"
-            );
-            lastSelectedTitleLabelStyleClass.add(
+            NodeUtil.replaceStyleClass(
+                    lastSelectedTitleLabel,
+                    "player-live-channel-list-view-title-label-focused",
                     "player-live-channel-list-view-title-label"
             );
 
@@ -1912,7 +1928,13 @@ public abstract class BasePlayer<T extends Node> {
 
     public static BasePlayer<?> createPlayer(Pane parentPane, @Nullable Config config) {
         if (config == null) {
-            config = Config.builder().liveMode(false).externalMode(false).build();
+            config = Config.builder()
+                    .liveMode(false)
+                    .externalMode(false)
+                    .allowFullScreen(true)
+                    .build();
+        } else if (config.getAllowFullScreen() == null) {
+            config.setAllowFullScreen(true);
         }
 
         return switch (ConfigHelper.getPlayerType()) {

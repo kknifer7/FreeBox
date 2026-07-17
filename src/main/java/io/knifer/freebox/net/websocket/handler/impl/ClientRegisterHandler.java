@@ -31,7 +31,7 @@ public class ClientRegisterHandler implements KebSocketMessageHandler<RegisterIn
     private final static int SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE;
 
     static {
-        String code = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE);
+        String code = XProperties.INSTANCE.getProperty(BaseValues.X_SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE);
 
         SUPPORTED_KEB_SOCKET_PROTOCOL_VERSION_CODE = NumberUtils.toInt(code, 1);
     }

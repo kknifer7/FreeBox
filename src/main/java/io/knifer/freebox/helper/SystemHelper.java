@@ -35,10 +35,10 @@ public class SystemHelper {
             "freebox.profile", EnvProfile.DEV.name()
     ));
     private final static AtomicBoolean DEBUG_FLAG = new AtomicBoolean(
-            "true".equals(BaseResources.X_PROPERTIES.getProperty(BaseValues.X_DEBUG))
+            "true".equals(XProperties.INSTANCE.getProperty(BaseValues.X_DEBUG))
     );
     private final static String SYSTEM_SUMMARY = "FreeBox Version: " +
-            BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION) + "\n" +
+            XProperties.INSTANCE.getProperty(BaseValues.X_APP_VERSION) + "\n" +
             SystemUtil.getOsInfo() +
             SystemUtil.getUserInfo() +
             SystemUtil.getRuntimeInfo() +

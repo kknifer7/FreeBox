@@ -263,10 +263,10 @@ public class ConfigHelper {
             } else {
                 configLoaded = new Config();
                 configLoaded.setUuid(UUID.randomUUID().toString());
-                configLoaded.setAppVersion(BaseResources.X_PROPERTIES.getProperty(
+                configLoaded.setAppVersion(XProperties.INSTANCE.getProperty(
                         BaseValues.X_APP_VERSION, "1.0.0"
                 ));
-                versionCodeStr = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
+                versionCodeStr = XProperties.INSTANCE.getProperty(BaseValues.X_APP_VERSION_CODE);
                 configLoaded.setAppVersionCode(
                         NumberUtils.isCreatable(versionCodeStr) ? Integer.parseInt(versionCodeStr) : 0
                 );

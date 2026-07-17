@@ -2,10 +2,10 @@ package io.knifer.freebox.controller.dialog;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RuntimeUtil;
-import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ButtonTypes;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.constant.XProperties;
 import io.knifer.freebox.controller.BaseController;
 import io.knifer.freebox.exception.FBException;
 import io.knifer.freebox.helper.*;
@@ -76,7 +76,7 @@ public class UpgradeDialogController extends BaseController {
             changelogTextFlow.getChildren().add(new Text(upgradeConfig.getChangelog()));
 
             currentVersionCode = Integer.parseInt(
-                    BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE)
+                    XProperties.INSTANCE.getProperty(BaseValues.X_APP_VERSION_CODE)
             );
             if (currentVersionCode < upgradeConfig.getMinRequiredVersionCode()) {
                 currentVersionTooLowProperty.set(true);

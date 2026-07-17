@@ -1,9 +1,9 @@
 package io.knifer.freebox.service;
 
 import cn.hutool.core.io.IoUtil;
-import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.I18nKeys;
+import io.knifer.freebox.constant.XProperties;
 import io.knifer.freebox.helper.ToastHelper;
 import io.knifer.freebox.model.bo.UpgradeCheckResultBO;
 import io.knifer.freebox.model.domain.UpgradeConfig;
@@ -25,7 +25,7 @@ import java.net.URL;
 @Slf4j
 public class UpgradeCheckService extends Service<UpgradeCheckResultBO> {
 
-    private final static String PROPS_URL = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_UPGRADE_CONFIG_URL);
+    private final static String PROPS_URL = XProperties.INSTANCE.getProperty(BaseValues.X_UPGRADE_CONFIG_URL);
 
     @Override
     protected Task<UpgradeCheckResultBO> createTask() {

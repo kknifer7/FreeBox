@@ -1,6 +1,5 @@
 package io.knifer.freebox.constant;
 
-import com.google.common.io.Resources;
 import io.knifer.freebox.FreeBoxApplication;
 import io.knifer.freebox.helper.SystemHelper;
 import javafx.scene.image.Image;
@@ -8,11 +7,9 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Properties;
 
 /**
  * 资源
@@ -30,16 +27,6 @@ public class BaseResources {
     public static final Image PLAYING_GIF = loadImage("image/playing.gif");
     public static final Image PLAY_BUTTON_IMG = loadImage("image/play_button.png");
     public static final Image JAVASCRIPT_LOGO_IMG = loadImage("image/javascript_logo.png");
-
-    public static final Properties X_PROPERTIES = new Properties() {
-        {
-            try (InputStream in = Resources.getResource("x.properties").openStream()) {
-                load(in);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    };
 
     @NotNull
     public static final URL PLAYER_CSS = FreeBoxApplication.class.getResource("css/player.css");

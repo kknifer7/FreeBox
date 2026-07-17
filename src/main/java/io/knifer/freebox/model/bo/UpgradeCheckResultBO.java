@@ -1,9 +1,9 @@
 package io.knifer.freebox.model.bo;
 
 import io.knifer.freebox.constant.Architecture;
-import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.Platform;
+import io.knifer.freebox.constant.XProperties;
 import io.knifer.freebox.helper.SystemHelper;
 import io.knifer.freebox.model.domain.UpgradeConfig;
 import io.knifer.freebox.util.CollectionUtil;
@@ -28,7 +28,7 @@ public class UpgradeCheckResultBO {
 
     public static UpgradeCheckResultBO from(UpgradeConfig upgradeConfig) {
         UpgradeCheckResultBO result = new UpgradeCheckResultBO();
-        String appVersionCode = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
+        String appVersionCode = XProperties.INSTANCE.getProperty(BaseValues.X_APP_VERSION_CODE);
         List<UpgradeConfig.ReleaseFileInfo> releaseFiles = upgradeConfig.getReleaseFiles();
         Platform platform;
         Architecture architecture;

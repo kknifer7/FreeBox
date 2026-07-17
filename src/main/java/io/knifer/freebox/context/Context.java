@@ -4,9 +4,9 @@ import com.google.common.eventbus.EventBus;
 import io.knifer.freebox.component.event.EventListener;
 import io.knifer.freebox.component.router.Router;
 import io.knifer.freebox.constant.AppEvents;
-import io.knifer.freebox.constant.BaseResources;
 import io.knifer.freebox.constant.BaseValues;
 import io.knifer.freebox.constant.ClientType;
+import io.knifer.freebox.constant.XProperties;
 import io.knifer.freebox.controller.BaseController;
 import io.knifer.freebox.handler.impl.SingleInstanceApplicationHandler;
 import io.knifer.freebox.helper.ConfigHelper;
@@ -136,14 +136,14 @@ public class Context {
 
             // 处理版本升级相关
             appVersionCode = ConfigHelper.getAppVersionCode();
-            latestAppVersionCodeStr = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION_CODE);
+            latestAppVersionCodeStr = XProperties.INSTANCE.getProperty(BaseValues.X_APP_VERSION_CODE);
             latestAppVersionCode = NumberUtils.isCreatable(latestAppVersionCodeStr) ?
                     Integer.parseInt(latestAppVersionCodeStr) : 0;
             if (appVersionCode < latestAppVersionCode) {
                 // config版本与x.properties中的版本不一致，说明用户刚刚安装了新版本，可对比新旧版本号，做一些更新后置操作
                 // ...
                 // 后置操作完成，保存最新版本号到config
-                latestAppVersion = BaseResources.X_PROPERTIES.getProperty(BaseValues.X_APP_VERSION);
+                latestAppVersion = XProperties.INSTANCE.getProperty(BaseValues.X_APP_VERSION);
                 ConfigHelper.setAppVersion(latestAppVersion);
                 ConfigHelper.setAppVersionCode(latestAppVersionCode);
                 ConfigHelper.saveAnyWay(() -> {
